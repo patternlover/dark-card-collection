@@ -1,0 +1,4 @@
+{
+  "buildCommand": "cross-env NODE_OPTIONS=\"--no-deprecation\" payload build",
+  "installCommand": "npm install"
+}
