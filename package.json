@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "cross-env NODE_OPTIONS=\"--no-deprecation\" payload build",
     "start": "next start",
     "lint": "next lint",
-    "payload": "payload"
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.86.0",
@@ -21,11 +23,15 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "clsx": "2.1.1",
+    "cross-env": "10.1.0",
+    "graphql": "^16.8.1",
     "lucide-react": "1.24.0",
     "next": "15.4.11",
+    "payload": "3.86.0",
     "postcss": "8.5.19",
     "react": "19.2.7",
     "react-dom": "19.2.7",
+    "sharp": "0.34.2",
     "stripe": "22.3.2",
     "tailwind-merge": "3.6.0",
     "tailwindcss": "4.3.3",
