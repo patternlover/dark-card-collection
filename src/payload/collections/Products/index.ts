@@ -127,6 +127,22 @@ export const Products: CollectionConfig = {
       relationTo: 'media',
     },
     {
+      name: 'averageSalePrice',
+      type: 'number',
+      admin: {
+        description: 'Average selling price from sales history (auto-calculated)',
+        readOnly: true,
+      },
+    },
+    {
+      name: 'lastPriceUpdate',
+      type: 'date',
+      admin: {
+        description: 'Last time average price was recalculated',
+        readOnly: true,
+      },
+    },
+    {
       name: 'featured',
       type: 'checkbox',
       defaultValue: false,
