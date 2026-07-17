@@ -6,6 +6,8 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Truck, Shield, Package } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ProductPage({
   params,
 }: {

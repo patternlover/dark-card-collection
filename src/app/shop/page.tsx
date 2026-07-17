@@ -3,6 +3,8 @@ import config from '@/payload.config'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductFilters } from '@/components/product/ProductFilters'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ShopPage({
   searchParams,
 }: {
