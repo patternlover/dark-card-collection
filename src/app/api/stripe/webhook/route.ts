@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
-import Stripe from 'stripe'
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-05-28.basil',
-  typescript: true,
-})
+import { stripe } from '@/lib/stripe'
+import config from '@payload-config'
+import { getPayload } from 'payload'
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -17,7 +14,7 @@ export async function POST(req: Request) {
     )
   }
 
-  let event: Stripe.Event
+  let event
 
   try {
     event = stripe.webhooks.constructEvent(
@@ -33,19 +30,38 @@ export async function POST(req: Request) {
     )
   }
 
+  const payload = await getPayload({ config })
+
   switch (event.type) {
     case 'checkout.session.completed': {
-      const session = event.data.object as Stripe.Checkout.Session
-      console.log('Payment successful:', session.id)
+      const session = event.data.object
 
-      // TODO: Create order in Payload CMS + update product quantities
-      // This will be implemented when Payload CMS is connected
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id)
 
+      const orderItems = lineItems.data.map((item) => ({
+        product: item.price?.product,
+        quantity: item.quantity || 1,
+        price: (item.amount_total || 0) / 100,
+      }))
+
+      await payload.create({
+        collection: 'orders',
+        data: {
+          orderId: session.id,
+          status: 'paid',
+          items: orderItems as any,
+          total: (session.amount_total || 0) / 100,
+          stripeSessionId: session.id,
+          email: session.customer_details?.email || '',
+        },
+      })
+
+      console.log('Order created for session:', session.id)
       break
     }
 
     case 'payment_intent.payment_failed': {
-      const paymentIntent = event.data.object as Stripe.PaymentIntent
+      const paymentIntent = event.data.object
       console.log('Payment failed:', paymentIntent.id)
       break
     }

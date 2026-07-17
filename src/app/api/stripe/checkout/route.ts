@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getStripe } from '@/lib/stripe'
+import { stripe } from '@/lib/stripe'
 
 export async function POST(req: Request) {
   try {
@@ -13,8 +13,6 @@ export async function POST(req: Request) {
       )
     }
 
-    const stripe = getStripe()
-
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: items.map((item: { title: string; price: number; quantity: number }) => ({
@@ -23,16 +21,14 @@ export async function POST(req: Request) {
           product_data: {
             name: item.title,
           },
-          unit_amount: Math.round(item.price * 100), // Stripe uses cents
+          unit_amount: Math.round(item.price * 100),
         },
         quantity: item.quantity,
       })),
       mode: 'payment',
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cart`,
-      metadata: {
-        // Will be used to link to Payload order
-      },
+      metadata: {},
     })
 
     return NextResponse.json({ url: session.url })

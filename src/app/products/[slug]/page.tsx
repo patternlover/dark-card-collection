@@ -15,7 +15,7 @@ const product = {
   compareAtPrice: 169.99,
   category: 'Booster Box',
   collection: 'Scarlet & Violet',
-  status: 'in-stock' as const,
+  status: 'in-stock' as 'in-stock' | 'preorder' | 'out-of-stock',
   sealed: true,
   features: ['36 Booster Pack', '10 carte per pack', 'Nuova meccanica Teracristallo', 'Carte illustration rara'],
   sku: 'SV-BB-001',
