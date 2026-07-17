@@ -72,7 +72,7 @@ export async function GET() {
       if (!itemId || !productName) { skippedRows++; continue }
       if (productState.toUpperCase() === 'SOLD') { skippedRows++; continue }
 
-      let categoryId: number | null = null
+      let categoryId: string | number | null = null
       if (category) {
         const existing = await payload.find({ collection: 'categories', where: { name: { equals: category } } })
         if (existing.docs.length > 0) {
@@ -84,7 +84,7 @@ export async function GET() {
         }
       }
 
-      let collectionId: number | null = null
+      let collectionId: string | number | null = null
       const setName = set.split(',')[0]?.trim() || ''
       if (setName) {
         const existing = await payload.find({ collection: 'collections', where: { name: { equals: setName } } })

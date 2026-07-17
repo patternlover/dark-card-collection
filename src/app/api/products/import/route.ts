@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         continue
       }
 
-      let categoryId: number | null = null
+      let categoryId: string | number | null = null
       if (category) {
         const existing = await payload.find({
           collection: 'categories',
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
         }
       }
 
-      let collectionId: number | null = null
+      let collectionId: string | number | null = null
       const setName = set.split(',')[0]?.trim() || ''
       if (setName) {
         const existing = await payload.find({

@@ -89,7 +89,7 @@ async function run() {
     }
 
     // Find or create category
-    let categoryId: number | null = null
+    let categoryId: string | number | null = null
     if (category) {
       const existing = await payload.find({
         collection: 'categories',
@@ -113,7 +113,7 @@ async function run() {
     }
 
     // Find or create collection (from set field - take first if comma-separated)
-    let collectionId: number | null = null
+    let collectionId: string | number | null = null
     const setName = set.split(',')[0]?.trim() || ''
     if (setName) {
       const existing = await payload.find({
