@@ -4,23 +4,24 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Search, ShoppingBag, Menu, X } from 'lucide-react'
 import { MobileMenu } from './MobileMenu'
+import { useCart } from '@/hooks/useCart'
 
 const navItems = [
   { label: 'Shop', href: '/shop' },
   { label: 'Collezioni', href: '/shop/collections' },
-  { label: 'Preordini', href: '/shop/preorders' },
-  { label: 'Novità', href: '/shop/new-arrivals' },
-  { label: 'Bestseller', href: '/shop/bestsellers' },
+  { label: 'Chi Siamo', href: '/info/about' },
+  { label: 'FAQ', href: '/info/faq' },
+  { label: 'Contatti', href: '/info/contact' },
 ]
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { itemCount } = useCart()
 
   return (
     <header className="sticky top-0 z-50 border-b border-zinc-800 bg-black/95 backdrop-blur-sm">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-white">
               Dark Card
@@ -30,7 +31,6 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex md:items-center md:gap-8">
             {navItems.map((item) => (
               <Link
@@ -43,15 +43,14 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Right actions */}
           <div className="flex items-center gap-4">
-            <button
-              type="button"
+            <Link
+              href="/shop"
               className="text-zinc-400 transition-colors hover:text-white"
               aria-label="Cerca"
             >
               <Search className="h-5 w-5" />
-            </button>
+            </Link>
 
             <Link
               href="/cart"
@@ -59,9 +58,11 @@ export function Header() {
               aria-label="Carrello"
             >
               <ShoppingBag className="h-5 w-5" />
-              <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
-                0
-              </span>
+              {itemCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                  {itemCount}
+                </span>
+              )}
             </Link>
 
             <button
@@ -80,7 +81,6 @@ export function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}

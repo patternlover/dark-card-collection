@@ -4,9 +4,6 @@ const footerLinks = {
   shop: [
     { label: 'Tutti i prodotti', href: '/shop' },
     { label: 'Collezioni', href: '/shop/collections' },
-    { label: 'Preordini', href: '/shop/preorders' },
-    { label: 'Novità', href: '/shop/new-arrivals' },
-    { label: 'Bestseller', href: '/shop/bestsellers' },
   ],
   info: [
     { label: 'Chi siamo', href: '/info/about' },
@@ -20,7 +17,6 @@ export function Footer() {
     <footer className="border-t border-zinc-800 bg-black">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block">
               <span className="text-xl font-bold tracking-tight text-white">
@@ -35,7 +31,6 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Shop links */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
               Shop
@@ -54,7 +49,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Info links */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
               Informazioni
@@ -73,7 +67,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Trust */}
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
               Garanzie

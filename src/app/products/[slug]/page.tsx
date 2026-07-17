@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { Badge } from '@/components/ui/Badge'
 import { ProductCard } from '@/components/product/ProductCard'
+import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Truck, Shield, Package } from 'lucide-react'
 
 export default async function ProductPage({
@@ -157,6 +158,8 @@ export default async function ProductPage({
                 </p>
               </div>
             )}
+
+            <AddToCartButton product={product} />
 
             <div className="space-y-3 rounded-lg border border-zinc-800 p-4">
               <div className="flex items-center gap-3 text-sm text-zinc-400">
