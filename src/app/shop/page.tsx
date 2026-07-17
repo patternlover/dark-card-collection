@@ -1,7 +1,5 @@
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { getPayloadClient } from '@/lib/payload'
 import { ProductCard } from '@/components/product/ProductCard'
-import { ProductFilters } from '@/components/product/ProductFilters'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +14,7 @@ export default async function ShopPage({
   let categories: any[] = []
 
   try {
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
 
     const where: any = { status: { equals: 'listed' } }
     if (params.category) {
@@ -64,7 +62,6 @@ export default async function ShopPage({
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-white mb-8">Shop</h1>
 
-        {/* Filters */}
         <div className="space-y-4 mb-8">
           <div>
             <h3 className="text-sm font-medium text-zinc-400 mb-2">Condizione</h3>
@@ -104,7 +101,7 @@ export default async function ShopPage({
             <div>
               <h3 className="text-sm font-medium text-zinc-400 mb-2">Categoria</h3>
               <div className="flex flex-wrap gap-2">
-                <a href={`/shop${params.condition ? `?condition=${params.condition}` : ''}${params.language ? `?language=${params.language}` : ''}`} className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.category ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+                <a href="/shop" className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.category ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
                   Tutti
                 </a>
                 {categories.map((cat: any) => (
@@ -121,7 +118,6 @@ export default async function ShopPage({
           )}
         </div>
 
-        {/* Products */}
         {products.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-zinc-500 text-lg">Nessun prodotto trovato.</p>

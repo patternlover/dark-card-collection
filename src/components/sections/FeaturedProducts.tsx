@@ -1,30 +1,20 @@
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { getPayloadClient } from '@/lib/payload'
 import { ProductCard } from '@/components/product/ProductCard'
 
 export async function FeaturedProducts() {
   let products: any[] = []
 
   try {
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'products',
-      where: {
-        and: [
-          { status: { equals: 'listed' } },
-        ],
-      },
+      where: { status: { equals: 'listed' } },
       limit: 8,
       sort: '-createdAt',
-      populate: {
-        category: { select: { name: true } },
-        collection: { select: { name: true } },
-        image: { select: { url: true, alt: true } },
-      },
     })
     products = result.docs
   } catch {
-    // DB might not be connected during build, show empty state
+    // DB might not be connected during build
   }
 
   return (

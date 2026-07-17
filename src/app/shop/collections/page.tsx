@@ -1,5 +1,4 @@
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { getPayloadClient } from '@/lib/payload'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -8,7 +7,7 @@ export default async function CollectionsPage() {
   let collections: any[] = []
 
   try {
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'collections',
       limit: 50,

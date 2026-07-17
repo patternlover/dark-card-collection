@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { getPayloadClient } from '@/lib/payload'
 import { Badge } from '@/components/ui/Badge'
 import { ProductCard } from '@/components/product/ProductCard'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
@@ -19,7 +18,7 @@ export default async function ProductPage({
   let relatedProducts: any[] = []
 
   try {
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
 
     const result = await payload.find({
       collection: 'products',
@@ -78,7 +77,6 @@ export default async function ProductPage({
     <div className="bg-black">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-          {/* Image */}
           <div>
             {product.image?.url ? (
               <img
@@ -93,7 +91,6 @@ export default async function ProductPage({
             )}
           </div>
 
-          {/* Product Info */}
           <div className="space-y-6">
             <div className="flex flex-wrap gap-2">
               {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
