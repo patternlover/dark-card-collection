@@ -10,7 +10,8 @@
     "lint": "next lint",
     "payload": "payload",
     "generate:types": "payload generate:types",
-    "generate:importmap": "payload generate:importmap"
+    "generate:importmap": "payload generate:importmap",
+    "import-products": "payload run scripts/import-products.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.86.0",

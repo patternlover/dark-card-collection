@@ -18,14 +18,51 @@ export const Products: CollectionConfig = {
       unique: true,
     },
     {
+      name: 'itemId',
+      type: 'text',
+      unique: true,
+      admin: {
+        description: 'Unique identifier from Google Sheets (e.g. PUR-0001-01)',
+      },
+    },
+    {
       name: 'description',
       type: 'textarea',
     },
     {
+      name: 'storePrice',
+      type: 'number',
+      min: 0,
+      admin: {
+        description: 'Actual selling price in the store',
+      },
+    },
+    {
       name: 'price',
       type: 'number',
-      required: true,
+      defaultValue: 0,
       min: 0,
+      admin: {
+        description: 'Purchase cost (from Google Sheets)',
+      },
+    },
+    {
+      name: 'compareAtPrice',
+      type: 'number',
+      min: 0,
+      admin: {
+        description: 'Target price / strikethrough price',
+      },
+    },
+    {
+      name: 'status',
+      type: 'select',
+      options: [
+        { label: 'Disponibile', value: 'listed' },
+        { label: 'In Attesa', value: 'hold' },
+        { label: 'Venduto', value: 'sold' },
+      ],
+      defaultValue: 'listed',
     },
     {
       name: 'condition',
@@ -37,6 +74,7 @@ export const Products: CollectionConfig = {
         { label: 'Moderately Played', value: 'moderately-played' },
         { label: 'Heavily Played', value: 'heavily-played' },
         { label: 'Damaged', value: 'damaged' },
+        { label: 'Graded', value: 'graded' },
       ],
       defaultValue: 'near-mint',
     },
@@ -44,12 +82,22 @@ export const Products: CollectionConfig = {
       name: 'category',
       type: 'relationship',
       relationTo: 'categories',
-      required: true,
     },
     {
       name: 'collection',
       type: 'relationship',
       relationTo: 'collections',
+    },
+    {
+      name: 'language',
+      type: 'select',
+      options: [
+        { label: 'Italiano', value: 'italian' },
+        { label: 'Inglese', value: 'english' },
+        { label: 'Cinese', value: 'chinese' },
+        { label: 'Giapponese', value: 'japanese' },
+      ],
+      defaultValue: 'italian',
     },
     {
       name: 'cardNumber',
@@ -66,16 +114,6 @@ export const Products: CollectionConfig = {
         { label: 'Ultra Rare', value: 'ultra-rare' },
         { label: 'Secret Rare', value: 'secret-rare' },
       ],
-    },
-    {
-      name: 'language',
-      type: 'select',
-      options: [
-        { label: 'Italiano', value: 'italian' },
-        { label: 'Inglese', value: 'english' },
-        { label: 'Giapponese', value: 'japanese' },
-      ],
-      defaultValue: 'italian',
     },
     {
       name: 'quantity',
