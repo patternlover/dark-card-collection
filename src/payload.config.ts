@@ -37,10 +37,16 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI || '',
     },
   }),
-  plugins: [
-    vercelBlobStorage({
-      collections: { media: true },
-      token: process.env.BLOB_READ_WRITE_TOKEN || '',
-    }),
-  ],
+  plugins: (() => {
+    const blobToken = process.env.BLOB_READ_WRITE_TOKEN
+    if (blobToken && blobToken.startsWith('vercel_blob_rw_')) {
+      return [
+        vercelBlobStorage({
+          collections: { media: true },
+          token: blobToken,
+        }),
+      ]
+    }
+    return []
+  })(),
 })
