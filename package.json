@@ -5,37 +5,26 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "cross-env NODE_OPTIONS=\"--no-deprecation\" payload build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
-    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
-    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@payloadcms/db-postgres": "3.86.0",
-    "@payloadcms/next": "3.86.0",
-    "@payloadcms/richtext-lexical": "3.86.0",
-    "@payloadcms/storage-vercel-blob": "3.86.0",
     "@stripe/stripe-js": "9.10.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "26.1.1",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "clsx": "2.1.1",
-    "cross-env": "10.1.0",
-    "graphql": "^16.8.1",
     "lucide-react": "1.24.0",
     "next": "15.4.11",
-    "payload": "3.86.0",
     "postcss": "8.5.19",
     "react": "19.2.7",
     "react-dom": "19.2.7",
-
     "stripe": "22.3.2",
     "tailwind-merge": "3.6.0",
     "tailwindcss": "4.3.3",
-    "typescript": "7.0.2"
+    "typescript": "5.8.3"
   },
   "devDependencies": {
     "@types/react": "19.2.17",
