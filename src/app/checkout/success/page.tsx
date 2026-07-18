@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Loader2 } from 'lucide-react'
@@ -13,7 +13,7 @@ interface OrderItem {
   price: number
 }
 
-export default function CheckoutSuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const { clearCart } = useCart()
@@ -126,5 +126,22 @@ export default function CheckoutSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="bg-black">
+          <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
+            <Loader2 className="h-16 w-16 text-zinc-500 mx-auto mb-6 animate-spin" />
+            <h1 className="text-3xl font-bold text-white mb-4">Caricamento...</h1>
+          </div>
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   )
 }
