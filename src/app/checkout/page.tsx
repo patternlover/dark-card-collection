@@ -42,6 +42,7 @@ export default function CheckoutPage() {
             title: item.title,
             price: item.price,
             quantity: item.quantity,
+            image: item.image,
           })),
           shipping,
         }),
@@ -90,11 +91,18 @@ export default function CheckoutPage() {
           <h2 className="text-lg font-semibold text-white mb-4">Riepilogo</h2>
           <div className="space-y-3">
             {items.map((item) => (
-              <div key={item.id} className="flex justify-between text-sm">
-                <span className="text-zinc-400">
-                  {item.title} x{item.quantity}
-                </span>
-                <span className="text-white">€{(item.price * item.quantity).toFixed(2)}</span>
+              <div key={item.id} className="flex items-center gap-3 text-sm">
+                {item.image ? (
+                  <img src={item.image} alt={item.title} className="h-10 w-10 rounded object-cover" />
+                ) : (
+                  <div className="h-10 w-10 rounded bg-zinc-800" />
+                )}
+                <div className="flex-1 flex justify-between">
+                  <span className="text-zinc-400">
+                    {item.title} x{item.quantity}
+                  </span>
+                  <span className="text-white">€{(item.price * item.quantity).toFixed(2)}</span>
+                </div>
               </div>
             ))}
             <div className="border-t border-zinc-800 pt-3 flex justify-between text-sm">

@@ -8,7 +8,7 @@ import { useCart } from '@/hooks/useCart'
 import { trackPurchase } from '@/lib/analytics'
 
 interface OrderItem {
-  product: { title: string } | null
+  product: { title: string; image?: { url: string } | null } | null
   quantity: number
   price: number
 }
@@ -84,11 +84,18 @@ function SuccessContent() {
             </p>
             <div className="space-y-2 text-sm">
               {order.items.map((item, i) => (
-                <div key={i} className="flex justify-between">
-                  <span className="text-zinc-400">
-                    {item.product?.title || 'Prodotto'} x{item.quantity}
-                  </span>
-                  <span className="text-white">€{item.price.toFixed(2)}</span>
+                <div key={i} className="flex items-center gap-3">
+                  {item.product?.image?.url ? (
+                    <img src={item.product.image.url} alt={item.product?.title || ''} className="h-10 w-10 rounded object-cover" />
+                  ) : (
+                    <div className="h-10 w-10 rounded bg-zinc-800" />
+                  )}
+                  <div className="flex-1 flex justify-between">
+                    <span className="text-zinc-400">
+                      {item.product?.title || 'Prodotto'} x{item.quantity}
+                    </span>
+                    <span className="text-white">€{item.price.toFixed(2)}</span>
+                  </div>
                 </div>
               ))}
               <div className="border-t border-zinc-800 pt-2 flex justify-between font-medium">

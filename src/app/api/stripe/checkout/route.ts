@@ -16,11 +16,12 @@ export async function POST(req: Request) {
       )
     }
 
-    const lineItems = items.map((item: { title: string; price: number; quantity: number; id: number | string }) => ({
+    const lineItems = items.map((item: { title: string; price: number; quantity: number; id: number | string; image?: string | null }) => ({
       price_data: {
         currency: 'eur',
         product_data: {
           name: item.title,
+          ...(item.image ? { images: [item.image] } : {}),
           metadata: {
             payloadProductId: String(item.id),
           },
