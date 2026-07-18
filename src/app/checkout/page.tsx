@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import { CreditCard, Lock } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+import { trackBeginCheckout } from '@/lib/analytics'
 
 export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const { items, subtotal, shipping, total, clearCart } = useCart()
+  const { items, subtotal, shipping, total } = useCart()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -21,6 +22,17 @@ export default function CheckoutPage() {
     }
 
     try {
+      trackBeginCheckout(
+        items.map((item) => ({
+          item_id: String(item.id),
+          item_name: item.title,
+          price: item.price,
+          currency: 'EUR',
+          quantity: item.quantity,
+        })),
+        total,
+      )
+
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -31,13 +43,13 @@ export default function CheckoutPage() {
             price: item.price,
             quantity: item.quantity,
           })),
+          shipping,
         }),
       })
 
       const data = await res.json()
 
       if (data.url) {
-        clearCart()
         window.location.href = data.url
       } else {
         setError(data.error || 'Errore nel checkout')
