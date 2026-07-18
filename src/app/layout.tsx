@@ -4,6 +4,9 @@ import './globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { CartProvider } from '@/hooks/useCart'
+import { ConsentProvider } from '@/hooks/useConsent'
+import { AnalyticsProvider } from '@/components/layout/AnalyticsProvider'
+import { CookieConsent } from '@/components/ui/CookieConsent'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -38,13 +41,18 @@ export default function RootLayout({
   return (
     <html lang="it">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <CartProvider>
-          <Header />
-          <main className="min-h-screen">
-            {children}
-          </main>
-          <Footer />
-        </CartProvider>
+        <ConsentProvider>
+          <AnalyticsProvider>
+            <CartProvider>
+              <Header />
+              <main className="min-h-screen">
+                {children}
+              </main>
+              <Footer />
+              <CookieConsent />
+            </CartProvider>
+          </AnalyticsProvider>
+        </ConsentProvider>
       </body>
     </html>
   )

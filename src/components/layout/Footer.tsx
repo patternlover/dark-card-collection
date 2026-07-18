@@ -10,13 +10,17 @@ const footerLinks = {
     { label: 'FAQ', href: '/info/faq' },
     { label: 'Contatti', href: '/info/contact' },
   ],
+  legal: [
+    { label: 'Privacy Policy', href: '/info/privacy' },
+    { label: 'Termini e Condizioni', href: '/info/terms' },
+  ],
 }
 
 export function Footer() {
   return (
     <footer className="border-t border-zinc-800 bg-black">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block">
               <span className="text-xl font-bold tracking-tight text-white">
@@ -76,6 +80,24 @@ export function Footer() {
               <li>Spedizione tracciabile</li>
               <li>Prodotti 100% originali</li>
               <li>Supporto clienti dedicato</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-white">
+              Legale
+            </h3>
+            <ul className="mt-4 space-y-3">
+              {footerLinks.legal.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-zinc-500 transition-colors hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
