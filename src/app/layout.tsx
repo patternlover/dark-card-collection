@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: '%s | Dark Card Collection',
   },
   description: 'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://dark-card-collection.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'),
   openGraph: {
     title: 'Dark Card Collection',
     description: 'Negozio specializzato in prodotti Pokémon TCG sigillati.',

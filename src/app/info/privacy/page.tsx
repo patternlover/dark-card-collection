@@ -20,7 +20,7 @@ export default function PrivacyPage() {
             <p>
               Dark Card Collection (&quot;noi&quot;, &quot;nostro&quot;) &egrave; il titolare del trattamento dei dati
               personali raccolti tramite il sito{' '}
-              <span className="text-white">dark-card-collection.vercel.app</span> (&quot;Sito&quot;).
+              <span className="text-white">darkcardcollection.com</span> (&quot;Sito&quot;).
             </p>
           </section>
 

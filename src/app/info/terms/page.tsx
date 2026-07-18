@@ -18,7 +18,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-xl font-semibold text-white mb-3">1. Accettazione dei termini</h2>
             <p>
-              Accedendo e utilizzando il sito dark-card-collection.vercel.app (&quot;Sito&quot;),
+              Accedendo e utilizzando il sito darkcardcollection.com (&quot;Sito&quot;),
               accetti integralmente i presenti Termini e Condizioni. Se non sei d&apos;accordo
               con qualcuno di questi termini, ti preghiamo di non utilizzare il Sito.
             </p>

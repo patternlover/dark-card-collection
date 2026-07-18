@@ -4,8 +4,8 @@
 
 E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + PostgreSQL (Neon.io) + Stripe + Vercel.
 
-- **Live URL**: https://dark-card-collection.vercel.app
-- **Admin**: https://dark-card-collection.vercel.app/admin
+- **Live URL**: https://darkcardcollection.com
+- **Admin**: https://darkcardcollection.com/admin
 - **GitHub**: https://github.com/patternlover/dark-card-collection
 
 ## Tech Stack
@@ -25,7 +25,7 @@ E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + Postgre
 ```env
 DATABASE_URI=postgresql://neondb_owner:npg_xxx@ep-xxx.neon.tech/neondb?sslmode=require
 PAYLOAD_SECRET=442145e4b83f1b07d85efd0a068ba673c05f41d0de582f1f5f664a95745cdd55
-NEXT_PUBLIC_SITE_URL=https://dark-card-collection.vercel.app
+NEXT_PUBLIC_SITE_URL=https://darkcardcollection.com
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
@@ -187,7 +187,7 @@ Latest: `fbc33b7` (all on `origin/main`)
 
 The build command runs Payload migrations before building Next.js:
 ```
-payload generate:db-schema && payload migrate:create --force-accept-warning && payload migrate && next build
+payload generate:db-schema && payload migrate && next build
 ```
 
 This ensures DB schema is always in sync with Payload config on every deploy.
