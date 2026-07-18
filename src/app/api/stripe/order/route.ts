@@ -18,7 +18,7 @@ export async function GET(req: Request) {
     collection: 'orders',
     where: { stripeSessionId: { equals: sessionId } },
     limit: 1,
-    populate: ['items.product'],
+    depth: 1,
   })
 
   if (orders.docs.length === 0) {
