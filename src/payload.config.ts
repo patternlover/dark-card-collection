@@ -11,6 +11,7 @@ import { Collections } from './payload/collections/Collections'
 import { Orders } from './payload/collections/Orders'
 import { Users } from './payload/collections/Users'
 import { Media } from './payload/collections/Media'
+import { Messages } from './payload/collections/Messages'
 import { SiteSettings } from './payload/globals/SiteSettings'
 import { Header } from './payload/globals/Header'
 
@@ -25,7 +26,7 @@ export default buildConfig({
       importMapFile: './app/(payload)/admin/importMap.js',
     },
   },
-  collections: [Products, Categories, Collections, Orders, Users, Media],
+  collections: [Products, Categories, Collections, Orders, Users, Media, Messages],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || 'fallback-secret-key-change-me',

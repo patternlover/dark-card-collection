@@ -1,3 +1,10 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Chi Siamo',
+  description: 'Scopri chi siamo e la nostra passione per il Pokémon TCG.',
+}
+
 export default function AboutPage() {
   return (
     <div className="bg-black">

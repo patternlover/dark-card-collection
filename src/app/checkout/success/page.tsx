@@ -1,5 +1,11 @@
 import Link from 'next/link'
 import { CheckCircle } from 'lucide-react'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Ordine Completato',
+  description: 'Il tuo ordine è stato registrato con successo.',
+}
 
 export default function CheckoutSuccessPage() {
   return (

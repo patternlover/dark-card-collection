@@ -1,7 +1,13 @@
 import { getPayloadClient } from '@/lib/payload'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Collezioni',
+  description: 'Esplora le nostre collezioni di espansioni Pokémon TCG.',
+}
 
 export default async function CollectionsPage() {
   let collections: any[] = []

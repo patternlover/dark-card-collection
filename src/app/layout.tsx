@@ -16,8 +16,18 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Dark Card Collection | Pokémon TCG Sigillati',
+  title: {
+    default: 'Dark Card Collection | Pokémon TCG Sigillati',
+    template: '%s | Dark Card Collection',
+  },
   description: 'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro.',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://dark-card-collection.vercel.app'),
+  openGraph: {
+    title: 'Dark Card Collection',
+    description: 'Negozio specializzato in prodotti Pokémon TCG sigillati.',
+    type: 'website',
+    locale: 'it_IT',
+  },
 }
 
 export default function RootLayout({

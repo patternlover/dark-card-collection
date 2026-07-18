@@ -4,8 +4,33 @@ import { Badge } from '@/components/ui/Badge'
 import { ProductCard } from '@/components/product/ProductCard'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Truck, Shield, Package } from 'lucide-react'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const { slug } = await params
+  try {
+    const payload = await getPayloadClient()
+    const result = await payload.find({
+      collection: 'products',
+      where: { slug: { equals: slug } },
+      limit: 1,
+    })
+    const product = result.docs[0]
+    if (!product) return { title: 'Prodotto non trovato' }
+    return {
+      title: product.title,
+      description: product.description || `${product.title} - Dark Card Collection`,
+    }
+  } catch {
+    return { title: 'Prodotto' }
+  }
+}
 
 export default async function ProductPage({
   params,

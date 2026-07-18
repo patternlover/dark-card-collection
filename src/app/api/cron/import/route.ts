@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { getPayloadClient } from '@/lib/payload'
+
+function verifyCronAuth(request: Request): boolean {
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) return true
+  if (authHeader === `Bearer ${process.env.PAYLOAD_SECRET}`) return true
+
+  return false
+}
 
 const GOOGLE_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/1cVAh2HWPEGgYHKlJP4QbQ-zut2-2hoXpAiRw8iDuoiY/gviz/tq?tqx=out:csv&sheet=inventory'
@@ -42,14 +51,18 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!verifyCronAuth(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const response = await fetch(GOOGLE_SHEET_CSV_URL)
     if (!response.ok) throw new Error(`Failed to fetch CSV: ${response.statusText}`)
     const csvText = await response.text()
     const rows = parseCSV(csvText)
 
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
 
     let createdCategories = 0
     let createdCollections = 0

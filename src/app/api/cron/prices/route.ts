@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
+import { getPayloadClient } from '@/lib/payload'
+
+function verifyCronAuth(request: Request): boolean {
+  const authHeader = request.headers.get('authorization')
+  const cronSecret = process.env.CRON_SECRET
+
+  if (cronSecret && authHeader === `Bearer ${cronSecret}`) return true
+  if (authHeader === `Bearer ${process.env.PAYLOAD_SECRET}`) return true
+
+  return false
+}
 
 const GOOGLE_SHEET_SALES_URL =
   'https://docs.google.com/spreadsheets/d/1cVAh2HWPEGgYHKlJP4QbQ-zut2-2hoXpAiRw8iDuoiY/gviz/tq?tqx=out:csv&sheet=sales'
@@ -19,14 +28,18 @@ function parseCSV(text: string): Record<string, string>[] {
   })
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!verifyCronAuth(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const response = await fetch(GOOGLE_SHEET_SALES_URL)
     if (!response.ok) throw new Error(`Failed to fetch sales CSV: ${response.statusText}`)
     const csvText = await response.text()
     const salesRows = parseCSV(csvText)
 
-    const payload = await getPayload({ config })
+    const payload = await getPayloadClient()
 
     const priceMap = new Map<string, { total: number; count: number }>()
 

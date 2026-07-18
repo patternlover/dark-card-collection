@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
-import config from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayloadClient } from '@/lib/payload'
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -30,19 +29,53 @@ export async function POST(req: Request) {
     )
   }
 
-  const payload = await getPayload({ config })
+  const payload = await getPayloadClient()
 
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object
 
+      const existingOrders = await payload.find({
+        collection: 'orders',
+        where: { stripeSessionId: { equals: session.id } },
+        limit: 1,
+      })
+
+      if (existingOrders.docs.length > 0) {
+        console.log('Order already exists for session:', session.id)
+        break
+      }
+
       const lineItems = await stripe.checkout.sessions.listLineItems(session.id)
 
-      const orderItems = lineItems.data.map((item) => ({
-        product: item.price?.product,
-        quantity: item.quantity || 1,
-        price: (item.amount_total || 0) / 100,
-      }))
+      const orderItems = await Promise.all(
+        lineItems.data.map(async (item) => {
+          const stripeProductId = item.price?.product
+          let payloadProductId: number | null = null
+
+          if (typeof stripeProductId === 'string') {
+            const stripeProduct = await stripe.products.retrieve(stripeProductId)
+            const pid = stripeProduct.metadata?.payloadProductId
+
+            if (pid) {
+              const products = await payload.find({
+                collection: 'products',
+                where: { id: { equals: pid } },
+                limit: 1,
+              })
+              if (products.docs.length > 0) {
+                payloadProductId = products.docs[0]!.id as number
+              }
+            }
+          }
+
+          return {
+            product: payloadProductId || 0,
+            quantity: item.quantity || 1,
+            price: (item.amount_total || 0) / 100,
+          }
+        })
+      )
 
       await payload.create({
         collection: 'orders',

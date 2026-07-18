@@ -1,30 +1,43 @@
 import { getPayloadClient } from '@/lib/payload'
 import { ProductCard } from '@/components/product/ProductCard'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Shop',
+  description: 'Esplora il nostro catalogo di prodotti Pokémon TCG sigillati.',
+}
 
 export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; condition?: string; language?: string }>
+  searchParams: Promise<{ category?: string; condition?: string; language?: string; collection?: string; q?: string }>
 }) {
   const params = await searchParams
 
   let products: any[] = []
   let categories: any[] = []
+  let collections: any[] = []
 
   try {
     const payload = await getPayloadClient()
 
     const where: any = { status: { equals: 'listed' } }
     if (params.category) {
-      where.category = { equals: params.category }
+      where.category = { equals: Number(params.category) || params.category }
+    }
+    if (params.collection) {
+      where.collection = { equals: Number(params.collection) || params.collection }
     }
     if (params.condition) {
       where.condition = { equals: params.condition }
     }
     if (params.language) {
       where.language = { equals: params.language }
+    }
+    if (params.q) {
+      where.title = { contains: params.q }
     }
 
     const result = await payload.find({
@@ -41,6 +54,13 @@ export default async function ShopPage({
       sort: 'name',
     })
     categories = catResult.docs
+
+    const colResult = await payload.find({
+      collection: 'collections',
+      limit: 50,
+      sort: 'name',
+    })
+    collections = colResult.docs
   } catch {
     // DB might not be connected during build
   }
@@ -64,6 +84,26 @@ export default async function ShopPage({
 
         <div className="space-y-4 mb-8">
           <div>
+            <h3 className="text-sm font-medium text-zinc-400 mb-2">Ricerca</h3>
+            <form action="/shop" method="GET">
+              {(params.category || params.collection || params.condition || params.language) && (
+                <>
+                  {params.category && <input type="hidden" name="category" value={params.category} />}
+                  {params.collection && <input type="hidden" name="collection" value={params.collection} />}
+                  {params.condition && <input type="hidden" name="condition" value={params.condition} />}
+                  {params.language && <input type="hidden" name="language" value={params.language} />}
+                </>
+              )}
+              <input
+                type="text"
+                name="q"
+                defaultValue={params.q || ''}
+                placeholder="Cerca per nome..."
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white placeholder-zinc-500 focus:border-white focus:outline-none"
+              />
+            </form>
+          </div>
+          <div>
             <h3 className="text-sm font-medium text-zinc-400 mb-2">Condizione</h3>
             <div className="flex flex-wrap gap-2">
               <a href="/shop" className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.condition ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
@@ -72,7 +112,7 @@ export default async function ShopPage({
               {conditionFilters.map((f) => (
                 <a
                   key={f.id}
-                  href={`/shop?condition=${f.id}${params.category ? `&category=${params.category}` : ''}${params.language ? `&language=${params.language}` : ''}`}
+                  href={`/shop?condition=${f.id}${params.category ? `&category=${params.category}` : ''}${params.collection ? `&collection=${params.collection}` : ''}${params.language ? `&language=${params.language}` : ''}${params.q ? `&q=${params.q}` : ''}`}
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.condition === f.id ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
                 >
                   {f.label}
@@ -89,7 +129,7 @@ export default async function ShopPage({
               {languageFilters.map((f) => (
                 <a
                   key={f.id}
-                  href={`/shop?language=${f.id}${params.category ? `&category=${params.category}` : ''}${params.condition ? `&condition=${params.condition}` : ''}`}
+                  href={`/shop?language=${f.id}${params.category ? `&category=${params.category}` : ''}${params.collection ? `&collection=${params.collection}` : ''}${params.condition ? `&condition=${params.condition}` : ''}${params.q ? `&q=${params.q}` : ''}`}
                   className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.language === f.id ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
                 >
                   {f.label}
@@ -107,10 +147,29 @@ export default async function ShopPage({
                 {categories.map((cat: any) => (
                   <a
                     key={cat.id}
-                    href={`/shop?category=${cat.id}${params.condition ? `&condition=${params.condition}` : ''}${params.language ? `&language=${params.language}` : ''}`}
+                    href={`/shop?category=${cat.id}${params.condition ? `&condition=${params.condition}` : ''}${params.collection ? `&collection=${params.collection}` : ''}${params.language ? `&language=${params.language}` : ''}${params.q ? `&q=${params.q}` : ''}`}
                     className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.category === String(cat.id) ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
                   >
                     {cat.name}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+          {collections.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-zinc-400 mb-2">Collezione</h3>
+              <div className="flex flex-wrap gap-2">
+                <a href="/shop" className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.collection ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
+                  Tutti
+                </a>
+                {collections.map((col: any) => (
+                  <a
+                    key={col.id}
+                    href={`/shop?collection=${col.id}${params.condition ? `&condition=${params.condition}` : ''}${params.language ? `&language=${params.language}` : ''}${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.collection === String(col.id) ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
+                  >
+                    {col.name}
                   </a>
                 ))}
               </div>
