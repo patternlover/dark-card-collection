@@ -181,4 +181,13 @@ Headers: `sale_id, item_id, listing_date, sale_date, platform, unitary_gross_pri
 
 ## Git Commits
 
-Latest: `25f3ff3` (all on `origin/main`)
+Latest: `fbc33b7` (all on `origin/main`)
+
+## Build Process
+
+The build command runs Payload migrations before building Next.js:
+```
+payload generate:db-schema && payload migrate:create --force-accept-warning && payload migrate && next build
+```
+
+This ensures DB schema is always in sync with Payload config on every deploy.
