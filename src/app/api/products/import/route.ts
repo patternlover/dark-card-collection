@@ -189,13 +189,15 @@ export async function POST(request: Request) {
           collection: 'products',
           id: existingProduct.docs[0]!.id,
           data: productData,
-        })
+          draft: false,
+        } as any)
         updatedProducts++
       } else {
         await payload.create({
           collection: 'products',
           data: productData,
-        })
+          draft: false,
+        } as any)
         createdProducts++
       }
     }
