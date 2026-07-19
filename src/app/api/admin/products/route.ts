@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const collection = sp.get('collection') || ''
   const withImage = sp.get('withImage') || ''
   const page = parseInt(sp.get('page') || '1')
-  const limit = parseInt(sp.get('limit') || '50')
+  const limit = parseInt(sp.get('limit') || '500')
 
   try {
     const payload = await getPayloadClient()

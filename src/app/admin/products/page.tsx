@@ -1,9 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { EditProductModal } from '@/components/admin/EditProductModal'
+import { ProductGroupRow } from '@/components/admin/ProductGroupRow'
+import { groupProducts } from '@/lib/group-products'
 
 interface Product {
   id: number
@@ -60,14 +62,15 @@ export default function AdminProductsPage() {
   const [category, setCategory] = useState('')
   const [collection, setCollection] = useState('')
   const [withImage, setWithImage] = useState('')
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+
+  const groups = useMemo(() => groupProducts(products), [products])
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams()
       params.set('page', String(page))
-      params.set('limit', '50')
+      params.set('limit', '500')
       if (search) params.set('search', search)
       if (status) params.set('status', status)
       if (category) params.set('category', category)
@@ -104,11 +107,6 @@ export default function AdminProductsPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setPage(1)
-  }
-
-  const handleProductSaved = (updated: Product) => {
-    setProducts(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p))
-    setEditingProduct(null)
   }
 
   if (!authenticated) {
@@ -218,7 +216,7 @@ export default function AdminProductsPage() {
         </div>
 
         <div className="mb-4 text-sm text-zinc-500">
-          {total} prodott{total === 1 ? 'o' : 'i'} trovati
+          {total} prodott{total === 1 ? 'o' : 'i'} ({groups.length} {groups.length === 1 ? 'gruppo' : 'gruppi'})
         </div>
 
         {loading ? (
@@ -230,57 +228,27 @@ export default function AdminProductsPage() {
                 <tr className="border-b border-zinc-800 text-left">
                   <th className="px-4 py-3 text-zinc-500 font-medium w-16"></th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Prodotto</th>
-                  <th className="px-4 py-3 text-zinc-500 font-medium">Item ID</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Categoria</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Collezione</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Prezzo</th>
+                  <th className="px-4 py-3 text-zinc-500 font-medium">Varianti</th>
+                  <th className="px-4 py-3 text-zinc-500 font-medium">Qta</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Stato</th>
-                  <th className="px-4 py-3 text-zinc-500 font-medium">Lingua</th>
+                  <th className="px-4 py-3 w-8"></th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((p) => (
-                  <tr key={p.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors cursor-pointer" onClick={() => setEditingProduct(p)}>
-                    <td className="px-4 py-3">
-                      {proxyImageUrl(p.imageUrl) ? (
-                        <img
-                          src={proxyImageUrl(p.imageUrl)!}
-                          alt={p.title}
-                          className="h-10 w-10 rounded object-cover"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 rounded bg-zinc-800 flex items-center justify-center text-zinc-600 text-xs">
-                          -
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link href={`/products/${p.slug}`} className="text-white hover:text-zinc-300 transition-colors">
-                        {p.title}
-                      </Link>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400 font-mono text-xs">{p.itemId}</td>
-                    <td className="px-4 py-3 text-zinc-400">{p.category?.name || '-'}</td>
-                    <td className="px-4 py-3 text-zinc-400">{p.collection?.name || '-'}</td>
-                    <td className="px-4 py-3 text-white font-medium">
-                      {p.storePrice && p.storePrice > 0 ? `€${p.storePrice.toFixed(2)}` : '-'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-                        p.status === 'listed' ? 'bg-green-900/50 text-green-400' :
-                        p.status === 'hold' ? 'bg-yellow-900/50 text-yellow-400' :
-                        'bg-zinc-800 text-zinc-400'
-                      }`}>
-                        {p.status === 'listed' ? 'Disponibile' : p.status === 'hold' ? 'In Attesa' : p.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-zinc-400 text-xs">{p.language || '-'}</td>
-                  </tr>
+                {groups.map((group) => (
+                  <ProductGroupRow
+                    key={group.title}
+                    group={group}
+                    password={password}
+                    onProductUpdated={fetchProducts}
+                  />
                 ))}
-                {products.length === 0 && (
+                {groups.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-12 text-center text-zinc-500">
+                    <td colSpan={9} className="px-4 py-12 text-center text-zinc-500">
                       Nessun prodotto trovato
                     </td>
                   </tr>
@@ -310,15 +278,6 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
-
-      {editingProduct && (
-        <EditProductModal
-          product={editingProduct}
-          password={password}
-          onClose={() => setEditingProduct(null)}
-          onSaved={handleProductSaved}
-        />
-      )}
     </div>
   )
 }

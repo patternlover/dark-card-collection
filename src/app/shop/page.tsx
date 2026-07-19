@@ -1,5 +1,6 @@
 import { getPayloadClient } from '@/lib/payload'
-import { ProductCard } from '@/components/product/ProductCard'
+import { ProductGroupCard } from '@/components/product/ProductGroupCard'
+import { groupProducts } from '@/lib/group-products'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -186,8 +187,8 @@ export default async function ShopPage({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {groupProducts(products).map((group) => (
+              <ProductGroupCard key={group.title} group={group} />
             ))}
           </div>
         )}

@@ -79,7 +79,7 @@ export default async function ProductPage({
 
   if (!product) notFound()
 
-  const displayPrice = product.storePrice || product.price || 0
+  const displayPrice = product.storePrice || 0
 
   const statusLabels: Record<string, string> = {
     listed: 'Disponibile',
@@ -144,11 +144,6 @@ export default async function ProductPage({
               <span className="text-3xl font-bold text-white">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
               </span>
-              {product.compareAtPrice && product.compareAtPrice > displayPrice && (
-                <span className="text-lg text-zinc-500 line-through">
-                  €{product.compareAtPrice.toFixed(2)}
-                </span>
-              )}
             </div>
 
             <div className="flex gap-4 text-sm text-zinc-400">

@@ -37,7 +37,7 @@ export function ProductCard({ product }: ProductCardProps) {
     sold: 'Venduto',
   }
 
-  const displayPrice = product.storePrice || product.price || 0
+  const displayPrice = product.storePrice || 0
   const imgUrl = proxyImageUrl(getProductImage(product))
 
   return (
@@ -85,11 +85,6 @@ export function ProductCard({ product }: ProductCardProps) {
             <span className="text-lg font-bold text-white">
               {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
             </span>
-            {product.compareAtPrice && product.compareAtPrice > displayPrice && (
-              <span className="text-sm text-zinc-500 line-through">
-                €{product.compareAtPrice.toFixed(2)}
-              </span>
-            )}
           </div>
           <div className="mt-1 flex gap-2">
             <span className="text-[10px] uppercase text-zinc-600">{product.language}</span>

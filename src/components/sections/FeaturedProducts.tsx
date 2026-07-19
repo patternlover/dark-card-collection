@@ -1,5 +1,6 @@
 import { getPayloadClient } from '@/lib/payload'
-import { ProductCard } from '@/components/product/ProductCard'
+import { ProductGroupCard } from '@/components/product/ProductGroupCard'
+import { groupProducts } from '@/lib/group-products'
 
 export async function FeaturedProducts() {
   let products: any[] = []
@@ -17,6 +18,8 @@ export async function FeaturedProducts() {
     // DB might not be connected during build
   }
 
+  const groups = groupProducts(products)
+
   return (
     <section className="bg-black py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -30,7 +33,7 @@ export async function FeaturedProducts() {
           </a>
         </div>
 
-        {products.length === 0 ? (
+        {groups.length === 0 ? (
           <div className="mt-8 text-center">
             <p className="text-zinc-500">Nessun prodotto disponibile al momento.</p>
             <p className="mt-2 text-sm text-zinc-600">
@@ -39,8 +42,8 @@ export async function FeaturedProducts() {
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {groups.map((group) => (
+              <ProductGroupCard key={group.title} group={group} />
             ))}
           </div>
         )}

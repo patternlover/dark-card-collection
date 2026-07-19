@@ -61,8 +61,6 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
     itemId: product.itemId || '',
     description: product.description || '',
     storePrice: product.storePrice ?? '',
-    price: product.price ?? '',
-    compareAtPrice: product.compareAtPrice ?? '',
     status: product.status || 'listed',
     condition: product.condition || 'near-mint',
     language: product.language || 'italian',
@@ -97,8 +95,6 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
     payload.itemId = form.itemId
     payload.description = form.description || null
     payload.storePrice = form.storePrice === '' ? null : Number(form.storePrice)
-    payload.price = form.price === '' ? 0 : Number(form.price)
-    payload.compareAtPrice = form.compareAtPrice === '' ? null : Number(form.compareAtPrice)
     payload.status = form.status
     payload.condition = form.condition
     payload.language = form.language
@@ -181,40 +177,16 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs text-zinc-500 mb-1">Prezzo Store (€)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.storePrice}
-                onChange={(e) => handleChange('storePrice', e.target.value)}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-zinc-500 mb-1">Prezzo Acquisto (€)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.price}
-                onChange={(e) => handleChange('price', e.target.value)}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-zinc-500 mb-1">Prezzo Listino (€)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.compareAtPrice}
-                onChange={(e) => handleChange('compareAtPrice', e.target.value)}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
-              />
-            </div>
+          <div>
+            <label className="block text-xs text-zinc-500 mb-1">Prezzo Vendita (€)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.storePrice}
+              onChange={(e) => handleChange('storePrice', e.target.value)}
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+            />
           </div>
 
           <div className="grid grid-cols-3 gap-4">

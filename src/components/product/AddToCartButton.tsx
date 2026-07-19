@@ -24,7 +24,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
   const [added, setAdded] = useState(false)
   const { addItem } = useCart()
 
-  const displayPrice = product.storePrice || product.price || 0
+  const displayPrice = product.storePrice || 0
 
   const handleAdd = () => {
     if (displayPrice <= 0 || product.status !== 'listed') return
