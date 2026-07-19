@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { syncInventory } from './actions'
 
 interface SyncResult {
   success?: boolean
@@ -24,13 +25,7 @@ export default function SyncPage() {
     setResult(null)
 
     try {
-      const res = await fetch('/api/products/import', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_PAYLOAD_SECRET || ''}`,
-        },
-      })
-      const data = await res.json()
+      const data = await syncInventory()
       setResult(data)
       if (data.success) {
         setLastSync(new Date().toLocaleString('it-IT'))
