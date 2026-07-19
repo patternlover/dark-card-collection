@@ -105,6 +105,7 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div>
             <ProductGallery
+              imageUrl={product.imageUrl}
               images={product.images || []}
               fallbackImage={product.image}
               alt={product.title}

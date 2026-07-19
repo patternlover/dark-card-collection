@@ -3,19 +3,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { proxyImageUrl } from '@/lib/proxy-image'
+import { EditProductModal } from '@/components/admin/EditProductModal'
 
 interface Product {
   id: number
   title: string
   slug: string
   itemId: string
+  description: string | null
+  storePrice: number | null
+  price: number | null
+  compareAtPrice: number | null
   status: string
   condition: string
-  storePrice: number
-  price: number
-  imageUrl: string | null
   language: string
   quantity: number
+  imageUrl: string | null
+  featured: boolean
+  cardNumber: string | null
+  rarity: string | null
   category: { id: number; name: string } | null
   collection: { id: number; name: string } | null
 }
@@ -54,6 +60,7 @@ export default function AdminProductsPage() {
   const [category, setCategory] = useState('')
   const [collection, setCollection] = useState('')
   const [withImage, setWithImage] = useState('')
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
 
   const fetchProducts = useCallback(async () => {
     setLoading(true)
@@ -97,6 +104,11 @@ export default function AdminProductsPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     setPage(1)
+  }
+
+  const handleProductSaved = (updated: Product) => {
+    setProducts(prev => prev.map(p => p.id === updated.id ? { ...p, ...updated } : p))
+    setEditingProduct(null)
   }
 
   if (!authenticated) {
@@ -228,7 +240,7 @@ export default function AdminProductsPage() {
               </thead>
               <tbody>
                 {products.map((p) => (
-                  <tr key={p.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors">
+                  <tr key={p.id} className="border-b border-zinc-800/50 hover:bg-zinc-900/50 transition-colors cursor-pointer" onClick={() => setEditingProduct(p)}>
                     <td className="px-4 py-3">
                       {proxyImageUrl(p.imageUrl) ? (
                         <img
@@ -252,7 +264,7 @@ export default function AdminProductsPage() {
                     <td className="px-4 py-3 text-zinc-400">{p.category?.name || '-'}</td>
                     <td className="px-4 py-3 text-zinc-400">{p.collection?.name || '-'}</td>
                     <td className="px-4 py-3 text-white font-medium">
-                      {p.storePrice > 0 ? `€${p.storePrice.toFixed(2)}` : '-'}
+                      {p.storePrice && p.storePrice > 0 ? `€${p.storePrice.toFixed(2)}` : '-'}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -298,6 +310,15 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {editingProduct && (
+        <EditProductModal
+          product={editingProduct}
+          password={password}
+          onClose={() => setEditingProduct(null)}
+          onSaved={handleProductSaved}
+        />
+      )}
     </div>
   )
 }
