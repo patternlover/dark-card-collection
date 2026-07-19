@@ -31,22 +31,39 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export async function syncInventory(): Promise<{
+export async function syncInventory(password: string): Promise<{
   success: boolean
+  authenticated?: boolean
   categories?: number
   collections?: number
   productsCreated?: number
   productsUpdated?: number
   imagesUploaded?: number
   skipped?: number
+  imageErrors?: string[]
+  debug?: string[]
   error?: string
   details?: string
 }> {
+  if (password !== process.env.SYNC_PASSWORD && password !== process.env.PAYLOAD_SECRET) {
+    return { success: false, authenticated: false, error: 'Password non valida' }
+  }
+
+  const debug: string[] = []
+
   try {
     const response = await fetch(GOOGLE_SHEET_CSV_URL)
     if (!response.ok) throw new Error(`Failed to fetch CSV: ${response.statusText}`)
     const csvText = await response.text()
     const rows = parseCSV(csvText)
+
+    debug.push(`Parsed ${rows.length} rows from CSV`)
+
+    if (rows.length > 0) {
+      const sample = rows[0]!
+      debug.push(`Sample row keys: ${Object.keys(sample).join(', ')}`)
+      debug.push(`Sample image_url: "${sample['image_url'] || '(empty)'}"`)
+    }
 
     const payload = await getPayload({ config })
 
@@ -56,6 +73,7 @@ export async function syncInventory(): Promise<{
     let updatedProducts = 0
     let skippedRows = 0
     let imagesUploaded = 0
+    const imageErrors: string[] = []
 
     for (const row of rows) {
       const itemId = row['item_id'] || row['item id'] || ''
@@ -127,10 +145,26 @@ export async function syncInventory(): Promise<{
       }
 
       const currentImageCount = existingProduct.docs.length > 0
-        ? ((existingProduct.docs[0] as any).images?.length || 0)
+        ? ((existingProduct.docs[0] as any).images?.length ?? 0)
         : 0
 
-      const imageResult = await importProductImages(payload, imageUrlRaw, productName, currentImageCount)
+      if (imageUrlRaw && debug.length < 10) {
+        debug.push(`${itemId}: imageUrlRaw="${imageUrlRaw}", currentImages=${currentImageCount}`)
+      }
+
+      let imageResult = { mediaIds: [] as (string | number)[], uploaded: 0, errors: [] as string[] }
+
+      if (currentImageCount === 0) {
+        imageResult = await importProductImages(payload, imageUrlRaw, productName, currentImageCount)
+      } else if (imageUrlRaw && debug.length < 15) {
+        debug.push(`${itemId}: already has ${currentImageCount} image(s), skipping upload`)
+      }
+
+      if (imageResult.errors.length > 0) {
+        for (const err of imageResult.errors) {
+          imageErrors.push(`${itemId}: ${err}`)
+        }
+      }
 
       if (imageResult.uploaded > 0) {
         const existingImages = existingProduct.docs.length > 0
@@ -154,14 +188,17 @@ export async function syncInventory(): Promise<{
 
     return {
       success: true,
+      authenticated: true,
       categories: createdCategories,
       collections: createdCollections,
       productsCreated: createdProducts,
       productsUpdated: updatedProducts,
       imagesUploaded,
       skipped: skippedRows,
+      imageErrors,
+      debug,
     }
   } catch (error) {
-    return { success: false, error: 'Import failed', details: String(error) }
+    return { success: false, authenticated: true, error: 'Import failed', details: String(error), debug }
   }
 }

@@ -94,15 +94,7 @@ export async function importProductImages(
   const urls = parseImageUrls(imageUrlRaw)
   if (urls.length === 0) return result
 
-  // If product already has enough images, skip
-  if (currentImageCount >= urls.length) {
-    return result
-  }
-
-  // Only upload images that are missing
-  const urlsToUpload = urls.slice(currentImageCount)
-
-  for (const url of urlsToUpload) {
+  for (const url of urls) {
     try {
       const { buffer, filename, mimetype } = await downloadImage(url)
 
