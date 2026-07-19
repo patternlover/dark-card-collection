@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
 import { importProductImages, buildImagesField } from '@/lib/image-import'
+import { parseCSV } from '@/lib/parse-csv'
 
 function verifyCronAuth(request: Request): boolean {
   const authHeader = request.headers.get('authorization')
@@ -32,20 +33,6 @@ const LANGUAGE_MAP: Record<string, string> = {
   ITA: 'italian',
   ENG: 'english',
   CIN: 'chinese',
-}
-
-function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.trim().split('\n')
-  if (lines.length < 2) return []
-  const headers = lines[0]!.split(',').map((h) => h.trim().replace(/^"|"$/g, ''))
-  return lines.slice(1).map((line) => {
-    const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''))
-    const row: Record<string, string> = {}
-    headers.forEach((header, i) => {
-      row[header] = values[i] || ''
-    })
-    return row
-  })
 }
 
 function slugify(text: string): string {

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { importProductImages, buildImagesField } from '@/lib/image-import'
+import { parseCSV } from '@/lib/parse-csv'
 
 const GOOGLE_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/1cVAh2HWPEGgYHKlJP4QbQ-zut2-2hoXpAiRw8iDuoiY/gviz/tq?tqx=out:csv&sheet=inventory'
@@ -23,22 +24,6 @@ const LANGUAGE_MAP: Record<string, string> = {
   ITA: 'italian',
   ENG: 'english',
   CIN: 'chinese',
-}
-
-function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.trim().split('\n')
-  if (lines.length < 2) return []
-
-  const headers = lines[0]!.split(',').map((h) => h.trim().replace(/^"|"$/g, ''))
-
-  return lines.slice(1).map((line) => {
-    const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''))
-    const row: Record<string, string> = {}
-    headers.forEach((header, i) => {
-      row[header] = values[i] || ''
-    })
-    return row
-  })
 }
 
 function slugify(text: string): string {
