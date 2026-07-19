@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { trackPurchase } from '@/lib/analytics'
+import { proxyImageUrl } from '@/lib/proxy-image'
 
 interface OrderItem {
   product: { title: string; imageUrl?: string | null; images?: Array<{ image?: { url: string } | null }>; image?: { url: string } | null } | null
@@ -85,12 +86,8 @@ function SuccessContent() {
             <div className="space-y-2 text-sm">
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  {item.product?.imageUrl ? (
-                    <img src={item.product.imageUrl} alt={item.product?.title || ''} className="h-10 w-10 rounded object-cover" />
-                  ) : item.product?.images?.[0]?.image?.url ? (
-                    <img src={item.product.images[0].image.url} alt={item.product?.title || ''} className="h-10 w-10 rounded object-cover" />
-                  ) : item.product?.image?.url ? (
-                    <img src={item.product.image.url} alt={item.product?.title || ''} className="h-10 w-10 rounded object-cover" />
+                  {proxyImageUrl(item.product?.imageUrl || item.product?.images?.[0]?.image?.url || item.product?.image?.url) ? (
+                    <img src={proxyImageUrl(item.product?.imageUrl || item.product?.images?.[0]?.image?.url || item.product?.image?.url)!} alt={item.product?.title || ''} className="h-10 w-10 rounded object-cover" />
                   ) : (
                     <div className="h-10 w-10 rounded bg-zinc-800" />
                   )}

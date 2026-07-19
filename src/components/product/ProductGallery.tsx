@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { proxyImageUrl } from '@/lib/proxy-image'
 
 interface ProductGalleryProps {
   imageUrl?: string | null
@@ -12,15 +13,18 @@ interface ProductGalleryProps {
 export function ProductGallery({ imageUrl, images, fallbackImage, alt = '' }: ProductGalleryProps) {
   const allUrls: string[] = []
 
-  if (imageUrl) allUrls.push(imageUrl)
+  const primary = proxyImageUrl(imageUrl)
+  if (primary) allUrls.push(primary)
 
   for (const img of images) {
     const url = typeof img === 'object' && img?.image?.url ? img.image.url : null
-    if (url && !allUrls.includes(url)) allUrls.push(url)
+    const proxied = proxyImageUrl(url)
+    if (proxied && !allUrls.includes(proxied)) allUrls.push(proxied)
   }
 
-  if (fallbackImage?.url && !allUrls.includes(fallbackImage.url)) {
-    allUrls.push(fallbackImage.url)
+  const fallbackUrl = proxyImageUrl(fallbackImage?.url)
+  if (fallbackUrl && !allUrls.includes(fallbackUrl)) {
+    allUrls.push(fallbackUrl)
   }
 
   const [selectedIndex, setSelectedIndex] = useState(0)

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
+import { proxyImageUrl } from '@/lib/proxy-image'
 
 interface Product {
   id: number | string
@@ -37,7 +38,7 @@ export function ProductCard({ product }: ProductCardProps) {
   }
 
   const displayPrice = product.storePrice || product.price || 0
-  const imgUrl = getProductImage(product)
+  const imgUrl = proxyImageUrl(getProductImage(product))
 
   return (
     <Link

@@ -30,7 +30,14 @@ function slugify(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
-export async function syncInventory(password: string): Promise<{
+export interface SyncFilters {
+  skipSold?: boolean
+  skipHold?: boolean
+  onlyWithImage?: boolean
+  onlyListed?: boolean
+}
+
+export async function syncInventory(password: string, filters?: SyncFilters): Promise<{
   success: boolean
   authenticated?: boolean
   categories?: number
@@ -39,6 +46,8 @@ export async function syncInventory(password: string): Promise<{
   productsUpdated?: number
   imagesUploaded?: number
   skipped?: number
+  totalRows?: number
+  filteredOut?: number
   imageErrors?: string[]
   debug?: string[]
   error?: string
@@ -49,6 +58,12 @@ export async function syncInventory(password: string): Promise<{
   }
 
   const debug: string[] = []
+  const skipSold = filters?.skipSold ?? true
+  const skipHold = filters?.skipHold ?? false
+  const onlyWithImage = filters?.onlyWithImage ?? false
+  const onlyListed = filters?.onlyListed ?? false
+
+  debug.push(`Filters: skipSold=${skipSold} skipHold=${skipHold} onlyWithImage=${onlyWithImage} onlyListed=${onlyListed}`)
 
   try {
     const response = await fetch(GOOGLE_SHEET_CSV_URL)
@@ -71,6 +86,7 @@ export async function syncInventory(password: string): Promise<{
     let createdProducts = 0
     let updatedProducts = 0
     let skippedRows = 0
+    let filteredOut = 0
     let imagesUploaded = 0
     const imageErrors: string[] = []
 
@@ -81,14 +97,18 @@ export async function syncInventory(password: string): Promise<{
       const language = row['language'] || ''
       const set = row['set'] || ''
       const condition = row['condition'] || ''
-      const productState = row['product_state'] || row['product state'] || ''
+      const productState = (row['product_state'] || row['product state'] || '').trim()
       const storePriceRaw = row['store_price'] || row['store price'] || ''
       const targetPriceRaw = row['target_price'] || row['target price'] || ''
       const purchasePriceRaw = row['unitary_gross_price'] || row['unitary gross price'] || ''
       const imageUrlRaw = row['image_url'] || row['image url'] || ''
 
       if (!itemId || !productName) { skippedRows++; continue }
-      if (productState.toUpperCase() === 'SOLD') { skippedRows++; continue }
+
+      if (skipSold && productState.toUpperCase() === 'SOLD') { filteredOut++; continue }
+      if (skipHold && productState.toUpperCase() === 'HOLD') { filteredOut++; continue }
+      if (onlyWithImage && !imageUrlRaw) { filteredOut++; continue }
+      if (onlyListed && productState.toUpperCase() !== 'AVAILABLE' && productState.toUpperCase() !== 'HOLD' && productState.toUpperCase() !== '') { filteredOut++; continue }
 
       let categoryId: string | number | null = null
       if (category) {
@@ -144,15 +164,15 @@ export async function syncInventory(password: string): Promise<{
         imageUrl: imageUrlRaw || undefined,
       }
 
-      if (imageUrlRaw && debug.length < 10) {
+      if (imageUrlRaw && debug.length < 15) {
         debug.push(`${itemId}: imageUrl="${imageUrlRaw}"`)
       }
 
       if (existingProduct.docs.length > 0) {
-        await payload.update({ collection: 'products', id: existingProduct.docs[0]!.id, data: productData })
+        await payload.update({ collection: 'products', id: existingProduct.docs[0]!.id, data: productData as any, draft: false })
         updatedProducts++
       } else {
-        await payload.create({ collection: 'products', data: productData })
+        await payload.create({ collection: 'products', data: productData as any, draft: false })
         createdProducts++
       }
       imagesUploaded += imageUrlRaw ? 1 : 0
@@ -167,6 +187,8 @@ export async function syncInventory(password: string): Promise<{
       productsUpdated: updatedProducts,
       imagesUploaded,
       skipped: skippedRows,
+      filteredOut,
+      totalRows: rows.length,
       imageErrors,
       debug,
     }

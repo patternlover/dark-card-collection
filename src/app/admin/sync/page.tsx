@@ -12,10 +12,19 @@ interface SyncResult {
   productsUpdated?: number
   imagesUploaded?: number
   skipped?: number
+  filteredOut?: number
+  totalRows?: number
   imageErrors?: string[]
   debug?: string[]
   error?: string
   details?: string
+}
+
+interface SyncFilters {
+  skipSold: boolean
+  skipHold: boolean
+  onlyWithImage: boolean
+  onlyListed: boolean
 }
 
 export default function SyncPage() {
@@ -25,6 +34,12 @@ export default function SyncPage() {
   const [result, setResult] = useState<SyncResult | null>(null)
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [authError, setAuthError] = useState(false)
+  const [filters, setFilters] = useState<SyncFilters>({
+    skipSold: true,
+    skipHold: false,
+    onlyWithImage: false,
+    onlyListed: false,
+  })
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,7 +52,7 @@ export default function SyncPage() {
     setResult(null)
 
     try {
-      const data = await syncInventory(password)
+      const data = await syncInventory(password, filters)
       setResult(data)
       if (data.authenticated === false) {
         setAuthError(true)
@@ -52,6 +67,10 @@ export default function SyncPage() {
     } finally {
       setSyncing(false)
     }
+  }
+
+  const toggleFilter = (key: keyof SyncFilters) => {
+    setFilters(prev => ({ ...prev, [key]: !prev[key] }))
   }
 
   if (!authenticated) {
@@ -97,6 +116,31 @@ export default function SyncPage() {
           Importa e aggiorna i prodotti dal Google Sheet
         </p>
 
+        <div className="rounded-lg border border-zinc-800 p-6 mb-6">
+          <h2 className="text-sm font-medium text-zinc-300 mb-4">Filtri Import</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { key: 'skipSold' as const, label: 'Escludi SOLD', desc: 'Non importare prodotti venduti' },
+              { key: 'skipHold' as const, label: 'Escludi HOLD', desc: 'Non importare prodotti in attesa' },
+              { key: 'onlyWithImage' as const, label: 'Solo con immagine', desc: 'Solo prodotti con image_url' },
+              { key: 'onlyListed' as const, label: 'Solo disponibili', desc: 'Solo stati disponibili' },
+            ].map(({ key, label, desc }) => (
+              <label key={key} className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={filters[key]}
+                  onChange={() => toggleFilter(key)}
+                  className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-white focus:ring-white"
+                />
+                <div>
+                  <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{label}</span>
+                  <p className="text-xs text-zinc-500">{desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <button
           onClick={handleSync}
           disabled={syncing}
@@ -126,6 +170,14 @@ export default function SyncPage() {
                 <h2 className="text-lg font-semibold text-green-400 mb-4">Completato</h2>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
+                    <span className="text-zinc-500">Righe totali:</span>{' '}
+                    <span className="font-medium">{result.totalRows || 0}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500">Filtrate fuori:</span>{' '}
+                    <span className="font-medium">{result.filteredOut || 0}</span>
+                  </div>
+                  <div>
                     <span className="text-zinc-500">Categorie create:</span>{' '}
                     <span className="font-medium">{result.categories || 0}</span>
                   </div>
@@ -142,13 +194,13 @@ export default function SyncPage() {
                     <span className="font-medium">{result.productsUpdated || 0}</span>
                   </div>
                   <div>
-                    <span className="text-zinc-500">Immagini caricate:</span>{' '}
+                    <span className="text-zinc-500">Con immagine:</span>{' '}
                     <span className={`font-medium ${result.imagesUploaded === 0 ? 'text-red-400' : 'text-green-400'}`}>
                       {result.imagesUploaded || 0}
                     </span>
                   </div>
                   <div>
-                    <span className="text-zinc-500">Righe saltate:</span>{' '}
+                    <span className="text-zinc-500">Righe saltate (dati mancanti):</span>{' '}
                     <span className="font-medium">{result.skipped || 0}</span>
                   </div>
                 </div>
