@@ -2,7 +2,6 @@
 
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import { importProductImages, buildImagesField } from '@/lib/image-import'
 import { parseCSV } from '@/lib/parse-csv'
 
 const GOOGLE_SHEET_CSV_URL =
@@ -142,39 +141,11 @@ export async function syncInventory(password: string): Promise<{
         collection: collectionId,
         language: LANGUAGE_MAP[language.toUpperCase()] || 'italian',
         quantity: 1,
+        imageUrl: imageUrlRaw || undefined,
       }
-
-      const currentImageCount = existingProduct.docs.length > 0
-        ? ((existingProduct.docs[0] as any).images?.length ?? 0)
-        : 0
 
       if (imageUrlRaw && debug.length < 10) {
-        debug.push(`${itemId}: imageUrlRaw="${imageUrlRaw}", currentImages=${currentImageCount}`)
-      }
-
-      let imageResult = { mediaIds: [] as (string | number)[], uploaded: 0, errors: [] as string[] }
-
-      if (currentImageCount === 0) {
-        imageResult = await importProductImages(payload, imageUrlRaw, productName, currentImageCount)
-      } else if (imageUrlRaw && debug.length < 15) {
-        debug.push(`${itemId}: already has ${currentImageCount} image(s), skipping upload`)
-      }
-
-      if (imageResult.errors.length > 0) {
-        for (const err of imageResult.errors) {
-          imageErrors.push(`${itemId}: ${err}`)
-        }
-      }
-
-      if (imageResult.uploaded > 0) {
-        const existingImages = existingProduct.docs.length > 0
-          ? (((existingProduct.docs[0] as any).images?.map((img: any) => typeof img === 'object' ? img.image : img) || []) as (number | null)[])
-          : []
-        const allImageIds = [...existingImages, ...imageResult.mediaIds].filter(
-          (id): id is string | number => id !== null && id !== undefined,
-        )
-        productData.images = buildImagesField(allImageIds)
-        imagesUploaded += imageResult.uploaded
+        debug.push(`${itemId}: imageUrl="${imageUrlRaw}"`)
       }
 
       if (existingProduct.docs.length > 0) {
@@ -184,6 +155,7 @@ export async function syncInventory(password: string): Promise<{
         await payload.create({ collection: 'products', data: productData })
         createdProducts++
       }
+      imagesUploaded += imageUrlRaw ? 1 : 0
     }
 
     return {

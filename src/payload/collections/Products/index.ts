@@ -122,10 +122,17 @@ export const Products: CollectionConfig = {
       min: 0,
     },
     {
+      name: 'imageUrl',
+      type: 'text',
+      admin: {
+        description: 'Direct product image URL (e.g. from Cardmarket)',
+      },
+    },
+    {
       name: 'images',
       type: 'array',
       admin: {
-        description: 'Product images (first one is the main/thumbnail)',
+        description: 'Additional product images (uploaded via admin)',
       },
       fields: [
         {

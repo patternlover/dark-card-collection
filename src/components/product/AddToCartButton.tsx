@@ -14,6 +14,7 @@ interface AddToCartButtonProps {
     storePrice?: number | null
     image?: { url: string; alt: string } | null
     images?: Array<{ image?: { url: string; alt: string } | null }> | null
+    imageUrl?: string | null
     status: string
   }
 }
@@ -32,7 +33,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       title: product.title,
       slug: product.slug,
       price: displayPrice,
-      image: product.images?.[0]?.image?.url || product.image?.url || null,
+      image: product.imageUrl || product.images?.[0]?.image?.url || product.image?.url || null,
     })
 
     trackAddToCart({

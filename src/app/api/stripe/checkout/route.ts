@@ -16,12 +16,14 @@ export async function POST(req: Request) {
       )
     }
 
-    const lineItems = items.map((item: { title: string; price: number; quantity: number; id: number | string; image?: string | null; images?: string[] | null }) => {
-      const productImages = item.images && item.images.length > 0
-        ? item.images.filter(Boolean)
-        : item.image
-          ? [item.image]
-          : []
+    const lineItems = items.map((item: { title: string; price: number; quantity: number; id: number | string; image?: string | null; imageUrl?: string | null; images?: string[] | null }) => {
+      const productImages = item.imageUrl
+        ? [item.imageUrl]
+        : item.images && item.images.length > 0
+          ? item.images.filter(Boolean)
+          : item.image
+            ? [item.image]
+            : []
 
       return {
         price_data: {

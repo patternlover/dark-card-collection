@@ -3,23 +3,29 @@
 import { useState } from 'react'
 
 interface ProductGalleryProps {
+  imageUrl?: string | null
   images: Array<{ image?: { url: string; alt?: string } | null } | null>
   fallbackImage?: { url: string; alt?: string } | null
   alt?: string
 }
 
-export function ProductGallery({ images, fallbackImage, alt = '' }: ProductGalleryProps) {
-  const validImages = images
-    .map((img) => (typeof img === 'object' && img?.image?.url ? img.image : null))
-    .filter(Boolean) as Array<{ url: string; alt?: string }>
+export function ProductGallery({ imageUrl, images, fallbackImage, alt = '' }: ProductGalleryProps) {
+  const allUrls: string[] = []
 
-  if (fallbackImage?.url && validImages.length === 0) {
-    validImages.push(fallbackImage)
+  if (imageUrl) allUrls.push(imageUrl)
+
+  for (const img of images) {
+    const url = typeof img === 'object' && img?.image?.url ? img.image.url : null
+    if (url && !allUrls.includes(url)) allUrls.push(url)
+  }
+
+  if (fallbackImage?.url && !allUrls.includes(fallbackImage.url)) {
+    allUrls.push(fallbackImage.url)
   }
 
   const [selectedIndex, setSelectedIndex] = useState(0)
 
-  if (validImages.length === 0) {
+  if (allUrls.length === 0) {
     return (
       <div className="aspect-square rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
         <span className="text-zinc-600 text-6xl">📦</span>
@@ -27,11 +33,11 @@ export function ProductGallery({ images, fallbackImage, alt = '' }: ProductGalle
     )
   }
 
-  if (validImages.length === 1) {
+  if (allUrls.length === 1) {
     return (
       <img
-        src={validImages[0]!.url}
-        alt={validImages[0]!.alt || alt}
+        src={allUrls[0]!}
+        alt={alt}
         className="aspect-square w-full rounded-lg object-cover border border-zinc-800"
       />
     )
@@ -40,12 +46,12 @@ export function ProductGallery({ images, fallbackImage, alt = '' }: ProductGalle
   return (
     <div className="space-y-3">
       <img
-        src={validImages[selectedIndex]!.url}
-        alt={validImages[selectedIndex]!.alt || alt}
+        src={allUrls[selectedIndex]!}
+        alt={alt}
         className="aspect-square w-full rounded-lg object-cover border border-zinc-800"
       />
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {validImages.map((img, i) => (
+        {allUrls.map((url, i) => (
           <button
             key={i}
             onClick={() => setSelectedIndex(i)}
@@ -54,8 +60,8 @@ export function ProductGallery({ images, fallbackImage, alt = '' }: ProductGalle
             }`}
           >
             <img
-              src={img.url}
-              alt={img.alt || `${alt} ${i + 1}`}
+              src={url}
+              alt={`${alt} ${i + 1}`}
               className="h-full w-full object-cover"
             />
           </button>
