@@ -126,6 +126,7 @@ export async function GET(request: Request) {
         collection: collectionId,
         language: LANGUAGE_MAP[language.toUpperCase()] || 'italian',
         quantity: 1,
+        productState: productState || undefined,
       }
 
       const currentImageCount = existingProduct.docs.length > 0

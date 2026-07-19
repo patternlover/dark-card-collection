@@ -20,6 +20,7 @@ interface Product {
   featured: boolean
   cardNumber: string | null
   rarity: string | null
+  productState: string | null
   category: { id: number; name: string } | null
   collection: { id: number; name: string } | null
 }
@@ -69,9 +70,11 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
     featured: product.featured || false,
     cardNumber: product.cardNumber || '',
     rarity: product.rarity || '',
+    productState: product.productState || '',
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [sheetSynced, setSheetSynced] = useState<boolean | null>(null)
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -88,6 +91,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
   const handleSave = async () => {
     setSaving(true)
     setError('')
+    setSheetSynced(null)
 
     const payload: Record<string, any> = {}
     payload.title = form.title
@@ -103,6 +107,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
     payload.featured = form.featured
     payload.cardNumber = form.cardNumber || null
     payload.rarity = form.rarity || null
+    payload.productState = form.productState || null
 
     try {
       const res = await fetch(`/api/admin/products/${product.id}`, {
@@ -120,6 +125,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
       }
 
       const data = await res.json()
+      setSheetSynced(data.sheetSynced ?? false)
       onSaved(data.product)
     } catch (err) {
       setError(String(err))
@@ -142,6 +148,14 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
         {error && (
           <div className="mb-4 rounded-lg border border-red-900 bg-red-950/50 p-3 text-sm text-red-400">
             {error}
+          </div>
+        )}
+
+        {sheetSynced !== null && (
+          <div className={`mb-4 rounded-lg border p-3 text-sm ${
+            sheetSynced ? 'border-green-900 bg-green-950/50 text-green-400' : 'border-zinc-700 bg-zinc-900/50 text-zinc-400'
+          }`}>
+            {sheetSynced ? 'Google Sheet aggiornato' : 'Sheet non configurato — solo salvato localmente'}
           </div>
         )}
 
@@ -177,16 +191,28 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
             />
           </div>
 
-          <div>
-            <label className="block text-xs text-zinc-500 mb-1">Prezzo Vendita (€)</label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.storePrice}
-              onChange={(e) => handleChange('storePrice', e.target.value)}
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">Prezzo Vendita (€)</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.storePrice}
+                onChange={(e) => handleChange('storePrice', e.target.value)}
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-zinc-500 mb-1">Product State</label>
+              <input
+                type="text"
+                value={form.productState}
+                onChange={(e) => handleChange('productState', e.target.value)}
+                placeholder="AVAILABLE, HOLD, SOLD..."
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-white focus:outline-none font-mono"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">

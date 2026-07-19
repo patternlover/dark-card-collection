@@ -87,6 +87,7 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-zinc-500 text-xs">
+                <th className="py-2 w-10"></th>
                 <th className="py-2">Lingua</th>
                 <th className="py-2">Condizione</th>
                 <th className="py-2 text-right">Prezzo</th>
@@ -95,27 +96,37 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
               </tr>
             </thead>
             <tbody>
-              {group.products.map((p) => (
-                <tr key={p.id} className="border-t border-zinc-800/50">
-                  <td className="py-2 text-zinc-300">
-                    {LANGUAGE_LABELS[p.language] || p.language || '-'}
-                  </td>
-                  <td className="py-2 text-zinc-300">
-                    {CONDITION_LABELS[p.condition] || p.condition || '-'}
-                  </td>
-                  <td className="py-2 text-right text-white font-medium">
-                    {p.storePrice && p.storePrice > 0 ? `€${p.storePrice.toFixed(2)}` : '-'}
-                  </td>
-                  <td className="py-2 text-right text-zinc-400">
-                    {p.quantity || 0}
-                  </td>
-                  <td className="py-2 text-right">
-                    {p.status === 'listed' && p.storePrice && p.storePrice > 0 && (
-                      <AddToCartButton product={p} />
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {group.products.map((p) => {
+                const variantImg = proxyImageUrl(p.imageUrl)
+                return (
+                  <tr key={p.id} className="border-t border-zinc-800/50">
+                    <td className="py-2">
+                      {variantImg ? (
+                        <img src={variantImg} alt="" className="h-8 w-8 rounded object-cover" loading="lazy" />
+                      ) : (
+                        <div className="h-8 w-8 rounded bg-zinc-800" />
+                      )}
+                    </td>
+                    <td className="py-2 text-zinc-300">
+                      {LANGUAGE_LABELS[p.language] || p.language || '-'}
+                    </td>
+                    <td className="py-2 text-zinc-300">
+                      {CONDITION_LABELS[p.condition] || p.condition || '-'}
+                    </td>
+                    <td className="py-2 text-right text-white font-medium">
+                      {p.storePrice && p.storePrice > 0 ? `€${p.storePrice.toFixed(2)}` : '-'}
+                    </td>
+                    <td className="py-2 text-right text-zinc-400">
+                      {p.quantity || 0}
+                    </td>
+                    <td className="py-2 text-right">
+                      {p.status === 'listed' && p.storePrice && p.storePrice > 0 && (
+                        <AddToCartButton product={p} />
+                      )}
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

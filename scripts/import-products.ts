@@ -171,6 +171,7 @@ async function run() {
       collection: collectionId,
       language: mappedLanguage,
       quantity: 1,
+      productState: productState || undefined,
     }
 
     // Handle images

@@ -65,6 +65,13 @@ export const Products: CollectionConfig = {
       defaultValue: 'listed',
     },
     {
+      name: 'productState',
+      type: 'text',
+      admin: {
+        description: 'Raw product_state from Google Sheets (e.g. LISTED, HOLD, WATCH)',
+      },
+    },
+    {
       name: 'condition',
       type: 'select',
       options: [

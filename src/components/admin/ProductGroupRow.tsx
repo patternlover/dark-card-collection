@@ -66,14 +66,13 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
         <td className="px-4 py-3 text-zinc-400 text-sm">{group.totalQuantity}</td>
         <td className="px-4 py-3">
           <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-            group.products.some((p: any) => p.status === 'listed')
+            group.products.some((p: any) => p.productState?.toUpperCase() === 'AVAILABLE')
               ? 'bg-green-900/50 text-green-400'
-              : group.products.some((p: any) => p.status === 'hold')
+              : group.products.some((p: any) => p.productState?.toUpperCase() === 'HOLD')
               ? 'bg-yellow-900/50 text-yellow-400'
               : 'bg-zinc-800 text-zinc-400'
           }`}>
-            {group.products.some((p: any) => p.status === 'listed') ? 'Disponibile' :
-             group.products.some((p: any) => p.status === 'hold') ? 'In Attesa' : 'Venduto'}
+            {group.products.find((p: any) => p.productState)?.productState || group.products.some((p: any) => p.status === 'listed') ? 'Disponibile' : '-'}
           </span>
         </td>
         <td className="px-4 py-3 w-8">
@@ -109,11 +108,14 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
           <td className="px-4 py-2 text-zinc-400 text-sm">{p.quantity || 0}</td>
           <td className="px-4 py-2" colSpan={2}>
             <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+              p.productState?.toUpperCase() === 'AVAILABLE' ? 'bg-green-900/50 text-green-400' :
+              p.productState?.toUpperCase() === 'HOLD' ? 'bg-yellow-900/50 text-yellow-400' :
+              p.productState ? 'bg-zinc-800 text-zinc-400' :
               p.status === 'listed' ? 'bg-green-900/50 text-green-400' :
               p.status === 'hold' ? 'bg-yellow-900/50 text-yellow-400' :
               'bg-zinc-800 text-zinc-400'
             }`}>
-              {p.status === 'listed' ? 'Disponibile' : p.status === 'hold' ? 'In Attesa' : p.status}
+              {p.productState || p.status || '-'}
             </span>
           </td>
         </tr>

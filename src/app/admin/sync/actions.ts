@@ -162,6 +162,7 @@ export async function syncInventory(password: string, filters?: SyncFilters): Pr
         language: LANGUAGE_MAP[language.toUpperCase()] || 'italian',
         quantity: 1,
         imageUrl: imageUrlRaw || undefined,
+        productState: productState || undefined,
       }
 
       if (imageUrlRaw && debug.length < 15) {

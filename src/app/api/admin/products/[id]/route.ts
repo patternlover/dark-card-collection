@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
+import { updateRowByItemId, productToSheetFields } from '@/lib/google-sheets'
 
 export async function PATCH(
   request: NextRequest,
@@ -15,7 +16,7 @@ export async function PATCH(
 
   const allowed = [
     'title', 'slug', 'description', 'storePrice', 'price', 'compareAtPrice',
-    'status', 'condition', 'category', 'collection', 'language',
+    'status', 'condition', 'category', 'collection', 'language', 'productState',
     'quantity', 'imageUrl', 'featured', 'cardNumber', 'rarity', 'itemId',
   ]
 
@@ -38,7 +39,16 @@ export async function PATCH(
       data,
       draft: false,
     } as any)
-    return NextResponse.json({ product: updated })
+
+    let sheetSynced = false
+    if (data.itemId) {
+      const sheetFields = productToSheetFields(data)
+      if (Object.keys(sheetFields).length > 0) {
+        sheetSynced = await updateRowByItemId(data.itemId, sheetFields)
+      }
+    }
+
+    return NextResponse.json({ product: updated, sheetSynced })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }

@@ -161,6 +161,7 @@ export async function POST(request: Request) {
         collection: collectionId,
         language: mappedLanguage,
         quantity: 1,
+        productState: productState || undefined,
       }
 
       // Handle images
