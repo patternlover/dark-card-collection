@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
+import { importProductImages, buildImagesField } from '@/lib/image-import'
 
 function verifyCronAuth(request: Request): boolean {
   const authHeader = request.headers.get('authorization')
@@ -69,6 +70,7 @@ export async function GET(request: Request) {
     let createdProducts = 0
     let updatedProducts = 0
     let skippedRows = 0
+    let imagesUploaded = 0
 
     for (const row of rows) {
       const itemId = row['item_id'] || row['item id'] || ''
@@ -81,6 +83,7 @@ export async function GET(request: Request) {
       const storePriceRaw = row['store_price'] || row['store price'] || ''
       const targetPriceRaw = row['target_price'] || row['target price'] || ''
       const purchasePriceRaw = row['unitary_gross_price'] || row['unitary gross price'] || ''
+      const imageUrlRaw = row['image_url'] || row['image url'] || ''
 
       if (!itemId || !productName) { skippedRows++; continue }
       if (productState.toUpperCase() === 'SOLD') { skippedRows++; continue }
@@ -123,7 +126,7 @@ export async function GET(request: Request) {
 
       const existingProduct = await payload.find({ collection: 'products', where: { itemId: { equals: itemId } } })
 
-      const productData = {
+      const productData: Record<string, any> = {
         title: productName,
         slug: slugify(itemId),
         itemId,
@@ -136,6 +139,23 @@ export async function GET(request: Request) {
         collection: collectionId,
         language: LANGUAGE_MAP[language.toUpperCase()] || 'italian',
         quantity: 1,
+      }
+
+      const currentImageCount = existingProduct.docs.length > 0
+        ? ((existingProduct.docs[0] as any).images?.length || 0)
+        : 0
+
+      const imageResult = await importProductImages(payload, imageUrlRaw, productName, currentImageCount)
+
+      if (imageResult.uploaded > 0) {
+        const existingImages = existingProduct.docs.length > 0
+          ? (((existingProduct.docs[0] as any).images?.map((img: any) => typeof img === 'object' ? img.image : img) || []) as (number | null)[])
+          : []
+        const allImageIds = [...existingImages, ...imageResult.mediaIds].filter(
+          (id): id is string | number => id !== null && id !== undefined,
+        )
+        productData.images = buildImagesField(allImageIds)
+        imagesUploaded += imageResult.uploaded
       }
 
       if (existingProduct.docs.length > 0) {
@@ -154,6 +174,7 @@ export async function GET(request: Request) {
       collections: createdCollections,
       productsCreated: createdProducts,
       productsUpdated: updatedProducts,
+      imagesUploaded,
       skipped: skippedRows,
     })
   } catch (error) {

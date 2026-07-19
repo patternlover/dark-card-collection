@@ -1,5 +1,6 @@
 import { getPayload } from 'payload'
 import config from '../src/payload.config'
+import { importProductImages, buildImagesField } from '../src/lib/image-import'
 
 const GOOGLE_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/1cVAh2HWPEGgYHKlJP4QbQ-zut2-2hoXpAiRw8iDuoiY/gviz/tq?tqx=out:csv&sheet=inventory'
@@ -63,6 +64,7 @@ async function run() {
   let createdProducts = 0
   let updatedProducts = 0
   let skippedRows = 0
+  let imagesUploaded = 0
 
   for (const row of rows) {
     const itemId = row['item_id'] || row['item id'] || ''
@@ -76,6 +78,7 @@ async function run() {
     const targetPriceRaw = row['target_price'] || row['target price'] || ''
     const purchasePriceRaw =
       row['unitary_gross_price'] || row['unitary gross price'] || ''
+    const imageUrlRaw = row['image_url'] || row['image url'] || ''
 
     if (!itemId || !productName) {
       skippedRows++
@@ -170,7 +173,7 @@ async function run() {
       where: { itemId: { equals: itemId } },
     })
 
-    const productData = {
+    const productData: Record<string, any> = {
       title: productName,
       slug,
       itemId,
@@ -183,6 +186,31 @@ async function run() {
       collection: collectionId,
       language: mappedLanguage,
       quantity: 1,
+    }
+
+    // Handle images
+    const currentImageCount = existingProduct.docs.length > 0
+      ? (existingProduct.docs[0] as any).images?.length || 0
+      : 0
+
+    const imageResult = await importProductImages(
+      payload,
+      imageUrlRaw,
+      productName,
+      currentImageCount,
+    )
+
+    if (imageResult.uploaded > 0) {
+      const existingImages = existingProduct.docs.length > 0
+        ? ((existingProduct.docs[0] as any).images?.map((img: any) => typeof img === 'object' ? img.image : img) || [])
+        : []
+      const allImageIds = [...existingImages, ...imageResult.mediaIds]
+      productData.images = buildImagesField(allImageIds)
+      imagesUploaded += imageResult.uploaded
+    }
+
+    if (imageResult.errors.length > 0) {
+      console.log(`Image errors for ${itemId}:`, imageResult.errors)
     }
 
     if (existingProduct.docs.length > 0) {
@@ -208,6 +236,7 @@ async function run() {
   console.log(`Collections created: ${createdCollections}`)
   console.log(`Products created: ${createdProducts}`)
   console.log(`Products updated: ${updatedProducts}`)
+  console.log(`Images uploaded: ${imagesUploaded}`)
   console.log(`Rows skipped: ${skippedRows}`)
   console.log('----------------------')
 

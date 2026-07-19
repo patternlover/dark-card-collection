@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
+import { importProductImages, buildImagesField } from '@/lib/image-import'
 
 const GOOGLE_SHEET_CSV_URL =
   'https://docs.google.com/spreadsheets/d/1cVAh2HWPEGgYHKlJP4QbQ-zut2-2hoXpAiRw8iDuoiY/gviz/tq?tqx=out:csv&sheet=inventory'
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
     let createdProducts = 0
     let updatedProducts = 0
     let skippedRows = 0
+    let imagesUploaded = 0
 
     for (const row of rows) {
       const itemId = row['item_id'] || row['item id'] || ''
@@ -81,6 +83,7 @@ export async function POST(request: Request) {
       const targetPriceRaw = row['target_price'] || row['target price'] || ''
       const purchasePriceRaw =
         row['unitary_gross_price'] || row['unitary gross price'] || ''
+      const imageUrlRaw = row['image_url'] || row['image url'] || ''
 
       if (!itemId || !productName) {
         skippedRows++
@@ -160,7 +163,7 @@ export async function POST(request: Request) {
         where: { itemId: { equals: itemId } },
       })
 
-      const productData = {
+      const productData: Record<string, any> = {
         title: productName,
         slug,
         itemId,
@@ -173,6 +176,27 @@ export async function POST(request: Request) {
         collection: collectionId,
         language: mappedLanguage,
         quantity: 1,
+      }
+
+      // Handle images
+      const currentImageCount = existingProduct.docs.length > 0
+        ? (existingProduct.docs[0] as any).images?.length || 0
+        : 0
+
+      const imageResult = await importProductImages(
+        payload,
+        imageUrlRaw,
+        productName,
+        currentImageCount,
+      )
+
+      if (imageResult.uploaded > 0) {
+        const existingImages = existingProduct.docs.length > 0
+          ? ((existingProduct.docs[0] as any).images?.map((img: any) => typeof img === 'object' ? img.image : img) || [])
+          : []
+        const allImageIds = [...existingImages, ...imageResult.mediaIds]
+        productData.images = buildImagesField(allImageIds)
+        imagesUploaded += imageResult.uploaded
       }
 
       if (existingProduct.docs.length > 0) {
@@ -197,6 +221,7 @@ export async function POST(request: Request) {
       collections: createdCollections,
       productsCreated: createdProducts,
       productsUpdated: updatedProducts,
+      imagesUploaded,
       skipped: skippedRows,
     })
   } catch (error) {

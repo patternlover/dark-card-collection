@@ -122,9 +122,18 @@ export const Products: CollectionConfig = {
       min: 0,
     },
     {
-      name: 'image',
-      type: 'upload',
-      relationTo: 'media',
+      name: 'images',
+      type: 'array',
+      admin: {
+        description: 'Product images (first one is the main/thumbnail)',
+      },
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+        },
+      ],
     },
     {
       name: 'averageSalePrice',

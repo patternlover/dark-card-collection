@@ -16,20 +16,28 @@ export async function POST(req: Request) {
       )
     }
 
-    const lineItems = items.map((item: { title: string; price: number; quantity: number; id: number | string; image?: string | null }) => ({
-      price_data: {
-        currency: 'eur',
-        product_data: {
-          name: item.title,
-          ...(item.image ? { images: [item.image] } : {}),
-          metadata: {
-            payloadProductId: String(item.id),
+    const lineItems = items.map((item: { title: string; price: number; quantity: number; id: number | string; image?: string | null; images?: string[] | null }) => {
+      const productImages = item.images && item.images.length > 0
+        ? item.images.filter(Boolean)
+        : item.image
+          ? [item.image]
+          : []
+
+      return {
+        price_data: {
+          currency: 'eur',
+          product_data: {
+            name: item.title,
+            ...(productImages.length > 0 ? { images: productImages.slice(0, 8) } : {}),
+            metadata: {
+              payloadProductId: String(item.id),
+            },
           },
+          unit_amount: Math.round(item.price * 100),
         },
-        unit_amount: Math.round(item.price * 100),
-      },
-      quantity: item.quantity,
-    }))
+        quantity: item.quantity,
+      }
+    })
 
     if (shipping > 0) {
       lineItems.push({

@@ -5,6 +5,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Truck, Shield, Package } from 'lucide-react'
 import type { Metadata } from 'next'
+import { ProductGallery } from '@/components/product/ProductGallery'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,17 +104,11 @@ export default async function ProductPage({
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div>
-            {product.image?.url ? (
-              <img
-                src={product.image.url}
-                alt={product.image.alt || product.title}
-                className="aspect-square w-full rounded-lg object-cover border border-zinc-800"
-              />
-            ) : (
-              <div className="aspect-square rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
-                <span className="text-zinc-600 text-6xl">📦</span>
-              </div>
-            )}
+            <ProductGallery
+              images={product.images || []}
+              fallbackImage={product.image}
+              alt={product.title}
+            />
           </div>
 
           <div className="space-y-6">

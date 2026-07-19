@@ -14,6 +14,7 @@ interface Product {
   category?: { name: string } | null
   collection?: { name: string } | null
   image?: { url: string; alt: string } | null
+  images?: Array<{ image?: { url: string; alt: string } | null }> | null
 }
 
 interface ProductCardProps {
@@ -34,7 +35,13 @@ export function ProductCard({ product }: ProductCardProps) {
       href={`/products/${product.slug}`}
       className="group relative flex flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700"
     >
-      {product.image?.url ? (
+      {product.images?.[0]?.image?.url ? (
+        <img
+          src={product.images[0].image.url}
+          alt={product.images[0].image.alt || product.title}
+          className="aspect-square w-full object-cover"
+        />
+      ) : product.image?.url ? (
         <img
           src={product.image.url}
           alt={product.image.alt || product.title}
