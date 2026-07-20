@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Database, RefreshCw, Settings } from 'lucide-react'
 
-export default function AdminDashboard() {
+export default function DashboardPage() {
   const [password, setPassword] = useState('')
   const [authenticated, setAuthenticated] = useState(false)
   const [authError, setAuthError] = useState(false)
@@ -19,7 +19,7 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <form onSubmit={handleLogin} className="w-full max-w-sm space-y-4 p-8">
-          <h1 className="text-2xl font-bold text-center">Admin</h1>
+          <h1 className="text-2xl font-bold text-center">Dashboard</h1>
           <input
             type="password"
             value={password}
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
     {
       title: 'Payload CMS',
       description: 'Pannello di amministrazione nativo di Payload.',
-      href: '/admin/[[...segments]]',
+      href: '/admin',
       icon: Settings,
     },
   ]
@@ -65,7 +65,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-black text-white">
       <div className="mx-auto max-w-4xl px-4 py-16">
         <div className="flex items-center justify-between mb-10">
-          <h1 className="text-3xl font-bold">Admin</h1>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
           <button
             onClick={() => { setAuthenticated(false); setPassword('') }}
             className="text-sm text-zinc-500 hover:text-white transition-colors"

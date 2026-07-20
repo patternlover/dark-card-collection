@@ -18,7 +18,7 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Products grouped by name (variants hidden from customers)
 - Google Sheets integration for inventory management
 - Stripe Checkout for secure payments
-- Admin dashboard at `/admin` with product management and sync tools
+- Admin dashboard at `/dashboard` with product management and sync tools
 - Responsive design with mobile menu
 - Product filtering by condition, language, category, collection
 - Product detail page with stock info and variant availability
@@ -63,7 +63,7 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) for the storefront.
-Open [http://localhost:3000/admin](http://localhost:3000/admin) for the admin dashboard.
+Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard) for the admin dashboard.
 
 ## Google Sheets Import
 
@@ -99,7 +99,7 @@ curl -X POST https://your-site.vercel.app/api/products/import \
 
 ## Admin
 
-Access the admin dashboard at `/admin` (password-protected).
+Access the admin dashboard at `/dashboard` (password-protected).
 
 - **Gestione Prodotti** (`/admin/products`): View, edit, and delete product variants. Products are grouped by name; expand a group to see individual variants with language, condition, price, and stock.
 - **Sincronizzazione** (`/admin/sync`): Trigger a manual sync from Google Sheets with import filters.
@@ -120,9 +120,10 @@ src/
 ├── app/
 │   ├── (payload)/              # Payload CMS admin
 │   ├── admin/
-│   │   ├── page.tsx            # Admin dashboard hub
 │   │   ├── products/page.tsx   # Variant management + delete
 │   │   └── sync/               # Google Sheets sync UI
+│   ├── dashboard/
+│   │   └── page.tsx            # Admin dashboard hub
 │   ├── shop/                   # Product listing with filters
 │   ├── products/[slug]/        # Product detail page (parent only)
 │   ├── cart/                   # Shopping cart

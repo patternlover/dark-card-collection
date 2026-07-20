@@ -81,12 +81,14 @@ src/
 │   │       └── import/route.ts     # Manual import endpoint
 │   │
 │   ├── admin/
-│   │   ├── page.tsx                # /admin — dashboard hub (password auth)
 │   │   ├── products/
 │   │   │   └── page.tsx            # /admin/products — variant management + delete
 │   │   └── sync/
 │   │       ├── page.tsx            # /admin/sync — Google Sheets sync UI
 │   │       └── actions.ts          # Server action for sync
+│   │
+│   ├── dashboard/
+│   │   └── page.tsx                # /dashboard — admin hub (password auth)
 │   │
 │   └── (payload)/                  # Payload admin (auto-generated)
 │
