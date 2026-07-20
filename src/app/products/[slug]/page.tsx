@@ -152,10 +152,10 @@ export default async function ProductPage({
               <img
                 src={imgSrc}
                 alt={product.title}
-                className="w-full rounded-xl object-cover"
+                className="w-full border-2 border-zinc-700 object-cover shadow-[4px_4px_0px_0px_#27272a]"
               />
             ) : (
-              <div className="aspect-square w-full rounded-xl bg-zinc-800 flex items-center justify-center">
+              <div className="aspect-square w-full border-2 border-zinc-700 bg-zinc-800 flex items-center justify-center shadow-[4px_4px_0px_0px_#27272a]">
                 <span className="text-zinc-600 text-6xl">📦</span>
               </div>
             )}
@@ -171,7 +171,7 @@ export default async function ProductPage({
               </Badge>
             </div>
 
-            <div className="text-sm text-zinc-500">
+            <div className="text-sm text-zinc-500 font-medium uppercase tracking-wider">
               <span>Shop</span>
               {categoryName && (
                 <>
@@ -187,14 +187,14 @@ export default async function ProductPage({
               )}
             </div>
 
-            <h1 className="text-3xl font-bold text-white">{product.title}</h1>
+            <h1 className="text-3xl font-black text-white uppercase tracking-tight">{product.title}</h1>
 
             <div className="flex items-baseline gap-4">
-              <span className="text-3xl font-bold text-white">
+              <span className="text-3xl font-black text-[#FACC15]">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
               </span>
               {group.totalQuantity > 0 && (
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-zinc-500 font-medium">
                   {group.totalQuantity} disponibil{group.totalQuantity === 1 ? 'e' : 'i'}
                 </span>
               )}
@@ -236,17 +236,17 @@ export default async function ProductPage({
 
             <AddToCartButton product={buyableProduct} />
 
-            <div className="space-y-3 rounded-lg border border-zinc-800 p-4">
+            <div className="space-y-3 border-2 border-zinc-800 p-4 shadow-[3px_3px_0px_0px_#27272a]">
               <div className="flex items-center gap-3 text-sm text-zinc-400">
-                <Truck className="h-5 w-5 text-zinc-500" />
+                <Truck className="h-5 w-5 text-[#FACC15]" />
                 <span>Spedizione gratuita sopra i €100</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-zinc-400">
-                <Shield className="h-5 w-5 text-zinc-500" />
+                <Shield className="h-5 w-5 text-[#FACC15]" />
                 <span>Prodotto 100% originale</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-zinc-400">
-                <Package className="h-5 w-5 text-zinc-500" />
+                <Package className="h-5 w-5 text-[#FACC15]" />
                 <span>Packaging professionale e sicuro</span>
               </div>
             </div>
@@ -254,8 +254,8 @@ export default async function ProductPage({
         </div>
 
         {relatedGroups.length > 0 && (
-          <section className="mt-16 border-t border-zinc-800 pt-12">
-            <h2 className="text-2xl font-bold text-white mb-8">Prodotti Correlati</h2>
+          <section className="mt-16 border-t-2 border-zinc-800 pt-12">
+            <h2 className="text-2xl font-black text-white mb-8 uppercase tracking-tight">Prodotti Correlati</h2>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {relatedGroups.slice(0, 4).map((g: any) => (
                 <ProductCard

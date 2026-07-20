@@ -7,12 +7,12 @@
   --primary-foreground: #ffffff;
   --secondary: #2a2a2a;
   --secondary-foreground: #ffffff;
-  --accent: #3b82f6;
-  --accent-foreground: #ffffff;
+  --accent: #FACC15;
+  --accent-foreground: #0a0a0a;
   --muted: #1a1a1a;
   --muted-foreground: #a1a1aa;
   --border: #27272a;
-  --ring: #3b82f6;
+  --ring: #FACC15;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 }
@@ -21,6 +21,43 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* Neobrutalism utilities */
+.shadow-brutal {
+  box-shadow: 4px 4px 0px 0px #27272a;
+}
+.shadow-brutal-accent {
+  box-shadow: 4px 4px 0px 0px #FACC15;
+}
+.shadow-brutal-sm {
+  box-shadow: 3px 3px 0px 0px #27272a;
+}
+.shadow-brutal-sm-accent {
+  box-shadow: 3px 3px 0px 0px #FACC15;
+}
+.shadow-brutal-xs {
+  box-shadow: 2px 2px 0px 0px #27272a;
+}
+
+.hover-brutal {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.hover-brutal:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #FACC15;
+}
+.hover-brutal:active {
+  transform: translate(0px, 0px);
+  box-shadow: 1px 1px 0px 0px #27272a;
+}
+
+.hover-brutal-dark {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.hover-brutal-dark:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px 0px #27272a;
 }
 
 /* Custom scrollbar */

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import { proxyImageUrl } from '@/lib/proxy-image'
+import { ArrowLeft } from 'lucide-react'
 import { EditProductModal } from '@/components/admin/EditProductModal'
 import { ProductGroupRow } from '@/components/admin/ProductGroupRow'
 import { groupProducts } from '@/lib/group-products'
@@ -119,13 +119,13 @@ export default function AdminProductsPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-white focus:outline-none"
+            className="w-full border-2 border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
             autoFocus
           />
           {authError && <p className="text-sm text-red-400">Password non valida</p>}
           <button
             type="submit"
-            className="w-full rounded-lg bg-white text-black px-4 py-3 font-medium hover:bg-zinc-200 transition-colors"
+            className="w-full border-2 border-[#FACC15] bg-[#FACC15] px-4 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
           >
             Accedi
           </button>
@@ -136,105 +136,105 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-7xl px-4 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Gestione Prodotti</h1>
+      <div className="mx-auto max-w-7xl px-4 py-8">
+        <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/admin/sync" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-[#FACC15] transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
+            </Link>
+            <h1 className="text-2xl font-bold">Gestione Prodotti</h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/admin/sync" className="text-sm text-zinc-400 hover:text-[#FACC15] transition-colors">
               Sincronizzazione
             </Link>
-            <button
-              onClick={() => { setAuthenticated(false); setPassword(''); setProducts([]) }}
-              className="text-sm text-zinc-500 hover:text-white transition-colors"
-            >
+            <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-white transition-colors">
               Esci
-            </button>
+            </Link>
           </div>
         </div>
 
-        <div className="rounded-lg border border-zinc-800 p-4 mb-6">
+        <div className="border-2 border-zinc-800 p-4 mb-6 shadow-[3px_3px_0px_0px_#27272a]">
           <form onSubmit={handleSearch} className="flex flex-wrap gap-3 items-end">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-xs text-zinc-500 mb-1">Cerca</label>
+              <label className="block text-xs text-zinc-500 mb-1 font-medium">Cerca</label>
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Nome o Item ID..."
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-white focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none"
               />
             </div>
             <div className="min-w-[140px]">
-              <label className="block text-xs text-zinc-500 mb-1">Stato</label>
+              <label className="block text-xs text-zinc-500 mb-1 font-medium">Stato</label>
               <select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
               >
                 {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div className="min-w-[140px]">
-              <label className="block text-xs text-zinc-500 mb-1">Categoria</label>
+              <label className="block text-xs text-zinc-500 mb-1 font-medium">Categoria</label>
               <select
                 value={category}
                 onChange={(e) => { setCategory(e.target.value); setPage(1) }}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
               >
                 <option value="">Tutte</option>
                 {categories.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
               </select>
             </div>
             <div className="min-w-[140px]">
-              <label className="block text-xs text-zinc-500 mb-1">Collezione</label>
+              <label className="block text-xs text-zinc-500 mb-1 font-medium">Collezione</label>
               <select
                 value={collection}
                 onChange={(e) => { setCollection(e.target.value); setPage(1) }}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
               >
                 <option value="">Tutte</option>
                 {collections.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
               </select>
             </div>
             <div className="min-w-[140px]">
-              <label className="block text-xs text-zinc-500 mb-1">Immagine</label>
+              <label className="block text-xs text-zinc-500 mb-1 font-medium">Immagine</label>
               <select
                 value={withImage}
                 onChange={(e) => { setWithImage(e.target.value); setPage(1) }}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-white focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
               >
                 {IMAGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <button
               type="submit"
-              className="rounded-lg bg-white text-black px-4 py-2 text-sm font-medium hover:bg-zinc-200 transition-colors"
+              className="border-2 border-[#FACC15] bg-[#FACC15] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
             >
               Cerca
             </button>
           </form>
         </div>
 
-        <div className="mb-4 text-sm text-zinc-500">
+        <div className="mb-4 text-sm text-zinc-500 font-medium">
           {total} prodott{total === 1 ? 'o' : 'i'} ({groups.length} {groups.length === 1 ? 'gruppo' : 'gruppi'})
         </div>
 
         {loading ? (
           <div className="text-center py-16 text-zinc-500">Caricamento...</div>
         ) : (
-          <div className="rounded-lg border border-zinc-800 overflow-hidden">
+          <div className="border-2 border-zinc-800 overflow-hidden shadow-[3px_3px_0px_0px_#27272a]">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 text-left">
+                <tr className="border-b-2 border-zinc-800 bg-zinc-900 text-left">
                   <th className="px-4 py-3 text-zinc-500 font-medium w-16"></th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Prodotto</th>
-                  <th className="px-4 py-3 text-zinc-500 font-medium">Categoria</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Collezione</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Prezzo</th>
-                  <th className="px-4 py-3 text-zinc-500 font-medium">Varianti</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Qta</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Stato</th>
-                  <th className="px-4 py-3 w-8"></th>
                 </tr>
               </thead>
               <tbody>
@@ -248,7 +248,7 @@ export default function AdminProductsPage() {
                 ))}
                 {groups.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-12 text-center text-zinc-500">
+                    <td colSpan={6} className="px-4 py-12 text-center text-zinc-500">
                       Nessun prodotto trovato
                     </td>
                   </tr>
@@ -263,7 +263,7 @@ export default function AdminProductsPage() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="border-2 border-zinc-700 px-3 py-1.5 text-sm text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               Precedente
             </button>
@@ -271,7 +271,7 @@ export default function AdminProductsPage() {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="rounded-lg border border-zinc-800 px-3 py-1.5 text-sm text-zinc-400 hover:text-white hover:border-zinc-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="border-2 border-zinc-700 px-3 py-1.5 text-sm text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               Successiva
             </button>

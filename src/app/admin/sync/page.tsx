@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { syncInventory } from './actions'
 
 interface SyncResult {
@@ -83,7 +85,7 @@ export default function SyncPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-white focus:outline-none"
+            className="w-full border-2 border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
             autoFocus
           />
           {authError && (
@@ -91,7 +93,7 @@ export default function SyncPage() {
           )}
           <button
             type="submit"
-            className="w-full rounded-lg bg-white text-black px-4 py-3 font-medium hover:bg-zinc-200 transition-colors"
+            className="w-full border-2 border-[#FACC15] bg-[#FACC15] px-4 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
           >
             Accedi
           </button>
@@ -102,22 +104,25 @@ export default function SyncPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="mx-auto max-w-3xl px-4 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">Sincronizzazione Inventario</h1>
-          <button
-            onClick={() => { setAuthenticated(false); setPassword(''); setResult(null) }}
-            className="text-sm text-zinc-500 hover:text-white transition-colors"
-          >
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-[#FACC15] transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
+            </Link>
+            <h1 className="text-2xl font-bold">Sincronizzazione Inventario</h1>
+          </div>
+          <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-white transition-colors">
             Esci
-          </button>
+          </Link>
         </div>
         <p className="text-zinc-400 mb-8">
           Importa e aggiorna i prodotti dal Google Sheet
         </p>
 
-        <div className="rounded-lg border border-zinc-800 p-6 mb-6">
-          <h2 className="text-sm font-medium text-zinc-300 mb-4">Filtri Import</h2>
+        <div className="border-2 border-zinc-800 p-6 mb-6 shadow-[3px_3px_0px_0px_#27272a]">
+          <h2 className="text-sm font-bold text-zinc-300 mb-4">Filtri Import</h2>
           <div className="grid grid-cols-2 gap-3">
             {[
               { key: 'skipSold' as const, label: 'Escludi SOLD', desc: 'Non importare prodotti venduti' },
@@ -130,10 +135,10 @@ export default function SyncPage() {
                   type="checkbox"
                   checked={filters[key]}
                   onChange={() => toggleFilter(key)}
-                  className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-white focus:ring-white"
+                  className="mt-1 h-4 w-4 border-2 border-zinc-600 bg-zinc-800 accent-[#FACC15]"
                 />
                 <div>
-                  <span className="text-sm text-zinc-300 group-hover:text-white transition-colors">{label}</span>
+                  <span className="text-sm text-zinc-300 group-hover:text-white transition-colors font-medium">{label}</span>
                   <p className="text-xs text-zinc-500">{desc}</p>
                 </div>
               </label>
@@ -144,7 +149,7 @@ export default function SyncPage() {
         <button
           onClick={handleSync}
           disabled={syncing}
-          className="rounded-lg bg-white text-black px-6 py-3 font-medium hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="border-2 border-[#FACC15] bg-[#FACC15] px-6 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[3px_3px_0px_0px_#000]"
         >
           {syncing ? (
             <span className="flex items-center gap-2">
@@ -166,48 +171,48 @@ export default function SyncPage() {
         {result && (
           <div className="mt-8 space-y-4">
             {result.success ? (
-              <div className="rounded-lg border border-zinc-800 p-6">
-                <h2 className="text-lg font-semibold text-green-400 mb-4">Completato</h2>
+              <div className="border-2 border-zinc-800 p-6 shadow-[3px_3px_0px_0px_#27272a]">
+                <h2 className="text-lg font-bold text-green-400 mb-4">Completato</h2>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-zinc-500">Righe totali:</span>{' '}
-                    <span className="font-medium">{result.totalRows || 0}</span>
+                    <span className="font-bold">{result.totalRows || 0}</span>
                   </div>
                   <div>
                     <span className="text-zinc-500">Filtrate fuori:</span>{' '}
-                    <span className="font-medium">{result.filteredOut || 0}</span>
+                    <span className="font-bold">{result.filteredOut || 0}</span>
                   </div>
                   <div>
                     <span className="text-zinc-500">Categorie create:</span>{' '}
-                    <span className="font-medium">{result.categories || 0}</span>
+                    <span className="font-bold">{result.categories || 0}</span>
                   </div>
                   <div>
                     <span className="text-zinc-500">Collezioni create:</span>{' '}
-                    <span className="font-medium">{result.collections || 0}</span>
+                    <span className="font-bold">{result.collections || 0}</span>
                   </div>
                   <div>
                     <span className="text-zinc-500">Prodotti creati:</span>{' '}
-                    <span className="font-medium">{result.productsCreated || 0}</span>
+                    <span className="font-bold">{result.productsCreated || 0}</span>
                   </div>
                   <div>
                     <span className="text-zinc-500">Prodotti aggiornati:</span>{' '}
-                    <span className="font-medium">{result.productsUpdated || 0}</span>
+                    <span className="font-bold">{result.productsUpdated || 0}</span>
                   </div>
                   <div>
                     <span className="text-zinc-500">Con immagine:</span>{' '}
-                    <span className={`font-medium ${result.imagesUploaded === 0 ? 'text-red-400' : 'text-green-400'}`}>
+                    <span className={`font-bold ${result.imagesUploaded === 0 ? 'text-red-400' : 'text-green-400'}`}>
                       {result.imagesUploaded || 0}
                     </span>
                   </div>
                   <div>
-                    <span className="text-zinc-500">Righe saltate (dati mancanti):</span>{' '}
-                    <span className="font-medium">{result.skipped || 0}</span>
+                    <span className="text-zinc-500">Righe saltate:</span>{' '}
+                    <span className="font-bold">{result.skipped || 0}</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="rounded-lg border border-red-900 p-6">
-                <h2 className="text-lg font-semibold text-red-400 mb-2">Errore</h2>
+              <div className="border-2 border-red-800 p-6 shadow-[3px_3px_0px_0px_#7f1d1d]">
+                <h2 className="text-lg font-bold text-red-400 mb-2">Errore</h2>
                 <p className="text-sm text-zinc-400">{result.error}</p>
                 {result.details && (
                   <pre className="mt-2 text-xs text-zinc-600 whitespace-pre-wrap">{result.details}</pre>
@@ -216,8 +221,8 @@ export default function SyncPage() {
             )}
 
             {result.imageErrors && result.imageErrors.length > 0 && (
-              <div className="rounded-lg border border-red-900 p-6">
-                <h3 className="text-sm font-semibold text-red-400 mb-3">Errori immagini ({result.imageErrors.length})</h3>
+              <div className="border-2 border-red-800 p-6 shadow-[3px_3px_0px_0px_#7f1d1d]">
+                <h3 className="text-sm font-bold text-red-400 mb-3">Errori immagini ({result.imageErrors.length})</h3>
                 <div className="max-h-60 overflow-y-auto space-y-1">
                   {result.imageErrors.map((err, i) => (
                     <p key={i} className="text-xs text-zinc-400 font-mono">{err}</p>
@@ -227,8 +232,8 @@ export default function SyncPage() {
             )}
 
             {result.debug && result.debug.length > 0 && (
-              <details className="rounded-lg border border-zinc-800 p-6">
-                <summary className="text-sm font-medium text-zinc-400 cursor-pointer hover:text-white">
+              <details className="border-2 border-zinc-800 p-6 shadow-[3px_3px_0px_0px_#27272a]">
+                <summary className="text-sm font-bold text-zinc-400 cursor-pointer hover:text-white">
                   Debug info ({result.debug.length} entries)
                 </summary>
                 <div className="mt-3 max-h-60 overflow-y-auto space-y-1">

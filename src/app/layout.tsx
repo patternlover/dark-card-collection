@@ -1,3 +1,6 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
@@ -44,16 +47,27 @@ export default function RootLayout({
         <ConsentProvider>
           <AnalyticsProvider>
             <CartProvider>
-              <Header />
-              <main className="min-h-screen">
-                {children}
-              </main>
-              <Footer />
-              <CookieConsent />
+              <LayoutShell>{children}</LayoutShell>
             </CartProvider>
           </AnalyticsProvider>
         </ConsentProvider>
       </body>
     </html>
+  )
+}
+
+function LayoutShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const isAdminArea = pathname.startsWith('/admin') || pathname.startsWith('/dashboard')
+
+  return (
+    <>
+      {!isAdminArea && <Header />}
+      <main className="min-h-screen">
+        {children}
+      </main>
+      {!isAdminArea && <Footer />}
+      {!isAdminArea && <CookieConsent />}
+    </>
   )
 }

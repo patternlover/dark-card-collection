@@ -56,18 +56,18 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       type="button"
       onClick={handleAdd}
       disabled={!isAvailable || added}
-      className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-6 py-4 text-base font-semibold text-black transition-colors hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex w-full items-center justify-center gap-2 border-2 border-[#FACC15] bg-[#FACC15] px-6 py-4 text-base font-bold text-black shadow-[4px_4px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[4px_4px_0px_0px_#000]"
     >
       {added ? (
         <>
-          <Check className="h-5 w-5" />
+          <Check className="h-5 w-5" strokeWidth={3} />
           Aggiunto!
         </>
       ) : !isAvailable ? (
         'Non disponibile'
       ) : (
         <>
-          <ShoppingBag className="h-5 w-5" />
+          <ShoppingBag className="h-5 w-5" strokeWidth={2.5} />
           Aggiungi al carrello
         </>
       )}

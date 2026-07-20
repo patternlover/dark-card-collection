@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
 import { proxyImageUrl } from '@/lib/proxy-image'
+import { QuickAddButton } from './QuickAddButton'
 
 interface Product {
   id: number | string
@@ -31,67 +32,52 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const statusLabels: Record<string, string> = {
-    listed: 'Disponibile',
-    hold: 'In Attesa',
-    sold: 'Venduto',
-  }
-
   const displayPrice = product.storePrice || 0
   const imgUrl = proxyImageUrl(getProductImage(product))
 
   return (
-    <Link
-      href={`/products/${product.slug}`}
-      className="group relative flex flex-col overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 transition-colors hover:border-zinc-700"
-    >
-      {imgUrl ? (
-        <img
-          src={imgUrl}
-          alt={product.title}
-          className="aspect-square w-full object-cover"
-        />
-      ) : (
-        <div className="aspect-square bg-zinc-800 flex items-center justify-center">
-          <span className="text-zinc-600 text-4xl">📦</span>
-        </div>
-      )}
-
-      <div className="flex flex-1 flex-col p-4">
-        <div className="mb-2 flex flex-wrap gap-2">
-          {product.status === 'hold' && <Badge variant="preorder">In Attesa</Badge>}
-          {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
-          {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
+    <div className="group relative border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#FACC15]">
+      <Link
+        href={`/products/${product.slug}`}
+        className="block"
+      >
+        <div className="p-3">
+          {imgUrl ? (
+            <img
+              src={imgUrl}
+              alt={product.title}
+              className="aspect-square w-full object-cover border border-zinc-800"
+            />
+          ) : (
+            <div className="aspect-square w-full bg-zinc-800 flex items-center justify-center border border-zinc-800">
+              <span className="text-zinc-600 text-4xl">📦</span>
+            </div>
+          )}
         </div>
 
-        {product.category && (
-          <p className="text-xs text-zinc-500">
-            {typeof product.category === 'object' ? product.category.name : product.category}
-          </p>
-        )}
+        <div className="px-4 pb-4">
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {product.status === 'hold' && <Badge variant="preorder">In Attesa</Badge>}
+            {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
+            {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
+          </div>
 
-        <h3 className="mt-1 text-sm font-medium text-white group-hover:text-blue-400 transition-colors line-clamp-2">
-          {product.title}
-        </h3>
+          <h3 className="text-sm font-semibold text-white line-clamp-2 leading-tight">
+            {product.title}
+          </h3>
 
-        {product.collection && (
-          <p className="mt-1 text-xs text-zinc-600">
-            {typeof product.collection === 'object' ? product.collection.name : product.collection}
-          </p>
-        )}
-
-        <div className="mt-auto pt-4">
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold text-white">
-              {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-lg font-bold text-[#FACC15]">
+              {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : '—'}
             </span>
-          </div>
-          <div className="mt-1 flex gap-2">
-            <span className="text-[10px] uppercase text-zinc-600">{product.language}</span>
-            <span className="text-[10px] uppercase text-zinc-600">{product.condition}</span>
+            <span className="text-[10px] uppercase tracking-wider text-zinc-600">{product.language}</span>
           </div>
         </div>
+      </Link>
+
+      <div className="absolute bottom-3 right-3">
+        <QuickAddButton product={product as any} />
       </div>
-    </Link>
+    </div>
   )
 }

@@ -66,21 +66,10 @@ export default async function ShopPage({
     // DB might not be connected during build
   }
 
-  function buildHref(overrides: Record<string, string | undefined>) {
-    const p = new URLSearchParams()
-    if (overrides.condition ?? params.condition) p.set('condition', overrides.condition ?? params.condition!)
-    if (overrides.language ?? params.language) p.set('language', overrides.language ?? params.language!)
-    if (overrides.category ?? params.category) p.set('category', overrides.category ?? params.category!)
-    if (overrides.collection ?? params.collection) p.set('collection', overrides.collection ?? params.collection!)
-    if (overrides.q ?? params.q) p.set('q', overrides.q ?? params.q!)
-    const qs = p.toString()
-    return qs ? `/shop?${qs}` : '/shop'
-  }
-
   return (
     <div className="bg-black min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-white mb-6">Shop</h1>
+        <h1 className="text-3xl font-black text-white mb-6 uppercase tracking-tight">Shop</h1>
 
         <form action="/shop" method="GET" className="flex flex-wrap gap-3 items-center mb-8">
           <input
@@ -88,13 +77,13 @@ export default async function ShopPage({
             name="q"
             defaultValue={params.q || ''}
             placeholder="Cerca per nome..."
-            className="flex-1 min-w-[180px] rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-white focus:outline-none"
+            className="flex-1 min-w-[180px] border-2 border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
           />
 
           <select
             name="condition"
             defaultValue={params.condition || ''}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+            className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
           >
             <option value="">Tutte le condizioni</option>
             <option value="mint">Sigillato</option>
@@ -105,7 +94,7 @@ export default async function ShopPage({
           <select
             name="language"
             defaultValue={params.language || ''}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+            className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
           >
             <option value="">Tutte le lingue</option>
             <option value="italian">Italiano</option>
@@ -117,7 +106,7 @@ export default async function ShopPage({
             <select
               name="category"
               defaultValue={params.category || ''}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+              className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
             >
               <option value="">Tutte le categorie</option>
               {categories.map((cat: any) => (
@@ -130,7 +119,7 @@ export default async function ShopPage({
             <select
               name="collection"
               defaultValue={params.collection || ''}
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+              className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
             >
               <option value="">Tutte le collezioni</option>
               {collections.map((col: any) => (
@@ -141,7 +130,7 @@ export default async function ShopPage({
 
           <button
             type="submit"
-            className="rounded-lg bg-white text-black px-5 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors"
+            className="border-2 border-[#FACC15] bg-[#FACC15] px-5 py-2.5 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
           >
             Filtra
           </button>
@@ -155,7 +144,7 @@ export default async function ShopPage({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {groupProducts(products).map((group) => (
               <ProductGroupCard key={group.title} group={group} />
             ))}
