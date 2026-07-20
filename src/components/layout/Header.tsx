@@ -76,6 +76,7 @@ export function Header() {
 
       {isMobileMenuOpen && (
         <MobileMenu
+          isOpen={isMobileMenuOpen}
           items={navItems}
           onClose={() => setIsMobileMenuOpen(false)}
         />
