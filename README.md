@@ -15,11 +15,16 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 ## Features
 
 - Product catalog with categories and collections
+- Products grouped by name (variants hidden from customers)
 - Google Sheets integration for inventory management
 - Stripe Checkout for secure payments
-- Admin panel at `/admin`
+- Admin dashboard at `/admin` with product management and sync tools
 - Responsive design with mobile menu
-- Product filtering by condition, language, category
+- Product filtering by condition, language, category, collection
+- Product detail page with stock info and variant availability
+- Variant management with edit and delete (Payload-only, no Sheets impact)
+- Daily cron jobs for import and price updates
+- GA4 ecommerce tracking via GTM
 
 ## Getting Started
 
@@ -46,6 +51,9 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 BLOB_READ_WRITE_TOKEN=vercel_blob_...
+CRON_SECRET=your-cron-secret
+SYNC_PASSWORD=your-admin-password
+GOOGLE_SERVICE_ACCOUNT=...
 ```
 
 ### Development
@@ -55,14 +63,7 @@ pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) for the storefront.
-Open [http://localhost:3000/admin](http://localhost:3000/admin) for the admin panel.
-
-### Build
-
-```bash
-pnpm build
-pnpm start
-```
+Open [http://localhost:3000/admin](http://localhost:3000/admin) for the admin dashboard.
 
 ## Google Sheets Import
 
@@ -79,9 +80,9 @@ Products are imported from a Google Sheets document with an `inventory` tab.
 | `set` | Card set name |
 | `condition` | SEALED, NM, EXC, GD, LP, PL, PSA, BGS |
 | `product_state` | LISTED, HOLD, SOLD |
-| `target_price` | Target selling price |
+| `target_price` | Target selling price (mapped to `storePrice`) |
 | `unitary_gross_price` | Purchase cost |
-| `store_price` | Actual store price (optional) |
+| `store_price` | Strikethrough price (mapped to `compareAtPrice`) |
 
 ### Import via Script
 
@@ -96,36 +97,70 @@ curl -X POST https://your-site.vercel.app/api/products/import \
   -H "Authorization: Bearer YOUR_PAYLOAD_SECRET"
 ```
 
+## Admin
+
+Access the admin dashboard at `/admin` (password-protected).
+
+- **Gestione Prodotti** (`/admin/products`): View, edit, and delete product variants. Products are grouped by name; expand a group to see individual variants with language, condition, price, and stock.
+- **Sincronizzazione** (`/admin/sync`): Trigger a manual sync from Google Sheets with import filters.
+- **Payload CMS** (`/admin/[[...segments]]`): Native Payload admin panel.
+
+### Variant Management
+
+- Products from Google Sheets are imported as variants (same title, different `itemId`)
+- Variants are only visible in `/admin/products` — the storefront shows grouped parent products
+- Stock = sum of all variant quantities
+- Selling price = lowest `storePrice` across variants
+- Deleting a variant removes it from Payload only; the Google Sheet row is preserved
+
 ## Project Structure
 
 ```
 src/
 ├── app/
-│   ├── (payload)/          # Payload CMS admin
-│   ├── (shop)/             # Shop pages
-│   ├── products/           # Product detail pages
-│   ├── cart/               # Shopping cart
-│   ├── checkout/           # Stripe checkout
-│   └── api/                # API routes
+│   ├── (payload)/              # Payload CMS admin
+│   ├── admin/
+│   │   ├── page.tsx            # Admin dashboard hub
+│   │   ├── products/page.tsx   # Variant management + delete
+│   │   └── sync/               # Google Sheets sync UI
+│   ├── shop/                   # Product listing with filters
+│   ├── products/[slug]/        # Product detail page (parent only)
+│   ├── cart/                   # Shopping cart
+│   ├── checkout/               # Stripe checkout
+│   └── api/                    # API routes
 ├── components/
-│   ├── layout/             # Header, Footer, MobileMenu
-│   ├── product/            # ProductCard, ProductFilters
-│   ├── sections/           # Hero, FeaturedProducts, TrustBadges
-│   └── ui/                 # Badge
+│   ├── admin/                  # EditProductModal, ProductGroupRow
+│   ├── layout/                 # Header, Footer, MobileMenu
+│   ├── product/                # ProductCard, ProductGroupCard, AddToCartButton
+│   ├── sections/               # Hero, FeaturedProducts, TrustBadges
+│   └── ui/                     # Badge, CookieConsent
 ├── lib/
-│   └── stripe.ts           # Stripe client
+│   ├── group-products.ts       # Groups variants by title
+│   ├── google-sheets.ts        # Google Sheets API
+│   ├── image-import.ts         # Image download + upload
+│   ├── proxy-image.ts          # Cardmarket image proxy
+│   ├── analytics.ts            # GA4 ecommerce events
+│   ├── payload.ts              # Cached Payload client
+│   └── stripe.ts               # Stripe client
 └── payload/
-    ├── collections/        # Products, Categories, Collections, Orders, Users, Media
-    └── globals/            # SiteSettings, Header
+    ├── collections/            # Products, Categories, Collections, Orders, Users, Media, Messages
+    └── globals/                # SiteSettings, Header
 ```
 
 ## Deployment
 
-This project is configured for Vercel deployment.
+This project is configured for Vercel deployment with automatic Payload migrations on build.
 
 ```bash
 vercel --prod
 ```
+
+### Cron Jobs
+
+| Endpoint | Schedule | Description |
+|----------|----------|-------------|
+| `/api/cron/import` | Daily 3:00 AM | Import products from Google Sheets |
+| `/api/cron/prices` | Daily 4:00 AM | Update average sale prices |
 
 ## License
 

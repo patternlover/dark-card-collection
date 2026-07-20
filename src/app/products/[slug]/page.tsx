@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation'
 import { getPayloadClient } from '@/lib/payload'
+import { groupProducts } from '@/lib/group-products'
 import { Badge } from '@/components/ui/Badge'
 import { ProductCard } from '@/components/product/ProductCard'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Truck, Shield, Package } from 'lucide-react'
 import type { Metadata } from 'next'
-import { ProductGallery } from '@/components/product/ProductGallery'
+import { proxyImageUrl } from '@/lib/proxy-image'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,6 +34,23 @@ export async function generateMetadata({
   }
 }
 
+const LANGUAGE_LABELS: Record<string, string> = {
+  italian: 'Italiano',
+  english: 'Inglese',
+  chinese: 'Cinese',
+  japanese: 'Giapponese',
+}
+
+const CONDITION_LABELS: Record<string, string> = {
+  mint: 'Sigillato',
+  'near-mint': 'Near Mint',
+  'lightly-played': 'Lightly Played',
+  'moderately-played': 'Moderately Played',
+  'heavily-played': 'Heavily Played',
+  damaged: 'Damaged',
+  graded: 'Graded',
+}
+
 export default async function ProductPage({
   params,
 }: {
@@ -41,7 +59,8 @@ export default async function ProductPage({
   const { slug } = await params
 
   let product: any = null
-  let relatedProducts: any[] = []
+  let group: any = null
+  let relatedGroups: any[] = []
 
   try {
     const payload = await getPayloadClient()
@@ -58,6 +77,15 @@ export default async function ProductPage({
 
     product = result.docs[0]
 
+    const allVariants = await payload.find({
+      collection: 'products',
+      where: { title: { equals: product.title } },
+      limit: 100,
+    })
+
+    const groups = groupProducts(allVariants.docs)
+    group = groups[0] || null
+
     if (product?.collection) {
       const colId = typeof product.collection === 'object' ? product.collection.id : product.collection
       const related = await payload.find({
@@ -69,15 +97,15 @@ export default async function ProductPage({
             { status: { equals: 'listed' } },
           ],
         },
-        limit: 4,
+        limit: 50,
       })
-      relatedProducts = related.docs
+      relatedGroups = groupProducts(related.docs)
     }
   } catch {
     notFound()
   }
 
-  if (!product) notFound()
+  if (!product || !group) notFound()
 
   const displayPrice = product.storePrice || 0
 
@@ -99,17 +127,38 @@ export default async function ProductPage({
       : product.collection
     : ''
 
+  const availableLanguages = [...new Set(
+    group.products
+      .filter((p: any) => p.status === 'listed' && p.language)
+      .map((p: any) => LANGUAGE_LABELS[p.language] || p.language)
+  )]
+
+  const availableConditions = [...new Set(
+    group.products
+      .filter((p: any) => p.status === 'listed' && p.condition)
+      .map((p: any) => CONDITION_LABELS[p.condition] || p.condition)
+  )]
+
+  const imgSrc = proxyImageUrl(group.image)
+
+  const buyableProduct = group.products.find((p: any) => p.status === 'listed' && p.storePrice && p.storePrice > 0) || product
+
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div>
-            <ProductGallery
-              imageUrl={product.imageUrl}
-              images={product.images || []}
-              fallbackImage={product.image}
-              alt={product.title}
-            />
+            {imgSrc ? (
+              <img
+                src={imgSrc}
+                alt={product.title}
+                className="w-full rounded-xl object-cover"
+              />
+            ) : (
+              <div className="aspect-square w-full rounded-xl bg-zinc-800 flex items-center justify-center">
+                <span className="text-zinc-600 text-6xl">📦</span>
+              </div>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -144,13 +193,24 @@ export default async function ProductPage({
               <span className="text-3xl font-bold text-white">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
               </span>
+              {group.totalQuantity > 0 && (
+                <span className="text-sm text-zinc-500">
+                  {group.totalQuantity} disponibil{group.totalQuantity === 1 ? 'e' : 'i'}
+                </span>
+              )}
             </div>
 
-            <div className="flex gap-4 text-sm text-zinc-400">
-              {product.language && <span>Lingua: {product.language}</span>}
-              {product.condition && <span>Condizione: {product.condition}</span>}
-              {product.itemId && <span>ID: {product.itemId}</span>}
-            </div>
+            {availableLanguages.length > 0 && (
+              <div className="text-sm text-zinc-400">
+                <span className="text-zinc-500">Lingue:</span> {availableLanguages.join(', ')}
+              </div>
+            )}
+
+            {availableConditions.length > 0 && (
+              <div className="text-sm text-zinc-400">
+                <span className="text-zinc-500">Condizioni:</span> {availableConditions.join(', ')}
+              </div>
+            )}
 
             {product.averageSalePrice && (
               <div className="rounded-lg border border-zinc-800 p-4">
@@ -174,7 +234,7 @@ export default async function ProductPage({
               </div>
             )}
 
-            <AddToCartButton product={product} />
+            <AddToCartButton product={buyableProduct} />
 
             <div className="space-y-3 rounded-lg border border-zinc-800 p-4">
               <div className="flex items-center gap-3 text-sm text-zinc-400">
@@ -193,12 +253,26 @@ export default async function ProductPage({
           </div>
         </div>
 
-        {relatedProducts.length > 0 && (
+        {relatedGroups.length > 0 && (
           <section className="mt-16 border-t border-zinc-800 pt-12">
             <h2 className="text-2xl font-bold text-white mb-8">Prodotti Correlati</h2>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {relatedProducts.map((p: any) => (
-                <ProductCard key={p.id} product={p} />
+              {relatedGroups.slice(0, 4).map((g: any) => (
+                <ProductCard
+                  key={g.title}
+                  product={{
+                    id: 0,
+                    title: g.title,
+                    slug: g.slug,
+                    storePrice: g.sellingPrice,
+                    status: 'listed' as const,
+                    condition: g.products[0]?.condition || '',
+                    language: g.products[0]?.language || '',
+                    category: g.category,
+                    collection: g.collection,
+                    imageUrl: g.image,
+                  }}
+                />
               ))}
             </div>
           </section>

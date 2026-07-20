@@ -66,117 +66,86 @@ export default async function ShopPage({
     // DB might not be connected during build
   }
 
-  const conditionFilters = [
-    { id: 'mint', label: 'Sigillato' },
-    { id: 'near-mint', label: 'Near Mint' },
-    { id: 'graded', label: 'Graded' },
-  ]
-
-  const languageFilters = [
-    { id: 'italian', label: 'Italiano' },
-    { id: 'english', label: 'Inglese' },
-    { id: 'chinese', label: 'Cinese' },
-  ]
+  function buildHref(overrides: Record<string, string | undefined>) {
+    const p = new URLSearchParams()
+    if (overrides.condition ?? params.condition) p.set('condition', overrides.condition ?? params.condition!)
+    if (overrides.language ?? params.language) p.set('language', overrides.language ?? params.language!)
+    if (overrides.category ?? params.category) p.set('category', overrides.category ?? params.category!)
+    if (overrides.collection ?? params.collection) p.set('collection', overrides.collection ?? params.collection!)
+    if (overrides.q ?? params.q) p.set('q', overrides.q ?? params.q!)
+    const qs = p.toString()
+    return qs ? `/shop?${qs}` : '/shop'
+  }
 
   return (
     <div className="bg-black min-h-screen">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Shop</h1>
+        <h1 className="text-3xl font-bold text-white mb-6">Shop</h1>
 
-        <div className="space-y-4 mb-8">
-          <div>
-            <h3 className="text-sm font-medium text-zinc-400 mb-2">Ricerca</h3>
-            <form action="/shop" method="GET">
-              {(params.category || params.collection || params.condition || params.language) && (
-                <>
-                  {params.category && <input type="hidden" name="category" value={params.category} />}
-                  {params.collection && <input type="hidden" name="collection" value={params.collection} />}
-                  {params.condition && <input type="hidden" name="condition" value={params.condition} />}
-                  {params.language && <input type="hidden" name="language" value={params.language} />}
-                </>
-              )}
-              <input
-                type="text"
-                name="q"
-                defaultValue={params.q || ''}
-                placeholder="Cerca per nome..."
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2 text-sm text-white placeholder-zinc-500 focus:border-white focus:outline-none"
-              />
-            </form>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-zinc-400 mb-2">Condizione</h3>
-            <div className="flex flex-wrap gap-2">
-              <a href="/shop" className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.condition ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-                Tutti
-              </a>
-              {conditionFilters.map((f) => (
-                <a
-                  key={f.id}
-                  href={`/shop?condition=${f.id}${params.category ? `&category=${params.category}` : ''}${params.collection ? `&collection=${params.collection}` : ''}${params.language ? `&language=${params.language}` : ''}${params.q ? `&q=${params.q}` : ''}`}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.condition === f.id ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
-                >
-                  {f.label}
-                </a>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-zinc-400 mb-2">Lingua</h3>
-            <div className="flex flex-wrap gap-2">
-              <a href="/shop" className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.language ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-                Tutti
-              </a>
-              {languageFilters.map((f) => (
-                <a
-                  key={f.id}
-                  href={`/shop?language=${f.id}${params.category ? `&category=${params.category}` : ''}${params.collection ? `&collection=${params.collection}` : ''}${params.condition ? `&condition=${params.condition}` : ''}${params.q ? `&q=${params.q}` : ''}`}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.language === f.id ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
-                >
-                  {f.label}
-                </a>
-              ))}
-            </div>
-          </div>
+        <form action="/shop" method="GET" className="flex flex-wrap gap-3 items-center mb-8">
+          <input
+            type="text"
+            name="q"
+            defaultValue={params.q || ''}
+            placeholder="Cerca per nome..."
+            className="flex-1 min-w-[180px] rounded-lg border border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-white focus:outline-none"
+          />
+
+          <select
+            name="condition"
+            defaultValue={params.condition || ''}
+            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+          >
+            <option value="">Tutte le condizioni</option>
+            <option value="mint">Sigillato</option>
+            <option value="near-mint">Near Mint</option>
+            <option value="graded">Graded</option>
+          </select>
+
+          <select
+            name="language"
+            defaultValue={params.language || ''}
+            className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+          >
+            <option value="">Tutte le lingue</option>
+            <option value="italian">Italiano</option>
+            <option value="english">Inglese</option>
+            <option value="chinese">Cinese</option>
+          </select>
+
           {categories.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-zinc-400 mb-2">Categoria</h3>
-              <div className="flex flex-wrap gap-2">
-                <a href="/shop" className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.category ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-                  Tutti
-                </a>
-                {categories.map((cat: any) => (
-                  <a
-                    key={cat.id}
-                    href={`/shop?category=${cat.id}${params.condition ? `&condition=${params.condition}` : ''}${params.collection ? `&collection=${params.collection}` : ''}${params.language ? `&language=${params.language}` : ''}${params.q ? `&q=${params.q}` : ''}`}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.category === String(cat.id) ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
-                  >
-                    {cat.name}
-                  </a>
-                ))}
-              </div>
-            </div>
+            <select
+              name="category"
+              defaultValue={params.category || ''}
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+            >
+              <option value="">Tutte le categorie</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
           )}
+
           {collections.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-zinc-400 mb-2">Collezione</h3>
-              <div className="flex flex-wrap gap-2">
-                <a href="/shop" className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${!params.collection ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}>
-                  Tutti
-                </a>
-                {collections.map((col: any) => (
-                  <a
-                    key={col.id}
-                    href={`/shop?collection=${col.id}${params.condition ? `&condition=${params.condition}` : ''}${params.language ? `&language=${params.language}` : ''}${params.category ? `&category=${params.category}` : ''}${params.q ? `&q=${params.q}` : ''}`}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${params.collection === String(col.id) ? 'bg-white text-black' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
-                  >
-                    {col.name}
-                  </a>
-                ))}
-              </div>
-            </div>
+            <select
+              name="collection"
+              defaultValue={params.collection || ''}
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-white focus:outline-none"
+            >
+              <option value="">Tutte le collezioni</option>
+              {collections.map((col: any) => (
+                <option key={col.id} value={col.id}>{col.name}</option>
+              ))}
+            </select>
           )}
-        </div>
+
+          <button
+            type="submit"
+            className="rounded-lg bg-white text-black px-5 py-2.5 text-sm font-medium hover:bg-zinc-200 transition-colors"
+          >
+            Filtra
+          </button>
+        </form>
 
         {products.length === 0 ? (
           <div className="text-center py-16">
@@ -186,7 +155,7 @@ export default async function ShopPage({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {groupProducts(products).map((group) => (
               <ProductGroupCard key={group.title} group={group} />
             ))}

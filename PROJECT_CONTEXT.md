@@ -65,6 +65,11 @@ src/
 │   │   └── contact/page.tsx        # Contact form (client)
 │   │
 │   ├── api/
+│   │   ├── admin/
+│   │   │   ├── products/
+│   │   │   │   ├── route.ts       # GET list products + PATCH update + DELETE variant
+│   │   │   │   └── [id]/
+│   │   │   │       └── route.ts   # PATCH update single product + DELETE variant (no Sheets)
 │   │   ├── stripe/
 │   │   │   ├── checkout/route.ts   # Creates Stripe checkout session
 │   │   │   └── webhook/route.ts    # Stripe webhook (checkout.session.completed)
@@ -75,29 +80,50 @@ src/
 │   │   └── products/
 │   │       └── import/route.ts     # Manual import endpoint
 │   │
+│   ├── admin/
+│   │   ├── page.tsx                # /admin — dashboard hub (password auth)
+│   │   ├── products/
+│   │   │   └── page.tsx            # /admin/products — variant management + delete
+│   │   └── sync/
+│   │       ├── page.tsx            # /admin/sync — Google Sheets sync UI
+│   │       └── actions.ts          # Server action for sync
+│   │
 │   └── (payload)/                  # Payload admin (auto-generated)
 │
 ├── components/
+│   ├── admin/
+│   │   ├── EditProductModal.tsx    # Modal for editing a single product variant
+│   │   └── ProductGroupRow.tsx     # Expandable table row with delete for admin
 │   ├── layout/
 │   │   ├── Header.tsx              # Sticky header with nav + cart badge
 │   │   ├── Footer.tsx              # Footer with cleaned links
 │   │   └── MobileMenu.tsx          # Mobile hamburger menu
 │   ├── product/
-│   │   ├── ProductCard.tsx         # Product card (Payload types)
+│   │   ├── ProductCard.tsx         # Product card (links to /products/[slug])
+│   │   ├── ProductGroupCard.tsx    # Grouped card in shop (links to PDP, no variants)
+│   │   ├── ProductGallery.tsx      # Image gallery with thumbnails
+│   │   ├── ProductFilters.tsx      # Reusable filter component (unused in shop)
 │   │   └── AddToCartButton.tsx     # Add to cart with feedback
 │   ├── sections/
 │   │   ├── HeroSection.tsx         # Homepage hero
 │   │   ├── FeaturedProducts.tsx    # Async server component, fetches from Payload
 │   │   └── TrustBadges.tsx         # Trust badges
 │   └── ui/
-│       └── Badge.tsx               # Status/condition badge
+│       ├── Badge.tsx               # Status/condition badge
+│       └── CookieConsent.tsx       # GDPR cookie consent banner
 │
 ├── hooks/
 │   └── useCart.tsx                  # CartProvider + useCart (localStorage)
 │
 ├── lib/
 │   ├── payload.ts                   # getPayloadClient() — cached singleton
-│   └── stripe.ts                    # Stripe client
+│   ├── stripe.ts                    # Stripe client
+│   ├── group-products.ts            # Groups products by title (variants → parent)
+│   ├── google-sheets.ts             # Google Sheets API read/write
+│   ├── image-import.ts              # Download + upload images to Vercel Blob
+│   ├── parse-csv.ts                 # RFC 4180 CSV parser
+│   ├── proxy-image.ts               # Cardmarket image proxy URL builder
+│   └── analytics.ts                 # GA4 ecommerce dataLayer events
 │
 ├── payload/
 │   ├── collections/
@@ -166,18 +192,29 @@ Headers: `sale_id, item_id, listing_date, sale_date, platform, unitary_gross_pri
 5. **Products collection**: Both LISTED and HOLD products shown on shop (HOLD with "In Attesa" badge)
 6. **Storefront visibility filter**: `status: { equals: 'listed' }` on shop page
 
+## Variant Products Logic
+
+Products in Google Sheets are imported as individual rows (variants). Each row becomes a Payload product with the same `title` but different `itemId`, `language`, `condition`, and `storePrice`. Variants represent the same product purchased from suppliers on different dates/orders.
+
+- **Variants are NOT exposed to customers** — shop and PDP show only the "parent product" (grouped by `title`)
+- **Stock** = sum of `quantity` across all variants with the same title
+- **Selling price** = minimum `storePrice` (target_price from Sheets) across variants
+- **Grouping** is done by `groupProducts()` in `src/lib/group-products.ts`
+- **PDP** fetches all variants by title, groups them, and shows aggregate info (total stock, available languages/conditions as text)
+- **Admin** (`/admin/products`) shows variants in expandable rows — this is the ONLY place variants are visible
+- **Delete variant**: removes from Payload only, does NOT affect Google Sheets (same row stays in the sheet for import history)
+
 ## Known Issues / TODO
 
-1. No Payload admin customization (default look)
-2. No user accounts / order history
-3. No email notifications
-4. No cart drawer/mini-cart
-5. No robots.txt / sitemap
-6. No middleware for route protection
-7. No tests
-8. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL
-9. `pnpm generate:types` times out on WSL — `payload-types.ts` never generated
-10. Stripe Products not synced with Payload products
+1. No user accounts / order history
+2. No email notifications
+3. No cart drawer/mini-cart
+4. No robots.txt / sitemap
+5. No middleware for route protection
+6. No tests
+7. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL
+8. `pnpm generate:types` times out on WSL — `payload-types.ts` never generated
+9. Stripe Products not synced with Payload products
 
 ## Git Commits
 

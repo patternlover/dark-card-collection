@@ -1,7 +1,7 @@
 export interface ProductGroup {
   title: string
   products: any[]
-  minPrice: number
+  sellingPrice: number
   totalQuantity: number
   image: string | null
   variantCount: number
@@ -40,7 +40,7 @@ export function groupProducts(products: any[]): ProductGroup[] {
       .map((p: any) => p.storePrice)
       .filter((p: any) => p != null && p > 0)
 
-    const minPrice = prices.length > 0 ? Math.min(...prices) : 0
+    const sellingPrice = prices.length > 0 ? Math.min(...prices) : 0
     const totalQuantity = sorted.reduce((sum: number, p: any) => sum + (p.quantity || 0), 0)
 
     const firstImage = sorted.find((p: any) => p.imageUrl)?.imageUrl || null
@@ -48,7 +48,7 @@ export function groupProducts(products: any[]): ProductGroup[] {
     groups.push({
       title,
       products: sorted,
-      minPrice,
+      sellingPrice,
       totalQuantity,
       image: firstImage,
       variantCount: sorted.length,

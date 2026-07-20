@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { EditProductModal } from './EditProductModal'
 import type { ProductGroup } from '@/lib/group-products'
@@ -32,8 +32,28 @@ interface ProductGroupRowProps {
 export function ProductGroupRow({ group, password, onProductUpdated }: ProductGroupRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [editingProduct, setEditingProduct] = useState<any>(null)
+  const [deleting, setDeleting] = useState<number | null>(null)
 
   const imgSrc = proxyImageUrl(group.image)
+
+  const handleDelete = async (e: React.MouseEvent, productId: number) => {
+    e.stopPropagation()
+    if (!confirm('Eliminare questa variante? Il record verrà rimosso dal sito ma rimarrà nel Google Sheet.')) return
+
+    setDeleting(productId)
+    try {
+      const res = await fetch(`/api/admin/products/${productId}`, {
+        method: 'DELETE',
+        headers: { 'x-sync-password': password },
+      })
+      if (!res.ok) throw new Error('Eliminazione fallita')
+      onProductUpdated()
+    } catch (err) {
+      alert(String(err))
+    } finally {
+      setDeleting(null)
+    }
+  }
 
   return (
     <>
@@ -56,7 +76,7 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
           {group.collection?.name || '-'}
         </td>
         <td className="px-4 py-3 text-white font-medium">
-          {group.minPrice > 0 ? `€${group.minPrice.toFixed(2)}` : '-'}
+          {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : '-'}
         </td>
         <td className="px-4 py-3">
           <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300">
@@ -83,8 +103,7 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
       {expanded && group.products.map((p: any) => (
         <tr
           key={p.id}
-          className="border-b border-zinc-800/30 bg-zinc-900/30 hover:bg-zinc-800/30 transition-colors cursor-pointer"
-          onClick={(e) => { e.stopPropagation(); setEditingProduct(p) }}
+          className="border-b border-zinc-800/30 bg-zinc-900/30 hover:bg-zinc-800/30 transition-colors"
         >
           <td className="px-4 py-2 pl-12">
             {proxyImageUrl(p.imageUrl) ? (
@@ -93,20 +112,22 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
               <div className="h-8 w-8 rounded bg-zinc-800" />
             )}
           </td>
-          <td className="px-4 py-2">
+          <td className="px-4 py-2 cursor-pointer" onClick={() => setEditingProduct(p)}>
             <span className="text-zinc-400 text-xs font-mono">{p.itemId}</span>
           </td>
-          <td className="px-4 py-2 text-zinc-300 text-sm">
+          <td className="px-4 py-2 text-zinc-300 text-sm cursor-pointer" onClick={() => setEditingProduct(p)}>
             {LANGUAGE_LABELS[p.language] || p.language || '-'}
           </td>
-          <td className="px-4 py-2 text-zinc-300 text-sm">
+          <td className="px-4 py-2 text-zinc-300 text-sm cursor-pointer" onClick={() => setEditingProduct(p)}>
             {CONDITION_LABELS[p.condition] || p.condition || '-'}
           </td>
-          <td className="px-4 py-2 text-white text-sm">
+          <td className="px-4 py-2 text-white text-sm cursor-pointer" onClick={() => setEditingProduct(p)}>
             {p.storePrice && p.storePrice > 0 ? `€${p.storePrice.toFixed(2)}` : '-'}
           </td>
-          <td className="px-4 py-2 text-zinc-400 text-sm">{p.quantity || 0}</td>
-          <td className="px-4 py-2" colSpan={2}>
+          <td className="px-4 py-2 text-zinc-400 text-sm cursor-pointer" onClick={() => setEditingProduct(p)}>
+            {p.quantity || 0}
+          </td>
+          <td className="px-4 py-2 cursor-pointer" onClick={() => setEditingProduct(p)}>
             <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
               p.productState?.toUpperCase() === 'AVAILABLE' ? 'bg-green-900/50 text-green-400' :
               p.productState?.toUpperCase() === 'HOLD' ? 'bg-yellow-900/50 text-yellow-400' :
@@ -117,6 +138,16 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
             }`}>
               {p.productState || p.status || '-'}
             </span>
+          </td>
+          <td className="px-4 py-2 w-8">
+            <button
+              onClick={(e) => handleDelete(e, p.id)}
+              disabled={deleting === p.id}
+              className="text-zinc-600 hover:text-red-400 transition-colors disabled:opacity-50"
+              title="Elimina variante"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </td>
         </tr>
       ))}

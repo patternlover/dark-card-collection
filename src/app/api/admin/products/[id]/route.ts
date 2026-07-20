@@ -53,3 +53,27 @@ export async function PATCH(
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const password = request.headers.get('x-sync-password')
+  if (password !== process.env.SYNC_PASSWORD && password !== process.env.PAYLOAD_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { id } = await params
+
+  try {
+    const payload = await getPayloadClient()
+    await payload.delete({
+      collection: 'products',
+      id: Number(id),
+    } as any)
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
+}
