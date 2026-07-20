@@ -170,5 +170,13 @@ export const Products: CollectionConfig = {
       type: 'checkbox',
       defaultValue: false,
     },
+    {
+      name: 'isVisible',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: {
+        description: 'Mostra il prodotto nello shop (indipendente dallo stato)',
+      },
+    },
   ],
 }

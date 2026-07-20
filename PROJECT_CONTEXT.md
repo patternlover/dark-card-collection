@@ -99,12 +99,14 @@ src/
 │   ├── layout/
 │   │   ├── Header.tsx              # Sticky header with nav + cart badge
 │   │   ├── Footer.tsx              # Footer with cleaned links
+│   │   ├── LayoutShell.tsx         # Client wrapper: conditional Header/Footer for admin routes
 │   │   └── MobileMenu.tsx          # Mobile hamburger menu
 │   ├── product/
 │   │   ├── ProductCard.tsx         # Product card (links to /products/[slug])
 │   │   ├── ProductGroupCard.tsx    # Grouped card in shop (links to PDP, no variants)
 │   │   ├── ProductGallery.tsx      # Image gallery with thumbnails
 │   │   ├── ProductFilters.tsx      # Reusable filter component (unused in shop)
+│   │   ├── QuickAddButton.tsx      # Cart icon button on cards (client, instant add)
 │   │   └── AddToCartButton.tsx     # Add to cart with feedback
 │   ├── sections/
 │   │   ├── HeroSection.tsx         # Homepage hero
@@ -129,7 +131,7 @@ src/
 │
 ├── payload/
 │   ├── collections/
-│   │   ├── Products/index.ts       # 19 fields (see schema below)
+│   │   ├── Products/index.ts       # 20 fields (see schema below)
 │   │   ├── Categories/index.ts     # name, slug, description
 │   │   ├── Collections/index.ts    # name, slug, description, releaseDate
 │   │   ├── Orders/index.ts         # orderId, items, status, total, stripeSessionId
@@ -167,6 +169,7 @@ src/
 | averageSalePrice | number | auto-calculated from sales |
 | lastPriceUpdate | date | |
 | featured | checkbox | default false |
+| isVisible | checkbox | default true, controls shop visibility independently of status |
 
 ### Payload `id` type is `string | number` — always cast with `as number` when creating orders.
 
@@ -191,8 +194,8 @@ Headers: `sale_id, item_id, listing_date, sale_date, platform, unitary_gross_pri
 2. **Cart**: localStorage via CartProvider context, not server-side
 3. **Checkout**: Creates ad-hoc Stripe price_data (no Stripe Products), passes Payload product IDs in metadata
 4. **Webhook**: Reads `product.metadata.payloadProductId` from Stripe to create order with correct Payload relationship
-5. **Products collection**: Both LISTED and HOLD products shown on shop (HOLD with "In Attesa" badge)
-6. **Storefront visibility filter**: `status: { equals: 'listed' }` on shop page
+5. **Products collection**: Both LISTED and HOLD products can be shown on shop, controlled by `isVisible` field
+6. **Storefront visibility filter**: `AND: [{ status: { equals: 'listed' } }, { isVisible: { equals: true } }]` on shop page
 
 ## Variant Products Logic
 
@@ -205,6 +208,7 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 - **PDP** fetches all variants by title, groups them, and shows aggregate info (total stock, available languages/conditions as text)
 - **Admin** (`/admin/products`) shows variants in expandable rows — this is the ONLY place variants are visible
 - **Delete variant**: removes from Payload only, does NOT affect Google Sheets (same row stays in the sheet for import history)
+- **Visibility toggle**: `isVisible` field controls whether a product group appears in the shop. Admin toggles via eye icon in `/admin/products`. Sync preserves existing visibility settings.
 
 ## Known Issues / TODO
 

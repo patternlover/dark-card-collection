@@ -24,7 +24,7 @@ export default async function ShopPage({
   try {
     const payload = await getPayloadClient()
 
-    const where: any = { status: { equals: 'listed' } }
+    const where: any = { AND: [{ status: { equals: 'listed' } }, { isVisible: { equals: true } }] }
     if (params.category) {
       where.category = { equals: Number(params.category) || params.category }
     }
@@ -71,69 +71,71 @@ export default async function ShopPage({
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-black text-white mb-6 uppercase tracking-tight">Shop</h1>
 
-        <form action="/shop" method="GET" className="flex flex-wrap gap-3 items-center mb-8">
+        <form action="/shop" method="GET" className="mb-8 space-y-3">
           <input
             type="text"
             name="q"
             defaultValue={params.q || ''}
             placeholder="Cerca per nome..."
-            className="flex-1 min-w-[180px] border-2 border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
+            className="w-full border-2 border-zinc-700 bg-zinc-800 px-4 py-2.5 text-sm text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
           />
 
-          <select
-            name="condition"
-            defaultValue={params.condition || ''}
-            className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
-          >
-            <option value="">Tutte le condizioni</option>
-            <option value="mint">Sigillato</option>
-            <option value="near-mint">Near Mint</option>
-            <option value="graded">Graded</option>
-          </select>
-
-          <select
-            name="language"
-            defaultValue={params.language || ''}
-            className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
-          >
-            <option value="">Tutte le lingue</option>
-            <option value="italian">Italiano</option>
-            <option value="english">Inglese</option>
-            <option value="chinese">Cinese</option>
-          </select>
-
-          {categories.length > 0 && (
+          <div className="flex flex-wrap gap-3 items-center">
             <select
-              name="category"
-              defaultValue={params.category || ''}
+              name="condition"
+              defaultValue={params.condition || ''}
               className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
             >
-              <option value="">Tutte le categorie</option>
-              {categories.map((cat: any) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
+              <option value="">Tutte le condizioni</option>
+              <option value="mint">Sigillato</option>
+              <option value="near-mint">Near Mint</option>
+              <option value="graded">Graded</option>
             </select>
-          )}
 
-          {collections.length > 0 && (
             <select
-              name="collection"
-              defaultValue={params.collection || ''}
+              name="language"
+              defaultValue={params.language || ''}
               className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
             >
-              <option value="">Tutte le collezioni</option>
-              {collections.map((col: any) => (
-                <option key={col.id} value={col.id}>{col.name}</option>
-              ))}
+              <option value="">Tutte le lingue</option>
+              <option value="italian">Italiano</option>
+              <option value="english">Inglese</option>
+              <option value="chinese">Cinese</option>
             </select>
-          )}
 
-          <button
-            type="submit"
-            className="border-2 border-[#FACC15] bg-[#FACC15] px-5 py-2.5 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
-          >
-            Filtra
-          </button>
+            {categories.length > 0 && (
+              <select
+                name="category"
+                defaultValue={params.category || ''}
+                className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
+              >
+                <option value="">Tutte le categorie</option>
+                {categories.map((cat: any) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            )}
+
+            {collections.length > 0 && (
+              <select
+                name="collection"
+                defaultValue={params.collection || ''}
+                className="border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]"
+              >
+                <option value="">Tutte le collezioni</option>
+                {collections.map((col: any) => (
+                  <option key={col.id} value={col.id}>{col.name}</option>
+                ))}
+              </select>
+            )}
+
+            <button
+              type="submit"
+              className="border-2 border-[#FACC15] bg-[#FACC15] px-5 py-2.5 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
+            >
+              Filtra
+            </button>
+          </div>
         </form>
 
         {products.length === 0 ? (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Link as LinkIcon, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { Link as LinkIcon, ChevronDown, ChevronUp, Trash2, Eye, EyeOff } from 'lucide-react'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { EditProductModal } from './EditProductModal'
 import type { ProductGroup } from '@/lib/group-products'
@@ -32,8 +32,10 @@ interface ProductGroupRowProps {
 export function ProductGroupRow({ group, password, onProductUpdated }: ProductGroupRowProps) {
   const [editingProduct, setEditingProduct] = useState<any>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
+  const [togglingVisible, setTogglingVisible] = useState(false)
 
   const imgSrc = proxyImageUrl(group.image)
+  const isVisible = group.products.some((p: any) => p.isVisible !== false)
 
   const handleDelete = async (e: React.MouseEvent, productId: number) => {
     e.stopPropagation()
@@ -51,6 +53,30 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
       alert(String(err))
     } finally {
       setDeleting(null)
+    }
+  }
+
+  const handleToggleVisible = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const product = group.products[0]
+    if (!product) return
+
+    setTogglingVisible(true)
+    try {
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-sync-password': password,
+        },
+        body: JSON.stringify({ isVisible: !isVisible }),
+      })
+      if (!res.ok) throw new Error('Toggle fallito')
+      onProductUpdated()
+    } catch (err) {
+      alert(String(err))
+    } finally {
+      setTogglingVisible(false)
     }
   }
 
@@ -82,6 +108,16 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
           }`}>
             {group.products.find((p: any) => p.productState)?.productState || group.products.some((p: any) => p.status === 'listed') ? 'Disponibile' : '-'}
           </span>
+        </td>
+        <td className="px-4 py-2">
+          <button
+            onClick={handleToggleVisible}
+            disabled={togglingVisible}
+            className={`transition-colors disabled:opacity-50 ${isVisible ? 'text-[#FACC15] hover:text-zinc-400' : 'text-zinc-600 hover:text-[#FACC15]'}`}
+            title={isVisible ? 'Nello shop — clicca per nascondere' : 'Nascosto — clicca per mostrare'}
+          >
+            {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
         </td>
       </tr>
 

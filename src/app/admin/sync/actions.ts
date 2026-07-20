@@ -173,6 +173,7 @@ export async function syncInventory(password: string, filters?: SyncFilters): Pr
         await payload.update({ collection: 'products', id: existingProduct.docs[0]!.id, data: productData as any, draft: false })
         updatedProducts++
       } else {
+        productData.isVisible = true
         await payload.create({ collection: 'products', data: productData as any, draft: false })
         createdProducts++
       }

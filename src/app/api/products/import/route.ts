@@ -194,6 +194,7 @@ export async function POST(request: Request) {
         } as any)
         updatedProducts++
       } else {
+        productData.isVisible = true
         await payload.create({
           collection: 'products',
           data: productData,

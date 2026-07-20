@@ -150,6 +150,7 @@ export async function GET(request: Request) {
         await payload.update({ collection: 'products', id: existingProduct.docs[0]!.id, data: productData, draft: false } as any)
         updatedProducts++
       } else {
+        productData.isVisible = true
         await payload.create({ collection: 'products', data: productData, draft: false } as any)
         createdProducts++
       }

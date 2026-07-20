@@ -26,6 +26,7 @@ interface Product {
   rarity: string | null
   category: { id: number; name: string } | null
   collection: { id: number; name: string } | null
+  isVisible: boolean
 }
 
 interface Category { id: number; name: string }
@@ -235,6 +236,7 @@ export default function AdminProductsPage() {
                   <th className="px-4 py-3 text-zinc-500 font-medium">Prezzo</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Qta</th>
                   <th className="px-4 py-3 text-zinc-500 font-medium">Stato</th>
+                  <th className="px-4 py-3 text-zinc-500 font-medium w-16">Vis.</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,7 +250,7 @@ export default function AdminProductsPage() {
                 ))}
                 {groups.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center text-zinc-500">
+                    <td colSpan={7} className="px-4 py-12 text-center text-zinc-500">
                       Nessun prodotto trovato
                     </td>
                   </tr>

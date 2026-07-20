@@ -17,7 +17,7 @@ export async function PATCH(
   const allowed = [
     'title', 'slug', 'description', 'storePrice', 'price', 'compareAtPrice',
     'status', 'condition', 'category', 'collection', 'language', 'productState',
-    'quantity', 'imageUrl', 'featured', 'cardNumber', 'rarity', 'itemId',
+    'quantity', 'imageUrl', 'featured', 'cardNumber', 'rarity', 'itemId', 'isVisible',
   ]
 
   const data: Record<string, any> = {}
