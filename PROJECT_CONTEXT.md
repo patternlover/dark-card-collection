@@ -16,9 +16,11 @@ E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + Postgre
 | CMS | Payload CMS 3.86.0 |
 | Database | PostgreSQL via Neon.io |
 | Payments | Stripe (live mode) |
+| Email | Resend (`@payloadcms/email-resend`) |
 | Styling | Tailwind CSS 4 |
 | Hosting | Vercel |
 | Storage | Vercel Blob Storage |
+| Tests/CI | Vitest + GitHub Actions |
 
 ## Environment Variables
 
@@ -30,6 +32,8 @@ STRIPE_SECRET_KEY=sk_live_...
 STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_live_...
 BLOB_READ_WRITE_TOKEN=vercel_blob_...
+RESEND_API_KEY=re_...
+EMAIL_FROM=noreply@darkcardcollection.com
 CRON_SECRET=your-cron-secret
 ```
 
@@ -73,7 +77,7 @@ src/
 │   │   │   │       └── route.ts   # PATCH update single product + DELETE variant (no Sheets)
 │   │   ├── stripe/
 │   │   │   ├── checkout/route.ts   # Creates Stripe checkout session
-│   │   │   └── webhook/route.ts    # Stripe webhook (checkout.session.completed)
+│   │   │   └── webhook/route.ts    # Stripe webhook (checkout.session.completed) + invio email conferma
 │   │   ├── contact/route.ts        # Contact form API (saves to messages collection)
 │   │   ├── cron/
 │   │   │   ├── import/route.ts     # Daily import from Google Sheets (3am)
@@ -124,9 +128,10 @@ src/
 │   ├── payload.ts                   # getPayloadClient() — cached singleton
 │   ├── stripe.ts                    # Stripe client
 │   ├── group-products.ts            # Groups products by title (variants → parent)
+│   ├── order-email.ts               # Template + invio email conferma ordine (Resend)
 │   ├── google-sheets.ts             # Google Sheets API read/write
 │   ├── image-import.ts              # Download + upload images to Vercel Blob
-│   ├── parse-csv.ts                 # RFC 4180 CSV parser
+│   ├── parse-csv.ts                 # RFC 4180 CSV parser (multilinea/quotes)
 │   ├── proxy-image.ts               # Cardmarket image proxy URL builder
 │   └── analytics.ts                 # GA4 ecommerce dataLayer events
 │
@@ -145,6 +150,12 @@ src/
 │
 └── scripts/
     └── import-products.ts          # Google Sheets → Payload import
+```
+
+```
+tests/                            # Unit test Vitest (group-products, parse-csv)
+.github/workflows/ci.yml          # CI: tsc --noEmit + vitest + next build
+vitest.config.ts
 ```
 
 ## Payload Collections Schema
@@ -214,18 +225,23 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 ## Known Issues / TODO
 
 1. No user accounts / order history
-2. No email notifications
-3. No cart drawer/mini-cart
-4. No middleware for route protection
-5. No tests
-6. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL — workaround for build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build` (the Next type-check phase OOMs with the default heap)
-7. `pnpm generate:types` times out on WSL — `payload-types.ts` never generated
-8. Stripe Products not synced with Payload products
-9. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders — required by law and by Stripe before go-live
+2. No cart drawer/mini-cart
+3. No middleware for route protection
+4. No tests for pages/components (only lib unit tests)
+5. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL — workaround for build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build` (the Next type-check phase OOMs with the default heap)
+6. `pnpm generate:types` times out on WSL — `payload-types.ts` never generated
+7. Stripe Products not synced with Payload products
+8. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders — required by law and by Stripe before go-live
+9. Email conferma ordine: senza `RESEND_API_KEY` l'email non parte (l'ordine viene comunque creato)
+
+## Email
+
+- Adapter Payload: `@payloadcms/email-resend` configurato in `payload.config.ts` solo se `RESEND_API_KEY` è presente (altrimenti log in console).
+- Invio: `sendOrderConfirmationEmail` in `src/lib/order-email.ts`, chiamata dal webhook `checkout.session.completed` dopo la creazione dell'ordine. Template HTML in `buildOrderConfirmationHtml` (funzione pura, testabile).
 
 ## Git Commits
 
-Latest: `e4689c2` (footer ripristinato — nero, legale solo in basso, rounded, layer giallo sotto) — all on `origin/main`
+Latest: `8bd85b5` (footer tutto nero) — all on `origin/main`
 
 ## Footer / Design
 

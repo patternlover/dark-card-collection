@@ -28,6 +28,20 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - GA4 ecommerce tracking via GTM
 - SEO: `robots.txt`, `sitemap.xml`, manifest, SVG favicon, OG metadata, JSON-LD structured data
 - Neobrutalism design: yellow accent (`#FACC15`) on brand elements, all-black footer with legal links in the bottom bar
+- Order confirmation emails via Resend
+- Unit tests (Vitest) + CI pipeline on GitHub Actions
+
+## Testing
+
+```bash
+pnpm test
+```
+
+Unit tests live in `tests/` and cover the pure lib modules (`group-products.ts`, `parse-csv.ts`).
+
+## CI
+
+`.github/workflows/ci.yml` runs on push/PR to `main`: type-check (`tsc --noEmit`), unit tests (`vitest`), and `next build` with placeholder env vars (no real DB required).
 
 ## Getting Started
 
@@ -54,6 +68,8 @@ STRIPE_SECRET_KEY=sk_live_...
 STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_live_...
 BLOB_READ_WRITE_TOKEN=vercel_blob_...
+RESEND_API_KEY=re_...
+EMAIL_FROM=noreply@darkcardcollection.com
 CRON_SECRET=your-cron-secret
 SYNC_PASSWORD=your-admin-password
 GOOGLE_SERVICE_ACCOUNT=...
@@ -64,6 +80,15 @@ GOOGLE_SERVICE_ACCOUNT=...
 - **Produzione**: usa le chiavi live (`sk_live_...`, `pk_live_...`) dal Dashboard Stripe.
 - **Webhook**: registra l'endpoint `https://darkcardcollection.com/api/stripe/webhook` nel Dashboard Stripe con l'evento `checkout.session.completed` e usa il relativo `whsec_live_...` come `STRIPE_WEBHOOK_SECRET`.
 - `NEXT_PUBLIC_SITE_URL` deve puntare al dominio di produzione, perché viene usata per le URL di successo/annullamento del checkout.
+
+### Email di conferma ordine
+
+Dopo un checkout completato, il webhook Stripe invia un'email di conferma al cliente tramite **Resend**:
+
+- Crea una API key su [resend.com](https://resend.com) e imposta `RESEND_API_KEY` (per la produzione, verifica anche il tuo dominio per il campo `from`).
+- `EMAIL_FROM` (default `noreply@darkcardcollection.com`).
+- Senza `RESEND_API_KEY` l'email non parte: il webhook logga l'errore ma l'ordine viene comunque creato.
+- Il template è in `src/lib/order-email.ts`.
 
 ### Development
 

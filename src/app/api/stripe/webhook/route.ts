@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
+import { sendOrderConfirmationEmail } from '@/lib/order-email'
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -90,6 +91,39 @@ export async function POST(req: Request) {
       })
 
       console.log('Order created for session:', session.id)
+
+      const customerEmail = session.customer_details?.email
+      if (customerEmail) {
+        const productIds = orderItems
+          .map((item) => item.product)
+          .filter((id): id is number => !!id)
+        const products =
+          productIds.length > 0
+            ? await payload.find({
+                collection: 'products',
+                where: { id: { in: productIds } },
+                limit: productIds.length,
+              })
+            : { docs: [] as { id: number; title: string }[] }
+        const titleById = new Map(products.docs.map((p) => [p.id, p.title]))
+
+        try {
+          await sendOrderConfirmationEmail(payload, {
+            orderId: session.id,
+            customerEmail,
+            total: (session.amount_total || 0) / 100,
+            items: orderItems.map((item) => ({
+              title: item.product ? titleById.get(item.product) || 'Prodotto' : 'Prodotto',
+              quantity: item.quantity,
+              price: item.price,
+            })),
+          })
+          console.log('Order confirmation email sent for session:', session.id)
+        } catch (err) {
+          console.error('Failed to send order confirmation email:', err)
+        }
+      }
+
       break
     }
 

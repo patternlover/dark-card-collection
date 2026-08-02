@@ -2,6 +2,7 @@ import { buildConfig } from 'payload'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
+import { resendAdapter } from '@payloadcms/email-resend'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -29,6 +30,13 @@ export default buildConfig({
   collections: [Products, Categories, Collections, Orders, Users, Media, Messages],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
+  email: process.env.RESEND_API_KEY
+    ? resendAdapter({
+        apiKey: process.env.RESEND_API_KEY,
+        defaultFromAddress: process.env.EMAIL_FROM || 'noreply@darkcardcollection.com',
+        defaultFromName: 'Dark Card Collection',
+      })
+    : undefined,
   secret: process.env.PAYLOAD_SECRET || 'fallback-secret-key-change-me',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),

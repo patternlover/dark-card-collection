@@ -6,6 +6,50 @@
  * - Skips empty rows
  */
 
+/**
+ * Splits CSV text into logical lines, keeping newlines that appear
+ * inside quoted fields together with their row.
+ */
+function getCSVLines(text: string): string[] {
+  const result: string[] = []
+  let current = ''
+  let inQuotes = false
+  const chars = text.split('')
+
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i]!
+
+    if (ch === '"') {
+      if (inQuotes && chars[i + 1] === '"') {
+        // Escaped quote → keep both characters
+        current += ch
+        i++
+        current += chars[i]!
+      } else {
+        current += ch
+        inQuotes = !inQuotes
+      }
+    } else if (ch === '\n') {
+      if (inQuotes) {
+        current += ch
+      } else {
+        const line = current.endsWith('\r') ? current.slice(0, -1) : current
+        result.push(line)
+        current = ''
+      }
+    } else {
+      current += ch
+    }
+  }
+
+  if (current !== '') {
+    const line = current.endsWith('\r') ? current.slice(0, -1) : current
+    result.push(line)
+  }
+
+  return result
+}
+
 function parseQuotedField(line: string, start: number): { value: string; end: number } {
   let value = ''
   let i = start + 1 // skip opening quote
@@ -36,12 +80,7 @@ function parseCSVLine(line: string): string[] {
   const fields: string[] = []
   let i = 0
 
-  while (i <= line.length) {
-    if (i === line.length) {
-      fields.push('')
-      break
-    }
-
+  while (i < line.length) {
     const ch = line[i]!
 
     if (ch === '"') {
@@ -63,15 +102,20 @@ function parseCSVLine(line: string): string[] {
     }
   }
 
+  // A trailing comma means one more empty field
+  if (line[line.length - 1] === ',') {
+    fields.push('')
+  }
+
   return fields
 }
 
 export function parseCSV(text: string): Record<string, string>[] {
-  const lines = text.split('\n')
+  const lines = getCSVLines(text)
   if (lines.length < 2) return []
 
   const headerLine = lines[0]!
-  const headers = parseCSVLine(headerLine).map((h) => h.trim().replace(/^"|"$/g, ''))
+  const headers = parseCSVLine(headerLine).map((h) => h.trim())
 
   const rows: Record<string, string>[] = []
 
@@ -84,7 +128,7 @@ export function parseCSV(text: string): Record<string, string>[] {
     let hasContent = false
 
     headers.forEach((header, i) => {
-      const val = (values[i] || '').trim().replace(/^"|"$/g, '')
+      const val = (values[i] || '').trim()
       row[header] = val
       if (val) hasContent = true
     })
