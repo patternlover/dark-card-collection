@@ -58,7 +58,12 @@ export async function GET(request: Request) {
 
         if (force && (product.images?.length || 0) > 0) {
           for (const entry of product.images) {
-            const mediaId = typeof entry === 'object' && entry !== null ? (entry as any).image : entry
+            const nested =
+              typeof entry === 'object' && entry !== null
+                ? (entry as any).image ?? (entry as any).id
+                : entry
+            const mediaId =
+              typeof nested === 'object' && nested !== null ? (nested as any).id : nested
             if (!mediaId) continue
             try {
               await payload.delete({ collection: 'media', id: mediaId } as any)

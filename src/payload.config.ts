@@ -54,7 +54,7 @@ export default buildConfig({
     if (blobToken && blobToken.startsWith('vercel_blob_rw_')) {
       return [
         vercelBlobStorage({
-          collections: { media: true },
+          collections: { media: { disablePayloadAccessControl: true } },
           token: blobToken,
         }),
       ]
