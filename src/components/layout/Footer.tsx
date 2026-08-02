@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CreditCard, Truck } from 'lucide-react'
 
 // TODO: sostituire con i dati aziendali reali (obbligatori per Stripe e per legge)
 const BUSINESS = {
@@ -8,32 +9,54 @@ const BUSINESS = {
   taxId: 'CF / P.IVA — da compilare',
 }
 
+const shopLinks = [
+  { label: 'Catalogo', href: '/shop' },
+  { label: 'Collezioni', href: '/shop/collections' },
+  { label: 'Bestseller', href: '/shop/bestsellers' },
+  { label: 'Novità', href: '/shop/new-arrivals' },
+  { label: 'In Attesa', href: '/shop/preorders' },
+]
+
+const infoLinks = [
+  { label: 'Chi Siamo', href: '/info/about' },
+  { label: 'FAQ', href: '/info/faq' },
+  { label: 'Contatti', href: '/info/contact' },
+  { label: 'Carrello', href: '/cart' },
+]
+
+const legalLinks = [
+  { label: 'Privacy', href: '/info/privacy' },
+  { label: 'Termini', href: '/info/terms' },
+  { label: 'Spedizioni e Resi', href: '/info/shipping-returns' },
+  { label: 'Contatti', href: '/info/contact' },
+]
+
 export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="border-t-2 border-zinc-700 bg-black">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
+    <footer className="bg-black">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-block">
-              <span className="text-xl font-black tracking-tight text-white">
+              <span className="text-xl font-black tracking-tight text-[#FACC15]">
                 DARK CARD
               </span>
               <span className="text-xl font-light text-[#FACC15]">
                 {' '}COLLECTION
               </span>
             </Link>
-            <p className="mt-4 text-sm text-zinc-500 leading-relaxed">
+            <p className="mt-3 text-sm leading-relaxed text-zinc-500">
               Negozio specializzato in prodotti Pokémon TCG sigillati.
               Booster Box, ETB, Collection Box e SPC.
             </p>
-            <div className="mt-6 space-y-1 text-xs text-zinc-600">
+            <div className="mt-4 space-y-1 text-xs text-zinc-600">
               <p>{BUSINESS.legalName}</p>
               <p>{BUSINESS.address}</p>
               <p>{BUSINESS.taxId}</p>
               <p>
-                <a href={`mailto:${BUSINESS.email}`} className="hover:text-[#FACC15] transition-colors">
+                <a href={`mailto:${BUSINESS.email}`} className="transition-colors hover:text-[#FACC15]">
                   {BUSINESS.email}
                 </a>
               </p>
@@ -41,113 +64,77 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white">
               Shop
             </h3>
-            <ul className="mt-4 space-y-2.5">
-              <li>
-                <Link href="/shop" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Catalogo
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop/collections" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Collezioni
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop/bestsellers" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Bestseller
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop/new-arrivals" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Novità
-                </Link>
-              </li>
-              <li>
-                <Link href="/shop/preorders" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  In Attesa
-                </Link>
-              </li>
+            <ul className="mt-3 space-y-2">
+              {shopLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white">
               Informazioni
             </h3>
-            <ul className="mt-4 space-y-2.5">
-              <li>
-                <Link href="/info/about" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Chi Siamo
-                </Link>
-              </li>
-              <li>
-                <Link href="/info/faq" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/info/contact" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Contatti
-                </Link>
-              </li>
-              <li>
-                <Link href="/cart" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Carrello
-                </Link>
-              </li>
+            <ul className="mt-3 space-y-2">
+              {infoLinks.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-sm font-bold uppercase tracking-wider text-white">
-              Legale
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+              Acquista in sicurezza
             </h3>
-            <ul className="mt-4 space-y-2.5">
-              <li>
-                <Link href="/info/privacy" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Privacy Policy
-                </Link>
+            <ul className="mt-3 space-y-2">
+              <li className="flex items-center gap-2 text-sm text-zinc-500">
+                <CreditCard className="h-4 w-4 text-[#FACC15]" />
+                Pagamenti sicuri con Stripe
               </li>
-              <li>
-                <Link href="/info/terms" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Termini e Condizioni
-                </Link>
-              </li>
-              <li>
-                <Link href="/info/shipping-returns" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Spedizioni e Resi
-                </Link>
-              </li>
-              <li>
-                <Link href="/info/contact" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  Contatti
-                </Link>
+              <li className="flex items-center gap-2 text-sm text-zinc-500">
+                <Truck className="h-4 w-4 text-[#FACC15]" />
+                Spedizione gratuita sopra 100 €
               </li>
             </ul>
           </div>
         </div>
+      </div>
 
-        <div className="mt-10 border-t-2 border-zinc-800 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
-          <p>&copy; {currentYear} Dark Card Collection. Tutti i diritti riservati.</p>
-          <div className="flex items-center gap-4">
-            <Link href="/info/privacy" className="hover:text-[#FACC15] transition-colors">
-              Privacy
-            </Link>
-            <span className="text-zinc-700">|</span>
-            <Link href="/info/terms" className="hover:text-[#FACC15] transition-colors">
-              Termini
-            </Link>
-            <span className="text-zinc-700">|</span>
-            <Link href="/info/shipping-returns" className="hover:text-[#FACC15] transition-colors">
-              Spedizioni
-            </Link>
-            <span className="text-zinc-700">|</span>
-            <Link href="/info/contact" className="hover:text-[#FACC15] transition-colors">
-              Contatti
-            </Link>
+      <div className="border-t-2 border-black bg-[#FACC15]">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col items-center gap-5 lg:flex-row lg:justify-between">
+            <p className="text-2xl font-black uppercase leading-none tracking-tight text-black lg:text-3xl">
+              Dark Card
+              <span className="font-light"> Collection</span>
+            </p>
+
+            <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-xs font-bold uppercase tracking-wide text-black/70 transition-colors hover:text-black"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <p className="text-xs font-semibold text-black/60">
+              © {currentYear} Dark Card Collection
+            </p>
           </div>
         </div>
       </div>
