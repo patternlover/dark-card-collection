@@ -1,10 +1,12 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/hooks/useCart'
 import { ConsentProvider } from '@/hooks/useConsent'
 import { AnalyticsProvider } from '@/components/layout/AnalyticsProvider'
 import { LayoutShell } from '@/components/layout/LayoutShell'
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -16,19 +18,39 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+export const viewport: Viewport = {
+  themeColor: '#FACC15',
+  width: 'device-width',
+  initialScale: 1,
+}
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Dark Card Collection | Pokémon TCG Sigillati',
     template: '%s | Dark Card Collection',
   },
   description: 'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'),
+  keywords: ['pokemon tcg', 'booster box', 'etb', 'collection box', 'carte pokemon', 'sealed products', 'pokemon sigillati'],
+  alternates: {
+    canonical: '/',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: 'Dark Card Collection',
     description: 'Negozio specializzato in prodotti Pokémon TCG sigillati.',
     type: 'website',
     locale: 'it_IT',
+    siteName: 'Dark Card Collection',
+    url: SITE_URL,
   },
+  icons: {
+    icon: '/icon.svg',
+  },
+  manifest: '/manifest.webmanifest',
 }
 
 export default function RootLayout({

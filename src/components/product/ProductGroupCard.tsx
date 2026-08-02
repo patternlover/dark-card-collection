@@ -26,8 +26,12 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
             <img
               src={imgSrc}
               alt={group.title}
+              width={600}
+              height={600}
+              sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
               className="aspect-square w-full object-cover border border-zinc-800"
               loading="lazy"
+              decoding="async"
             />
           ) : (
             <div className="aspect-square w-full bg-zinc-800 flex items-center justify-center border border-zinc-800">

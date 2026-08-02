@@ -42,6 +42,11 @@ export function ProductGallery({ imageUrl, images, fallbackImage, alt = '' }: Pr
       <img
         src={allUrls[0]!}
         alt={alt}
+        width={800}
+        height={800}
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        fetchPriority="high"
+        decoding="async"
         className="aspect-square w-full rounded-lg object-cover border border-zinc-800"
       />
     )
@@ -52,6 +57,11 @@ export function ProductGallery({ imageUrl, images, fallbackImage, alt = '' }: Pr
       <img
         src={allUrls[selectedIndex]!}
         alt={alt}
+        width={800}
+        height={800}
+        sizes="(min-width: 1024px) 50vw, 100vw"
+        fetchPriority="high"
+        decoding="async"
         className="aspect-square w-full rounded-lg object-cover border border-zinc-800"
       />
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -66,6 +76,10 @@ export function ProductGallery({ imageUrl, images, fallbackImage, alt = '' }: Pr
             <img
               src={url}
               alt={`${alt} ${i + 1}`}
+              width={64}
+              height={64}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
             />
           </button>

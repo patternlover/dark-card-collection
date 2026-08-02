@@ -1,7 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { Send } from 'lucide-react'
+import { Send, Mail } from 'lucide-react'
+
+// TODO: inserisci qui la tua email reale di contatto
+const CONTACT_EMAIL = 'info@darkcardcollection.com'
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -52,6 +55,21 @@ export default function ContactPage() {
         <p className="text-zinc-400 mb-8">
           Hai domande? Siamo qui per aiutarti. Compila il form e ti risponderemo entro 24 ore.
         </p>
+
+        <div className="mb-8 flex items-center gap-4 border-2 border-[#FACC15] bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_#FACC15]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[#FACC15]">
+            <Mail className="h-5 w-5 text-black" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">Oppure scrivici direttamente:</p>
+            <a
+              href={`mailto:${CONTACT_EMAIL}`}
+              className="text-sm text-[#FACC15] underline underline-offset-2 hover:text-white"
+            >
+              {CONTACT_EMAIL}
+            </a>
+          </div>
+        </div>
 
         {success && (
           <div className="mb-6 rounded-lg border border-green-800 bg-green-900/30 p-4 text-green-300">

@@ -152,6 +152,11 @@ export default async function ProductPage({
               <img
                 src={imgSrc}
                 alt={product.title}
+                width={800}
+                height={800}
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                fetchPriority="high"
+                decoding="async"
                 className="w-full border-2 border-zinc-700 object-cover shadow-[4px_4px_0px_0px_#27272a]"
               />
             ) : (

@@ -126,11 +126,6 @@ export function Footer() {
                   Contatti
                 </Link>
               </li>
-              <li>
-                <a href={`mailto:${BUSINESS.email}`} className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
-                  {BUSINESS.email}
-                </a>
-              </li>
             </ul>
           </div>
         </div>
