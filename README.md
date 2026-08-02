@@ -27,7 +27,7 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Daily cron jobs for import and price updates
 - GA4 ecommerce tracking via GTM
 - SEO: `robots.txt`, `sitemap.xml`, manifest, SVG favicon, OG metadata, JSON-LD structured data
-- Neobrutalism design: yellow accent (`#FACC15`), footer card with rounded bottom corners on a yellow page layer revealed when scrolling to the bottom
+- Neobrutalism design: yellow accent (`#FACC15`) on brand elements, all-black footer with legal links in the bottom bar
 
 ## Getting Started
 

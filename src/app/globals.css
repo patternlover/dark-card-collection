@@ -17,14 +17,8 @@
   --destructive-foreground: #ffffff;
 }
 
-/* Lo sfondo del documento è giallo: si scopre sotto/ai lati del footer
-   quando si scrolla fino in fondo (e durante l'overscroll). */
-html {
-  background: #FACC15;
-}
-
 body {
-  background: #FACC15;
+  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }

@@ -227,12 +227,11 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 
 Latest: `e4689c2` (footer ripristinato — nero, legale solo in basso, rounded, layer giallo sotto) — all on `origin/main`
 
-## Footer / Accent Layer Design
+## Footer / Design
 
-- Footer is a black card with **only the two bottom corners rounded** (`rounded-b-2xl`), inset (`mx-3 sm:mx-6`) with a bottom margin (`mb-6 sm:mb-10`).
-- The document background (`html`/`body`) is yellow `#FACC15`. Page content sits on an opaque dark wrapper (`bg-[#0a0a0a] min-h-screen` in `LayoutShell.tsx`) that ends above the footer.
-- Result: scrolling to the very bottom reveals the yellow layer under/beside the footer; overscroll (mobile bounce, trackpad) reveals it further. No static yellow bar.
-- Legal links (Privacy, Termini, Spedizioni e Resi, Contatti) live only in the footer bottom bar.
+- Footer: **all-black** (`bg-black`, `border-t-2 border-zinc-700`), full width, columns Brand / Shop / Informazioni.
+- Legal links (Privacy, Termini, Spedizioni e Resi, Contatti) live only in the footer bottom bar (no "Legale" column).
+- Yellow accent `#FACC15` is used only on brand/UI elements (hover, logo "COLLECTION"), not as a footer background.
 
 ## Build Process
 
