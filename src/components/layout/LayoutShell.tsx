@@ -11,10 +11,12 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {!isAdminArea && <Header />}
-      <main className="min-h-screen">
-        {children}
-      </main>
+      <div className="min-h-screen bg-[#0a0a0a]">
+        {!isAdminArea && <Header />}
+        <main className="min-h-screen">
+          {children}
+        </main>
+      </div>
       {!isAdminArea && <Footer />}
       {!isAdminArea && <CookieConsent />}
     </>

@@ -26,6 +26,8 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Product visibility toggle (`isVisible`) — control which products appear in the shop independently of status
 - Daily cron jobs for import and price updates
 - GA4 ecommerce tracking via GTM
+- SEO: `robots.txt`, `sitemap.xml`, manifest, SVG favicon, OG metadata, JSON-LD structured data
+- Neobrutalism design: yellow accent (`#FACC15`), footer card with rounded bottom corners on a yellow page layer revealed when scrolling to the bottom
 
 ## Getting Started
 
@@ -71,6 +73,18 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) for the storefront.
 Open [http://localhost:3000/dashboard](http://localhost:3000/dashboard) for the admin dashboard.
+
+### Build
+
+```bash
+pnpm build
+```
+
+On WSL the type-check phase can run out of heap memory. If the build crashes with a JavaScript heap OOM error, raise the Node heap and retry:
+
+```bash
+NODE_OPTIONS="--max-old-space-size=6144" pnpm build
+```
 
 ## Google Sheets Import
 

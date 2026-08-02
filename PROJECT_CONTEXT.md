@@ -216,16 +216,23 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 1. No user accounts / order history
 2. No email notifications
 3. No cart drawer/mini-cart
-4. No robots.txt / sitemap
-5. No middleware for route protection
-6. No tests
-7. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL
-8. `pnpm generate:types` times out on WSL — `payload-types.ts` never generated
-9. Stripe Products not synced with Payload products
+4. No middleware for route protection
+5. No tests
+6. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL — workaround for build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build` (the Next type-check phase OOMs with the default heap)
+7. `pnpm generate:types` times out on WSL — `payload-types.ts` never generated
+8. Stripe Products not synced with Payload products
+9. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders — required by law and by Stripe before go-live
 
 ## Git Commits
 
-Latest: `fbc33b7` (all on `origin/main`)
+Latest: `e4689c2` (footer ripristinato — nero, legale solo in basso, rounded, layer giallo sotto) — all on `origin/main`
+
+## Footer / Accent Layer Design
+
+- Footer is a black card with **only the two bottom corners rounded** (`rounded-b-2xl`), inset (`mx-3 sm:mx-6`) with a bottom margin (`mb-6 sm:mb-10`).
+- The document background (`html`/`body`) is yellow `#FACC15`. Page content sits on an opaque dark wrapper (`bg-[#0a0a0a] min-h-screen` in `LayoutShell.tsx`) that ends above the footer.
+- Result: scrolling to the very bottom reveals the yellow layer under/beside the footer; overscroll (mobile bounce, trackpad) reveals it further. No static yellow bar.
+- Legal links (Privacy, Termini, Spedizioni e Resi, Contatti) live only in the footer bottom bar.
 
 ## Build Process
 

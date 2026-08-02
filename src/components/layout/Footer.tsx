@@ -19,8 +19,8 @@ export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="px-3 pb-3 sm:px-6 sm:pb-6">
-      <div className="rounded-2xl bg-black">
+    <footer className="mx-3 mb-6 sm:mx-6 sm:mb-10">
+      <div className="rounded-b-2xl bg-black">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-3">
             <div className="col-span-2 md:col-span-1">
@@ -125,8 +125,6 @@ export function Footer() {
           </div>
         </div>
       </div>
-
-      <div className="mt-3 h-8 rounded-2xl bg-[#FACC15]" aria-hidden="true" />
     </footer>
   )
 }

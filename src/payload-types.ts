@@ -159,6 +159,10 @@ export interface Product {
    */
   compareAtPrice?: number | null;
   status?: ('listed' | 'hold' | 'sold') | null;
+  /**
+   * Raw product_state from Google Sheets (e.g. LISTED, HOLD, WATCH)
+   */
+  productState?: string | null;
   condition?:
     ('mint' | 'near-mint' | 'lightly-played' | 'moderately-played' | 'heavily-played' | 'damaged' | 'graded') | null;
   category?: (number | null) | Category;
@@ -168,7 +172,11 @@ export interface Product {
   rarity?: ('common' | 'uncommon' | 'rare' | 'rare-holo' | 'ultra-rare' | 'secret-rare') | null;
   quantity?: number | null;
   /**
-   * Product images (first one is the main/thumbnail)
+   * Direct product image URL (e.g. from Cardmarket)
+   */
+  imageUrl?: string | null;
+  /**
+   * Additional product images (uploaded via admin)
    */
   images?:
     | {
@@ -185,6 +193,10 @@ export interface Product {
    */
   lastPriceUpdate?: string | null;
   featured?: boolean | null;
+  /**
+   * Mostra il prodotto nello shop (indipendente dallo stato)
+   */
+  isVisible?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -402,6 +414,7 @@ export interface ProductsSelect<T extends boolean = true> {
   price?: T;
   compareAtPrice?: T;
   status?: T;
+  productState?: T;
   condition?: T;
   category?: T;
   collection?: T;
@@ -409,6 +422,7 @@ export interface ProductsSelect<T extends boolean = true> {
   cardNumber?: T;
   rarity?: T;
   quantity?: T;
+  imageUrl?: T;
   images?:
     | T
     | {
@@ -418,6 +432,7 @@ export interface ProductsSelect<T extends boolean = true> {
   averageSalePrice?: T;
   lastPriceUpdate?: T;
   featured?: T;
+  isVisible?: T;
   updatedAt?: T;
   createdAt?: T;
 }
