@@ -1,5 +1,13 @@
 import Link from 'next/link'
 
+// TODO: sostituire con i dati aziendali reali (obbligatori per Stripe e per legge)
+const BUSINESS = {
+  legalName: 'Nome e Cognome (o Ragione Sociale)',
+  address: 'Via Esempio 1, 00000 Città (RM), Italia',
+  email: 'info@darkcardcollection.com',
+  taxId: 'CF / P.IVA — da compilare',
+}
+
 export function Footer() {
   const currentYear = new Date().getFullYear()
 
@@ -20,6 +28,16 @@ export function Footer() {
               Negozio specializzato in prodotti Pokémon TCG sigillati.
               Booster Box, ETB, Collection Box e SPC.
             </p>
+            <div className="mt-6 space-y-1 text-xs text-zinc-600">
+              <p>{BUSINESS.legalName}</p>
+              <p>{BUSINESS.address}</p>
+              <p>{BUSINESS.taxId}</p>
+              <p>
+                <a href={`mailto:${BUSINESS.email}`} className="hover:text-[#FACC15] transition-colors">
+                  {BUSINESS.email}
+                </a>
+              </p>
+            </div>
           </div>
 
           <div>
@@ -98,6 +116,11 @@ export function Footer() {
                   Termini e Condizioni
                 </Link>
               </li>
+              <li>
+                <Link href="/info/shipping-returns" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                  Spedizioni e Resi
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -111,6 +134,10 @@ export function Footer() {
             <span className="text-zinc-700">|</span>
             <Link href="/info/terms" className="hover:text-[#FACC15] transition-colors">
               Termini
+            </Link>
+            <span className="text-zinc-700">|</span>
+            <Link href="/info/shipping-returns" className="hover:text-[#FACC15] transition-colors">
+              Spedizioni
             </Link>
             <span className="text-zinc-700">|</span>
             <Link href="/info/contact" className="hover:text-[#FACC15] transition-colors">

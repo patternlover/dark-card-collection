@@ -15,7 +15,7 @@ E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + Postgre
 | Framework | Next.js 15.4.11 (App Router) |
 | CMS | Payload CMS 3.86.0 |
 | Database | PostgreSQL via Neon.io |
-| Payments | Stripe |
+| Payments | Stripe (live mode) |
 | Styling | Tailwind CSS 4 |
 | Hosting | Vercel |
 | Storage | Vercel Blob Storage |
@@ -26,9 +26,9 @@ E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + Postgre
 DATABASE_URI=postgresql://neondb_owner:npg_xxx@ep-xxx.neon.tech/neondb?sslmode=require
 PAYLOAD_SECRET=442145e4b83f1b07d85efd0a068ba673c05f41d0de582f1f5f664a95745cdd55
 NEXT_PUBLIC_SITE_URL=https://darkcardcollection.com
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_live_...
 BLOB_READ_WRITE_TOKEN=vercel_blob_...
 CRON_SECRET=your-cron-secret
 ```
@@ -62,7 +62,8 @@ src/
 │   ├── info/
 │   │   ├── about/page.tsx          # About page
 │   │   ├── faq/page.tsx            # FAQ (client, accordion)
-│   │   └── contact/page.tsx        # Contact form (client)
+│   │   ├── contact/page.tsx        # Contact form (client)
+│   │   └── shipping-returns/       # Spedizioni e Resi (richiesto da Stripe)
 │   │
 │   ├── api/
 │   │   ├── admin/
