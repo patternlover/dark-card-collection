@@ -1,4 +1,5 @@
 import { buildConfig } from 'payload'
+import sharp from 'sharp'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
@@ -30,6 +31,7 @@ export default buildConfig({
   collections: [Products, Categories, Collections, Orders, Users, Media, Messages],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
+  sharp,
   email: process.env.RESEND_API_KEY
     ? resendAdapter({
         apiKey: process.env.RESEND_API_KEY,

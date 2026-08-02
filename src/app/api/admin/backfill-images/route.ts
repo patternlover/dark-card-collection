@@ -27,6 +27,8 @@ export async function GET(request: Request) {
 
   try {
     const payload = await getPayloadClient()
+    const url = new URL(request.url)
+    const force = url.searchParams.get('force') === '1'
 
     let total = 0
     let processed = 0
@@ -49,9 +51,25 @@ export async function GET(request: Request) {
         const product = doc as any
         total++
         if (!product.imageUrl) continue
-        if ((product.images?.length || 0) > 0) {
+        if ((product.images?.length || 0) > 0 && !force) {
           processed++
           continue
+        }
+
+        if (force && (product.images?.length || 0) > 0) {
+          for (const entry of product.images) {
+            const mediaId = typeof entry === 'object' && entry !== null ? (entry as any).image : entry
+            if (!mediaId) continue
+            try {
+              await payload.delete({ collection: 'media', id: mediaId } as any)
+            } catch (err) {
+              errors.push(
+                `${product.itemId}: Failed to delete old media ${mediaId}: ${
+                  err instanceof Error ? err.message : String(err)
+                }`,
+              )
+            }
+          }
         }
 
         const imageResult = await importProductImages(
