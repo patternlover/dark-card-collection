@@ -121,6 +121,16 @@ export function Footer() {
                   Spedizioni e Resi
                 </Link>
               </li>
+              <li>
+                <Link href="/info/contact" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                  Contatti
+                </Link>
+              </li>
+              <li>
+                <a href={`mailto:${BUSINESS.email}`} className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                  {BUSINESS.email}
+                </a>
+              </li>
             </ul>
           </div>
         </div>
