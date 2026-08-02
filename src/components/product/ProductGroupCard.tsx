@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { proxyImageUrl } from '@/lib/proxy-image'
+import { ProductImage } from './ProductImage'
 import { QuickAddButton } from './QuickAddButton'
 import type { ProductGroup } from '@/lib/group-products'
 
@@ -8,7 +8,7 @@ interface ProductGroupCardProps {
 }
 
 export function ProductGroupCard({ group }: ProductGroupCardProps) {
-  const imgSrc = proxyImageUrl(group.image)
+  const imgSrc = group.imageCard || group.image
   const collectionName = group.collection?.name || ''
 
   const cheapest = group.products.find(
@@ -22,22 +22,20 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
         className="block"
       >
         <div className="p-3">
-          {imgSrc ? (
-            <img
-              src={imgSrc}
-              alt={group.title}
-              width={600}
-              height={600}
-              sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
-              className="aspect-square w-full object-cover border border-zinc-800"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <div className="aspect-square w-full bg-zinc-800 flex items-center justify-center border border-zinc-800">
-              <span className="text-zinc-600 text-4xl">📦</span>
-            </div>
-          )}
+          <div className="relative aspect-square w-full">
+            {imgSrc ? (
+              <ProductImage
+                src={imgSrc}
+                alt={group.title}
+                sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+                className="border border-zinc-800 object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center border border-zinc-800 bg-zinc-800">
+                <span className="text-4xl text-zinc-600">📦</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="px-4 pb-4">

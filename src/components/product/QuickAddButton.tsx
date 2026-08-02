@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { ShoppingBag, Check } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { proxyImageUrl } from '@/lib/proxy-image'
+import { getProductImageInfo } from '@/lib/product-image'
 
 interface QuickAddButtonProps {
   product: {
@@ -35,7 +36,7 @@ export function QuickAddButton({ product }: QuickAddButtonProps) {
       title: product.title,
       slug: product.slug,
       price,
-      image: proxyImageUrl(product.imageUrl) || null,
+      image: proxyImageUrl(getProductImageInfo(product).cardUrl) || null,
     })
 
     setAdded(true)

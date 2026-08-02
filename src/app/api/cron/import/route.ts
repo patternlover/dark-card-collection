@@ -121,6 +121,7 @@ export async function GET(request: Request) {
         price: purchasePrice,
         compareAtPrice: storePrice || undefined,
         status: productState.toUpperCase() === 'HOLD' ? 'hold' : 'listed',
+        isPreorder: productState.toUpperCase() === 'HOLD',
         condition: CONDITION_MAP[condition.toUpperCase()] || 'near-mint',
         category: categoryId,
         collection: collectionId,

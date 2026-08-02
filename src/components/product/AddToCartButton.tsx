@@ -5,6 +5,7 @@ import { ShoppingBag, Check } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { trackAddToCart } from '@/lib/analytics'
 import { proxyImageUrl } from '@/lib/proxy-image'
+import { getProductImageInfo } from '@/lib/product-image'
 
 interface AddToCartButtonProps {
   product: {
@@ -34,7 +35,7 @@ export function AddToCartButton({ product }: AddToCartButtonProps) {
       title: product.title,
       slug: product.slug,
       price: displayPrice,
-      image: proxyImageUrl(product.imageUrl || product.images?.[0]?.image?.url || product.image?.url) || null,
+      image: proxyImageUrl(getProductImageInfo(product).cardUrl) || null,
     })
 
     trackAddToCart({

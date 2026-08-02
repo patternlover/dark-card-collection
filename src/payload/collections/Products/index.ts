@@ -72,6 +72,14 @@ export const Products: CollectionConfig = {
       },
     },
     {
+      name: 'isPreorder',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile',
+      },
+    },
+    {
       name: 'condition',
       type: 'select',
       options: [

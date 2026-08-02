@@ -3,10 +3,10 @@ import { getPayloadClient } from '@/lib/payload'
 import { groupProducts } from '@/lib/group-products'
 import { Badge } from '@/components/ui/Badge'
 import { ProductCard } from '@/components/product/ProductCard'
+import { ProductImage } from '@/components/product/ProductImage'
 import { AddToCartButton } from '@/components/product/AddToCartButton'
 import { Truck, Shield, Package } from 'lucide-react'
 import type { Metadata } from 'next'
-import { proxyImageUrl } from '@/lib/proxy-image'
 
 export const dynamic = 'force-dynamic'
 
@@ -139,7 +139,7 @@ export default async function ProductPage({
       .map((p: any) => CONDITION_LABELS[p.condition] || p.condition)
   )]
 
-  const imgSrc = proxyImageUrl(group.image)
+  const imgSrc = group.imagePdp || group.image
 
   const buyableProduct = group.products.find((p: any) => p.status === 'listed' && p.storePrice && p.storePrice > 0) || product
 
@@ -147,21 +147,18 @@ export default async function ProductPage({
     <div className="bg-black">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-          <div>
+          <div className="relative aspect-square w-full">
             {imgSrc ? (
-              <img
+              <ProductImage
                 src={imgSrc}
                 alt={product.title}
-                width={800}
-                height={800}
                 sizes="(min-width: 1024px) 50vw, 100vw"
-                fetchPriority="high"
-                decoding="async"
-                className="w-full border-2 border-zinc-700 object-cover shadow-[4px_4px_0px_0px_#27272a]"
+                priority
+                className="border-2 border-zinc-700 object-cover shadow-[4px_4px_0px_0px_#27272a]"
               />
             ) : (
-              <div className="aspect-square w-full border-2 border-zinc-700 bg-zinc-800 flex items-center justify-center shadow-[4px_4px_0px_0px_#27272a]">
-                <span className="text-zinc-600 text-6xl">📦</span>
+              <div className="flex h-full w-full items-center justify-center border-2 border-zinc-700 bg-zinc-800 shadow-[4px_4px_0px_0px_#27272a]">
+                <span className="text-6xl text-zinc-600">📦</span>
               </div>
             )}
           </div>
@@ -170,7 +167,7 @@ export default async function ProductPage({
             <div className="flex flex-wrap gap-2">
               {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
               {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
-              {product.status === 'hold' && <Badge variant="preorder">In Attesa</Badge>}
+              {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
               <Badge variant="default">
                 {statusLabels[product.status] || product.status}
               </Badge>

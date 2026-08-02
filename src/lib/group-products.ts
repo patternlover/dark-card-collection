@@ -1,9 +1,13 @@
+import { getProductImageInfo } from './product-image'
+
 export interface ProductGroup {
   title: string
   products: any[]
   sellingPrice: number
   totalQuantity: number
   image: string | null
+  imageCard: string | null
+  imagePdp: string | null
   variantCount: number
   category: any
   collection: any
@@ -43,14 +47,22 @@ export function groupProducts(products: any[]): ProductGroup[] {
     const sellingPrice = prices.length > 0 ? Math.min(...prices) : 0
     const totalQuantity = sorted.reduce((sum: number, p: any) => sum + (p.quantity || 0), 0)
 
-    const firstImage = sorted.find((p: any) => p.imageUrl)?.imageUrl || null
+    const firstWithImage = sorted.find(
+      (p: any) =>
+        p.images?.[0]?.image?.url ||
+        (typeof p.image === 'object' && p.image?.url) ||
+        p.imageUrl,
+    )
+    const imageInfo = getProductImageInfo(firstWithImage || {})
 
     groups.push({
       title,
       products: sorted,
       sellingPrice,
       totalQuantity,
-      image: firstImage,
+      image: imageInfo.url,
+      imageCard: imageInfo.cardUrl,
+      imagePdp: imageInfo.pdpUrl,
       variantCount: sorted.length,
       category: sorted[0]?.category || null,
       collection: sorted[0]?.collection || null,

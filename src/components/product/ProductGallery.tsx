@@ -1,30 +1,37 @@
 'use client'
 
 import { useState } from 'react'
-import { proxyImageUrl } from '@/lib/proxy-image'
+import { getProductImageInfo } from '@/lib/product-image'
+import { ProductImage } from './ProductImage'
 
 interface ProductGalleryProps {
+  product?: any
   imageUrl?: string | null
-  images: Array<{ image?: { url: string; alt?: string } | null } | null>
-  fallbackImage?: { url: string; alt?: string } | null
+  images?: Array<{ image?: any } | null>
+  fallbackImage?: any
   alt?: string
 }
 
-export function ProductGallery({ imageUrl, images, fallbackImage, alt = '' }: ProductGalleryProps) {
+export function ProductGallery({
+  product,
+  imageUrl,
+  images,
+  fallbackImage,
+  alt = '',
+}: ProductGalleryProps) {
+  const info = getProductImageInfo(product)
   const allUrls: string[] = []
 
-  const primary = proxyImageUrl(imageUrl)
+  const primary = info.pdpUrl || imageUrl || images?.[0]?.image?.url || fallbackImage?.url || null
   if (primary) allUrls.push(primary)
 
-  for (const img of images) {
-    const url = typeof img === 'object' && img?.image?.url ? img.image.url : null
-    const proxied = proxyImageUrl(url)
-    if (proxied && !allUrls.includes(proxied)) allUrls.push(proxied)
+  for (const img of images || []) {
+    const url = getProductImageInfo({ image: img?.image }).pdpUrl
+    if (url && !allUrls.includes(url)) allUrls.push(url)
   }
 
-  const fallbackUrl = proxyImageUrl(fallbackImage?.url)
-  if (fallbackUrl && !allUrls.includes(fallbackUrl)) {
-    allUrls.push(fallbackUrl)
+  if (fallbackImage?.url && !allUrls.includes(fallbackImage.url)) {
+    allUrls.push(fallbackImage.url)
   }
 
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -37,54 +44,39 @@ export function ProductGallery({ imageUrl, images, fallbackImage, alt = '' }: Pr
     )
   }
 
-  if (allUrls.length === 1) {
-    return (
-      <img
-        src={allUrls[0]!}
-        alt={alt}
-        width={800}
-        height={800}
-        sizes="(min-width: 1024px) 50vw, 100vw"
-        fetchPriority="high"
-        decoding="async"
-        className="aspect-square w-full rounded-lg object-cover border border-zinc-800"
-      />
-    )
-  }
+  const mainSrc = allUrls[selectedIndex]!
 
   return (
     <div className="space-y-3">
-      <img
-        src={allUrls[selectedIndex]!}
-        alt={alt}
-        width={800}
-        height={800}
-        sizes="(min-width: 1024px) 50vw, 100vw"
-        fetchPriority="high"
-        decoding="async"
-        className="aspect-square w-full rounded-lg object-cover border border-zinc-800"
-      />
-      <div className="flex gap-2 overflow-x-auto pb-1">
-        {allUrls.map((url, i) => (
-          <button
-            key={i}
-            onClick={() => setSelectedIndex(i)}
-            className={`shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors ${
-              i === selectedIndex ? 'border-white' : 'border-zinc-700 hover:border-zinc-500'
-            }`}
-          >
-            <img
-              src={url}
-              alt={`${alt} ${i + 1}`}
-              width={64}
-              height={64}
-              loading="lazy"
-              decoding="async"
-              className="h-full w-full object-cover"
-            />
-          </button>
-        ))}
+      <div className="relative aspect-square w-full rounded-lg border border-zinc-800 overflow-hidden">
+        <ProductImage
+          src={mainSrc}
+          alt={alt}
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          priority
+          className="object-cover"
+        />
       </div>
+      {allUrls.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {allUrls.map((url, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedIndex(i)}
+              className={`relative shrink-0 h-16 w-16 rounded-md overflow-hidden border-2 transition-colors ${
+                i === selectedIndex ? 'border-white' : 'border-zinc-700 hover:border-zinc-500'
+              }`}
+            >
+              <ProductImage
+                src={url}
+                alt={`${alt} ${i + 1}`}
+                sizes="64px"
+                className="h-full w-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

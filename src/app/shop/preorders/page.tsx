@@ -16,7 +16,9 @@ export default async function PreordersPage() {
     const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'products',
-      where: { status: { equals: 'hold' } },
+      where: {
+        AND: [{ isPreorder: { equals: true } }, { isVisible: { equals: true } }],
+      },
       limit: 50,
       sort: '-createdAt',
     })

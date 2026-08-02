@@ -1,4 +1,5 @@
 import type { Payload } from 'payload'
+import sharp from 'sharp'
 
 /**
  * Shared utility for importing product images from URLs into Payload CMS.
@@ -6,8 +7,9 @@ import type { Payload } from 'payload'
  * Flow:
  * 1. Parse image_url column from Google Sheets (comma-separated URLs)
  * 2. Download each image via fetch()
- * 3. Upload to Payload media collection (which stores in Vercel Blob)
- * 4. Return array of media IDs to link to the product
+ * 3. Optimize with sharp: normalize orientation, upscale to 900px, re-encode JPEG
+ * 4. Upload to Payload media collection (which stores in Vercel Blob)
+ * 5. Return array of media IDs to link to the product
  *
  * Usage in import scripts:
  *   const imageIds = await importProductImages(payload, row['image_url'], productTitle)
@@ -18,6 +20,41 @@ export interface ImageImportResult {
   mediaIds: (string | number)[]
   uploaded: number
   errors: string[]
+}
+
+export const TARGET_MAX_DIMENSION = 900
+
+/**
+ * Normalize, upscale and re-encode an image buffer.
+ * Cardmarket thumbnails are usually small (300x300): we upscale them to a
+ * consistent size so the storefront can render them sharply on retina.
+ */
+export async function processImageBuffer(buffer: Buffer): Promise<{
+  buffer: Buffer
+  mimetype: string
+}> {
+  let pipeline = sharp(buffer, { failOn: 'none' }).rotate()
+
+  const metadata = await pipeline.metadata()
+
+  if (metadata.width && metadata.height) {
+    const maxDim = Math.max(metadata.width, metadata.height)
+    if (maxDim < TARGET_MAX_DIMENSION) {
+      const scale = TARGET_MAX_DIMENSION / maxDim
+      pipeline = pipeline.resize({
+        width: Math.round(metadata.width * scale),
+        height: Math.round(metadata.height * scale),
+        fit: 'inside',
+        kernel: sharp.kernel.lanczos3,
+      })
+    }
+  }
+
+  const out = await pipeline
+    .toFormat('jpeg', { quality: 88, mozjpeg: true })
+    .toBuffer({ resolveWithObject: true })
+
+  return { buffer: out.data, mimetype: 'image/jpeg' }
 }
 
 /**
@@ -52,9 +89,10 @@ async function downloadImage(url: string): Promise<{
     throw new Error(`Failed to download ${url}: ${response.statusText}`)
   }
 
-  const contentType = response.headers.get('content-type') || 'image/jpeg'
   const arrayBuffer = await response.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
+  const rawBuffer = Buffer.from(arrayBuffer)
+
+  const { buffer, mimetype } = await processImageBuffer(rawBuffer)
 
   // Determine filename from URL
   const urlPath = new URL(url).pathname
@@ -62,11 +100,14 @@ async function downloadImage(url: string): Promise<{
   let filename = parts[parts.length - 1] || 'image.jpg'
   filename = filename.replace(/[^a-zA-Z0-9._-]/g, '_')
   if (!filename.includes('.')) {
-    const ext = contentType.includes('png') ? '.png' : '.jpg'
+    const ext = mimetype.includes('png') ? '.png' : '.jpg'
     filename = `${filename}${ext}`
   }
+  if (!filename.toLowerCase().endsWith('.jpg') && !filename.toLowerCase().endsWith('.jpeg')) {
+    filename = `${filename}.jpg`
+  }
 
-  return { buffer, filename, mimetype: contentType }
+  return { buffer, filename, mimetype }
 }
 
 /**

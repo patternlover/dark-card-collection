@@ -156,6 +156,7 @@ export async function syncInventory(password: string, filters?: SyncFilters): Pr
         price: purchasePrice,
         compareAtPrice: storePrice || undefined,
         status: productState.toUpperCase() === 'HOLD' ? 'hold' : 'listed',
+        isPreorder: productState.toUpperCase() === 'HOLD',
         condition: CONDITION_MAP[condition.toUpperCase()] || 'near-mint',
         category: categoryId,
         collection: collectionId,

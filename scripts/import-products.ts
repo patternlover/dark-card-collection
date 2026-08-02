@@ -166,6 +166,7 @@ async function run() {
       price: purchasePrice,
       compareAtPrice: storePrice || undefined,
       status: mappedStatus,
+      isPreorder: mappedStatus === 'hold',
       condition: mappedCondition,
       category: categoryId,
       collection: collectionId,

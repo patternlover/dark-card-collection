@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
-import { proxyImageUrl } from '@/lib/proxy-image'
+import { getProductImageInfo } from '@/lib/product-image'
+import { ProductImage } from './ProductImage'
 import { QuickAddButton } from './QuickAddButton'
 
 interface Product {
@@ -11,6 +12,7 @@ interface Product {
   storePrice?: number
   compareAtPrice?: number
   status: 'listed' | 'hold' | 'sold'
+  isPreorder?: boolean
   condition: string
   language: string
   category?: { name: string } | null
@@ -20,20 +22,13 @@ interface Product {
   imageUrl?: string | null
 }
 
-function getProductImage(product: Product): string | null {
-  if (product.imageUrl) return product.imageUrl
-  if (product.images?.[0]?.image?.url) return product.images[0].image.url
-  if (product.image?.url) return product.image.url
-  return null
-}
-
 interface ProductCardProps {
   product: Product
 }
 
 export function ProductCard({ product }: ProductCardProps) {
   const displayPrice = product.storePrice || 0
-  const imgUrl = proxyImageUrl(getProductImage(product))
+  const imgUrl = getProductImageInfo(product).cardUrl
 
   return (
     <div className="group relative border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#FACC15]">
@@ -42,27 +37,25 @@ export function ProductCard({ product }: ProductCardProps) {
         className="block"
       >
         <div className="p-3">
-          {imgUrl ? (
-            <img
-              src={imgUrl}
-              alt={product.title}
-              width={600}
-              height={600}
-              sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
-              className="aspect-square w-full object-cover border border-zinc-800"
-              loading="lazy"
-              decoding="async"
-            />
-          ) : (
-            <div className="aspect-square w-full bg-zinc-800 flex items-center justify-center border border-zinc-800">
-              <span className="text-zinc-600 text-4xl">📦</span>
-            </div>
-          )}
+          <div className="relative aspect-square w-full">
+            {imgUrl ? (
+              <ProductImage
+                src={imgUrl}
+                alt={product.title}
+                sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
+                className="border border-zinc-800 object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center border border-zinc-800 bg-zinc-800">
+                <span className="text-4xl text-zinc-600">📦</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="px-4 pb-4">
           <div className="mb-2 flex flex-wrap gap-1.5">
-            {product.status === 'hold' && <Badge variant="preorder">In Attesa</Badge>}
+            {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
             {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
             {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
           </div>
