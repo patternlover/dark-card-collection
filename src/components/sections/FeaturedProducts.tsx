@@ -9,8 +9,10 @@ export async function FeaturedProducts() {
     const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'products',
-      where: { status: { equals: 'listed' } },
-      limit: 8,
+      where: {
+        AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }],
+      },
+      limit: 100,
       sort: '-createdAt',
     })
     products = result.docs

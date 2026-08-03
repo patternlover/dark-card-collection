@@ -67,6 +67,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, quantity }]
     })
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('dcc:cart-add', { detail: 1 }))
+    }
   }, [])
 
   const removeItem = useCallback((id: number | string) => {

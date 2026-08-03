@@ -21,7 +21,10 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Admin dashboard at `/dashboard` with product management and sync tools
 - Responsive design with mobile menu
 - Product filtering by condition, language, category, collection
-- Product detail page with stock info, variant availability, short description, quantity selector and sticky add-to-cart bar
+- Product detail page with stock info, variant availability, short description, quantity selector and sticky add-to-cart bar (appears only when the main button scrolls out of view, on mobile and desktop)
+- Product filtering: always-visible sidebar filters on the left (condition, language, category, collection) with a search bar on top of every listing page
+- Social proof bar on the homepage ("N collezionisti hanno aggiunto al carrello nelle ultime 24 ore")
+- Footer pinned to the bottom on short pages (flex layout shell with all-black background)
 - Free shipping over €60 (displayed in a banner below the navbar and in a dedicated animated CTA section on the homepage)
 - Hold/SPC products shown in the shop as one grouped card with total stock (listings are kept durable against the daily import cron)
 - Variant management with edit and delete (Payload-only, no Sheets impact)
@@ -33,13 +36,69 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Order confirmation emails via Resend
 - Unit tests (Vitest) + CI pipeline on GitHub Actions
 
+## Database Schema
+
+PostgreSQL (Neon), managed by Payload CMS. Migrations live in `src/migrations/`.
+
+```
+dark_card_collection (Neon PostgreSQL)
+├── users                        # Admin accounts
+│   ├── id, name, email (unique)
+│   └── auth: salt, hash, reset_password_token, login_attempts, lock_until
+│       └── users_sessions       # (1:N) login sessions
+├── media                        # Uploaded images (Vercel Blob)
+│   ├── id, url, filename, mime_type, filesize, width, height
+│   └── sizes: card (url, width, height, filename) / pdp (url, width, height, filename)
+├── categories                   # ETB, Collection, SPC, Tin...
+│   └── id, name, slug (unique), description
+├── collections                  # Expansions/sets (es. "Prismatic Evolutions")
+│   └── id, name, slug (unique), description, release_date
+├── products                     # Storefront variants (grouped by title)
+│   ├── id, title, slug (unique), item_id (unique, from Google Sheets)
+│   ├── pricing: price, store_price, compare_at_price, average_sale_price, last_price_update
+│   ├── state: status (enum: listed|hold|sold), product_state, is_preorder, is_visible, featured
+│   ├── details: description, condition (enum), language (enum), rarity, card_number
+│   ├── stock: quantity
+│   ├── created_at, updated_at
+│   ├── belongsTo categories (category_id, on delete set null)
+│   ├── belongsTo collections (collection_id, on delete set null)
+│   └── products_images          # (1:N) join to media for product images
+├── orders                       # Checkout orders
+│   ├── id, order_id, status (enum: pending|paid|fulfilled|cancelled)
+│   ├── total, email, stripe_session_id
+│   └── orders_items             # (1:N) snapshot of purchased items
+│       └── product_id → products, quantity, price (unit)
+└── messages                     # Contact form submissions
+    └── id, name, email, subject, message, read, replied
+```
+
+Payload internals (managed automatically): `payload_kv`, `payload_preferences` (+ rels),
+`payload_locked_documents` (+ rels), `payload_migrations`.
+
+### Globals
+
+```
+├── header          # site_header: logo → media, nav_items[] (label, url)
+└── site_settings   # site_name, description
+```
+
+### Migrations
+
+| Name | Purpose |
+|------|---------|
+| `20260719_131233` | Initial schema |
+| `20260719_add_image_url` | Add `image_url` to products |
+| `20260719_add_product_state` | Add `product_state` to products |
+| `20260720_add_is_visible` | Add `is_visible` (default true) to products |
+| `20260802_202035` | Add `description`, `products_images`, stock handling |
+
 ## Testing
 
 ```bash
 pnpm test
 ```
 
-Unit tests live in `tests/` and cover the pure lib modules (`group-products.ts`, `parse-csv.ts`).
+Unit tests live in `tests/` and cover the pure lib modules (`group-products.ts`, `parse-csv.ts`) and the sticky add-to-cart visibility logic (`sticky-add-to-cart.test.tsx`, rendered in a DOM environment).
 
 ## CI
 

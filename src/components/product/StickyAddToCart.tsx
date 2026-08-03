@@ -19,30 +19,38 @@ interface StickyAddToCartProps {
 }
 
 export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartProps) {
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
+  const mainRef = useRef<HTMLDivElement | null>(null)
   const [show, setShow] = useState(false)
 
   useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => setShow(!entry.isIntersecting),
-      { threshold: 0 },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
+    const update = () => {
+      const el = mainRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const vh = window.innerHeight || document.documentElement.clientHeight
+      setShow(rect.bottom <= 0 || rect.top >= vh)
+    }
+
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
   }, [])
 
   return (
     <>
-      <div ref={sentinelRef}>
+      <div ref={mainRef} data-testid="main-atc">
         <AddToCartButton product={product} maxQuantity={maxQuantity} />
       </div>
 
       <div
-        className={`fixed inset-x-0 bottom-0 z-40 border-t-2 border-zinc-700 bg-black/95 p-3 backdrop-blur transition-transform duration-300 ${
-          show ? 'translate-y-0' : 'translate-y-full'
-        }`}
+        data-testid="sticky-atc"
+        aria-hidden={!show}
+        className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-zinc-700 bg-black/95 p-3 shadow-[0_-2px_0px_0px_#FACC15] backdrop-blur transition-transform duration-300"
+        style={{ transform: show ? 'translateY(0)' : 'translateY(100%)' }}
       >
         <div className="mx-auto max-w-7xl">
           <AddToCartButton product={product} maxQuantity={maxQuantity} compact />

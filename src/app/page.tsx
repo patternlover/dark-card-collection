@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { FreeShippingBanner } from '@/components/sections/FreeShippingBanner'
 import { HeroSection } from '@/components/sections/HeroSection'
-import { Marquee } from '@/components/sections/Marquee'
 import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
 import { PromoBand } from '@/components/sections/PromoBand'
+import { CartSocialProof } from '@/components/sections/CartSocialProof'
 import { CtaBanner } from '@/components/sections/CtaBanner'
 import { TrustBadges } from '@/components/sections/TrustBadges'
 
@@ -58,8 +58,8 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <FreeShippingBanner />
-      <Marquee />
       <HeroSection />
+      <CartSocialProof />
       <FeaturedProducts />
       <PromoBand />
       <CtaBanner />
