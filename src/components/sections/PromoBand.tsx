@@ -12,7 +12,7 @@ export function PromoBand() {
             </div>
             <div>
               <h2 className="text-2xl font-black uppercase tracking-tight text-white">
-                Spedizione gratuita sopra <span className="text-[#FACC15]">60 €</span>
+                Spedizione gratuita dagli <span className="text-[#FACC15]">80 €</span> in Italia
               </h2>
               <p className="mt-1 text-sm text-zinc-400">
                 Ordini tracciati e assicurati su tutto il territorio italiano. Pagamenti sicuri con Stripe.

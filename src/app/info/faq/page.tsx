@@ -10,7 +10,7 @@ const faqs = [
   },
   {
     question: 'Come funziona la spedizione?',
-    answer: 'Utilizziamo corrieri tracciabili per tutti gli ordini. Una volta spedito il tuo ordine, riceverai un codice di tracciamento via email. La spedizione gratuita è disponibile per ordini superiori a €60.',
+    answer: 'Utilizziamo corrieri tracciabili per tutti gli ordini. Una volta spedito il tuo ordine, riceverai un codice di tracciamento via email. La spedizione gratuita è disponibile per ordini dagli 80 €.',
   },
   {
     question: 'Posso restituire un prodotto?',

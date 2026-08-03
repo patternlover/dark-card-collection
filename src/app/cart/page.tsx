@@ -1,11 +1,33 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { Trash2, ShoppingBag, Minus, Plus } from 'lucide-react'
-import { useCart } from '@/hooks/useCart'
+import { useCart, type CartItem } from '@/hooks/useCart'
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal, shipping, total } = useCart()
+  const [confirm, setConfirm] = useState<{ type: 'remove' | 'decrement'; item: CartItem } | null>(
+    null,
+  )
+
+  const handleMinus = (item: CartItem) => {
+    if (item.quantity <= 1) {
+      setConfirm({ type: 'decrement', item })
+    } else {
+      updateQuantity(item.id, item.quantity - 1)
+    }
+  }
+
+  const handleRemove = (item: CartItem) => {
+    setConfirm({ type: 'remove', item })
+  }
+
+  const confirmAction = () => {
+    if (!confirm) return
+    removeItem(confirm.item.id)
+    setConfirm(null)
+  }
 
   return (
     <div className="bg-black">
@@ -52,7 +74,7 @@ export default function CartPage() {
                     <div className="mt-2 flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        onClick={() => handleMinus(item)}
                         className="rounded border border-zinc-700 p-1 text-zinc-400 hover:text-white"
                       >
                         <Minus className="h-3 w-3" />
@@ -77,7 +99,7 @@ export default function CartPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => handleRemove(item)}
                     className="text-zinc-500 hover:text-red-500"
                     aria-label="Rimuovi"
                   >
@@ -102,7 +124,7 @@ export default function CartPage() {
                 </div>
                 {shipping > 0 && (
                   <p className="text-xs text-zinc-600">
-                    Spedizione gratuita per ordini sopra i €60
+                    Spedizione gratuita in Italia dagli 80 €
                   </p>
                 )}
                 <div className="border-t border-zinc-800 pt-3 flex justify-between font-medium text-white">
@@ -124,6 +146,37 @@ export default function CartPage() {
               >
                 Continua lo shopping
               </Link>
+            </div>
+          </div>
+        )}
+
+        {confirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div className="w-full max-w-sm border-2 border-[#FACC15] bg-black p-6 shadow-[8px_8px_0px_0px_#FACC15]">
+              <h2 className="text-lg font-black uppercase tracking-wide text-white">
+                Rimuovere l&apos;articolo?
+              </h2>
+              <p className="mt-3 text-sm text-zinc-400">
+                {confirm.type === 'decrement'
+                  ? 'La quantità minima è 1. Il prodotto verrà rimosso dal carrello.'
+                  : `"${confirm.item.title}" verrà rimosso dal carrello.`}
+              </p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConfirm(null)}
+                  className="flex-1 border-2 border-zinc-600 bg-zinc-900 px-4 py-2.5 text-sm font-black uppercase tracking-wide text-white transition-colors hover:border-zinc-400"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmAction}
+                  className="flex-1 border-2 border-red-500 bg-red-500 px-4 py-2.5 text-sm font-black uppercase tracking-wide text-black transition-colors hover:bg-red-400"
+                >
+                  Rimuovi
+                </button>
+              </div>
             </div>
           </div>
         )}

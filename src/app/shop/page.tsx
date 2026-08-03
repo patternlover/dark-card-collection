@@ -1,7 +1,6 @@
 import { getPayloadClient } from '@/lib/payload'
 import { ProductGroupCard } from '@/components/product/ProductGroupCard'
-import { ProductFiltersSidebar } from '@/components/product/ProductFiltersSidebar'
-import { ProductSearchInput } from '@/components/product/ProductSearchInput'
+import { ListingShell } from '@/components/sections/ListingShell'
 import { groupProducts } from '@/lib/group-products'
 import { applyListingFilters, type ListingParams } from '@/lib/product-filters'
 import type { Metadata } from 'next'
@@ -65,42 +64,28 @@ export default async function ShopPage({
   }
 
   return (
-    <div className="bg-black">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="mb-6 text-3xl font-black uppercase tracking-tight text-white">Shop</h1>
-
-        <form action="/shop" method="GET">
-          <div className="mb-6">
-            <ProductSearchInput defaultValue={listingParams.q || ''} />
-          </div>
-
-          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr] lg:items-start">
-            <ProductFiltersSidebar
-              action="/shop"
-              categories={categories}
-              collections={collections}
-              params={listingParams}
-            />
-
-            <section>
-              {products.length === 0 ? (
-                <div className="py-16 text-center">
-                  <p className="text-lg text-zinc-500">Nessun prodotto trovato.</p>
-                  <p className="mt-2 text-sm text-zinc-600">
-                    I prodotti vengono importati automaticamente dal foglio Google Sheets.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                  {groupProducts(products).map((group) => (
-                    <ProductGroupCard key={group.title} group={group} />
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
-        </form>
-      </div>
-    </div>
+    <ListingShell
+      title="Shop"
+      action="/shop"
+      searchDefault={listingParams.q || ''}
+      categories={categories}
+      collections={collections}
+      params={listingParams}
+    >
+      {products.length === 0 ? (
+        <div className="py-16 text-center">
+          <p className="text-lg text-zinc-500">Nessun prodotto trovato.</p>
+          <p className="mt-2 text-sm text-zinc-600">
+            I prodotti vengono importati automaticamente dal foglio Google Sheets.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {groupProducts(products).map((group) => (
+            <ProductGroupCard key={group.title} group={group} />
+          ))}
+        </div>
+      )}
+    </ListingShell>
   )
 }

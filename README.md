@@ -25,7 +25,7 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Product filtering: always-visible sidebar filters on the left (condition, language, category, collection) with a search bar on top of every listing page
 - Social proof bar on the homepage ("N collezionisti hanno aggiunto al carrello nelle ultime 24 ore")
 - Footer pinned to the bottom on short pages (flex layout shell with all-black background)
-- Free shipping over €60 (displayed in a banner below the navbar and in a dedicated animated CTA section on the homepage)
+- Free shipping over €80 in Italy (displayed in a banner below the navbar and in a dedicated CTA section on the homepage)
 - Hold/SPC products shown in the shop as one grouped card with total stock (listings are kept durable against the daily import cron)
 - Variant management with edit and delete (Payload-only, no Sheets impact)
 - Product visibility toggle (`isVisible`) - control which products appear in the shop independently of status

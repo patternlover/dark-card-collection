@@ -206,7 +206,7 @@ ottimizza, carica su Blob e collega `images[]`. Idempotente (salta chi ha già i
 1. L'utente aggiunge item al carrello (localStorage via `useCart`).
 2. `/checkout` → `POST /api/stripe/checkout`:
    - crea una sessione Stripe `mode=payment`, `billing_address_collection=required`,
-     spedizione solo in IT, gratis sopra €60 (altrimenti +€9.99).
+     spedizione solo in IT, gratis dagli €80 (altrimenti +€9.99).
    - ogni riga porta `metadata.payloadProductId` = `products.id` (serve al webhook).
 3. Cliente paga su Stripe.
 4. Stripe invia il webhook `checkout.session.completed` a `/api/stripe/webhook`:

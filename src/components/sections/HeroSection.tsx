@@ -7,10 +7,50 @@ const stats = [
   { icon: PackageCheck, label: 'Packaging sicuro' },
 ]
 
+function GengarBackdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+      <div className="animate-gengar-glow absolute -right-24 top-0 h-[420px] w-[420px] rounded-full bg-[#7C3AED]/25 blur-3xl" />
+      <div className="animate-gengar-glow absolute -left-32 bottom-0 h-[380px] w-[380px] rounded-full bg-[#A78BFA]/15 blur-3xl [animation-delay:1.4s]" />
+
+      <div className="animate-gengar-bob absolute -top-4 right-4 opacity-90 sm:right-14">
+        <svg width="200" height="186" viewBox="0 0 240 220" fill="none">
+          <path
+            d="M50 118 C44 70 70 46 120 46 C170 46 196 70 190 118 C198 150 198 172 194 196 L164 196 L120 176 L76 196 L46 196 C42 172 42 150 50 118 Z"
+            fill="#7C3AED"
+          />
+          <path d="M62 64 L50 28 L88 46 Z" fill="#7C3AED" />
+          <path d="M178 64 L190 28 L152 46 Z" fill="#7C3AED" />
+          <path
+            d="M92 50 L100 30 L112 48 L120 26 L128 48 L140 30 L148 50"
+            stroke="#7C3AED"
+            strokeWidth="12"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <ellipse cx="90" cy="128" rx="17" ry="23" fill="#FDE68A" />
+          <ellipse cx="150" cy="128" rx="17" ry="23" fill="#FDE68A" />
+          <ellipse cx="94" cy="134" rx="8" ry="11" fill="#111827" />
+          <ellipse cx="146" cy="134" rx="8" ry="11" fill="#111827" />
+          <path d="M82 168 C102 194 138 194 158 168 C150 182 132 190 120 190 C108 190 90 182 82 168 Z" fill="#FFFFFF" />
+          <path d="M104 180 L108 194 L112 180 Z" fill="#FFFFFF" stroke="#7C3AED" strokeWidth="2" />
+          <path d="M128 180 L132 194 L136 180 Z" fill="#FFFFFF" stroke="#7C3AED" strokeWidth="2" />
+        </svg>
+      </div>
+
+      <div className="animate-gengar-bob absolute left-[6%] top-[16%] h-3 w-3 rotate-12 border-2 border-[#7C3AED] [animation-delay:0.7s]" />
+      <div className="animate-gengar-bob absolute left-[14%] top-[64%] h-2 w-2 rounded-full bg-[#A78BFA]/70 [animation-delay:1.3s]" />
+      <div className="animate-gengar-bob absolute bottom-[22%] right-[38%] h-2.5 w-2.5 rotate-45 border-2 border-[#A78BFA]/60 [animation-delay:1.9s]" />
+      <div className="animate-gengar-bob absolute left-[42%] top-[12%] h-2 w-2 rounded-full bg-[#7C3AED]/60 [animation-delay:0.4s]" />
+    </div>
+  )
+}
+
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b-2 border-zinc-700 bg-black">
-      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+      <GengarBackdrop />
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           <div className="text-center lg:text-left">
             <span className="inline-block border-2 border-[#FACC15] bg-[#FACC15] px-3 py-1 text-xs font-black uppercase tracking-widest text-black shadow-[3px_3px_0px_0px_#fff]">

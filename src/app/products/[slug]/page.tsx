@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayloadClient } from '@/lib/payload'
 import { groupProducts } from '@/lib/group-products'
@@ -115,12 +116,6 @@ export default async function ProductPage({
     sold: 'Venduto',
   }
 
-  const categoryName = product.category
-    ? typeof product.category === 'object'
-      ? product.category.name
-      : product.category
-    : ''
-
   const collectionName = product.collection
     ? typeof product.collection === 'object'
       ? product.collection.name
@@ -176,21 +171,33 @@ export default async function ProductPage({
               </Badge>
             </div>
 
-            <div className="text-sm text-zinc-500 font-medium uppercase tracking-wider">
-              <span>Shop</span>
-              {categoryName && (
-                <>
-                  <span className="mx-2">/</span>
-                  <span>{categoryName}</span>
-                </>
-              )}
-              {collectionName && (
-                <>
-                  <span className="mx-2">/</span>
-                  <span>{collectionName}</span>
-                </>
-              )}
-            </div>
+            <nav aria-label="Breadcrumb" className="text-sm font-medium uppercase tracking-wider">
+              <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
+                <li>
+                  <Link href="/" className="transition-colors hover:text-[#FACC15]">
+                    Home
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link href="/shop" className="transition-colors hover:text-[#FACC15]">
+                    Shop
+                  </Link>
+                </li>
+                <li aria-hidden="true">/</li>
+                <li>
+                  <Link href="/shop/collections" className="transition-colors hover:text-[#FACC15]">
+                    Collezioni
+                  </Link>
+                </li>
+                {collectionName && (
+                  <>
+                    <li aria-hidden="true">/</li>
+                    <li className="text-zinc-300">{collectionName}</li>
+                  </>
+                )}
+              </ol>
+            </nav>
 
             <h1 className="text-3xl font-black text-white uppercase tracking-tight">{product.title}</h1>
 
@@ -242,7 +249,7 @@ export default async function ProductPage({
             <div className="space-y-3 border-2 border-zinc-800 p-4 shadow-[3px_3px_0px_0px_#27272a]">
               <div className="flex items-center gap-3 text-sm text-zinc-400">
                 <Truck className="h-5 w-5 text-[#FACC15]" />
-                <span>Spedizione gratuita sopra i €60</span>
+                <span>Spedizione gratuita in Italia dagli 80 €</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-zinc-400">
                 <Shield className="h-5 w-5 text-[#FACC15]" />

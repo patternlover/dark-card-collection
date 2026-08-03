@@ -20,7 +20,7 @@ export async function FeaturedProducts() {
     // DB might not be connected during build
   }
 
-  const groups = groupProducts(products)
+  const groups = groupProducts(products).slice(0, 4)
 
   return (
     <section className="bg-black py-16">

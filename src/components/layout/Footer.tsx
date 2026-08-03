@@ -4,7 +4,7 @@ import Link from 'next/link'
 const BUSINESS = {
   legalName: 'Nome e Cognome (o Ragione Sociale)',
   address: 'Via Esempio 1, 00000 Città (RM), Italia',
-  email: 'info@darkcardcollection.com',
+  email: 'darkcardcollection@gmail.com',
   taxId: 'CF / P.IVA da compilare',
 }
 

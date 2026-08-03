@@ -4,6 +4,7 @@ import { render, screen, cleanup } from '@testing-library/react'
 import { act } from 'react'
 import { StickyAddToCart } from '@/components/product/StickyAddToCart'
 import { CartProvider } from '@/hooks/useCart'
+import { ConsentProvider } from '@/hooks/useConsent'
 
 const product = {
   id: 1,
@@ -60,15 +61,35 @@ beforeEach(() => {
 })
 
 function renderSticky() {
+  localStorage.setItem('dcc-cookie-consent', JSON.stringify({ necessary: true, analytics: true, marketing: true }))
   return render(
-    <CartProvider>
-      <footer />
-      <StickyAddToCart product={product} maxQuantity={3} />
-    </CartProvider>,
+    <ConsentProvider>
+      <CartProvider>
+        <footer />
+        <StickyAddToCart product={product} maxQuantity={3} />
+      </CartProvider>
+    </ConsentProvider>,
+  )
+}
+
+function renderStickyWithoutConsent() {
+  localStorage.removeItem('dcc-cookie-consent')
+  return render(
+    <ConsentProvider>
+      <CartProvider>
+        <footer />
+        <StickyAddToCart product={product} maxQuantity={3} />
+      </CartProvider>
+    </ConsentProvider>,
   )
 }
 
 describe('StickyAddToCart', () => {
+  it('stays hidden until cookie consent is given', () => {
+    renderStickyWithoutConsent()
+    expect(screen.getByTestId('sticky-atc').style.transform).toContain('translateY(100%)')
+  })
+
   it('is hidden while the buy box is in view', () => {
     renderSticky()
     expect(screen.getByTestId('sticky-atc').style.transform).toContain('translateY(100%)')

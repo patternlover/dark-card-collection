@@ -6,7 +6,6 @@ on:
   pull_request:
 
 env:
-  DATABASE_URI: postgresql://placeholder:placeholder@localhost:5432/placeholder
   PAYLOAD_SECRET: ci-placeholder-secret
   NEXT_PUBLIC_SITE_URL: https://darkcardcollection.com
   NODE_OPTIONS: --max-old-space-size=6144
@@ -14,6 +13,19 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dcc
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URI: postgresql://postgres:postgres@localhost:5432/dcc
     steps:
       - uses: actions/checkout@v4
 
@@ -23,7 +35,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies

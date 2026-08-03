@@ -14,7 +14,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection
 export const metadata: Metadata = {
   title: 'Dark Card Collection | Pokémon TCG Sigillati',
   description:
-    'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro. Spedizione gratuita sopra 60 €.',
+    'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro. Spedizione gratuita in Italia dagli 80 €.',
   alternates: {
     canonical: '/',
   },

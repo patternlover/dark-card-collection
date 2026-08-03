@@ -6,7 +6,7 @@ export const metadata: Metadata = {
 }
 
 const SHIPPING_COST = '9,99 €'
-const FREE_SHIPPING_THRESHOLD = '60,00 €'
+const FREE_SHIPPING_THRESHOLD = '80,00 €'
 
 export default function ShippingReturnsPage() {
   return (

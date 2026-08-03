@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Send, Mail } from 'lucide-react'
 
 // TODO: inserisci qui la tua email reale di contatto
-const CONTACT_EMAIL = 'info@darkcardcollection.com'
+const CONTACT_EMAIL = 'darkcardcollection@gmail.com'
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
