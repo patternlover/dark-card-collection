@@ -19,16 +19,19 @@ interface StickyAddToCartProps {
 }
 
 export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartProps) {
-  const mainRef = useRef<HTMLDivElement | null>(null)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
   const [show, setShow] = useState(false)
 
   useEffect(() => {
     const update = () => {
-      const el = mainRef.current
+      const el = sentinelRef.current
       if (!el) return
-      const rect = el.getBoundingClientRect()
       const vh = window.innerHeight || document.documentElement.clientHeight
-      setShow(rect.bottom <= 0 || rect.top >= vh)
+      const rect = el.getBoundingClientRect()
+      const buyBoxOut = rect.top < 0 || rect.top >= vh
+      const footer = document.querySelector('footer')
+      const footerTop = footer ? footer.getBoundingClientRect().top : Infinity
+      setShow(buyBoxOut && footerTop > vh)
     }
 
     update()
@@ -40,20 +43,32 @@ export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartPro
     }
   }, [])
 
+  const displayPrice = product.storePrice || 0
+
   return (
     <>
-      <div ref={mainRef} data-testid="main-atc">
-        <AddToCartButton product={product} maxQuantity={maxQuantity} />
-      </div>
+      <div ref={sentinelRef} aria-hidden="true" data-testid="atc-sentinel" />
 
       <div
         data-testid="sticky-atc"
         aria-hidden={!show}
-        className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-zinc-700 bg-black/95 p-3 shadow-[0_-2px_0px_0px_#FACC15] backdrop-blur transition-transform duration-300"
+        className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-[#FACC15] bg-black/95 shadow-[0_-2px_0px_0px_#000] backdrop-blur transition-transform duration-300"
         style={{ transform: show ? 'translateY(0)' : 'translateY(100%)' }}
       >
-        <div className="mx-auto max-w-7xl">
-          <AddToCartButton product={product} maxQuantity={maxQuantity} compact />
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="min-w-0 shrink-0">
+            <p className="text-lg font-black leading-none text-[#FACC15]">
+              {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
+            </p>
+            <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+              {maxQuantity > 0
+                ? `${maxQuantity} disponibil${maxQuantity === 1 ? 'e' : 'i'}`
+                : 'Non disponibile'}
+            </p>
+          </div>
+          <div className="w-full max-w-sm sm:max-w-md">
+            <AddToCartButton product={product} maxQuantity={maxQuantity} />
+          </div>
         </div>
       </div>
     </>

@@ -21,7 +21,7 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Admin dashboard at `/dashboard` with product management and sync tools
 - Responsive design with mobile menu
 - Product filtering by condition, language, category, collection
-- Product detail page with stock info, variant availability, short description, quantity selector and sticky add-to-cart bar (appears only when the main button scrolls out of view, on mobile and desktop)
+- Product detail page with stock info, variant availability, short description and a sticky add-to-cart bar (the only purchase button: shows price, stock and quantity selector, appears when the buy box scrolls out of view on mobile and desktop, hides near the footer)
 - Product filtering: always-visible sidebar filters on the left (condition, language, category, collection) with a search bar on top of every listing page
 - Social proof bar on the homepage ("N collezionisti hanno aggiunto al carrello nelle ultime 24 ore")
 - Footer pinned to the bottom on short pages (flex layout shell with all-black background)
@@ -210,7 +210,19 @@ Access the admin dashboard at `/dashboard` (password-protected).
 
 - **Gestione Prodotti** (`/admin/products`): View, edit, and delete product variants. Products are grouped by name; expand a group to see individual variants with language, condition, price, and stock.
 - **Sincronizzazione** (`/admin/sync`): Trigger a manual sync from Google Sheets with import filters.
-- **Payload CMS** (`/admin/[[...segments]]`): Native Payload admin panel.
+- **Payload CMS** (`/admin`): Native Payload admin panel. Full frontend to query and edit every collection (products, categories, collections, orders, messages, media, users) and global (header, site settings). Sign in with the admin user account.
+
+### Payload Admin user
+
+The first admin user is created with:
+
+```bash
+ADMIN_EMAIL=your@email.com ADMIN_PASSWORD=your-password pnpm create-admin
+```
+
+(If the env vars are omitted it uses `admin@darkcardcollection.com` and prints a temporary password.)
+
+Login at `https://darkcardcollection.com/admin`. Change the password from the "Profile" menu after the first login.
 
 ### Variant Management
 

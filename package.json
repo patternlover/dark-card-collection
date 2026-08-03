@@ -13,7 +13,8 @@
     "payload": "payload",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
-    "import-products": "payload run scripts/import-products.ts"
+    "import-products": "payload run scripts/import-products.ts",
+    "create-admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.86.0",
@@ -47,6 +48,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "^6.0.5",
     "happy-dom": "^20.11.1",
+    "pg": "^8.22.0",
     "vitest": "^4.1.10"
   },
   "pnpm": {

@@ -198,6 +198,11 @@ export default async function ProductPage({
               <p className="text-base text-zinc-400 leading-relaxed">{product.description}</p>
             )}
 
+            <StickyAddToCart
+              product={buyableProduct}
+              maxQuantity={group.totalQuantity > 0 ? group.totalQuantity : 1}
+            />
+
             <div className="flex items-baseline gap-4">
               <span className="text-3xl font-black text-[#FACC15]">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
@@ -233,11 +238,6 @@ export default async function ProductPage({
                 )}
               </div>
             )}
-
-            <StickyAddToCart
-              product={buyableProduct}
-              maxQuantity={group.totalQuantity > 0 ? group.totalQuantity : 1}
-            />
 
             <div className="space-y-3 border-2 border-zinc-800 p-4 shadow-[3px_3px_0px_0px_#27272a]">
               <div className="flex items-center gap-3 text-sm text-zinc-400">
