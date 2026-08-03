@@ -51,6 +51,11 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
             <span className="text-lg font-bold text-[#FACC15]">
               {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : ''}
             </span>
+            {group.totalQuantity > 0 && (
+              <p className="mt-1 text-xs font-medium text-zinc-500">
+                {group.totalQuantity} disponibil{group.totalQuantity === 1 ? 'e' : 'i'}
+              </p>
+            )}
           </div>
         </div>
       </Link>
