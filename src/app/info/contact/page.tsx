@@ -4,7 +4,7 @@ import { ContactForm } from '@/components/contact/ContactForm'
 import { JsonLd } from '@/components/seo/JsonLd'
 import type { Metadata } from 'next'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
 const CONTACT_EMAIL = 'darkcardcollection@gmail.com'
 
 export const metadata: Metadata = {

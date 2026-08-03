@@ -6,7 +6,7 @@ import { ConsentProvider } from '@/hooks/useConsent'
 import { AnalyticsProvider } from '@/components/layout/AnalyticsProvider'
 import { LayoutShell } from '@/components/layout/LayoutShell'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

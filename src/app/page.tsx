@@ -12,7 +12,7 @@ import { TrustBadges } from '@/components/sections/TrustBadges'
 
 export const dynamic = 'force-dynamic'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
 
 export const metadata: Metadata = {
   title: 'Pokémon TCG Sigillati | Booster Box, ETB | Dark Card Collection',

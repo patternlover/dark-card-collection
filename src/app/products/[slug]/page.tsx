@@ -12,7 +12,7 @@ import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
 
 function absoluteUrl(url: string | null | undefined): string | null {
   if (!url) return null
