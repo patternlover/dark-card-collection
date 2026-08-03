@@ -163,6 +163,10 @@ export interface Product {
    * Raw product_state from Google Sheets (e.g. LISTED, HOLD, WATCH)
    */
   productState?: string | null;
+  /**
+   * Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile
+   */
+  isPreorder?: boolean | null;
   condition?:
     ('mint' | 'near-mint' | 'lightly-played' | 'moderately-played' | 'heavily-played' | 'damaged' | 'graded') | null;
   category?: (number | null) | Category;
@@ -243,6 +247,24 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    card?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    pdp?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -415,6 +437,7 @@ export interface ProductsSelect<T extends boolean = true> {
   compareAtPrice?: T;
   status?: T;
   productState?: T;
+  isPreorder?: T;
   condition?: T;
   category?: T;
   collection?: T;
@@ -520,6 +543,30 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        card?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        pdp?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

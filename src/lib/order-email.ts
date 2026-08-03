@@ -80,7 +80,7 @@ export function buildOrderConfirmationHtml(data: OrderEmailData): string {
             <tr>
               <td style="padding-top: 24px;">
                 <p style="margin: 0; color: #a1a1aa; font-size: 12px; font-family: Arial, Helvetica, sans-serif;">
-                  ${storeName} — per assistenza rispondi a questa email.
+                  ${storeName}, per assistenza rispondi a questa email.
                 </p>
               </td>
             </tr>

@@ -27,7 +27,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | null>(null)
 
 const STORAGE_KEY = 'dcc-cart'
-const FREE_SHIPPING_THRESHOLD = 100
+const FREE_SHIPPING_THRESHOLD = 60
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])

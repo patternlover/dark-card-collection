@@ -1,4 +1,4 @@
-# DARK CARD COLLECTION — Project Context
+# DARK CARD COLLECTION - Project Context
 
 ## Overview
 
@@ -49,11 +49,11 @@ src/
 │   ├── globals.css
 │   │
 │   ├── shop/
-│   │   ├── page.tsx                # /shop — product listing with filters + search
-│   │   ├── bestsellers/page.tsx    # /shop/bestsellers — featured products
-│   │   ├── new-arrivals/page.tsx   # /shop/new-arrivals — newest products
-│   │   ├── preorders/page.tsx      # /shop/preorders — hold status products
-│   │   └── collections/page.tsx    # /shop/collections — collection list from Payload
+│   │   ├── page.tsx                # /shop - product listing with filters + search
+│   │   ├── bestsellers/page.tsx    # /shop/bestsellers - featured products
+│   │   ├── new-arrivals/page.tsx   # /shop/new-arrivals - newest products
+│   │   ├── preorders/page.tsx      # /shop/preorders - hold status products
+│   │   └── collections/page.tsx    # /shop/collections - collection list from Payload
 │   │
 │   ├── products/
 │   │   └── [slug]/page.tsx         # Product detail page
@@ -87,13 +87,13 @@ src/
 │   │
 │   ├── admin/
 │   │   ├── products/
-│   │   │   └── page.tsx            # /admin/products — variant management + delete
+│   │   │   └── page.tsx            # /admin/products - variant management + delete
 │   │   └── sync/
-│   │       ├── page.tsx            # /admin/sync — Google Sheets sync UI
+│   │       ├── page.tsx            # /admin/sync - Google Sheets sync UI
 │   │       └── actions.ts          # Server action for sync
 │   │
 │   ├── dashboard/
-│   │   └── page.tsx                # /dashboard — admin hub (password auth)
+│   │   └── page.tsx                # /dashboard - admin hub (password auth)
 │   │
 │   └── (payload)/                  # Payload admin (auto-generated)
 │
@@ -125,7 +125,7 @@ src/
 │   └── useCart.tsx                  # CartProvider + useCart (localStorage)
 │
 ├── lib/
-│   ├── payload.ts                   # getPayloadClient() — cached singleton
+│   ├── payload.ts                   # getPayloadClient() - cached singleton
 │   ├── stripe.ts                    # Stripe client
 │   ├── group-products.ts            # Groups products by title (variants → parent)
 │   ├── order-email.ts               # Template + invio email conferma ordine (Resend)
@@ -183,11 +183,11 @@ vitest.config.ts
 | featured | checkbox | default false |
 | isVisible | checkbox | default true, controls shop visibility independently of status |
 
-### Payload `id` type is `string | number` — always cast with `as number` when creating orders.
+### Payload `id` type is `string | number` - always cast with `as number` when creating orders.
 
 ## Cron Jobs (vercel.json)
-- `/api/cron/import` — daily at 3am, imports from Google Sheets inventory tab
-- `/api/cron/prices` — daily at 4am, calculates average sale price from sales tab
+- `/api/cron/import` - daily at 3am, imports from Google Sheets inventory tab
+- `/api/cron/prices` - daily at 4am, calculates average sale price from sales tab
 - Auth: Bearer token with `CRON_SECRET` or `PAYLOAD_SECRET`
 
 ## Google Sheets
@@ -207,18 +207,18 @@ Headers: `sale_id, item_id, listing_date, sale_date, platform, unitary_gross_pri
 3. **Checkout**: Creates ad-hoc Stripe price_data (no Stripe Products), passes Payload product IDs in metadata
 4. **Webhook**: Reads `product.metadata.payloadProductId` from Stripe to create order with correct Payload relationship
 5. **Products collection**: Both LISTED and HOLD products can be shown on shop, controlled by `isVisible` field
-6. **Storefront visibility filter**: `AND: [{ status: { equals: 'listed' } }, { isVisible: { equals: true } }]` on shop page
+6. **Storefront visibility filter**: `AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }]` on shop page (hold products with a price stay visible)
 
 ## Variant Products Logic
 
 Products in Google Sheets are imported as individual rows (variants). Each row becomes a Payload product with the same `title` but different `itemId`, `language`, `condition`, and `storePrice`. Variants represent the same product purchased from suppliers on different dates/orders.
 
-- **Variants are NOT exposed to customers** — shop and PDP show only the "parent product" (grouped by `title`)
+- **Variants are NOT exposed to customers** - shop and PDP show only the "parent product" (grouped by `title`)
 - **Stock** = sum of `quantity` across all variants with the same title
 - **Selling price** = minimum `storePrice` (target_price from Sheets) across variants
 - **Grouping** is done by `groupProducts()` in `src/lib/group-products.ts`
 - **PDP** fetches all variants by title, groups them, and shows aggregate info (total stock, available languages/conditions as text)
-- **Admin** (`/admin/products`) shows variants in expandable rows — this is the ONLY place variants are visible
+- **Admin** (`/admin/products`) shows variants in expandable rows - this is the ONLY place variants are visible
 - **Delete variant**: removes from Payload only, does NOT affect Google Sheets (same row stays in the sheet for import history)
 - **Visibility toggle**: `isVisible` field controls whether a product group appears in the shop. Admin toggles via eye icon in `/admin/products`. Sync preserves existing visibility settings.
 
@@ -228,10 +228,10 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 2. No cart drawer/mini-cart
 3. No middleware for route protection
 4. No tests for pages/components (only lib unit tests)
-5. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL — workaround for build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build` (the Next type-check phase OOMs with the default heap)
-6. `pnpm generate:types` times out on WSL — `payload-types.ts` never generated
+5. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL - workaround for build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build` (the Next type-check phase OOMs with the default heap)
+6. `pnpm generate:types` times out on WSL - `payload-types.ts` never generated
 7. Stripe Products not synced with Payload products
-8. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders — required by law and by Stripe before go-live
+8. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders - required by law and by Stripe before go-live
 9. Email conferma ordine: senza `RESEND_API_KEY` l'email non parte (l'ordine viene comunque creato)
 
 ## Email
@@ -241,7 +241,7 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 
 ## Git Commits
 
-Latest: `8bd85b5` (footer tutto nero) — all on `origin/main`
+Latest: `8bd85b5` (footer tutto nero) - all on `origin/main`
 
 ## Footer / Design
 

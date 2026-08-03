@@ -72,7 +72,7 @@ function parseQuotedField(line: string, start: number): { value: string; end: nu
     }
   }
 
-  // Unterminated quote — return what we have
+  // Unterminated quote, return what we have
   return { value, end: i }
 }
 

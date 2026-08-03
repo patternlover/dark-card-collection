@@ -112,6 +112,9 @@ export async function GET(request: Request) {
       const purchasePrice = parsePrice(purchasePriceRaw)
 
       const existingProduct = await payload.find({ collection: 'products', where: { itemId: { equals: itemId } } })
+      const existingDoc = existingProduct.docs.length > 0 ? (existingProduct.docs[0] as any) : null
+      const isHold = productState.toUpperCase() === 'HOLD'
+      const keepListed = Boolean(existingDoc && existingDoc.status === 'listed')
 
       const productData: Record<string, any> = {
         title: productName,
@@ -120,8 +123,8 @@ export async function GET(request: Request) {
         storePrice: targetPrice || storePrice || undefined,
         price: purchasePrice,
         compareAtPrice: storePrice || undefined,
-        status: productState.toUpperCase() === 'HOLD' ? 'hold' : 'listed',
-        isPreorder: productState.toUpperCase() === 'HOLD',
+        status: keepListed ? 'listed' : isHold ? 'hold' : 'listed',
+        isPreorder: keepListed ? Boolean(existingDoc?.isPreorder) : isHold,
         condition: CONDITION_MAP[condition.toUpperCase()] || 'near-mint',
         category: categoryId,
         collection: collectionId,

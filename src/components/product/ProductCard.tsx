@@ -66,7 +66,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
           <div className="mt-3 flex items-center justify-between">
             <span className="text-lg font-bold text-[#FACC15]">
-              {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : '—'}
+              {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : ''}
             </span>
             <span className="text-[10px] uppercase tracking-wider text-zinc-600">{product.language}</span>
           </div>

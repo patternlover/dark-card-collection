@@ -1,0 +1,14 @@
+import { Truck } from 'lucide-react'
+
+export function FreeShippingBanner() {
+  return (
+    <div className="border-b-2 border-zinc-700 bg-[#FACC15]">
+      <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
+        <Truck className="h-4 w-4 shrink-0 text-black" strokeWidth={2.5} />
+        <p className="text-center text-xs font-black uppercase tracking-widest text-black sm:text-sm">
+          Spedizione gratuita sopra i 60 €
+        </p>
+      </div>
+    </div>
+  )
+}

@@ -5,7 +5,7 @@ const BUSINESS = {
   legalName: 'Nome e Cognome (o Ragione Sociale)',
   address: 'Via Esempio 1, 00000 Città (RM), Italia',
   email: 'info@darkcardcollection.com',
-  taxId: 'CF / P.IVA — da compilare',
+  taxId: 'CF / P.IVA da compilare',
 }
 
 const legalLinks = [

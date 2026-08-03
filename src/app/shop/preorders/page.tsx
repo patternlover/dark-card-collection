@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'In Attesa | Dark Card Collection',
-  description: 'Prodotti attualmente in hold — disponibili a breve.',
+  description: 'Prodotti attualmente in hold, disponibili a breve.',
 }
 
 export default async function PreordersPage() {
@@ -32,7 +32,7 @@ export default async function PreordersPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-white mb-2">In Attesa</h1>
         <p className="text-zinc-400 mb-8">
-          Prodotti attualmente in hold — disponibili a breve
+          Prodotti attualmente in hold, disponibili a breve
         </p>
 
         {products.length === 0 ? (

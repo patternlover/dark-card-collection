@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
+import { FreeShippingBanner } from '@/components/sections/FreeShippingBanner'
 import { HeroSection } from '@/components/sections/HeroSection'
 import { Marquee } from '@/components/sections/Marquee'
 import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
 import { PromoBand } from '@/components/sections/PromoBand'
+import { CtaBanner } from '@/components/sections/CtaBanner'
 import { TrustBadges } from '@/components/sections/TrustBadges'
 
 export const dynamic = 'force-dynamic'
@@ -12,7 +14,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection
 export const metadata: Metadata = {
   title: 'Dark Card Collection | Pokémon TCG Sigillati',
   description:
-    'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro. Spedizione gratuita sopra 100 €.',
+    'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro. Spedizione gratuita sopra 60 €.',
   alternates: {
     canonical: '/',
   },
@@ -55,10 +57,12 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <FreeShippingBanner />
       <Marquee />
       <HeroSection />
       <FeaturedProducts />
       <PromoBand />
+      <CtaBanner />
       <TrustBadges />
     </>
   )

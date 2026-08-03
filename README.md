@@ -21,9 +21,11 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Admin dashboard at `/dashboard` with product management and sync tools
 - Responsive design with mobile menu
 - Product filtering by condition, language, category, collection
-- Product detail page with stock info and variant availability
+- Product detail page with stock info, variant availability, short description, quantity selector and sticky add-to-cart bar
+- Free shipping over €60 (displayed in a banner below the navbar and in a dedicated animated CTA section on the homepage)
+- Hold/SPC products shown in the shop as one grouped card with total stock (listings are kept durable against the daily import cron)
 - Variant management with edit and delete (Payload-only, no Sheets impact)
-- Product visibility toggle (`isVisible`) — control which products appear in the shop independently of status
+- Product visibility toggle (`isVisible`) - control which products appear in the shop independently of status
 - Daily cron jobs for import and price updates
 - GA4 ecommerce tracking via GTM
 - SEO: `robots.txt`, `sitemap.xml`, manifest, SVG favicon, OG metadata, JSON-LD structured data
@@ -154,7 +156,7 @@ Access the admin dashboard at `/dashboard` (password-protected).
 ### Variant Management
 
 - Products from Google Sheets are imported as variants (same title, different `itemId`)
-- Variants are only visible in `/admin/products` — the storefront shows grouped parent products
+- Variants are only visible in `/admin/products` - the storefront shows grouped parent products
 - Stock = sum of all variant quantities
 - Selling price = lowest `storePrice` across variants
 - Deleting a variant removes it from Payload only; the Google Sheet row is preserved

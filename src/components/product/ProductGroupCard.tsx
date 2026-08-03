@@ -12,7 +12,7 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
   const collectionName = group.collection?.name || ''
 
   const cheapest = group.products.find(
-    (p: any) => p.status === 'listed' && p.storePrice && p.storePrice > 0
+    (p: any) => (p.status === 'listed' || p.status === 'hold') && p.storePrice && p.storePrice > 0,
   )
 
   return (
@@ -49,7 +49,7 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
 
           <div className="mt-3">
             <span className="text-lg font-bold text-[#FACC15]">
-              {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : '—'}
+              {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : ''}
             </span>
           </div>
         </div>

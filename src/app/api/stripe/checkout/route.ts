@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 
-const FREE_SHIPPING_THRESHOLD = 100
+const FREE_SHIPPING_THRESHOLD = 60
 const SHIPPING_COST = 9.99
 
 export async function POST(req: Request) {

@@ -102,7 +102,7 @@ export default function CartPage() {
                 </div>
                 {shipping > 0 && (
                   <p className="text-xs text-zinc-600">
-                    Spedizione gratuita per ordini sopra i €100
+                    Spedizione gratuita per ordini sopra i €60
                   </p>
                 )}
                 <div className="border-t border-zinc-800 pt-3 flex justify-between font-medium text-white">

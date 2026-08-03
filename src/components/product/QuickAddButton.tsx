@@ -14,6 +14,7 @@ interface QuickAddButtonProps {
     storePrice: number | null
     imageUrl?: string | null
     status: string
+    quantity?: number
   }
 }
 
@@ -22,7 +23,7 @@ export function QuickAddButton({ product }: QuickAddButtonProps) {
   const { addItem } = useCart()
 
   const price = product.storePrice || 0
-  const isAvailable = product.status === 'listed' && price > 0
+  const isAvailable = (product.status === 'listed' || product.status === 'hold') && price > 0
 
   if (!isAvailable) return null
 
@@ -31,13 +32,17 @@ export function QuickAddButton({ product }: QuickAddButtonProps) {
     e.stopPropagation()
     if (added) return
 
-    addItem({
-      id: product.id,
-      title: product.title,
-      slug: product.slug,
-      price,
-      image: proxyImageUrl(getProductImageInfo(product).cardUrl) || null,
-    })
+    addItem(
+      {
+        id: product.id,
+        title: product.title,
+        slug: product.slug,
+        price,
+        image: proxyImageUrl(getProductImageInfo(product).cardUrl) || null,
+        maxQuantity: Math.max(1, product.quantity || 1),
+      },
+      1,
+    )
 
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)

@@ -114,7 +114,7 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
             onClick={handleToggleVisible}
             disabled={togglingVisible}
             className={`transition-colors disabled:opacity-50 ${isVisible ? 'text-[#FACC15] hover:text-zinc-400' : 'text-zinc-600 hover:text-[#FACC15]'}`}
-            title={isVisible ? 'Nello shop — clicca per nascondere' : 'Nascosto — clicca per mostrare'}
+            title={isVisible ? 'Nello shop, clicca per nascondere' : 'Nascosto, clicca per mostrare'}
           >
             {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>

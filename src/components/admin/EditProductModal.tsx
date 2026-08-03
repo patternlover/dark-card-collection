@@ -155,7 +155,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
           <div className={`mb-4 border-2 p-3 text-sm font-medium ${
             sheetSynced ? 'border-green-700 bg-green-950 text-green-400' : 'border-zinc-700 bg-zinc-900 text-zinc-400'
           }`}>
-            {sheetSynced ? 'Google Sheet aggiornato' : 'Sheet non configurato — solo salvato localmente'}
+            {sheetSynced ? 'Google Sheet aggiornato' : 'Sheet non configurato, solo salvato localmente'}
           </div>
         )}
 

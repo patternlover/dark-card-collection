@@ -19,59 +19,126 @@ interface AddToCartButtonProps {
     imageUrl?: string | null
     status: string
   }
+  maxQuantity?: number
+  compact?: boolean
 }
 
-export function AddToCartButton({ product }: AddToCartButtonProps) {
+export function AddToCartButton({ product, maxQuantity = 1, compact = false }: AddToCartButtonProps) {
   const [added, setAdded] = useState(false)
+  const [quantity, setQuantity] = useState(1)
   const { addItem } = useCart()
 
   const displayPrice = product.storePrice || 0
+  const isAvailable = (product.status === 'listed' || product.status === 'hold') && displayPrice > 0
+  const maxQty = Math.max(1, Math.floor(maxQuantity))
 
   const handleAdd = () => {
-    if (displayPrice <= 0 || product.status !== 'listed') return
+    if (!isAvailable || added) return
 
-    addItem({
-      id: product.id,
-      title: product.title,
-      slug: product.slug,
-      price: displayPrice,
-      image: proxyImageUrl(getProductImageInfo(product).cardUrl) || null,
-    })
+    addItem(
+      {
+        id: product.id,
+        title: product.title,
+        slug: product.slug,
+        price: displayPrice,
+        image: proxyImageUrl(getProductImageInfo(product).cardUrl) || null,
+        maxQuantity: maxQty,
+      },
+      quantity,
+    )
 
     trackAddToCart({
       item_id: String(product.id),
       item_name: product.title,
       price: displayPrice,
       currency: 'EUR',
-      quantity: 1,
+      quantity,
     })
 
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
 
-  const isAvailable = product.status === 'listed' && displayPrice > 0
+  if (compact) {
+    return (
+      <div className="flex w-full items-stretch gap-2">
+        <select
+          aria-label="Quantità"
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          disabled={!isAvailable}
+          className="w-16 border-2 border-zinc-700 bg-zinc-900 px-2 py-2 text-center text-sm font-bold text-white focus:border-[#FACC15] focus:outline-none disabled:opacity-50"
+        >
+          {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!isAvailable || added}
+          className="flex flex-1 items-center justify-center gap-2 border-2 border-[#FACC15] bg-[#FACC15] px-4 py-2 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {added ? (
+            <>
+              <Check className="h-4 w-4" strokeWidth={3} />
+              Aggiunto!
+            </>
+          ) : (
+            <>
+              <ShoppingBag className="h-4 w-4" strokeWidth={2.5} />
+              Aggiungi
+            </>
+          )}
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <button
-      type="button"
-      onClick={handleAdd}
-      disabled={!isAvailable || added}
-      className="flex w-full items-center justify-center gap-2 border-2 border-[#FACC15] bg-[#FACC15] px-6 py-4 text-base font-bold text-black shadow-[4px_4px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[4px_4px_0px_0px_#000]"
-    >
-      {added ? (
-        <>
-          <Check className="h-5 w-5" strokeWidth={3} />
-          Aggiunto!
-        </>
-      ) : !isAvailable ? (
-        'Non disponibile'
-      ) : (
-        <>
-          <ShoppingBag className="h-5 w-5" strokeWidth={2.5} />
-          Aggiungi al carrello
-        </>
-      )}
-    </button>
+    <div className="space-y-3">
+      <div className="flex items-center gap-3">
+        <label htmlFor="pdp-quantity" className="text-sm font-medium text-zinc-400">
+          Quantità
+        </label>
+        <select
+          id="pdp-quantity"
+          aria-label="Quantità"
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          disabled={!isAvailable}
+          className="w-20 border-2 border-zinc-700 bg-zinc-900 px-2 py-2.5 text-center text-sm font-bold text-white focus:border-[#FACC15] focus:outline-none disabled:opacity-50"
+        >
+          {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
+            <option key={n} value={n}>
+              {n}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleAdd}
+        disabled={!isAvailable || added}
+        className="flex w-full items-center justify-center gap-2 border-2 border-[#FACC15] bg-[#FACC15] px-6 py-4 text-base font-bold text-black shadow-[4px_4px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[4px_4px_0px_0px_#000]"
+      >
+        {added ? (
+          <>
+            <Check className="h-5 w-5" strokeWidth={3} />
+            Aggiunto!
+          </>
+        ) : !isAvailable ? (
+          'Non disponibile'
+        ) : (
+          <>
+            <ShoppingBag className="h-5 w-5" strokeWidth={2.5} />
+            Aggiungi al carrello
+          </>
+        )}
+      </button>
+    </div>
   )
 }

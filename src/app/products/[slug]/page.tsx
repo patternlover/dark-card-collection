@@ -4,7 +4,7 @@ import { groupProducts } from '@/lib/group-products'
 import { Badge } from '@/components/ui/Badge'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductImage } from '@/components/product/ProductImage'
-import { AddToCartButton } from '@/components/product/AddToCartButton'
+import { StickyAddToCart } from '@/components/product/StickyAddToCart'
 import { Truck, Shield, Package } from 'lucide-react'
 import type { Metadata } from 'next'
 
@@ -141,11 +141,14 @@ export default async function ProductPage({
 
   const imgSrc = group.imagePdp || group.image
 
-  const buyableProduct = group.products.find((p: any) => p.status === 'listed' && p.storePrice && p.storePrice > 0) || product
+  const buyableProduct =
+    group.products.find(
+      (p: any) => (p.status === 'listed' || p.status === 'hold') && p.storePrice && p.storePrice > 0,
+    ) || product
 
   return (
     <div className="bg-black">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div className="relative aspect-square w-full">
             {imgSrc ? (
@@ -191,6 +194,10 @@ export default async function ProductPage({
 
             <h1 className="text-3xl font-black text-white uppercase tracking-tight">{product.title}</h1>
 
+            {product.description && (
+              <p className="text-base text-zinc-400 leading-relaxed">{product.description}</p>
+            )}
+
             <div className="flex items-baseline gap-4">
               <span className="text-3xl font-black text-[#FACC15]">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
@@ -227,21 +234,15 @@ export default async function ProductPage({
               </div>
             )}
 
-            {product.description && (
-              <div>
-                <h3 className="text-sm font-medium text-white mb-2">Descrizione</h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  {product.description}
-                </p>
-              </div>
-            )}
-
-            <AddToCartButton product={buyableProduct} />
+            <StickyAddToCart
+              product={buyableProduct}
+              maxQuantity={group.totalQuantity > 0 ? group.totalQuantity : 1}
+            />
 
             <div className="space-y-3 border-2 border-zinc-800 p-4 shadow-[3px_3px_0px_0px_#27272a]">
               <div className="flex items-center gap-3 text-sm text-zinc-400">
                 <Truck className="h-5 w-5 text-[#FACC15]" />
-                <span>Spedizione gratuita sopra i €100</span>
+                <span>Spedizione gratuita sopra i €60</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-zinc-400">
                 <Shield className="h-5 w-5 text-[#FACC15]" />

@@ -24,7 +24,7 @@ export default async function ShopPage({
   try {
     const payload = await getPayloadClient()
 
-    const where: any = { AND: [{ status: { equals: 'listed' } }, { isVisible: { equals: true } }] }
+    const where: any = { AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }] }
     if (params.category) {
       where.category = { equals: Number(params.category) || params.category }
     }
