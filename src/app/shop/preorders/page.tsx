@@ -7,8 +7,12 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'In Attesa | Dark Card Collection',
-  description: 'Prodotti attualmente in hold, disponibili a breve.',
+  title: 'Preordini Pokémon TCG | Le Prossime Espansioni',
+  description:
+    'Preordina le prossime espansioni Pokémon TCG: booster box, ETB e collection box prima dell\u2019uscita ufficiale. Spedizione gratuita in Italia dagli 80 €.',
+  alternates: {
+    canonical: '/shop/preorders',
+  },
 }
 
 export default async function PreordersPage({

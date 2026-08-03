@@ -3,6 +3,9 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description: 'Informativa sulla privacy di Dark Card Collection.',
+  alternates: {
+    canonical: '/info/privacy',
+  },
 }
 
 export default function PrivacyPage() {

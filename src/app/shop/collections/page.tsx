@@ -1,12 +1,19 @@
 import { getPayloadClient } from '@/lib/payload'
 import Link from 'next/link'
+import { JsonLd } from '@/components/seo/JsonLd'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
+
 export const metadata: Metadata = {
-  title: 'Collezioni',
-  description: 'Esplora le nostre collezioni di espansioni Pokémon TCG.',
+  title: 'Collezioni Pokémon TCG | Tutte le Espansioni',
+  description:
+    'Esplora tutte le collezioni Pokémon TCG in vendita: Primi Compagni d\u2019Avventura, Destino Sfuggente e molto altro. Originali e sigillati, spedizione gratuita dagli 80 €.',
+  alternates: {
+    canonical: '/shop/collections',
+  },
 }
 
 export default async function CollectionsPage() {
@@ -24,42 +31,91 @@ export default async function CollectionsPage() {
     // DB might not be connected during build
   }
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: `${SITE_URL}/shop` },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: 'Collezioni',
+        item: `${SITE_URL}/shop/collections`,
+      },
+    ],
+  }
+
+  const itemListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: collections.map((col, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: col.name,
+      url: `${SITE_URL}/shop/collections/${col.slug}`,
+    })),
+  }
+
   return (
     <div className="bg-black">
+      <JsonLd data={[breadcrumbJsonLd, itemListJsonLd]} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-white mb-4">Collezioni</h1>
-        <p className="text-zinc-400 mb-8">
-          Esplora le nostre collezioni di espansioni Pokémon TCG
+        <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
+          <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
+            <li>
+              <Link href="/" className="transition-colors hover:text-[#FACC15]">
+                Home
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li>
+              <Link href="/shop" className="transition-colors hover:text-[#FACC15]">
+                Shop
+              </Link>
+            </li>
+            <li aria-hidden="true">/</li>
+            <li className="text-zinc-300">Collezioni</li>
+          </ol>
+        </nav>
+
+        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+          Collezioni Pokémon TCG
+        </h1>
+        <p className="mt-2 max-w-2xl text-zinc-400">
+          Tutte le espansioni Pokémon TCG in vendita da Dark Card Collection: booster box,
+          ETB e collection box originali e sigillati. Ogni collezione ha la sua pagina
+          dedicata con prezzi, disponibilità e dettagli.
         </p>
 
         {collections.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-zinc-500">Nessuna collezione disponibile.</p>
+          <div className="py-16 text-center">
+            <p className="text-lg text-zinc-500">Nessuna collezione disponibile.</p>
             <p className="mt-2 text-sm text-zinc-600">
               Le collezioni verranno importate automaticamente dal foglio Google Sheets.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {collections.map((col) => (
               <Link
                 key={col.id}
-                href={`/shop?collection=${col.id}`}
-                className="rounded-lg border border-zinc-800 bg-zinc-900 p-6 hover:border-zinc-700 transition-colors"
+                href={`/shop/collections/${col.slug}`}
+                className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#FACC15]"
               >
-                <div className="aspect-video bg-zinc-800 rounded mb-4 flex items-center justify-center">
-                  <span className="text-zinc-600 text-3xl">🃏</span>
+                <div className="aspect-video rounded bg-zinc-800 mb-4 flex items-center justify-center">
+                  <span className="text-3xl text-zinc-600">🃏</span>
                 </div>
                 <h2 className="text-lg font-semibold text-white">{col.name}</h2>
                 {col.description && (
-                  <p className="text-sm text-zinc-500 mt-2 line-clamp-2">{col.description}</p>
+                  <p className="mt-2 text-sm text-zinc-500 line-clamp-2">{col.description}</p>
                 )}
                 {col.releaseDate && (
-                  <p className="text-xs text-zinc-600 mt-2">
-                    {new Date(col.releaseDate).toLocaleDateString('it-IT')}
+                  <p className="mt-2 text-xs text-zinc-600">
+                    Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}
                   </p>
                 )}
-                <p className="text-sm text-zinc-400 mt-4">Vedi prodotti →</p>
+                <p className="mt-4 text-sm text-[#FACC15]">Vedi prodotti →</p>
               </Link>
             ))}
           </div>

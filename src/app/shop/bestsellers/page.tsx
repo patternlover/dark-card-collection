@@ -7,8 +7,12 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Bestseller | Dark Card Collection',
-  description: "I prodotti più venduti e più amati dai nostri clienti.",
+  title: 'Bestseller Pokémon TCG | I Più Venduti Sigillati',
+  description:
+    "I prodotti Pokémon TCG più venduti e più amati: booster box, ETB e collection box sigillati. Spedizione gratuita in Italia dagli 80 €.",
+  alternates: {
+    canonical: '/shop/bestsellers',
+  },
 }
 
 export default async function BestsellersPage({

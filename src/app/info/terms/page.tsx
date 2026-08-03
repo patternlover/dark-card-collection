@@ -3,6 +3,9 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Termini e Condizioni',
   description: 'Termini e condizioni di utilizzo e di vendita di Dark Card Collection.',
+  alternates: {
+    canonical: '/info/terms',
+  },
 }
 
 export default function TermsPage() {

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getPayloadClient } from '@/lib/payload'
 import { groupProducts } from '@/lib/group-products'
 import { Badge } from '@/components/ui/Badge'
+import { JsonLd } from '@/components/seo/JsonLd'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductImage } from '@/components/product/ProductImage'
 import { StickyAddToCart } from '@/components/product/StickyAddToCart'
@@ -11,12 +12,21 @@ import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
+
+function absoluteUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  if (url.startsWith('http')) return url
+  return `${SITE_URL}${url}`
+}
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const { slug } = await params
+  const url = `${SITE_URL}/products/${slug}`
   try {
     const payload = await getPayloadClient()
     const result = await payload.find({
@@ -26,13 +36,58 @@ export async function generateMetadata({
     })
     const product = result.docs[0]
     if (!product) return { title: 'Prodotto non trovato' }
+
+    const price =
+      product.storePrice && product.storePrice > 0 ? `€${product.storePrice.toFixed(2)}` : ''
+    const collectionName =
+      typeof product.collection === 'object' && product.collection?.name
+        ? product.collection.name
+        : ''
+
+    const title = collectionName
+      ? `${product.title}${price ? ` | ${price}` : ''} | ${collectionName}`
+      : `${product.title}${price ? ` | ${price}` : ''}`
+
+    const description =
+      product.description && product.description.length > 5
+        ? `${product.description.slice(0, 130)}. Spedizione gratuita in Italia dagli 80 €.`
+        : `${product.title} in vendita presso Dark Card Collection: originale e sigillato, spedizione gratuita in Italia dagli 80 €.`
+
+    const firstImage = product.images?.[0]?.image
+    const imageUrl = absoluteUrl(
+      product.imageUrl || (firstImage && typeof firstImage === 'object' ? firstImage.url : null),
+    )
+
     return {
-      title: product.title,
-      description: product.description || `${product.title} - Dark Card Collection`,
+      title,
+      description,
+      alternates: { canonical: url },
+      openGraph: {
+        title,
+        description,
+        type: 'website',
+        url,
+        images: imageUrl
+          ? [{ url: imageUrl, alt: product.title }]
+          : [{ url: '/og.png', width: 1200, height: 630, alt: 'Dark Card Collection' }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: imageUrl ? [imageUrl] : ['/og.png'],
+      },
     }
   } catch {
-    return { title: 'Prodotto' }
+    return {
+      title: productNotFoundTitle(),
+      alternates: { canonical: url },
+    }
   }
+}
+
+function productNotFoundTitle() {
+  return 'Prodotto'
 }
 
 const LANGUAGE_LABELS: Record<string, string> = {
@@ -122,6 +177,22 @@ export default async function ProductPage({
       : product.collection
     : ''
 
+  const collectionSlug =
+    typeof product.collection === 'object' && product.collection?.slug
+      ? product.collection.slug
+      : ''
+
+  const categoryName = product.category
+    ? typeof product.category === 'object'
+      ? product.category.name
+      : product.category
+    : ''
+
+  const categorySlug =
+    typeof product.category === 'object' && product.category?.slug
+      ? product.category.slug
+      : ''
+
   const availableLanguages = [...new Set(
     group.products
       .filter((p: any) => p.status === 'listed' && p.language)
@@ -141,8 +212,98 @@ export default async function ProductPage({
       (p: any) => (p.status === 'listed' || p.status === 'hold') && p.storePrice && p.storePrice > 0,
     ) || product
 
+  const productUrl = `${SITE_URL}/products/${product.slug}`
+  const availability =
+    product.status === 'sold'
+      ? 'https://schema.org/OutOfStock'
+      : product.status === 'hold' || product.isPreorder
+        ? 'https://schema.org/PreOrder'
+        : 'https://schema.org/InStock'
+  const schemaImageUrl = absoluteUrl(group.imagePdp || group.image)
+  const priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+        { '@type': 'ListItem', position: 2, name: 'Shop', item: `${SITE_URL}/shop` },
+        { '@type': 'ListItem', position: 3, name: 'Collezioni', item: `${SITE_URL}/shop/collections` },
+        ...(collectionSlug
+          ? [
+              {
+                '@type': 'ListItem' as const,
+                position: 4,
+                name: collectionName,
+                item: `${SITE_URL}/shop/collections/${collectionSlug}`,
+              },
+            ]
+          : []),
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      '@id': `${productUrl}#product`,
+      name: product.title,
+      ...(schemaImageUrl ? { image: [schemaImageUrl] } : {}),
+      description: product.description || `${product.title} - Dark Card Collection`,
+      ...(product.itemId ? { sku: product.itemId } : {}),
+      offers: {
+        '@type': 'Offer',
+        '@id': `${productUrl}#offer`,
+        url: productUrl,
+        priceCurrency: 'EUR',
+        price: displayPrice > 0 ? displayPrice.toFixed(2) : '0',
+        availability,
+        itemCondition: 'https://schema.org/NewCondition',
+        priceValidUntil,
+        seller: { '@type': 'Organization', name: 'Dark Card Collection', url: SITE_URL },
+        shippingDetails: {
+          '@type': 'OfferShippingDetails',
+          shippingRate: {
+            '@type': 'Offer',
+            priceCurrency: 'EUR',
+            price: '9.99',
+            eligibleTransactionVolume: {
+              '@type': 'PriceSpecification',
+              price: '80.00',
+              priceCurrency: 'EUR',
+            },
+          },
+          shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IT' },
+          deliveryTime: {
+            '@type': 'ShippingDeliveryTime',
+            handlingTime: {
+              '@type': 'QuantitativeValue',
+              minValue: 1,
+              maxValue: 1,
+              unitCode: 'DAY',
+            },
+            transitTime: {
+              '@type': 'QuantitativeValue',
+              minValue: 2,
+              maxValue: 4,
+              unitCode: 'DAY',
+            },
+          },
+        },
+      },
+      merchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IT',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 14,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/ReturnFeesCustomerResponsibility',
+      },
+    },
+  ]
+
   return (
     <div className="bg-black">
+      <JsonLd data={jsonLd} />
       <div className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div className="relative aspect-square w-full">
@@ -193,7 +354,18 @@ export default async function ProductPage({
                 {collectionName && (
                   <>
                     <li aria-hidden="true">/</li>
-                    <li className="text-zinc-300">{collectionName}</li>
+                    <li>
+                      {collectionSlug ? (
+                        <Link
+                          href={`/shop/collections/${collectionSlug}`}
+                          className="transition-colors hover:text-[#FACC15]"
+                        >
+                          {collectionName}
+                        </Link>
+                      ) : (
+                        <span className="text-zinc-300">{collectionName}</span>
+                      )}
+                    </li>
                   </>
                 )}
               </ol>
@@ -230,6 +402,27 @@ export default async function ProductPage({
             {availableConditions.length > 0 && (
               <div className="text-sm text-zinc-400">
                 <span className="text-zinc-500">Condizioni:</span> {availableConditions.join(', ')}
+              </div>
+            )}
+
+            {(categorySlug || collectionSlug) && (
+              <div className="flex flex-wrap gap-2">
+                {categorySlug && (
+                  <Link
+                    href={`/shop/categories/${categorySlug}`}
+                    className="border border-zinc-700 px-3 py-1 text-sm text-zinc-400 transition-colors hover:border-[#FACC15] hover:text-[#FACC15]"
+                  >
+                    {categoryName}
+                  </Link>
+                )}
+                {collectionSlug && (
+                  <Link
+                    href={`/shop/collections/${collectionSlug}`}
+                    className="border border-zinc-700 px-3 py-1 text-sm text-zinc-400 transition-colors hover:border-[#FACC15] hover:text-[#FACC15]"
+                  >
+                    Collezione: {collectionName}
+                  </Link>
+                )}
               </div>
             )}
 

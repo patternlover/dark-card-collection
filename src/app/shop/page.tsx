@@ -8,8 +8,12 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Shop',
-  description: 'Esplora il nostro catalogo di prodotti Pokémon TCG sigillati.',
+  title: 'Shop Pokémon TCG | Booster Box, ETB e Sigillati',
+  description:
+    'Tutti i nostri prodotti Pokémon TCG sigillati: booster box, ETB, collection box e SPC. Originali al 100%, spedizione gratuita in Italia dagli 80 €.',
+  alternates: {
+    canonical: '/shop',
+  },
 }
 
 export default async function ShopPage({
@@ -65,7 +69,8 @@ export default async function ShopPage({
 
   return (
     <ListingShell
-      title="Shop"
+      title="Shop Pokémon TCG"
+      subtitle="Booster Box, ETB, Collection Box e SPC sigillati. Originali al 100%."
       action="/shop"
       searchDefault={listingParams.q || ''}
       categories={categories}

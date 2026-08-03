@@ -30,27 +30,42 @@ export const metadata: Metadata = {
     default: 'Dark Card Collection | Pokémon TCG Sigillati',
     template: '%s | Dark Card Collection',
   },
-  description: 'Negozio specializzato in prodotti Pokémon TCG sigillati. Booster Box, ETB, Collection Box, SPC e molto altro.',
-  keywords: ['pokemon tcg', 'booster box', 'etb', 'collection box', 'carte pokemon', 'sealed products', 'pokemon sigillati'],
-  alternates: {
-    canonical: '/',
-  },
+  description:
+    'Negozio specializzato in prodotti Pokémon TCG sigillati: Booster Box, ETB, Collection Box e SPC. Originali al 100%, spedizione gratuita in Italia dagli 80 €.',
+  keywords: ['pokemon tcg', 'booster box', 'etb', 'collection box', 'carte pokemon', 'sealed products', 'pokemon sigillati', 'dove comprare carte pokemon', 'elite trainer box'],
   robots: {
     index: true,
     follow: true,
   },
   openGraph: {
-    title: 'Dark Card Collection',
-    description: 'Negozio specializzato in prodotti Pokémon TCG sigillati.',
+    title: 'Dark Card Collection | Pokémon TCG Sigillati',
+    description:
+      'Booster Box, ETB e Collection Box Pokémon TCG originali e sigillati. Spedizione gratuita in Italia dagli 80 €.',
     type: 'website',
     locale: 'it_IT',
     siteName: 'Dark Card Collection',
     url: SITE_URL,
+    images: [
+      {
+        url: '/og.png',
+        width: 1200,
+        height: 630,
+        alt: 'Dark Card Collection - Pokémon TCG sigillati',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Dark Card Collection | Pokémon TCG Sigillati',
+    description:
+      'Booster Box, ETB e Collection Box Pokémon TCG originali e sigillati. Spedizione gratuita dagli 80 € in Italia.',
+    images: ['/og.png'],
   },
   icons: {
     icon: '/icon.svg',
   },
   manifest: '/manifest.webmanifest',
+  applicationName: 'Dark Card Collection',
 }
 
 export default function RootLayout({

@@ -3,6 +3,9 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Spedizioni e Resi',
   description: 'Informazioni su spedizioni, tempi di consegna e diritto di recesso di Dark Card Collection.',
+  alternates: {
+    canonical: '/info/shipping-returns',
+  },
 }
 
 const SHIPPING_COST = '9,99 €'

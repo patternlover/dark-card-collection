@@ -1,8 +1,12 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Chi Siamo',
-  description: 'Scopri chi siamo e la nostra passione per il Pokémon TCG.',
+  title: 'Chi Siamo | Pokémon TCG Sigillati',
+  description:
+    'Dark Card Collection è il negozio specializzato in prodotti Pokémon TCG sigillati: originali al 100%, packaging sicuro e spedizione gratuita in Italia dagli 80 €.',
+  alternates: {
+    canonical: '/info/about',
+  },
 }
 
 export default function AboutPage() {

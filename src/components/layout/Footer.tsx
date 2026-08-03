@@ -96,6 +96,11 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/guide" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                  Guide
+                </Link>
+              </li>
+              <li>
                 <Link href="/info/contact" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
                   Contatti
                 </Link>

@@ -7,8 +7,12 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Novità | Dark Card Collection',
-  description: 'Scopri gli ultimi prodotti aggiunti al nostro catalogo.',
+  title: 'Novità Pokémon TCG | Ultimi Arrivi Sigillati',
+  description:
+    'Scopri gli ultimi arrivi di Pokémon TCG sigillati: booster box, ETB e collection box appena aggiunti al catalogo. Spedizione gratuita dagli 80 €.',
+  alternates: {
+    canonical: '/shop/new-arrivals',
+  },
 }
 
 export default async function NewArrivalsPage({
