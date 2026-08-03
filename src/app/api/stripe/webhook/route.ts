@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { sendOrderConfirmationEmail } from '@/lib/order-email'
 
 export async function POST(req: Request) {
+  const stripe = getStripe()
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
 
