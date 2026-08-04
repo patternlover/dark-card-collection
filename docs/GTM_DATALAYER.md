@@ -266,18 +266,37 @@ window.dataLayer.push({
 
 ---
 
-### 3.3 `consent_update` — Aggiornamento consenso cookie
+### 3.3 `consent` — Consent Mode v2 (aggiornamento consenso cookie)
 
 **Trigger:** Cambio preferenze cookie (banner)  
-**Componente:** `CookieConsent`
+**Componente:** `useConsent` (`persistConsent`)
 
 ```ts
 window.dataLayer.push({
-  event: 'consent_update',
-  analytics_storage: 'granted' | 'denied',
+  consent: 'update',
   ad_storage: 'granted' | 'denied',
+  analytics_storage: 'granted' | 'denied',
+  ad_user_data: 'granted' | 'denied',
+  ad_personalization: 'granted' | 'denied',
+  functionality_storage: 'granted',
+  personalization_storage: 'granted' | 'denied',
+  security_storage: 'granted',
 })
 ```
+
+Prima di tutto (inline script `ConsentModeScript` nel `<body>` di `layout.tsx`) viene
+pushato lo stato **`consent: 'default'`** con `ad_storage`, `analytics_storage`,
+`ad_user_data`, `ad_personalization`, `personalization_storage = 'denied'` e
+`functionality_storage`, `security_storage = 'granted'`. Se esiste già una scelta salvata
+in `localStorage['dcc-cookie-consent']`, lo script applica subito un `consent: 'update'`
+con i valori salvati.
+
+Mappatura dei consensi del banner:
+- `analytics_storage` e `personalization_storage` ← consenso **Analytics**
+- `ad_storage`, `ad_user_data`, `ad_personalization` ← consenso **Marketing**
+
+Nota: GTM viene caricato **solo dopo** interazione col banner e consenso analytics
+(`AnalyticsProvider`): strategia "strict", niente cookie Google prima del consenso.
 
 ---
 
@@ -364,27 +383,26 @@ export interface EcommerceItem {
 
 ### Caricamento condizionale GTM (solo dopo consenso analytics)
 
+Lo stato di consenso viene impostato **prima di tutto** da `ConsentModeScript`
+(script inline nel `<body>` di `layout.tsx`, push di `consent: 'default'` + eventuale
+`consent: 'update'` da `localStorage`). `AnalyticsProvider` carica GTM solo quando
+l'utente ha interagito col banner e ha consentito analytics:
+
 ```tsx
-// In layout.tsx, caricare GTM solo se consentito
+// src/components/layout/AnalyticsProvider.tsx
 'use client'
 import { useEffect } from 'react'
 import { useConsent } from '@/hooks/useConsent'
 
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || ''
+
 export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
-  const { analytics } = useConsent()
+  const { consent, hasInteracted } = useConsent()
 
   useEffect(() => {
-    if (!analytics) return
-
-    // Inizializza GTM
-    const script = document.createElement('script')
-    script.src = `https://www.googletagmanager.com/gtm.js?id=GTM-XXXXXXX`
-    script.async = true
-    document.head.appendChild(script)
-
-    window.dataLayer = window.dataLayer || []
-    window.dataLayer.push({ event: 'gtm.js', 'gtm.start': Date.now() })
-  }, [analytics])
+    if (!hasInteracted || !consent.analytics || !GTM_ID) return
+    // inject gtm.js (vedi componente)
+  }, [consent.analytics, hasInteracted])
 
   return <>{children}</>
 }
@@ -396,7 +414,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 |---------|------|------------|
 | All Pages | Page View | Sempre |
 | E-commerce Events | Custom Event | `event = view_item_list`, `add_to_cart`, etc. |
-| Consent Granted | Custom Event | `event = consent_update` + `analytics_storage = granted` |
+| Consent Granted | Consent Init / Consent Update | `consent` command in dataLayer con `analytics_storage = granted` |
 
 ### Variabili DataLayer GTM
 
@@ -418,7 +436,7 @@ export function AnalyticsProvider({ children }: { children: React.ReactNode }) {
 
 Il caricamento di GTM deve essere lazy — il tag GTM viene iniettato nel DOM **solo** dopo che l'utente accetta "Analytics" nel banner cookie.
 
-Eventi `consent_update` e `ad_storage` seguono le impostazioni GA4 Consent Mode v2.
+Lo stato di consenso (default + update) segue il formato ufficiale **Consent Mode v2** (comando `consent` nel dataLayer, con `ad_storage`, `analytics_storage`, `ad_user_data`, `ad_personalization`, `functionality_storage`, `personalization_storage`, `security_storage`).
 
 ---
 

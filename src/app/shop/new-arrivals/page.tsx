@@ -1,7 +1,5 @@
 import { getPayloadClient } from '@/lib/payload'
-import { ProductCard } from '@/components/product/ProductCard'
 import { ListingShell } from '@/components/sections/ListingShell'
-import { applyListingFilters, type ListingParams } from '@/lib/product-filters'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -15,20 +13,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function NewArrivalsPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | undefined>>
-}) {
-  const params = await searchParams
-  const listingParams: ListingParams = {
-    q: params.q,
-    category: params.category,
-    collection: params.collection,
-    condition: params.condition,
-    language: params.language,
-  }
-
+export default async function NewArrivalsPage() {
   let products: any[] = []
   let categories: any[] = []
   let collections: any[] = []
@@ -38,10 +23,9 @@ export default async function NewArrivalsPage({
 
     const result = await payload.find({
       collection: 'products',
-      where: applyListingFilters(
-        { AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }] },
-        listingParams,
-      ),
+      where: {
+        AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }],
+      },
       limit: 50,
       sort: '-createdAt',
     })
@@ -69,25 +53,10 @@ export default async function NewArrivalsPage({
       title="Novità"
       subtitle="Scopri gli ultimi prodotti aggiunti al nostro catalogo"
       action="/shop/new-arrivals"
-      searchDefault={listingParams.q || ''}
       categories={categories}
       collections={collections}
-      params={listingParams}
-    >
-      {products.length === 0 ? (
-        <div className="py-16 text-center">
-          <p className="text-lg text-zinc-500">Stiamo preparando novità.</p>
-          <p className="mt-2 text-sm text-zinc-600">
-            Resta connesso per i prossimi arrivi!
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
-    </ListingShell>
+      products={products}
+      grouped={false}
+    />
   )
 }

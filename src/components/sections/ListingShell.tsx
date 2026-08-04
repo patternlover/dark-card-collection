@@ -1,53 +1,54 @@
-import { ProductFiltersSidebar } from '@/components/product/ProductFiltersSidebar'
-import { ProductSearchInput } from '@/components/product/ProductSearchInput'
-import type { ListingParams } from '@/lib/product-filters'
+import { Suspense } from 'react'
+import { ClientListing } from '@/components/sections/ClientListing'
 
 interface ListingShellProps {
   title: string
   subtitle?: string
   action: string
-  searchDefault: string
   categories?: any[]
   collections?: any[]
-  params: ListingParams
-  children: React.ReactNode
+  products: any[]
+  grouped?: boolean
+  emptyTitle?: string
+  emptySubtitle?: string
 }
 
 export function ListingShell({
   title,
   subtitle,
   action,
-  searchDefault,
   categories = [],
   collections = [],
-  params,
-  children,
+  products,
+  grouped = true,
+  emptyTitle,
+  emptySubtitle,
 }: ListingShellProps) {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <form action={action} method="GET" className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
-          <div className="mb-6 lg:col-start-2 lg:row-start-1 lg:mb-0">
-            <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
-            {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
-          </div>
+        <div className="mb-6 lg:mb-8">
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
+          {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
+        </div>
 
-          <div className="mb-6 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:mb-0">
-            <ProductFiltersSidebar
-              action={action}
-              categories={categories}
-              collections={collections}
-              params={params}
-            />
-          </div>
-
-          <div className="lg:col-start-2 lg:row-start-2">
-            <div className="mb-6">
-              <ProductSearchInput defaultValue={searchDefault} />
+        <Suspense
+          fallback={
+            <div className="py-16 text-center">
+              <p className="text-sm text-zinc-500">Caricamento prodotti...</p>
             </div>
-            {children}
-          </div>
-        </form>
+          }
+        >
+          <ClientListing
+            products={products}
+            categories={categories}
+            collections={collections}
+            basePath={action}
+            grouped={grouped}
+            emptyTitle={emptyTitle}
+            emptySubtitle={emptySubtitle}
+          />
+        </Suspense>
       </div>
     </div>
   )

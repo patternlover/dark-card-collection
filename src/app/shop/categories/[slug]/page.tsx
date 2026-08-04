@@ -4,6 +4,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { groupProducts } from '@/lib/group-products'
 import { ProductGroupCard } from '@/components/product/ProductGroupCard'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -163,32 +164,34 @@ export default async function CategoryPage({
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-          {hint?.title || category.name}
-        </h1>
-        <p className="mt-2 max-w-2xl text-zinc-400">
-          {hint?.description || category.description || `${category.name} Pokémon TCG in vendita: originali e sigillati.`}
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            {hint?.title || category.name}
+          </h1>
+          <p className="mt-2 max-w-2xl text-zinc-400">
+            {hint?.description || category.description || `${category.name} Pokémon TCG in vendita: originali e sigillati.`}
+          </p>
+        </Reveal>
 
         {groups.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-lg text-zinc-500">
               Nessun prodotto disponibile in questa categoria al momento.
             </p>
-            <p className="mt-2 text-sm text-zinc-600">
-              I prodotti vengono importati automaticamente dal foglio Google Sheets.
-            </p>
+            <p className="mt-2 text-sm text-zinc-600">Torna a trovarci a breve!</p>
           </div>
         ) : (
           <>
             <h2 className="mt-10 text-xl font-bold uppercase tracking-tight text-white">
               Prodotti disponibili
             </h2>
-            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {groups.map((group) => (
-                <ProductGroupCard key={group.title} group={group} />
-              ))}
-            </div>
+            <Reveal>
+              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {groups.map((group) => (
+                  <ProductGroupCard key={group.title} group={group} />
+                ))}
+              </div>
+            </Reveal>
           </>
         )}
 
@@ -197,18 +200,20 @@ export default async function CategoryPage({
             <h2 className="text-xl font-bold uppercase tracking-tight text-white">
               Altre categorie
             </h2>
-            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-              {otherCategories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  href={`/shop/categories/${cat.slug}`}
-                  className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-[var(--accent)]"
-                >
-                  <h3 className="font-semibold text-white line-clamp-2">{cat.name}</h3>
-                  <p className="mt-2 text-xs text-[var(--accent)]">Vedi prodotti →</p>
-                </Link>
-              ))}
-            </div>
+            <Reveal>
+              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {otherCategories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    href={`/shop/categories/${cat.slug}`}
+                    className="border-2 border-zinc-700 bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
+                  >
+                    <h3 className="font-semibold text-white line-clamp-2">{cat.name}</h3>
+                    <p className="mt-2 text-xs text-[var(--accent)]">Vedi prodotti →</p>
+                  </Link>
+                ))}
+              </div>
+            </Reveal>
           </section>
         )}
       </div>

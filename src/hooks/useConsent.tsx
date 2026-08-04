@@ -46,9 +46,14 @@ export function ConsentProvider({ children }: { children: ReactNode }) {
 
     window.dataLayer = window.dataLayer || []
     window.dataLayer.push({
-      event: 'consent_update',
-      analytics_storage: state.analytics ? 'granted' : 'denied',
+      consent: 'update',
       ad_storage: state.marketing ? 'granted' : 'denied',
+      analytics_storage: state.analytics ? 'granted' : 'denied',
+      ad_user_data: state.marketing ? 'granted' : 'denied',
+      ad_personalization: state.marketing ? 'granted' : 'denied',
+      functionality_storage: 'granted',
+      personalization_storage: state.analytics ? 'granted' : 'denied',
+      security_storage: 'granted',
     })
   }, [])
 

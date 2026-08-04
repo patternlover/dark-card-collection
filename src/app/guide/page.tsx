@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -71,25 +72,28 @@ export default function GuideHubPage() {
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-          Guide Pokémon TCG
-        </h1>
-        <p className="mt-2 max-w-2xl text-zinc-400">
-          Guide pratiche per collezionisti e principianti: dove comprare, come scegliere e cosa
-          significa ogni prodotto. Tutto spiegato in modo semplice.
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            Guide Pokémon TCG
+          </h1>
+          <p className="mt-2 max-w-2xl text-zinc-400">
+            Guide pratiche per collezionisti e principianti: dove comprare, come scegliere e cosa
+            significa ogni prodotto. Tutto spiegato in modo semplice.
+          </p>
+        </Reveal>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          {guides.map((guide) => (
-            <Link
-              key={guide.href}
-              href={guide.href}
-              className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[var(--accent)]"
-            >
-              <h2 className="text-lg font-bold text-white">{guide.title}</h2>
-              <p className="mt-2 text-sm text-zinc-400">{guide.description}</p>
-              <p className="mt-4 text-sm text-[var(--accent)]">Leggi la guida →</p>
-            </Link>
+          {guides.map((guide, i) => (
+            <Reveal key={guide.href} delay={i * 70}>
+              <Link
+                href={guide.href}
+                className="block border-2 border-zinc-700 bg-zinc-900 p-6 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
+              >
+                <h2 className="text-lg font-bold text-white">{guide.title}</h2>
+                <p className="mt-2 text-sm text-zinc-400">{guide.description}</p>
+                <p className="mt-4 text-sm text-[var(--accent)]">Leggi la guida →</p>
+              </Link>
+            </Reveal>
           ))}
         </div>
 

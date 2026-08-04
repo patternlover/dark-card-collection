@@ -1,8 +1,8 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { trackPurchase } from '@/lib/analytics'
@@ -14,10 +14,14 @@ interface OrderItem {
   price: number
 }
 
+const TRACKED_KEY = 'dcc-purchase-tracked'
+
 function SuccessContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const sessionId = searchParams.get('session_id')
   const { clearCart } = useCart()
+  const clearedRef = useRef(false)
   const [order, setOrder] = useState<{
     orderId: string
     total: number
@@ -27,7 +31,10 @@ function SuccessContent() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    clearCart()
+    if (!clearedRef.current) {
+      clearedRef.current = true
+      clearCart()
+    }
 
     if (!sessionId) {
       setLoading(false)
@@ -39,22 +46,32 @@ function SuccessContent() {
       .then((data) => {
         if (data?.order) {
           setOrder(data.order)
-          trackPurchase(
-            data.order.orderId,
-            data.order.items.map((item: OrderItem) => ({
-              item_id: item.product?.title || '',
-              item_name: item.product?.title || '',
-              price: item.price,
-              currency: 'EUR',
-              quantity: item.quantity,
-            })),
-            data.order.total,
-          )
+          const alreadyTracked = typeof window !== 'undefined' && sessionStorage.getItem(TRACKED_KEY) === sessionId
+          if (!alreadyTracked) {
+            sessionStorage.setItem(TRACKED_KEY, sessionId)
+            trackPurchase(
+              data.order.orderId,
+              data.order.items.map((item: OrderItem) => ({
+                item_id: item.product?.title || '',
+                item_name: item.product?.title || '',
+                price: item.price,
+                currency: 'EUR',
+                quantity: item.quantity,
+              })),
+              data.order.total,
+            )
+          }
         }
       })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [sessionId, clearCart])
+
+  useEffect(() => {
+    if (loading || !order) return
+    const t = setTimeout(() => router.replace('/'), 3000)
+    return () => clearTimeout(t)
+  }, [loading, order, router])
 
   return (
     <div className="bg-black">
@@ -132,6 +149,12 @@ function SuccessContent() {
             Torna alla home
           </Link>
         </div>
+
+        {order && (
+          <p className="mt-6 text-xs text-zinc-600">
+            Verrai reindirizzato alla home tra pochi secondi...
+          </p>
+        )}
       </div>
     </div>
   )

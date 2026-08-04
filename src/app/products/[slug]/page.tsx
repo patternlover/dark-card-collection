@@ -4,6 +4,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { groupProducts } from '@/lib/group-products'
 import { Badge } from '@/components/ui/Badge'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductImage } from '@/components/product/ProductImage'
 import { StickyAddToCart } from '@/components/product/StickyAddToCart'
@@ -322,8 +323,9 @@ export default async function ProductPage({
             )}
           </div>
 
-          <div className="space-y-6">
-            <div className="flex flex-wrap gap-2">
+          <Reveal>
+            <div className="space-y-6">
+              <div className="flex flex-wrap gap-2">
               {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
               {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
               {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
@@ -377,15 +379,15 @@ export default async function ProductPage({
               <p className="text-base text-zinc-400 leading-relaxed">{product.description}</p>
             )}
 
-            <StickyAddToCart
-              product={buyableProduct}
-              maxQuantity={group.totalQuantity > 0 ? group.totalQuantity : 1}
-            />
-
             <div className="flex items-baseline gap-4">
               <span className="text-3xl font-black text-[var(--accent)]">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
               </span>
+              {product.compareAtPrice && product.compareAtPrice > displayPrice && (
+                <span className="text-lg font-medium text-zinc-500 line-through">
+                  €{product.compareAtPrice.toFixed(2)}
+                </span>
+              )}
               {group.totalQuantity > 0 && (
                 <span className="text-sm text-zinc-500 font-medium">
                   {group.totalQuantity} disponibil{group.totalQuantity === 1 ? 'e' : 'i'}
@@ -453,12 +455,19 @@ export default async function ProductPage({
                 <span>Packaging professionale e sicuro</span>
               </div>
             </div>
-          </div>
+            </div>
+          </Reveal>
         </div>
+
+        <StickyAddToCart
+          product={buyableProduct}
+          maxQuantity={group.totalQuantity > 0 ? group.totalQuantity : 1}
+        />
 
         {relatedGroups.length > 0 && (
           <section className="mt-16 border-t-2 border-zinc-800 pt-12">
             <h2 className="text-2xl font-black text-white mb-8 uppercase tracking-tight">Prodotti Correlati</h2>
+            <Reveal>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {relatedGroups.slice(0, 4).map((g: any) => (
                 <ProductCard
@@ -478,6 +487,7 @@ export default async function ProductPage({
                 />
               ))}
             </div>
+            </Reveal>
           </section>
         )}
       </div>

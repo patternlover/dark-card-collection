@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -87,17 +88,19 @@ export default function GuideBoosterBoxPage() {
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-          Come scegliere un booster box Pokémon
-        </h1>
-        <p className="mt-4 text-lg leading-relaxed text-zinc-300">
-          Un booster box Pokémon contiene in genere 36 bustine sigillate di una singola
-          espansione. È la scelta migliore se vuoi aprire tante bustine a costo unitario
-          ridotto: il prezzo per bustina è molto più basso rispetto all\u2019acquisto singolo.
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            Come scegliere un booster box Pokémon
+          </h1>
+          <p className="mt-4 text-lg leading-relaxed text-zinc-300">
+            Un booster box Pokémon contiene in genere 36 bustine sigillate di una singola
+            espansione. È la scelta migliore se vuoi aprire tante bustine a costo unitario
+            ridotto: il prezzo per bustina è molto più basso rispetto all’acquisto singolo.
+          </p>
+        </Reveal>
 
         <h2 className="mt-10 text-xl font-bold text-white">
-          Booster box: cosa c\u2019è dentro
+          Booster box: cosa c’è dentro
         </h2>
         <table className="mt-4 w-full border-collapse text-sm text-zinc-400">
           <thead>
@@ -130,7 +133,7 @@ export default function GuideBoosterBoxPage() {
           Come valutare il prezzo
         </h2>
         <p className="mt-4 text-zinc-400">
-          Il prezzo di un booster box dipende dall\u2019espansione, non dal costo di listino del
+          Il prezzo di un booster box dipende dall’espansione, non dal costo di listino del
           singolo prodotto. I set più recenti e stampati in grande quantità costano meno; le
           espansioni più vecchie o con alta domanda salgono. Confronta sempre con il prezzo
           medio di vendita indicato nella scheda prodotto.

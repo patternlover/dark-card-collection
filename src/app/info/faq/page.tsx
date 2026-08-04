@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -89,12 +90,14 @@ export default function FAQPage() {
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-          Domande Frequenti
-        </h1>
-        <p className="mt-2 text-zinc-400">
-          Le risposte alle domande più comuni su autenticità, spedizioni, resi e preordini.
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            Domande Frequenti
+          </h1>
+          <p className="mt-2 text-zinc-400">
+            Le risposte alle domande più comuni su autenticità, spedizioni, resi e preordini.
+          </p>
+        </Reveal>
 
         <div className="mt-8 space-y-4">
           {faqs.map((faq) => (

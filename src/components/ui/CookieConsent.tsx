@@ -1,21 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Shield, Settings, X } from 'lucide-react'
 import { useConsent } from '@/hooks/useConsent'
 
 export function CookieConsent() {
   const { consent, hasInteracted, acceptAll, rejectAll, savePreferences } = useConsent()
   const [showDetails, setShowDetails] = useState(false)
+  const [stickyBar, setStickyBar] = useState(false)
   const [tempPrefs, setTempPrefs] = useState({
     analytics: consent.analytics,
     marketing: consent.marketing,
   })
 
+  useEffect(() => {
+    setStickyBar(!!document.querySelector('[data-testid="sticky-atc"]'))
+  }, [])
+
   if (hasInteracted) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[100] p-4 sm:p-6">
+    <div className={`fixed inset-x-0 z-[100] p-4 sm:p-6 ${stickyBar ? 'bottom-[5.5rem]' : 'bottom-0'}`}>
       <div className="mx-auto max-w-3xl rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
         <div className="flex items-start gap-4">
           <Shield className="h-6 w-6 shrink-0 text-blue-500 mt-0.5" />

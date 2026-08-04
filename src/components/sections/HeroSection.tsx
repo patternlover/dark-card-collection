@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Zap, PackageCheck, ShieldCheck } from 'lucide-react'
+import { HeroBackground } from './HeroBackground'
+import { Reveal } from '@/components/ui/Reveal'
 
 const stats = [
   { icon: ShieldCheck, label: '100% originali' },
@@ -7,28 +9,13 @@ const stats = [
   { icon: PackageCheck, label: 'Packaging sicuro' },
 ]
 
-function HeroBackdrop() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-      <div className="animate-hero-glow absolute -right-24 top-0 h-[420px] w-[420px] rounded-full bg-[var(--accent)]/20 blur-3xl" />
-      <div className="animate-hero-glow absolute -left-32 bottom-0 h-[380px] w-[380px] rounded-full bg-[var(--accent)]/10 blur-3xl [animation-delay:1.4s]" />
-      <div className="animate-hero-glow absolute left-1/3 top-1/4 h-[280px] w-[280px] rounded-full bg-[var(--accent)]/10 blur-3xl [animation-delay:2.8s]" />
-
-      <div className="animate-hero-bob absolute left-[6%] top-[16%] h-3 w-3 rotate-12 border-2 border-[var(--accent)] [animation-delay:0.7s]" />
-      <div className="animate-hero-bob absolute left-[14%] top-[64%] h-2 w-2 rounded-full bg-[var(--accent)]/70 [animation-delay:1.3s]" />
-      <div className="animate-hero-bob absolute bottom-[22%] right-[38%] h-2.5 w-2.5 rotate-45 border-2 border-[var(--accent)]/60 [animation-delay:1.9s]" />
-      <div className="animate-hero-bob absolute left-[42%] top-[12%] h-2 w-2 rounded-full bg-[var(--accent)]/60 [animation-delay:0.4s]" />
-    </div>
-  )
-}
-
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b-2 border-zinc-700 bg-black">
-      <HeroBackdrop />
+      <HeroBackground />
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div className="grid items-center gap-14 lg:grid-cols-2">
-          <div className="text-center lg:text-left">
+          <Reveal className="text-center lg:text-left">
             <span className="inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-3 py-1 text-xs font-black uppercase tracking-widest text-black shadow-[3px_3px_0px_0px_#fff]">
               Nuovi arrivi ogni settimana
             </span>
@@ -59,9 +46,9 @@ export function HeroSection() {
                 Preordini
               </Link>
             </div>
-          </div>
+          </Reveal>
 
-          <div className="relative mx-auto hidden w-full max-w-md lg:block">
+          <Reveal delay={150} className="relative mx-auto hidden w-full max-w-md lg:block">
             <div className="relative rotate-2 border-2 border-[var(--accent)] bg-[var(--accent)] p-6 shadow-[8px_8px_0px_0px_#fff] transition-transform duration-200 hover:rotate-0">
               <p className="text-xs font-black uppercase tracking-widest text-black/60">Featured</p>
               <p className="mt-2 text-2xl font-black uppercase leading-tight text-black">
@@ -84,7 +71,7 @@ export function HeroSection() {
                 ★ Collezione 2026
               </p>
             </div>
-          </div>
+          </Reveal>
         </div>
 
         <div className="mt-16 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 border-t-2 border-zinc-800 pt-8 lg:justify-start">

@@ -1,6 +1,7 @@
 import { getPayloadClient } from '@/lib/payload'
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -79,46 +80,52 @@ export default async function CollectionsPage() {
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-          Collezioni Pokémon TCG
-        </h1>
-        <p className="mt-2 max-w-2xl text-zinc-400">
-          Tutte le espansioni Pokémon TCG in vendita da Dark Card Collection: booster box,
-          ETB e collection box originali e sigillati. Ogni collezione ha la sua pagina
-          dedicata con prezzi, disponibilità e dettagli.
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            Collezioni Pokémon TCG
+          </h1>
+          <p className="mt-2 max-w-2xl text-zinc-400">
+            Tutte le espansioni Pokémon TCG in vendita da Dark Card Collection: booster box,
+            ETB e collection box originali e sigillati. Ogni collezione ha la sua pagina
+            dedicata con prezzi, disponibilità e dettagli.
+          </p>
+        </Reveal>
 
         {collections.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-lg text-zinc-500">Nessuna collezione disponibile.</p>
-            <p className="mt-2 text-sm text-zinc-600">
-              Le collezioni verranno importate automaticamente dal foglio Google Sheets.
-            </p>
+            <p className="mt-2 text-sm text-zinc-600">Torna a trovarci a breve!</p>
           </div>
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {collections.map((col) => (
-              <Link
-                key={col.id}
-                href={`/shop/collections/${col.slug}`}
-                className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[var(--accent)]"
-              >
-                <div className="aspect-video rounded bg-zinc-800 mb-4 flex items-center justify-center">
-                  <span className="text-3xl text-zinc-600">🃏</span>
-                </div>
-                <h2 className="text-lg font-semibold text-white">{col.name}</h2>
-                {col.description && (
-                  <p className="mt-2 text-sm text-zinc-500 line-clamp-2">{col.description}</p>
-                )}
-                {col.releaseDate && (
-                  <p className="mt-2 text-xs text-zinc-600">
-                    Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}
-                  </p>
-                )}
-                <p className="mt-4 text-sm text-[var(--accent)]">Vedi prodotti →</p>
-              </Link>
-            ))}
-          </div>
+          <Reveal>
+            <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {collections.map((col) => (
+                <Link
+                  key={col.id}
+                  href={`/shop/collections/${col.slug}`}
+                  className="border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
+                >
+                  <div className="p-3">
+                    <div className="flex aspect-square items-center justify-center bg-zinc-800">
+                      <span className="text-3xl text-zinc-600">🃏</span>
+                    </div>
+                  </div>
+                  <div className="px-4 pb-4">
+                    <h2 className="text-lg font-semibold text-white">{col.name}</h2>
+                    {col.description && (
+                      <p className="mt-2 text-sm text-zinc-500 line-clamp-2">{col.description}</p>
+                    )}
+                    {col.releaseDate && (
+                      <p className="mt-2 text-xs text-zinc-600">
+                        Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}
+                      </p>
+                    )}
+                    <p className="mt-4 text-sm text-[var(--accent)]">Vedi prodotti →</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Reveal>
         )}
       </div>
     </div>

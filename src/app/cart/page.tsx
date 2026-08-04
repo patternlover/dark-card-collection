@@ -40,7 +40,7 @@ export default function CartPage() {
             <p className="text-zinc-500">Il carrello è vuoto</p>
             <Link
               href="/shop"
-              className="inline-block mt-4 rounded-lg bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-zinc-200"
+              className="mt-4 inline-block border-2 border-white bg-white px-6 py-3 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)] active:translate-0 active:shadow-[1px_1px_0px_0px_#000]"
             >
               Continua lo shopping
             </Link>
@@ -51,16 +51,16 @@ export default function CartPage() {
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 rounded-lg border border-zinc-800 p-4"
+                  className="flex gap-4 border-2 border-zinc-700 bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_#27272a]"
                 >
                   {item.image ? (
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="h-24 w-24 flex-shrink-0 rounded object-cover"
+                      className="h-24 w-24 flex-shrink-0 border border-zinc-700 object-cover"
                     />
                   ) : (
-                    <div className="h-24 w-24 flex-shrink-0 rounded bg-zinc-800 flex items-center justify-center">
+                    <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center border border-zinc-700 bg-zinc-800">
                       <span className="text-zinc-600 text-2xl">📦</span>
                     </div>
                   )}
@@ -75,7 +75,8 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => handleMinus(item)}
-                        className="rounded border border-zinc-700 p-1 text-zinc-400 hover:text-white"
+                        aria-label="Diminuisci quantità"
+                        className="border-2 border-zinc-700 p-1 text-zinc-400 hover:text-white"
                       >
                         <Minus className="h-3 w-3" />
                       </button>
@@ -83,7 +84,9 @@ export default function CartPage() {
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="rounded border border-zinc-700 p-1 text-zinc-400 hover:text-white"
+                        aria-label="Aumenta quantità"
+                        disabled={item.quantity >= (item.maxQuantity || 99)}
+                        className="border-2 border-zinc-700 p-1 text-zinc-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Plus className="h-3 w-3" />
                       </button>
@@ -109,7 +112,7 @@ export default function CartPage() {
               ))}
             </div>
 
-            <div className="rounded-lg border border-zinc-800 p-6 h-fit">
+            <div className="h-fit border-2 border-zinc-700 bg-zinc-900 p-6 shadow-[3px_3px_0px_0px_#27272a]">
               <h2 className="text-lg font-semibold text-white mb-4">
                 Riepilogo ordine
               </h2>
@@ -135,7 +138,7 @@ export default function CartPage() {
 
               <Link
                 href="/checkout"
-                className="mt-6 flex w-full items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-zinc-200"
+                className="mt-6 flex w-full items-center justify-center border-2 border-white bg-white px-6 py-3 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)] active:translate-0 active:shadow-[1px_1px_0px_0px_#000]"
               >
                 Procedi al checkout
               </Link>
@@ -151,28 +154,28 @@ export default function CartPage() {
         )}
 
         {confirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-sm border-2 border-[var(--accent)] bg-black p-6 shadow-[8px_8px_0px_0px_var(--accent)]">
-              <h2 className="text-lg font-black uppercase tracking-wide text-white">
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+            <div className="w-full max-w-sm border-2 border-zinc-700 bg-zinc-900 p-5 shadow-[4px_4px_0px_0px_#000]">
+              <h2 className="text-base font-semibold text-white">
                 Rimuovere l&apos;articolo?
               </h2>
-              <p className="mt-3 text-sm text-zinc-400">
+              <p className="mt-2 text-sm text-zinc-400">
                 {confirm.type === 'decrement'
                   ? 'La quantità minima è 1. Il prodotto verrà rimosso dal carrello.'
                   : `"${confirm.item.title}" verrà rimosso dal carrello.`}
               </p>
-              <div className="mt-6 flex gap-3">
+              <div className="mt-5 flex gap-2">
                 <button
                   type="button"
                   onClick={() => setConfirm(null)}
-                  className="flex-1 border-2 border-zinc-600 bg-zinc-900 px-4 py-2.5 text-sm font-black uppercase tracking-wide text-white transition-colors hover:border-zinc-400"
+                  className="flex-1 border-2 border-zinc-600 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-400 hover:text-white"
                 >
                   Annulla
                 </button>
                 <button
                   type="button"
                   onClick={confirmAction}
-                  className="flex-1 border-2 border-red-500 bg-red-500 px-4 py-2.5 text-sm font-black uppercase tracking-wide text-black transition-colors hover:bg-red-400"
+                  className="flex-1 border-2 border-red-500 bg-red-500 px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-red-400 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
                 >
                   Rimuovi
                 </button>

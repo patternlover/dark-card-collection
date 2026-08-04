@@ -147,7 +147,7 @@ export default function AdminProductsPage() {
             <h1 className="text-2xl font-bold">Gestione Prodotti</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/admin/sync" className="text-sm text-zinc-400 hover:text-[var(--accent)] transition-colors">
+            <Link href="/dashboard" className="text-sm text-zinc-400 hover:text-[var(--accent)] transition-colors">
               Sincronizzazione
             </Link>
             <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-white transition-colors">

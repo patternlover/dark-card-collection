@@ -47,6 +47,12 @@ describe('StickyAddToCart', () => {
     expect(sticky.style.transform).not.toContain('translateY(100%)')
   })
 
+  it('sits above the cookie consent banner so clicks are always possible', () => {
+    renderSticky()
+    const sticky = screen.getByTestId('sticky-atc')
+    expect(sticky.className).toContain('z-[110]')
+  })
+
   it('shows the price and stock in the bar', () => {
     renderSticky()
     expect(screen.getByTestId('sticky-atc').textContent).toContain('€100.00')

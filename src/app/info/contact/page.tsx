@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Mail } from 'lucide-react'
 import { ContactForm } from '@/components/contact/ContactForm'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -46,10 +47,12 @@ export default function ContactPage() {
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">Contattaci</h1>
-        <p className="mt-2 text-zinc-400">
-          Hai domande? Siamo qui per aiutarti. Compila il form e ti risponderemo entro 24 ore.
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">Contattaci</h1>
+          <p className="mt-2 text-zinc-400">
+            Hai domande? Siamo qui per aiutarti. Compila il form e ti risponderemo entro 24 ore.
+          </p>
+        </Reveal>
 
         <div className="mt-8 mb-8 flex items-center gap-4 border-2 border-[var(--accent)] bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_var(--accent)]">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[var(--accent)]">

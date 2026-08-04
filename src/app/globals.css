@@ -89,9 +89,39 @@ body {
   animation: hero-glow 4.5s ease-in-out infinite;
 }
 
+@keyframes confetti-burst {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--cf-dx), var(--cf-dy)) rotate(var(--cf-rotate));
+    opacity: 0;
+  }
+}
+
+.animate-atc-pop {
+  animation: atc-pop 0.3s ease-out;
+}
+
+@keyframes atc-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-hero-bob,
   .animate-hero-glow {
+    animation: none;
+  }
+  .animate-atc-pop {
     animation: none;
   }
 }

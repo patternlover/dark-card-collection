@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Reveal } from '@/components/ui/Reveal'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy',
@@ -12,10 +13,12 @@ export default function PrivacyPage() {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Privacy Policy</h1>
-        <p className="text-sm text-zinc-500 mb-8">
-          Ultimo aggiornamento: 18 luglio 2026
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-bold text-white mb-8">Privacy Policy</h1>
+          <p className="text-sm text-zinc-500 mb-8">
+            Ultimo aggiornamento: 18 luglio 2026
+          </p>
+        </Reveal>
 
         <div className="prose prose-invert prose-zinc max-w-none space-y-8 text-zinc-300 text-sm leading-relaxed">
           <section>

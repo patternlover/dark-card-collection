@@ -56,21 +56,20 @@ export async function POST(req: Request) {
     }
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      ui_mode: 'embedded_page',
       line_items: lineItems,
       mode: 'payment',
       shipping_address_collection: {
         allowed_countries: ['IT'],
       },
       billing_address_collection: 'required',
-      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/cart`,
+      return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       metadata: {
         productIds: items.map((item: { id: number | string }) => String(item.id)).join(','),
       },
     })
 
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ client_secret: session.client_secret })
   } catch (error) {
     console.error('Stripe checkout error:', error)
     return NextResponse.json(

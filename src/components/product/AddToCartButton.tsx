@@ -6,6 +6,7 @@ import { useCart } from '@/hooks/useCart'
 import { trackAddToCart } from '@/lib/analytics'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { getProductImageInfo } from '@/lib/product-image'
+import { ConfettiBurst } from '@/components/ui/ConfettiBurst'
 
 interface AddToCartButtonProps {
   product: {
@@ -25,13 +26,14 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonProps) {
   const [added, setAdded] = useState(false)
   const [quantity, setQuantity] = useState(1)
+  const [burst, setBurst] = useState<{ x: number; y: number; id: number } | null>(null)
   const { addItem } = useCart()
 
   const displayPrice = product.storePrice || 0
   const isAvailable = (product.status === 'listed' || product.status === 'hold') && displayPrice > 0
   const maxQty = Math.max(1, Math.floor(maxQuantity))
 
-  const handleAdd = () => {
+  const handleAdd = (e: React.MouseEvent) => {
     if (!isAvailable || added) return
 
     addItem(
@@ -54,6 +56,7 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
       quantity,
     })
 
+    setBurst({ x: e.clientX, y: e.clientY, id: Date.now() })
     setAdded(true)
     setTimeout(() => setAdded(false), 2000)
   }
@@ -77,7 +80,7 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
         type="button"
         onClick={handleAdd}
         disabled={!isAvailable || added}
-        className="flex flex-1 items-center justify-center gap-2 border-2 border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`flex flex-1 items-center justify-center gap-2 border-2 border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed ${added ? 'animate-atc-pop' : ''}`}
       >
         {added ? (
           <>
@@ -93,6 +96,14 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
           </>
         )}
       </button>
+      {burst && (
+        <ConfettiBurst
+          key={burst.id}
+          x={burst.x}
+          y={burst.y}
+          onDone={() => setBurst(null)}
+        />
+      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -87,15 +88,17 @@ export default function GuideDoveComprarePage() {
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-          Dove comprare carte Pokémon originali
-        </h1>
-        <p className="mt-4 text-lg leading-relaxed text-zinc-300">
-          Per comprare carte Pokémon originali online il modo più sicuro è rivolgersi a negozi
-          specializzati che vendono prodotti sigillati acquistati da distributori autorizzati,
-          con imballaggio protetto e spedizione tracciabile. Diffida dei prezzi molto sotto il
-          mercato e dei venditori senza recensioni.
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            Dove comprare carte Pokémon originali
+          </h1>
+          <p className="mt-4 text-lg leading-relaxed text-zinc-300">
+            Per comprare carte Pokémon originali online il modo più sicuro è rivolgersi a negozi
+            specializzati che vendono prodotti sigillati acquistati da distributori autorizzati,
+            con imballaggio protetto e spedizione tracciabile. Diffida dei prezzi molto sotto il
+            mercato e dei venditori senza recensioni.
+          </p>
+        </Reveal>
 
         <h2 className="mt-10 text-xl font-bold text-white">
           Cosa controllare prima di comprare
@@ -105,7 +108,7 @@ export default function GuideDoveComprarePage() {
           <li>I prodotti sono sigillati e con foto reali?</li>
           <li>Ci sono recensioni verificate e una pagina contatti?</li>
           <li>Il prezzo è in linea con il prezzo medio di mercato?</li>
-          <li>L\u2019imballaggio protegge la scatola (cartone rigido)?</li>
+          <li>L’imballaggio protegge la scatola (cartone rigido)?</li>
           <li>La spedizione è tracciabile e assicurata?</li>
         </ul>
 

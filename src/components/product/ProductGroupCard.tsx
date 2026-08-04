@@ -62,7 +62,7 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
 
       {cheapest && (
         <div className="absolute bottom-3 right-3">
-          <QuickAddButton product={cheapest} />
+          <QuickAddButton product={cheapest} maxQuantity={group.totalQuantity} />
         </div>
       )}
     </div>

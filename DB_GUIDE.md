@@ -3,7 +3,7 @@
 Guida leggibile di tutta la struttura dati (Payload CMS su PostgreSQL/Neon) e di come
 funzionano i flussi principali del sito (acquisto, import inventario, preordini, immagini).
 
-> Stato al 2026-08-02. I file "sorgente di verità" sono le collection in
+> Stato al 2026-08-04. I file "sorgente di verità" sono le collection in
 > `src/payload/collections/*` e i global in `src/payload/globals/*`. Il DB è generato
 > da Payload con `pnpm build` (`payload generate:db-schema && payload migrate`).
 
@@ -237,7 +237,9 @@ Per ogni riga del foglio l'import:
 Trigger disponibili:
 - **cron notturno**: `GET /api/cron/import` alle 03:00 UTC (`vercel.json`). Richiede
   `Authorization: Bearer {CRON_SECRET|PAYLOAD_SECRET}`.
-- **pagina admin sync**: `/admin/sync` (filtri skipSold/skipHold/onlyWithImage/onlyListed).
+- **dashboard → Sincronizzazione**: tab del pannello `/dashboard`
+  (filtri skipSold/skipHold/onlyWithImage/onlyListed). La vecchia pagina `/admin/sync`
+  è stata **eliminata**: il sync manuale ora vive solo qui.
 - **script manuale**: `pnpm import-products` (`scripts/import-products.ts`).
 
 ⚠️ **Nota**: i cron Vercel non inviano header custom → se `CRON_SECRET` non è presente,
@@ -264,6 +266,41 @@ Il PDP mostra "Prezzo medio di vendita" se `averageSalePrice` > 0.
 `GET /api/admin/backfill-images?secret=...` - come da §5. Utile per popolare le
 immagini Blob di prodotti esistenti senza reimportare tutto.
 
+### 6.6 Dashboard (`/dashboard`)
+
+Pannello di gestione interno in `src/app/dashboard/` con auth **reale**:
+
+- **Auth** (`src/lib/dash-auth.ts` + `src/app/api/auth/google/*`): la pagina è un server
+  component che verifica un cookie firmato (`dcc-dash`, HMAC-SHA256 con `PAYLOAD_SECRET`,
+  scadenza 7 giorni, `httpOnly`). Il login è **solo con Google OAuth** (nessuna password):
+  `GET /api/auth/google` genera lo state nonce e reindirizza a Google; il callback
+  `/api/auth/google/callback` valida lo state (anti-CSRF), scambia il `code` e verifica
+  l'ID token (`email_verified === true`); l'accesso è consentito **solo alle email nella
+  whitelist** `DASHBOARD_GOOGLE_EMAILS` (lista separata da virgole). L'utente loggato è
+  registrato nel cookie come `google:<email>`.
+- **Panoramica**: conteggi prodotti per stato (`listed`/`hold`/`sold`/`visibili`/
+  stock basso ≤1), valore inventario (somma `storePrice × quantity` dei `listed`
+  visibili), ordini per stato e fatturato (somma `total` di `paid`+`shipped`+
+  `delivered`), ultimi 8 ordini.
+- **Prodotti**: ricerca (titolo/itemId/descrizione), modifica inline di
+  `storePrice`, `compareAtPrice`, `quantity`, `status`, `isVisible`, `featured`
+  (server action `updateProduct`) ed eliminazione (`deleteProduct`).
+- **Ordini**: lista con cambio status (`pending`/`paid`/`shipped`/`delivered`/
+  `cancelled`) via `updateOrderStatus`.
+- **Sincronizzazione**: esegue `runInventorySync(filters)` — logica estratta in
+  `src/lib/inventory-sync.ts` (non più legata a `/admin/sync`, che è stato eliminato)
+  — con i filtri skipSold/skipHold/onlyWithImage/onlyListed e lo stato "ultimo run"
+  salvato in localStorage.
+- **SQL (sola lettura)**: tab che esegue query **read-only** sul DB via
+  `runReadOnlyQuery` (`src/lib/db-query.ts`, pool `pg` lazy su `DATABASE_URI`).
+  Protezioni: whitelist di soli comandi `SELECT/SHOW/EXPLAIN/WITH`, blocco di
+  keyword distruttive (`DELETE`, `UPDATE`, `DROP`, `ALTER`, `INSERT`, `TRUNCATE`,
+  `GRANT`, `CREATE`, ecc.), nessun multi-statement, massimo 500 righe restituite.
+  Utile per interrogare inventory/prezzi senza rischiare scritture.
+
+Tutte le server action di lettura/scrittura chiamano `requireAuth()` e rispondono
+`Unauthorized` senza cookie valido.
+
 ---
 
 ## 7. Variabili d'ambiente rilevanti
@@ -277,7 +314,11 @@ immagini Blob di prodotti esistenti senza reimportare tutto.
 | `NEXT_PUBLIC_SITE_URL` | - | URL pubblico (success/cancel url) |
 | `RESEND_API_KEY` / `EMAIL_FROM` | Resend | Email conferma ordine (opzionale) |
 | `CRON_SECRET` | - | Auth dei cron (se impostato) |
-| `SYNC_PASSWORD` | - | Auth pagina `/admin/sync` |
+| `SYNC_PASSWORD` | - | Auth delle API `/api/admin/products` (variant management) |
+| `GOOGLE_CLIENT_ID` | Google Cloud | OAuth Client ID per il login dashboard (web) |
+| `GOOGLE_CLIENT_SECRET` | Google Cloud | OAuth Client Secret |
+| `GOOGLE_OAUTH_REDIRECT_URI` | - | Redirect URI OAuth (default `${NEXT_PUBLIC_SITE_URL}/api/auth/google/callback`) |
+| `DASHBOARD_GOOGLE_EMAILS` | - | Whitelist email abilitate alla dashboard (separate da virgola) |
 
 ---
 
@@ -290,4 +331,5 @@ immagini Blob di prodotti esistenti senza reimportare tutto.
    (piattaforma, commissioni, shipping, profitto, ROI reale, stripeSessionId).
 3. **Flusso inserimento manuale** - form admin "Nuovo item" con generazione `itemId`/`slug`.
 4. **Rimozione Google Sheets** - solo quando Looker Studio (su Neon) sostituirà le
-   dashboard; poi eliminare cron import/prices, pagina sync, `google-sheets.ts`, ecc.
+   dashboard; poi eliminare cron import/prices, il tab sync della dashboard
+   (la pagina `/admin/sync` è già stata rimossa), `google-sheets.ts`, ecc.

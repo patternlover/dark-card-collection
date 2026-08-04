@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
+import { Reveal } from '@/components/ui/Reveal'
 import type { Metadata } from 'next'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -87,19 +88,21 @@ export default function GuideEtbPage() {
           </ol>
         </nav>
 
-        <h1 className="text-3xl font-black uppercase tracking-tight text-white">
-          ETB: cosa sono le Elite Trainer Box Pokémon
-        </h1>
-        <p className="mt-4 text-lg leading-relaxed text-zinc-300">
-          L\u2019Elite Trainer Box (ETB) è il kit ufficiale per allenatori e collezionisti del
-          Pokémon TCG: contiene bustine dell\u2019espansione, una carta promozionale foil
-          esclusiva e gli accessori da gioco. Costa meno di un booster box ma offre contenuti
-          che il box non ha.
-        </p>
+        <Reveal>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white">
+            ETB: cosa sono le Elite Trainer Box Pokémon
+          </h1>
+          <p className="mt-4 text-lg leading-relaxed text-zinc-300">
+            L’Elite Trainer Box (ETB) è il kit ufficiale per allenatori e collezionisti del
+            Pokémon TCG: contiene bustine dell’espansione, una carta promozionale foil
+            esclusiva e gli accessori da gioco. Costa meno di un booster box ma offre contenuti
+            che il box non ha.
+          </p>
+        </Reveal>
 
-        <h2 className="mt-10 text-xl font-bold text-white">Cosa c\u2019è dentro una ETB</h2>
+        <h2 className="mt-10 text-xl font-bold text-white">Cosa c’è dentro una ETB</h2>
         <ul className="mt-4 list-disc space-y-2 pl-5 text-zinc-400">
-          <li>8-9 bustine dell\u2019espansione della collezione</li>
+          <li>8-9 bustine dell’espansione della collezione</li>
           <li>1 carta promozionale foil esclusiva</li>
           <li>65 segna-danni, dadi e segnalini status</li>
           <li>1 pellicola per il dado (sleeve)</li>
@@ -144,7 +147,7 @@ export default function GuideEtbPage() {
           <li>Vuoi la carta promozionale esclusiva della collezione.</li>
           <li>Giochi e ti servono dadi e segna-danni.</li>
           <li>Vuoi una scatola rigida per ordinare la collezione.</li>
-          <li>Vuoi provare un\u2019espansione senza comprare 36 bustine.</li>
+          <li>Vuoi provare un’espansione senza comprare 36 bustine.</li>
         </ul>
 
         <div className="mt-10 rounded-lg border-2 border-[var(--accent)] bg-zinc-900 p-6">

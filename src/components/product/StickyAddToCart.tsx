@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AddToCartButton } from './AddToCartButton'
 
 interface StickyAddToCartProps {
@@ -18,12 +20,16 @@ interface StickyAddToCartProps {
 }
 
 export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartProps) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const displayPrice = product.storePrice || 0
 
-  return (
+  if (!mounted) return null
+
+  return createPortal(
     <div
       data-testid="sticky-atc"
-      className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-[var(--accent)] bg-black/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_0px_0px_#000] backdrop-blur"
+      className="fixed inset-x-0 bottom-0 z-[110] border-t-2 border-[var(--accent)] bg-black pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_0px_0px_#000]"
     >
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="min-w-0 shrink-0">
@@ -40,6 +46,7 @@ export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartPro
           <AddToCartButton product={product} maxQuantity={maxQuantity} />
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

@@ -4,6 +4,7 @@ import './globals.css'
 import { CartProvider } from '@/hooks/useCart'
 import { ConsentProvider } from '@/hooks/useConsent'
 import { AnalyticsProvider } from '@/components/layout/AnalyticsProvider'
+import { ConsentModeScript } from '@/components/layout/ConsentModeScript'
 import { LayoutShell } from '@/components/layout/LayoutShell'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -90,6 +91,7 @@ export default function RootLayout({
   return (
     <html lang="it">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ConsentModeScript />
         <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
         {/* hreflang renderizzato minuscolo per compatibilità crawler (React usa hrefLang di default) */}
         <link rel="alternate" {...({ hreflang: 'it-IT', href: '/' } as React.HTMLAttributes<HTMLLinkElement>)} />

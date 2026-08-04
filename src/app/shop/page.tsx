@@ -1,8 +1,5 @@
 import { getPayloadClient } from '@/lib/payload'
-import { ProductGroupCard } from '@/components/product/ProductGroupCard'
 import { ListingShell } from '@/components/sections/ListingShell'
-import { groupProducts } from '@/lib/group-products'
-import { applyListingFilters, type ListingParams } from '@/lib/product-filters'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -16,20 +13,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function ShopPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | undefined>>
-}) {
-  const params = await searchParams
-  const listingParams: ListingParams = {
-    q: params.q,
-    category: params.category,
-    collection: params.collection,
-    condition: params.condition,
-    language: params.language,
-  }
-
+export default async function ShopPage() {
   let products: any[] = []
   let categories: any[] = []
   let collections: any[] = []
@@ -37,14 +21,11 @@ export default async function ShopPage({
   try {
     const payload = await getPayloadClient()
 
-    const where = applyListingFilters(
-      { AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }] },
-      listingParams,
-    )
-
     const result = await payload.find({
       collection: 'products',
-      where,
+      where: {
+        AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }],
+      },
       limit: 50,
       sort: '-createdAt',
     })
@@ -72,25 +53,10 @@ export default async function ShopPage({
       title="Shop Pokémon TCG"
       subtitle="Booster Box, ETB, Collection Box e SPC sigillati. Originali al 100%."
       action="/shop"
-      searchDefault={listingParams.q || ''}
       categories={categories}
       collections={collections}
-      params={listingParams}
-    >
-      {products.length === 0 ? (
-        <div className="py-16 text-center">
-          <p className="text-lg text-zinc-500">Nessun prodotto trovato.</p>
-          <p className="mt-2 text-sm text-zinc-600">
-            I prodotti vengono importati automaticamente dal foglio Google Sheets.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {groupProducts(products).map((group) => (
-            <ProductGroupCard key={group.title} group={group} />
-          ))}
-        </div>
-      )}
-    </ListingShell>
+      products={products}
+      grouped
+    />
   )
 }

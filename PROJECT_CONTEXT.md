@@ -70,6 +70,10 @@ src/
 │   │   └── shipping-returns/       # Spedizioni e Resi (richiesto da Stripe)
 │   │
 │   ├── api/
+│   │   ├── auth/
+│   │   │   └── google/
+│   │   │       ├── route.ts          # GET /api/auth/google - starts OAuth flow (state nonce cookie)
+│   │   │       └── callback/route.ts # GET callback - exchanges code, verifies ID token + email whitelist, sets dcc-dash cookie
 │   │   ├── admin/
 │   │   │   ├── products/
 │   │   │   │   ├── route.ts       # GET list products + PATCH update + DELETE variant
@@ -86,14 +90,14 @@ src/
 │   │       └── import/route.ts     # Manual import endpoint
 │   │
 │   ├── admin/
-│   │   ├── products/
-│   │   │   └── page.tsx            # /admin/products - variant management + delete
-│   │   └── sync/
-│   │       ├── page.tsx            # /admin/sync - Google Sheets sync UI
-│   │       └── actions.ts          # Server action for sync
+│   │   └── products/
+│   │       └── page.tsx            # /admin/products - variant management + delete
 │   │
 │   ├── dashboard/
-│   │   └── page.tsx                # /dashboard - admin hub (password auth)
+│   │   ├── page.tsx                # /dashboard - admin hub (Google OAuth auth, whitelist)
+│   │   ├── actions.ts              # Server actions: products, orders, sync, SQL
+│   │   ├── login.tsx               # Login screen: "Accedi con Google" (only)
+│   │   └── main.tsx                # Dashboard UI: overview, products, orders, sync, SQL tabs
 │   │
 │   └── (payload)/                  # Payload admin (auto-generated)
 │

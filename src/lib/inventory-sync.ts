@@ -1,5 +1,3 @@
-'use server'
-
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 import { parseCSV } from '@/lib/parse-csv'
@@ -37,7 +35,7 @@ export interface SyncFilters {
   onlyListed?: boolean
 }
 
-export async function syncInventory(password: string, filters?: SyncFilters): Promise<{
+export interface SyncResult {
   success: boolean
   authenticated?: boolean
   categories?: number
@@ -52,11 +50,9 @@ export async function syncInventory(password: string, filters?: SyncFilters): Pr
   debug?: string[]
   error?: string
   details?: string
-}> {
-  if (password !== process.env.SYNC_PASSWORD && password !== process.env.PAYLOAD_SECRET) {
-    return { success: false, authenticated: false, error: 'Password non valida' }
-  }
+}
 
+export async function runInventorySync(filters?: SyncFilters): Promise<SyncResult> {
   const debug: string[] = []
   const skipSold = filters?.skipSold ?? true
   const skipHold = filters?.skipHold ?? false

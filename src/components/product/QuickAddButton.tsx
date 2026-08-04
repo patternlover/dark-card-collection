@@ -3,8 +3,10 @@
 import { useState } from 'react'
 import { ShoppingBag, Check } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+import { trackAddToCart } from '@/lib/analytics'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { getProductImageInfo } from '@/lib/product-image'
+import { ConfettiBurst } from '@/components/ui/ConfettiBurst'
 
 interface QuickAddButtonProps {
   product: {
@@ -16,14 +18,17 @@ interface QuickAddButtonProps {
     status: string
     quantity?: number
   }
+  maxQuantity?: number
 }
 
-export function QuickAddButton({ product }: QuickAddButtonProps) {
+export function QuickAddButton({ product, maxQuantity }: QuickAddButtonProps) {
   const [added, setAdded] = useState(false)
+  const [burst, setBurst] = useState<{ x: number; y: number; id: number } | null>(null)
   const { addItem } = useCart()
 
   const price = product.storePrice || 0
   const isAvailable = (product.status === 'listed' || product.status === 'hold') && price > 0
+  const maxQty = Math.max(1, Math.floor(maxQuantity ?? product.quantity ?? 1))
 
   if (!isAvailable) return null
 
@@ -39,27 +44,46 @@ export function QuickAddButton({ product }: QuickAddButtonProps) {
         slug: product.slug,
         price,
         image: proxyImageUrl(getProductImageInfo(product).cardUrl) || null,
-        maxQuantity: Math.max(1, product.quantity || 1),
+        maxQuantity: maxQty,
       },
       1,
     )
 
+    trackAddToCart({
+      item_id: String(product.id),
+      item_name: product.title,
+      price,
+      currency: 'EUR',
+      quantity: 1,
+    })
+
+    setBurst({ x: e.clientX, y: e.clientY, id: Date.now() })
     setAdded(true)
     setTimeout(() => setAdded(false), 1500)
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleAdd}
-      className="flex h-9 w-9 items-center justify-center border-2 border-[var(--accent)] bg-[var(--accent)] text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
-      title="Aggiungi al carrello"
-    >
-      {added ? (
-        <Check className="h-4 w-4" strokeWidth={3} />
-      ) : (
-        <ShoppingBag className="h-4 w-4" strokeWidth={2.5} />
+    <>
+      <button
+        type="button"
+        onClick={handleAdd}
+        className={`flex h-9 w-9 items-center justify-center border-2 border-[var(--accent)] bg-[var(--accent)] text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none ${added ? 'animate-atc-pop' : ''}`}
+        title="Aggiungi al carrello"
+      >
+        {added ? (
+          <Check className="h-4 w-4" strokeWidth={3} />
+        ) : (
+          <ShoppingBag className="h-4 w-4" strokeWidth={2.5} />
+        )}
+      </button>
+      {burst && (
+        <ConfettiBurst
+          key={burst.id}
+          x={burst.x}
+          y={burst.y}
+          onDone={() => setBurst(null)}
+        />
       )}
-    </button>
+    </>
   )
 }

@@ -134,6 +134,9 @@ EMAIL_FROM=noreply@darkcardcollection.com
 CRON_SECRET=your-cron-secret
 SYNC_PASSWORD=your-admin-password
 GOOGLE_SERVICE_ACCOUNT=...
+GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
+DASHBOARD_GOOGLE_EMAILS=you@gmail.com
 ```
 
 ### Payments (Stripe)
@@ -206,10 +209,18 @@ curl -X POST https://your-site.vercel.app/api/products/import \
 
 ## Admin
 
-Access the admin dashboard at `/dashboard` (password-protected).
+Access the admin dashboard at `/dashboard`, protected by **Google OAuth sign-in** (whitelisted emails only, no passwords).
 
+To enable it:
+1. In Google Cloud Console create an OAuth consent screen (External) and an OAuth Client ID of type "Web".
+2. Add `https://darkcardcollection.com/api/auth/google/callback` (and `http://localhost:3000/...` for local dev) to the Authorized redirect URIs.
+3. Set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `DASHBOARD_GOOGLE_EMAILS` (comma-separated allowed emails) as env vars.
+4. Without credentials the Google button is hidden and the dashboard is not accessible.
+
+- **Accesso dashboard**: `GET /api/auth/google` starts the OAuth flow, `/api/auth/google/callback` verifies the ID token and sets the signed `dcc-dash` cookie (HMAC-SHA256, 7 days, httpOnly).
 - **Gestione Prodotti** (`/admin/products`): View, edit, and delete product variants. Products are grouped by name; expand a group to see individual variants with language, condition, price, and stock.
-- **Sincronizzazione** (`/admin/sync`): Trigger a manual sync from Google Sheets with import filters.
+- **Sincronizzazione** (`/dashboard`, tab "Sincronizzazione"): Trigger a manual sync from Google Sheets with import filters.
+- **SQL read-only** (`/dashboard`, tab "SQL"): Run read-only SQL queries (SELECT/SHOW/EXPLAIN/WITH only, destructive keywords blocked, max 500 rows).
 - **Payload CMS** (`/admin`): Native Payload admin panel. Full frontend to query and edit every collection (products, categories, collections, orders, messages, media, users) and global (header, site settings). Sign in with the admin user account.
 
 ### Payload Admin user
@@ -247,15 +258,17 @@ src/
 ├── app/
 │   ├── (payload)/              # Payload CMS admin
 │   ├── admin/
-│   │   ├── products/page.tsx   # Variant management + delete
-│   │   └── sync/               # Google Sheets sync UI
+│   │   └── products/page.tsx   # Variant management + delete
 │   ├── dashboard/
-│   │   └── page.tsx            # Admin dashboard hub
+│   │   ├── page.tsx            # Admin dashboard hub (Google OAuth auth)
+│   │   ├── login.tsx           # Google-only login screen
+│   │   ├── actions.ts          # Server actions: products, orders, sync, SQL
+│   │   └── main.tsx            # Dashboard UI: overview, products, orders, sync, SQL tabs
 │   ├── shop/                   # Product listing with filters
 │   ├── products/[slug]/        # Product detail page (parent only)
 │   ├── cart/                   # Shopping cart
 │   ├── checkout/               # Stripe checkout
-│   └── api/                    # API routes
+│   └── api/                    # API routes (incl. /api/auth/google OAuth flow)
 ├── components/
 │   ├── admin/                  # EditProductModal, ProductGroupRow
 │   ├── layout/                 # Header, Footer, MobileMenu
@@ -268,6 +281,8 @@ src/
 │   ├── image-import.ts         # Image download + upload
 │   ├── proxy-image.ts          # Cardmarket image proxy
 │   ├── analytics.ts            # GA4 ecommerce events
+│   ├── dash-auth.ts            # Signed dashboard session (HMAC cookie)
+│   ├── db-query.ts             # Read-only SQL runner (dashboard SQL tab)
 │   ├── payload.ts              # Cached Payload client
 │   └── stripe.ts               # Stripe client
 └── payload/
