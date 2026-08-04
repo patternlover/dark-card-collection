@@ -62,7 +62,7 @@ export default function GuideHubPage() {
         <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
           <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
             <li>
-              <Link href="/" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
                 Home
               </Link>
             </li>
@@ -84,11 +84,11 @@ export default function GuideHubPage() {
             <Link
               key={guide.href}
               href={guide.href}
-              className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#FACC15]"
+              className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[var(--accent)]"
             >
               <h2 className="text-lg font-bold text-white">{guide.title}</h2>
               <p className="mt-2 text-sm text-zinc-400">{guide.description}</p>
-              <p className="mt-4 text-sm text-[#FACC15]">Leggi la guida →</p>
+              <p className="mt-4 text-sm text-[var(--accent)]">Leggi la guida →</p>
             </Link>
           ))}
         </div>
@@ -101,13 +101,13 @@ export default function GuideHubPage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/shop"
-              className="border-2 border-[#FACC15] bg-[#FACC15] px-5 py-2 text-sm font-black uppercase tracking-wide text-black transition-transform hover:-translate-y-0.5"
+              className="border-2 border-[var(--accent)] bg-[var(--accent)] px-5 py-2 text-sm font-black uppercase tracking-wide text-black transition-transform hover:-translate-y-0.5"
             >
               Vai allo Shop
             </Link>
             <Link
               href="/shop/collections"
-              className="border-2 border-zinc-600 px-5 py-2 text-sm font-black uppercase tracking-wide text-white transition-colors hover:border-[#FACC15] hover:text-[#FACC15]"
+              className="border-2 border-zinc-600 px-5 py-2 text-sm font-black uppercase tracking-wide text-white transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
               Le Collezioni
             </Link>

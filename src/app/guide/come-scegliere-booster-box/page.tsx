@@ -72,13 +72,13 @@ export default function GuideBoosterBoxPage() {
         <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
           <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
             <li>
-              <Link href="/" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
                 Home
               </Link>
             </li>
             <li aria-hidden="true">/</li>
             <li>
-              <Link href="/guide" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/guide" className="transition-colors hover:text-[var(--accent)]">
                 Guide
               </Link>
             </li>
@@ -144,7 +144,7 @@ export default function GuideBoosterBoxPage() {
           <li>Cerchi il costo per bustina più basso possibile.</li>
         </ul>
 
-        <div className="mt-10 rounded-lg border-2 border-[#FACC15] bg-zinc-900 p-6">
+        <div className="mt-10 rounded-lg border-2 border-[var(--accent)] bg-zinc-900 p-6">
           <h2 className="text-lg font-bold text-white">I booster box in vendita</h2>
           <p className="mt-2 text-sm text-zinc-400">
             Vedi i booster box disponibili nelle nostre collezioni, sigillati e originali.
@@ -152,13 +152,13 @@ export default function GuideBoosterBoxPage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/shop"
-              className="border-2 border-[#FACC15] bg-[#FACC15] px-5 py-2 text-sm font-black uppercase tracking-wide text-black transition-transform hover:-translate-y-0.5"
+              className="border-2 border-[var(--accent)] bg-[var(--accent)] px-5 py-2 text-sm font-black uppercase tracking-wide text-black transition-transform hover:-translate-y-0.5"
             >
               Vai allo Shop
             </Link>
             <Link
               href="/shop/collections"
-              className="border-2 border-zinc-600 px-5 py-2 text-sm font-black uppercase tracking-wide text-white transition-colors hover:border-[#FACC15] hover:text-[#FACC15]"
+              className="border-2 border-zinc-600 px-5 py-2 text-sm font-black uppercase tracking-wide text-white transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
               Le Collezioni
             </Link>
@@ -182,11 +182,11 @@ export default function GuideBoosterBoxPage() {
           <div className="mt-2 flex flex-wrap gap-3">
             <Link
               href="/guide/dove-comprare-carte-pokemon-originali"
-              className="text-[#FACC15] hover:text-white"
+              className="text-[var(--accent)] hover:text-white"
             >
               Dove comprare carte Pokémon originali →
             </Link>
-            <Link href="/guide/etb-cosa-sono-elite-trainer-box" className="text-[#FACC15] hover:text-white">
+            <Link href="/guide/etb-cosa-sono-elite-trainer-box" className="text-[var(--accent)] hover:text-white">
               Cosa sono le ETB →
             </Link>
           </div>

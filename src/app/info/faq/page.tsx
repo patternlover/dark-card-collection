@@ -80,7 +80,7 @@ export default function FAQPage() {
         <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
           <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
             <li>
-              <Link href="/" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
                 Home
               </Link>
             </li>
@@ -113,14 +113,14 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <div className="mt-12 border-2 border-[#FACC15] bg-zinc-900 p-6 shadow-[4px_4px_0px_0px_#FACC15]">
+        <div className="mt-12 border-2 border-[var(--accent)] bg-zinc-900 p-6 shadow-[4px_4px_0px_0px_var(--accent)]">
           <h2 className="text-lg font-bold text-white">Hai ancora domande?</h2>
           <p className="mt-2 text-sm text-zinc-400">
             Scrivici: rispondiamo entro 24 ore lavorative.
           </p>
           <Link
             href="/info/contact"
-            className="mt-4 inline-block border-2 border-[#FACC15] bg-[#FACC15] px-6 py-2.5 text-sm font-black uppercase tracking-wide text-black transition-transform hover:-translate-y-0.5"
+            className="mt-4 inline-block border-2 border-[var(--accent)] bg-[var(--accent)] px-6 py-2.5 text-sm font-black uppercase tracking-wide text-black transition-transform hover:-translate-y-0.5"
           >
             Contattaci
           </Link>

@@ -18,7 +18,7 @@ interface ProductFiltersSidebarProps {
 }
 
 const selectClass =
-  'w-full border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[#FACC15] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]'
+  'w-full border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[var(--accent)] focus:outline-none shadow-[2px_2px_0px_0px_#27272a]'
 
 export function ProductFiltersSidebar({ action, categories = [], collections = [], params }: ProductFiltersSidebarProps) {
   const [open, setOpen] = useState(false)
@@ -32,7 +32,7 @@ export function ProductFiltersSidebar({ action, categories = [], collections = [
         aria-expanded={open}
         className="flex w-full items-center justify-between px-5 py-4 lg:hidden"
       >
-        <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#FACC15]">
+        <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--accent)]">
           <SlidersHorizontal className="h-4 w-4" />
           Filtri
         </span>
@@ -46,7 +46,7 @@ export function ProductFiltersSidebar({ action, categories = [], collections = [
 
       <div className={`space-y-4 border-t-2 border-zinc-700 p-5 lg:block lg:border-t-0 lg:p-0 ${open ? 'block' : 'hidden'}`}>
         <div className="hidden items-center justify-between lg:flex">
-          <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#FACC15]">
+          <h2 className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--accent)]">
             <SlidersHorizontal className="h-4 w-4" />
             Filtri
           </h2>
@@ -111,7 +111,7 @@ export function ProductFiltersSidebar({ action, categories = [], collections = [
 
         <button
           type="submit"
-          className="w-full border-2 border-[#FACC15] bg-[#FACC15] px-5 py-3 text-sm font-black uppercase tracking-wide text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
+          className="w-full border-2 border-[var(--accent)] bg-[var(--accent)] px-5 py-3 text-sm font-black uppercase tracking-wide text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
         >
           Applica filtri
         </button>

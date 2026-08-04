@@ -85,7 +85,7 @@ export default function SyncPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full border-2 border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
+            className="w-full border-2 border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-[var(--accent)] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
             autoFocus
           />
           {authError && (
@@ -93,7 +93,7 @@ export default function SyncPage() {
           )}
           <button
             type="submit"
-            className="w-full border-2 border-[#FACC15] bg-[#FACC15] px-4 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
+            className="w-full border-2 border-[var(--accent)] bg-[var(--accent)] px-4 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
           >
             Accedi
           </button>
@@ -107,7 +107,7 @@ export default function SyncPage() {
       <div className="mx-auto max-w-3xl px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-[#FACC15] transition-colors">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-[var(--accent)] transition-colors">
               <ArrowLeft className="h-4 w-4" />
               Dashboard
             </Link>
@@ -135,7 +135,7 @@ export default function SyncPage() {
                   type="checkbox"
                   checked={filters[key]}
                   onChange={() => toggleFilter(key)}
-                  className="mt-1 h-4 w-4 border-2 border-zinc-600 bg-zinc-800 accent-[#FACC15]"
+                  className="mt-1 h-4 w-4 border-2 border-zinc-600 bg-zinc-800 accent-[var(--accent)]"
                 />
                 <div>
                   <span className="text-sm text-zinc-300 group-hover:text-white transition-colors font-medium">{label}</span>
@@ -149,7 +149,7 @@ export default function SyncPage() {
         <button
           onClick={handleSync}
           disabled={syncing}
-          className="border-2 border-[#FACC15] bg-[#FACC15] px-6 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[3px_3px_0px_0px_#000]"
+          className="border-2 border-[var(--accent)] bg-[var(--accent)] px-6 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[3px_3px_0px_0px_#000]"
         >
           {syncing ? (
             <span className="flex items-center gap-2">

@@ -152,7 +152,7 @@ export default function CartPage() {
 
         {confirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-            <div className="w-full max-w-sm border-2 border-[#FACC15] bg-black p-6 shadow-[8px_8px_0px_0px_#FACC15]">
+            <div className="w-full max-w-sm border-2 border-[var(--accent)] bg-black p-6 shadow-[8px_8px_0px_0px_var(--accent)]">
               <h2 className="text-lg font-black uppercase tracking-wide text-white">
                 Rimuovere l&apos;articolo?
               </h2>

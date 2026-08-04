@@ -37,7 +37,7 @@ export default function ContactPage() {
         <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
           <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
             <li>
-              <Link href="/" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
                 Home
               </Link>
             </li>
@@ -51,15 +51,15 @@ export default function ContactPage() {
           Hai domande? Siamo qui per aiutarti. Compila il form e ti risponderemo entro 24 ore.
         </p>
 
-        <div className="mt-8 mb-8 flex items-center gap-4 border-2 border-[#FACC15] bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_#FACC15]">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[#FACC15]">
+        <div className="mt-8 mb-8 flex items-center gap-4 border-2 border-[var(--accent)] bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_var(--accent)]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-[var(--accent)]">
             <Mail className="h-5 w-5 text-black" />
           </div>
           <div>
             <p className="text-sm font-bold text-white">Oppure scrivici direttamente:</p>
             <a
               href={`mailto:${CONTACT_EMAIL}`}
-              className="text-sm text-[#FACC15] underline underline-offset-2 hover:text-white"
+              className="text-sm text-[var(--accent)] underline underline-offset-2 hover:text-white"
             >
               {CONTACT_EMAIL}
             </a>

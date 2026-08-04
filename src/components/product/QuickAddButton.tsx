@@ -52,7 +52,7 @@ export function QuickAddButton({ product }: QuickAddButtonProps) {
     <button
       type="button"
       onClick={handleAdd}
-      className="flex h-9 w-9 items-center justify-center border-2 border-[#FACC15] bg-[#FACC15] text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
+      className="flex h-9 w-9 items-center justify-center border-2 border-[var(--accent)] bg-[var(--accent)] text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
       title="Aggiungi al carrello"
     >
       {added ? (

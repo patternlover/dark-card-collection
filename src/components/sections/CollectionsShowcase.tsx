@@ -39,7 +39,7 @@ export async function CollectionsShowcase() {
             <Link
               key={col.id}
               href={`/shop/collections/${col.slug}`}
-              className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-[#FACC15]"
+              className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-[var(--accent)]"
             >
               <h3 className="font-semibold text-white line-clamp-2">{formatCollectionName(col.name)}</h3>
               {col.releaseDate && (
@@ -47,7 +47,7 @@ export async function CollectionsShowcase() {
                   Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}
                 </p>
               )}
-              <p className="mt-3 text-xs text-[#FACC15]">Vedi prodotti →</p>
+              <p className="mt-3 text-xs text-[var(--accent)]">Vedi prodotti →</p>
             </Link>
           ))}
         </div>

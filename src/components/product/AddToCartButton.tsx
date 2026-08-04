@@ -65,7 +65,7 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
         value={quantity}
         onChange={(e) => setQuantity(Number(e.target.value))}
         disabled={!isAvailable}
-        className="w-16 border-2 border-zinc-700 bg-zinc-900 px-2 py-2 text-center text-sm font-bold text-white focus:border-[#FACC15] focus:outline-none disabled:opacity-50"
+        className="w-16 border-2 border-zinc-700 bg-zinc-900 px-2 py-2 text-center text-sm font-bold text-white focus:border-[var(--accent)] focus:outline-none disabled:opacity-50"
       >
         {Array.from({ length: maxQty }, (_, i) => i + 1).map((n) => (
           <option key={n} value={n}>
@@ -77,7 +77,7 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
         type="button"
         onClick={handleAdd}
         disabled={!isAvailable || added}
-        className="flex flex-1 items-center justify-center gap-2 border-2 border-[#FACC15] bg-[#FACC15] px-4 py-2 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex flex-1 items-center justify-center gap-2 border-2 border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_0px_#000] active:translate-0 active:shadow-[1px_1px_0px_0px_#000] disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {added ? (
           <>

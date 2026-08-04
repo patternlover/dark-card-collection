@@ -125,13 +125,13 @@ export default async function CollectionPage({
         <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
           <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
             <li>
-              <Link href="/" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
                 Home
               </Link>
             </li>
             <li aria-hidden="true">/</li>
             <li>
-              <Link href="/shop" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/shop" className="transition-colors hover:text-[var(--accent)]">
                 Shop
               </Link>
             </li>
@@ -139,7 +139,7 @@ export default async function CollectionPage({
             <li>
               <Link
                 href="/shop/collections"
-                className="transition-colors hover:text-[#FACC15]"
+                className="transition-colors hover:text-[var(--accent)]"
               >
                 Collezioni
               </Link>
@@ -195,10 +195,10 @@ export default async function CollectionPage({
                 <Link
                   key={col.id}
                   href={`/shop/collections/${col.slug}`}
-                  className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-[#FACC15]"
+                  className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-[var(--accent)]"
                 >
                   <h3 className="font-semibold text-white line-clamp-2">{col.name}</h3>
-                  <p className="mt-2 text-xs text-[#FACC15]">Vedi prodotti →</p>
+                  <p className="mt-2 text-xs text-[var(--accent)]">Vedi prodotti →</p>
                 </Link>
               ))}
             </div>

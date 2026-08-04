@@ -335,19 +335,19 @@ export default async function ProductPage({
             <nav aria-label="Breadcrumb" className="text-sm font-medium uppercase tracking-wider">
               <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
                 <li>
-                  <Link href="/" className="transition-colors hover:text-[#FACC15]">
+                  <Link href="/" className="transition-colors hover:text-[var(--accent)]">
                     Home
                   </Link>
                 </li>
                 <li aria-hidden="true">/</li>
                 <li>
-                  <Link href="/shop" className="transition-colors hover:text-[#FACC15]">
+                  <Link href="/shop" className="transition-colors hover:text-[var(--accent)]">
                     Shop
                   </Link>
                 </li>
                 <li aria-hidden="true">/</li>
                 <li>
-                  <Link href="/shop/collections" className="transition-colors hover:text-[#FACC15]">
+                  <Link href="/shop/collections" className="transition-colors hover:text-[var(--accent)]">
                     Collezioni
                   </Link>
                 </li>
@@ -358,7 +358,7 @@ export default async function ProductPage({
                       {collectionSlug ? (
                         <Link
                           href={`/shop/collections/${collectionSlug}`}
-                          className="transition-colors hover:text-[#FACC15]"
+                          className="transition-colors hover:text-[var(--accent)]"
                         >
                           {collectionName}
                         </Link>
@@ -383,7 +383,7 @@ export default async function ProductPage({
             />
 
             <div className="flex items-baseline gap-4">
-              <span className="text-3xl font-black text-[#FACC15]">
+              <span className="text-3xl font-black text-[var(--accent)]">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
               </span>
               {group.totalQuantity > 0 && (
@@ -410,7 +410,7 @@ export default async function ProductPage({
                 {categorySlug && (
                   <Link
                     href={`/shop/categories/${categorySlug}`}
-                    className="border border-zinc-700 px-3 py-1 text-sm text-zinc-400 transition-colors hover:border-[#FACC15] hover:text-[#FACC15]"
+                    className="border border-zinc-700 px-3 py-1 text-sm text-zinc-400 transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   >
                     {categoryName}
                   </Link>
@@ -418,7 +418,7 @@ export default async function ProductPage({
                 {collectionSlug && (
                   <Link
                     href={`/shop/collections/${collectionSlug}`}
-                    className="border border-zinc-700 px-3 py-1 text-sm text-zinc-400 transition-colors hover:border-[#FACC15] hover:text-[#FACC15]"
+                    className="border border-zinc-700 px-3 py-1 text-sm text-zinc-400 transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   >
                     Collezione: {collectionName}
                   </Link>
@@ -441,15 +441,15 @@ export default async function ProductPage({
 
             <div className="space-y-3 border-2 border-zinc-800 p-4 shadow-[3px_3px_0px_0px_#27272a]">
               <div className="flex items-center gap-3 text-sm text-zinc-400">
-                <Truck className="h-5 w-5 text-[#FACC15]" />
+                <Truck className="h-5 w-5 text-[var(--accent)]" />
                 <span>Spedizione gratuita in Italia dagli 80 €</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-zinc-400">
-                <Shield className="h-5 w-5 text-[#FACC15]" />
+                <Shield className="h-5 w-5 text-[var(--accent)]" />
                 <span>Prodotto 100% originale</span>
               </div>
               <div className="flex items-center gap-3 text-sm text-zinc-400">
-                <Package className="h-5 w-5 text-[#FACC15]" />
+                <Package className="h-5 w-5 text-[var(--accent)]" />
                 <span>Packaging professionale e sicuro</span>
               </div>
             </div>

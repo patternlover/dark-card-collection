@@ -16,7 +16,7 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
   )
 
   return (
-    <div className="group relative border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#FACC15]">
+    <div className="group relative border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)]">
       <Link
         href={`/products/${group.slug}`}
         className="block"
@@ -48,7 +48,7 @@ export function ProductGroupCard({ group }: ProductGroupCardProps) {
           </h3>
 
           <div className="mt-3">
-            <span className="text-lg font-bold text-[#FACC15]">
+            <span className="text-lg font-bold text-[var(--accent)]">
               {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : ''}
             </span>
             {group.totalQuantity > 0 && (

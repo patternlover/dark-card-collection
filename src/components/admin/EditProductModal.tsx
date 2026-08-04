@@ -140,7 +140,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
       <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-zinc-700 bg-zinc-950 p-6 shadow-[6px_6px_0px_0px_#27272a]">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-black text-white uppercase tracking-tight">Modifica Prodotto</h2>
-          <button onClick={onClose} className="text-zinc-500 hover:text-[#FACC15] transition-colors">
+          <button onClick={onClose} className="text-zinc-500 hover:text-[var(--accent)] transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -167,7 +167,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
                 type="text"
                 value={form.title}
                 onChange={(e) => handleChange('title', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               />
             </div>
             <div>
@@ -176,7 +176,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
                 type="text"
                 value={form.itemId}
                 onChange={(e) => handleChange('itemId', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               />
             </div>
           </div>
@@ -187,7 +187,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
               type="text"
               value={form.slug}
               onChange={(e) => handleChange('slug', e.target.value)}
-              className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+              className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
             />
           </div>
 
@@ -200,7 +200,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
                 min="0"
                 value={form.storePrice}
                 onChange={(e) => handleChange('storePrice', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               />
             </div>
             <div>
@@ -210,7 +210,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
                 value={form.productState}
                 onChange={(e) => handleChange('productState', e.target.value)}
                 placeholder="AVAILABLE, HOLD, SOLD..."
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[#FACC15] focus:outline-none font-mono"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[var(--accent)] focus:outline-none font-mono"
               />
             </div>
           </div>
@@ -221,7 +221,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
               <select
                 value={form.status}
                 onChange={(e) => handleChange('status', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               >
                 {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
@@ -231,7 +231,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
               <select
                 value={form.condition}
                 onChange={(e) => handleChange('condition', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               >
                 {CONDITION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
@@ -241,7 +241,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
               <select
                 value={form.language}
                 onChange={(e) => handleChange('language', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               >
                 {LANGUAGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
@@ -256,7 +256,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
                 min="0"
                 value={form.quantity}
                 onChange={(e) => handleChange('quantity', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               />
             </div>
             <div>
@@ -265,7 +265,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
                 type="text"
                 value={form.cardNumber}
                 onChange={(e) => handleChange('cardNumber', e.target.value)}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               />
             </div>
             <div className="flex items-end pb-1">
@@ -274,7 +274,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
                   type="checkbox"
                   checked={form.featured}
                   onChange={(e) => handleChange('featured', e.target.checked)}
-                  className="h-4 w-4 border-2 border-zinc-600 bg-zinc-800 accent-[#FACC15]"
+                  className="h-4 w-4 border-2 border-zinc-600 bg-zinc-800 accent-[var(--accent)]"
                 />
                 <span className="text-sm text-zinc-300 font-medium">In Evidenza</span>
               </label>
@@ -288,7 +288,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
               value={form.imageUrl}
               onChange={(e) => handleChange('imageUrl', e.target.value)}
               placeholder="https://product-images.s3.cardmarket.com/..."
-              className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[#FACC15] focus:outline-none font-mono"
+              className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[var(--accent)] focus:outline-none font-mono"
             />
           </div>
 
@@ -298,7 +298,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
               value={form.description}
               onChange={(e) => handleChange('description', e.target.value)}
               rows={3}
-              className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none resize-none"
+              className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none resize-none"
             />
           </div>
         </div>
@@ -313,7 +313,7 @@ export function EditProductModal({ product, password, onClose, onSaved }: EditPr
           <button
             onClick={handleSave}
             disabled={saving || !form.title}
-            className="border-2 border-[#FACC15] bg-[#FACC15] px-6 py-2 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[3px_3px_0px_0px_#000]"
+            className="border-2 border-[var(--accent)] bg-[var(--accent)] px-6 py-2 text-sm font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-0 disabled:hover:shadow-[3px_3px_0px_0px_#000]"
           >
             {saving ? 'Salvataggio...' : 'Salva'}
           </button>

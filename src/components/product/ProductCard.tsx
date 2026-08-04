@@ -31,7 +31,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const imgUrl = getProductImageInfo(product).cardUrl
 
   return (
-    <div className="group relative border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#FACC15]">
+    <div className="group relative border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)]">
       <Link
         href={`/products/${product.slug}`}
         className="block"
@@ -65,7 +65,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </h3>
 
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-lg font-bold text-[#FACC15]">
+            <span className="text-lg font-bold text-[var(--accent)]">
               {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : ''}
             </span>
             <span className="text-[10px] uppercase tracking-wider text-zinc-600">{product.language}</span>

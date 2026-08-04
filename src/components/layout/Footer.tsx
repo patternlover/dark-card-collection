@@ -27,7 +27,7 @@ export function Footer() {
               <span className="text-xl font-black tracking-tight text-white">
                 DARK CARD
               </span>
-              <span className="text-xl font-light text-[#FACC15]">
+              <span className="text-xl font-light text-[var(--accent)]">
                 {' '}COLLECTION
               </span>
             </Link>
@@ -40,7 +40,7 @@ export function Footer() {
               <p>{BUSINESS.address}</p>
               <p>{BUSINESS.taxId}</p>
               <p>
-                <a href={`mailto:${BUSINESS.email}`} className="transition-colors hover:text-[#FACC15]">
+                <a href={`mailto:${BUSINESS.email}`} className="transition-colors hover:text-[var(--accent)]">
                   {BUSINESS.email}
                 </a>
               </p>
@@ -53,27 +53,27 @@ export function Footer() {
             </h3>
             <ul className="mt-4 space-y-2.5">
               <li>
-                <Link href="/shop" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/shop" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Catalogo
                 </Link>
               </li>
               <li>
-                <Link href="/shop/collections" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/shop/collections" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Collezioni
                 </Link>
               </li>
               <li>
-                <Link href="/shop/bestsellers" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/shop/bestsellers" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Bestseller
                 </Link>
               </li>
               <li>
-                <Link href="/shop/new-arrivals" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/shop/new-arrivals" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Novità
                 </Link>
               </li>
               <li>
-                <Link href="/shop/preorders" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/shop/preorders" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   In Attesa
                 </Link>
               </li>
@@ -86,27 +86,27 @@ export function Footer() {
             </h3>
             <ul className="mt-4 space-y-2.5">
               <li>
-                <Link href="/info/about" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/info/about" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Chi Siamo
                 </Link>
               </li>
               <li>
-                <Link href="/info/faq" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/info/faq" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   FAQ
                 </Link>
               </li>
               <li>
-                <Link href="/guide" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/guide" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Guide
                 </Link>
               </li>
               <li>
-                <Link href="/info/contact" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/info/contact" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Contatti
                 </Link>
               </li>
               <li>
-                <Link href="/cart" className="text-sm text-zinc-500 transition-colors hover:text-[#FACC15]">
+                <Link href="/cart" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Carrello
                 </Link>
               </li>
@@ -120,7 +120,7 @@ export function Footer() {
             {legalLinks.map((link, i) => (
               <span key={link.href} className="flex items-center gap-3">
                 {i > 0 && <span className="text-zinc-700">|</span>}
-                <Link href={link.href} className="transition-colors hover:text-[#FACC15]">
+                <Link href={link.href} className="transition-colors hover:text-[var(--accent)]">
                   {link.label}
                 </Link>
               </span>

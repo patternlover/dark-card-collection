@@ -94,7 +94,7 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
         <td className="px-4 py-3 text-zinc-400 text-sm">
           {group.collection?.name || '-'}
         </td>
-        <td className="px-4 py-3 text-[#FACC15] font-bold">
+        <td className="px-4 py-3 text-[var(--accent)] font-bold">
           {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : '-'}
         </td>
         <td className="px-4 py-3 text-zinc-400 text-sm font-medium">{group.totalQuantity}</td>
@@ -113,7 +113,7 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
           <button
             onClick={handleToggleVisible}
             disabled={togglingVisible}
-            className={`transition-colors disabled:opacity-50 ${isVisible ? 'text-[#FACC15] hover:text-zinc-400' : 'text-zinc-600 hover:text-[#FACC15]'}`}
+            className={`transition-colors disabled:opacity-50 ${isVisible ? 'text-[var(--accent)] hover:text-zinc-400' : 'text-zinc-600 hover:text-[var(--accent)]'}`}
             title={isVisible ? 'Nello shop, clicca per nascondere' : 'Nascosto, clicca per mostrare'}
           >
             {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}

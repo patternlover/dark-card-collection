@@ -12,7 +12,7 @@
   --muted: #1a1a1a;
   --muted-foreground: #a1a1aa;
   --border: #27272a;
-  --ring: #FACC15;
+  --ring: var(--accent);
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
 }
@@ -28,13 +28,13 @@ body {
   box-shadow: 4px 4px 0px 0px #27272a;
 }
 .shadow-brutal-accent {
-  box-shadow: 4px 4px 0px 0px #FACC15;
+  box-shadow: 4px 4px 0px 0px var(--accent);
 }
 .shadow-brutal-sm {
   box-shadow: 3px 3px 0px 0px #27272a;
 }
 .shadow-brutal-sm-accent {
-  box-shadow: 3px 3px 0px 0px #FACC15;
+  box-shadow: 3px 3px 0px 0px var(--accent);
 }
 .shadow-brutal-xs {
   box-shadow: 2px 2px 0px 0px #27272a;
@@ -45,7 +45,7 @@ body {
 }
 .hover-brutal:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px 0px #FACC15;
+  box-shadow: 6px 6px 0px 0px var(--accent);
 }
 .hover-brutal:active {
   transform: translate(0px, 0px);

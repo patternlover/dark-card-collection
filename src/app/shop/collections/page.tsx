@@ -64,13 +64,13 @@ export default async function CollectionsPage() {
         <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
           <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
             <li>
-              <Link href="/" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
                 Home
               </Link>
             </li>
             <li aria-hidden="true">/</li>
             <li>
-              <Link href="/shop" className="transition-colors hover:text-[#FACC15]">
+              <Link href="/shop" className="transition-colors hover:text-[var(--accent)]">
                 Shop
               </Link>
             </li>
@@ -101,7 +101,7 @@ export default async function CollectionsPage() {
               <Link
                 key={col.id}
                 href={`/shop/collections/${col.slug}`}
-                className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[#FACC15]"
+                className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-6 transition-colors hover:border-[var(--accent)]"
               >
                 <div className="aspect-video rounded bg-zinc-800 mb-4 flex items-center justify-center">
                   <span className="text-3xl text-zinc-600">🃏</span>
@@ -115,7 +115,7 @@ export default async function CollectionsPage() {
                     Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}
                   </p>
                 )}
-                <p className="mt-4 text-sm text-[#FACC15]">Vedi prodotti →</p>
+                <p className="mt-4 text-sm text-[var(--accent)]">Vedi prodotti →</p>
               </Link>
             ))}
           </div>

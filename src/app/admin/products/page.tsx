@@ -120,13 +120,13 @@ export default function AdminProductsPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
-            className="w-full border-2 border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
+            className="w-full border-2 border-zinc-700 bg-zinc-900 px-4 py-3 text-white placeholder-zinc-500 focus:border-[var(--accent)] focus:outline-none shadow-[3px_3px_0px_0px_#27272a]"
             autoFocus
           />
           {authError && <p className="text-sm text-red-400">Password non valida</p>}
           <button
             type="submit"
-            className="w-full border-2 border-[#FACC15] bg-[#FACC15] px-4 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
+            className="w-full border-2 border-[var(--accent)] bg-[var(--accent)] px-4 py-3 font-bold text-black shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_#000] active:translate-0 active:shadow-none"
           >
             Accedi
           </button>
@@ -140,14 +140,14 @@ export default function AdminProductsPage() {
       <div className="mx-auto max-w-7xl px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-[#FACC15] transition-colors">
+            <Link href="/dashboard" className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-[var(--accent)] transition-colors">
               <ArrowLeft className="h-4 w-4" />
               Dashboard
             </Link>
             <h1 className="text-2xl font-bold">Gestione Prodotti</h1>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/admin/sync" className="text-sm text-zinc-400 hover:text-[#FACC15] transition-colors">
+            <Link href="/admin/sync" className="text-sm text-zinc-400 hover:text-[var(--accent)] transition-colors">
               Sincronizzazione
             </Link>
             <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-white transition-colors">
@@ -165,7 +165,7 @@ export default function AdminProductsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Nome o Item ID..."
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-[var(--accent)] focus:outline-none"
               />
             </div>
             <div className="min-w-[140px]">
@@ -173,7 +173,7 @@ export default function AdminProductsPage() {
               <select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               >
                 {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
@@ -183,7 +183,7 @@ export default function AdminProductsPage() {
               <select
                 value={category}
                 onChange={(e) => { setCategory(e.target.value); setPage(1) }}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               >
                 <option value="">Tutte</option>
                 {categories.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
@@ -194,7 +194,7 @@ export default function AdminProductsPage() {
               <select
                 value={collection}
                 onChange={(e) => { setCollection(e.target.value); setPage(1) }}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               >
                 <option value="">Tutte</option>
                 {collections.map(c => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
@@ -205,14 +205,14 @@ export default function AdminProductsPage() {
               <select
                 value={withImage}
                 onChange={(e) => { setWithImage(e.target.value); setPage(1) }}
-                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[#FACC15] focus:outline-none"
+                className="w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white focus:border-[var(--accent)] focus:outline-none"
               >
                 {IMAGE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <button
               type="submit"
-              className="border-2 border-[#FACC15] bg-[#FACC15] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
+              className="border-2 border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
             >
               Cerca
             </button>

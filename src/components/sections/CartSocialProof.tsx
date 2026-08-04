@@ -45,9 +45,9 @@ export function CartSocialProof() {
   return (
     <div className="border-b-2 border-zinc-700 bg-zinc-900">
       <div className="mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-2.5 text-center">
-        <ShoppingBag className="h-4 w-4 shrink-0 text-[#FACC15]" strokeWidth={2.5} />
+        <ShoppingBag className="h-4 w-4 shrink-0 text-[var(--accent)]" strokeWidth={2.5} />
         <p className="text-xs font-bold uppercase tracking-wide text-zinc-300 sm:text-sm">
-          <span className="font-black text-[#FACC15]">{count}</span>{' '}
+          <span className="font-black text-[var(--accent)]">{count}</span>{' '}
           collezionisti hanno aggiunto al carrello nelle ultime 24 ore
         </p>
       </div>
