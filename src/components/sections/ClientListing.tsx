@@ -269,15 +269,17 @@ export function ClientListing({
             </label>
           )}
 
-          {active && (
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="w-full border-2 border-zinc-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-zinc-300 transition-colors hover:border-zinc-400 hover:text-white lg:hidden"
-            >
-              Azzera filtri
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={resetFilters}
+            tabIndex={active ? 0 : -1}
+            aria-hidden={!active}
+            className={`w-full border-2 border-zinc-600 px-5 py-3 text-sm font-black uppercase tracking-wide text-zinc-300 transition-colors hover:border-zinc-400 hover:text-white lg:hidden ${
+              active ? 'visible' : 'invisible'
+            }`}
+          >
+            Azzera filtri
+          </button>
         </div>
       </aside>
 

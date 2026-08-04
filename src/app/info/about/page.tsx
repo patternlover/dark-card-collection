@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <div className="bg-black">
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
         <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
           <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
             <li>

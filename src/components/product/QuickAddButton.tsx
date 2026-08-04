@@ -67,7 +67,7 @@ export function QuickAddButton({ product, maxQuantity }: QuickAddButtonProps) {
       <button
         type="button"
         onClick={handleAdd}
-        className={`flex h-9 w-9 items-center justify-center border-2 border-[var(--accent)] bg-[var(--accent)] text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none ${added ? 'animate-atc-pop' : ''}`}
+        className={`flex h-9 w-9 cursor-pointer items-center justify-center border-2 border-[var(--accent)] bg-[var(--accent)] text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none ${added ? 'animate-atc-pop' : ''}`}
         title="Aggiungi al carrello"
       >
         {added ? (

@@ -15,7 +15,7 @@ const FREE_SHIPPING_THRESHOLD = '80,00 €'
 export default function ShippingReturnsPage() {
   return (
     <div className="bg-black">
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
         <Reveal>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-8">Spedizioni e Resi</h1>
           <p className="text-sm text-zinc-500 mb-8">
