@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Trash2, ShoppingBag, Minus, Plus } from 'lucide-react'
 import { useCart, type CartItem } from '@/hooks/useCart'
+import { Reveal } from '@/components/ui/Reveal'
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal, shipping, total } = useCart()
@@ -32,7 +33,9 @@ export default function CartPage() {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-white mb-8">Carrello</h1>
+        <Reveal>
+          <h1 className="text-3xl font-bold text-white mb-8">Carrello</h1>
+        </Reveal>
 
         {items.length === 0 ? (
           <div className="text-center py-16">
@@ -76,7 +79,7 @@ export default function CartPage() {
                         type="button"
                         onClick={() => handleMinus(item)}
                         aria-label="Diminuisci quantità"
-                        className="border-2 border-zinc-700 p-1 text-zinc-400 hover:text-white"
+                        className="cursor-pointer border-2 border-zinc-700 p-1 text-zinc-400 hover:text-white"
                       >
                         <Minus className="h-3 w-3" />
                       </button>
@@ -86,7 +89,7 @@ export default function CartPage() {
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         aria-label="Aumenta quantità"
                         disabled={item.quantity >= (item.maxQuantity || 99)}
-                        className="border-2 border-zinc-700 p-1 text-zinc-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+                        className="cursor-pointer border-2 border-zinc-700 p-1 text-zinc-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Plus className="h-3 w-3" />
                       </button>
@@ -103,7 +106,7 @@ export default function CartPage() {
                   <button
                     type="button"
                     onClick={() => handleRemove(item)}
-                    className="text-zinc-500 hover:text-red-500"
+                    className="cursor-pointer text-zinc-500 hover:text-red-500"
                     aria-label="Rimuovi"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -168,14 +171,14 @@ export default function CartPage() {
                 <button
                   type="button"
                   onClick={() => setConfirm(null)}
-                  className="flex-1 border-2 border-zinc-600 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-400 hover:text-white"
+                  className="flex-1 cursor-pointer border-2 border-zinc-600 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-zinc-400 hover:text-white"
                 >
                   Annulla
                 </button>
                 <button
                   type="button"
                   onClick={confirmAction}
-                  className="flex-1 border-2 border-red-500 bg-red-500 px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-red-400 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
+                  className="flex-1 cursor-pointer border-2 border-red-500 bg-red-500 px-4 py-2 text-sm font-bold text-black shadow-[2px_2px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:bg-red-400 hover:shadow-[3px_3px_0px_0px_#000] active:translate-0 active:shadow-none"
                 >
                   Rimuovi
                 </button>

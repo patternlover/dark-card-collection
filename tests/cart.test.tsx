@@ -55,6 +55,30 @@ describe('useCart clamp', () => {
     expect(screen.getByTestId('max').textContent).toBe('3')
   })
 
+  it('merges quantities for the same product id', () => {
+    function MergeHarness() {
+      const { addItem, items } = useCart()
+      return (
+        <div>
+          <button type="button" onClick={() => addItem({ id: 1, title: 'Test', slug: 'test', price: 10, maxQuantity: 5 }, 2)}>
+            add2
+          </button>
+          <span data-testid="rows">{items.length}</span>
+          <span data-testid="qty">{items[0]?.quantity ?? 0}</span>
+        </div>
+      )
+    }
+    render(
+      <CartProvider>
+        <MergeHarness />
+      </CartProvider>,
+    )
+    fireEvent.click(screen.getByText('add2'))
+    fireEvent.click(screen.getByText('add2'))
+    expect(screen.getByTestId('rows').textContent).toBe('1')
+    expect(screen.getByTestId('qty').textContent).toBe('4')
+  })
+
   it('QuickAddButton uses the group totalQuantity as maxQuantity', () => {
     render(
       <CartProvider>

@@ -15,6 +15,7 @@
   --ring: var(--accent);
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
+  --banner-h: 2.5rem;
 }
 
 body {

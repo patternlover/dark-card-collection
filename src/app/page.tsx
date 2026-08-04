@@ -1,12 +1,9 @@
 import type { Metadata } from 'next'
 import { JsonLd } from '@/components/seo/JsonLd'
-import { FreeShippingBanner } from '@/components/sections/FreeShippingBanner'
 import { HeroSection } from '@/components/sections/HeroSection'
 import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
 import { CollectionsShowcase } from '@/components/sections/CollectionsShowcase'
-import { PromoBand } from '@/components/sections/PromoBand'
 import { CartSocialProof } from '@/components/sections/CartSocialProof'
-import { HomepageFaq } from '@/components/sections/HomepageFaq'
 import { CtaBanner } from '@/components/sections/CtaBanner'
 import { TrustBadges } from '@/components/sections/TrustBadges'
 
@@ -110,13 +107,10 @@ export default function Home() {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <FreeShippingBanner />
       <HeroSection />
       <CartSocialProof />
       <FeaturedProducts />
       <CollectionsShowcase />
-      <PromoBand />
-      <HomepageFaq />
       <CtaBanner />
       <TrustBadges />
     </>

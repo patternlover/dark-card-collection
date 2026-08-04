@@ -7,6 +7,7 @@ import { loadStripe } from '@stripe/stripe-js'
 import { useCart } from '@/hooks/useCart'
 import { trackBeginCheckout } from '@/lib/analytics'
 import { LoadingFallback } from '@/components/ui/LoadingFallback'
+import { Reveal } from '@/components/ui/Reveal'
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
@@ -126,7 +127,9 @@ export default function CheckoutPage() {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <h1 className="mb-8 text-3xl font-bold text-white">Checkout</h1>
+        <Reveal>
+          <h1 className="mb-8 text-3xl font-bold text-white">Checkout</h1>
+        </Reveal>
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-800 bg-red-900/20 p-4 text-sm text-red-400">
@@ -145,7 +148,10 @@ export default function CheckoutPage() {
               </h2>
               <div className="space-y-3">
                 {items.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 text-sm">
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-lg border-2 border-transparent p-2 text-sm transition-colors hover:border-[var(--accent)] hover:bg-zinc-800/50"
+                  >
                     {item.image ? (
                       <img
                         src={item.image}
@@ -158,7 +164,9 @@ export default function CheckoutPage() {
                       <div className="h-11 w-11 rounded border border-zinc-800 bg-zinc-800" />
                     )}
                     <div className="flex flex-1 justify-between gap-2">
-                      <span className="text-zinc-300">{item.title}</span>
+                      <span className="text-zinc-300 transition-colors hover:text-[var(--accent)]">
+                        {item.title}
+                      </span>
                       <span className="shrink-0 text-white">
                         €{(item.price * item.quantity).toFixed(2)}
                       </span>

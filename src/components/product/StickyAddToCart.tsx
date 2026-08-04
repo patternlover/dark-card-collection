@@ -21,7 +21,37 @@ interface StickyAddToCartProps {
 
 export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartProps) {
   const [mounted, setMounted] = useState(false)
+  const [footerOffset, setFooterOffset] = useState(0)
   useEffect(() => setMounted(true), [])
+
+  useEffect(() => {
+    if (!mounted) return
+    const footer = document.querySelector('footer')
+    if (!footer) return
+
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const rect = footer.getBoundingClientRect()
+      const visible = Math.max(
+        0,
+        Math.min(window.innerHeight, rect.bottom) - Math.max(0, rect.top),
+      )
+      setFooterOffset(visible)
+    }
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [mounted])
+
   const displayPrice = product.storePrice || 0
 
   if (!mounted) return null
@@ -30,6 +60,7 @@ export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartPro
     <div
       data-testid="sticky-atc"
       className="fixed inset-x-0 bottom-0 z-[110] border-t-2 border-[var(--accent)] bg-black pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_0px_0px_#000]"
+      style={footerOffset > 0 ? { bottom: `${footerOffset}px` } : undefined}
     >
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <div className="min-w-0 shrink-0">

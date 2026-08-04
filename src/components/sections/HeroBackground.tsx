@@ -15,33 +15,25 @@ export function HeroBackground() {
     if (reduced) return
 
     let raf = 0
-    let mx = 0
-    let my = 0
-    let tx = 0
-    let ty = 0
     let sy = 0
 
-    const onMouse = (e: MouseEvent) => {
-      mx = (e.clientX / window.innerWidth - 0.5) * 2
-      my = (e.clientY / window.innerHeight - 0.5) * 2
-    }
     const onScroll = () => {
       sy = window.scrollY
     }
+
     const tick = () => {
-      tx += (mx * 26 - tx) * 0.08
-      ty += (my * 18 - ty) * 0.08
-      const scrollOffset = Math.max(-50, Math.min(0, -sy * 0.18))
-      el.style.transform = `translate3d(${tx.toFixed(2)}px, ${(ty + scrollOffset).toFixed(2)}px, 0)`
+      const progress = Math.min(1, sy / window.innerHeight)
+      const scale = 1.06 + progress * 0.02
+      const rotateZ = progress * 1.2 + Math.sin(sy * 0.003) * 0.8
+      const translateY = sy * 0.04
+      el.style.transform = `scale(${scale.toFixed(4)}) rotate(${rotateZ.toFixed(3)}deg) translateY(${translateY.toFixed(2)}px)`
       raf = requestAnimationFrame(tick)
     }
 
-    window.addEventListener('mousemove', onMouse)
     window.addEventListener('scroll', onScroll, { passive: true })
     raf = requestAnimationFrame(tick)
 
     return () => {
-      window.removeEventListener('mousemove', onMouse)
       window.removeEventListener('scroll', onScroll)
       cancelAnimationFrame(raf)
     }
@@ -51,7 +43,7 @@ export function HeroBackground() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none absolute inset-0 z-0 overflow-hidden will-change-transform"
+      className="pointer-events-none absolute inset-0 z-0 origin-center overflow-hidden will-change-transform"
     >
       <div className="animate-hero-glow absolute -right-24 top-0 h-[420px] w-[420px] rounded-full bg-[var(--accent)]/20 blur-3xl" />
       <div className="animate-hero-glow absolute -left-32 bottom-0 h-[380px] w-[380px] rounded-full bg-[var(--accent)]/10 blur-3xl [animation-delay:1.4s]" />

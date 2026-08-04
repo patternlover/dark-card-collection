@@ -7,6 +7,7 @@ import { CheckCircle, Loader2 } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
 import { trackPurchase } from '@/lib/analytics'
 import { proxyImageUrl } from '@/lib/proxy-image'
+import { Reveal } from '@/components/ui/Reveal'
 
 interface OrderItem {
   product: { title: string; imageUrl?: string | null; images?: Array<{ image?: { url: string } | null }>; image?: { url: string } | null } | null
@@ -82,9 +83,11 @@ function SuccessContent() {
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
         )}
 
-        <h1 className="text-3xl font-bold text-white mb-4">
-          {loading ? 'Verifica ordine...' : 'Ordine confermato!'}
-        </h1>
+        <Reveal>
+          <h1 className="text-3xl font-bold text-white mb-4">
+            {loading ? 'Verifica ordine...' : 'Ordine confermato!'}
+          </h1>
+        </Reveal>
 
         <p className="text-zinc-400 mb-8">
           {order
@@ -167,7 +170,9 @@ export default function CheckoutSuccessPage() {
         <div className="bg-black">
           <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
             <Loader2 className="h-16 w-16 text-zinc-500 mx-auto mb-6 animate-spin" />
-            <h1 className="text-3xl font-bold text-white mb-4">Caricamento...</h1>
+            <Reveal>
+              <h1 className="text-3xl font-bold text-white mb-4">Caricamento...</h1>
+            </Reveal>
           </div>
         </div>
       }

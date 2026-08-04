@@ -64,11 +64,11 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.title}
           </h3>
 
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between gap-2 pr-14">
             <span className="text-lg font-bold text-[var(--accent)]">
               {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : ''}
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-zinc-600">{product.language}</span>
+            <span className="shrink-0 text-[10px] uppercase tracking-wider text-zinc-500">{product.language}</span>
           </div>
         </div>
       </Link>

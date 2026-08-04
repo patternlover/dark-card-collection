@@ -213,6 +213,58 @@ export default async function ProductPage({
       (p: any) => (p.status === 'listed' || p.status === 'hold') && p.storePrice && p.storePrice > 0,
     ) || product
 
+  const badges = (
+    <div className="flex flex-wrap gap-2">
+      {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
+      {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
+      {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
+      <Badge variant="default">
+        {statusLabels[product.status] || product.status}
+      </Badge>
+    </div>
+  )
+
+  const breadcrumb = (
+    <nav aria-label="Breadcrumb" className="text-sm font-medium uppercase tracking-wider">
+      <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
+        <li>
+          <Link href="/" className="transition-colors hover:text-[var(--accent)]">
+            Home
+          </Link>
+        </li>
+        <li aria-hidden="true">/</li>
+        <li>
+          <Link href="/shop" className="transition-colors hover:text-[var(--accent)]">
+            Shop
+          </Link>
+        </li>
+        <li aria-hidden="true">/</li>
+        <li>
+          <Link href="/shop/collections" className="transition-colors hover:text-[var(--accent)]">
+            Collezioni
+          </Link>
+        </li>
+        {collectionName && (
+          <>
+            <li aria-hidden="true">/</li>
+            <li>
+              {collectionSlug ? (
+                <Link
+                  href={`/shop/collections/${collectionSlug}`}
+                  className="transition-colors hover:text-[var(--accent)]"
+                >
+                  {collectionName}
+                </Link>
+              ) : (
+                <span className="text-zinc-300">{collectionName}</span>
+              )}
+            </li>
+          </>
+        )}
+      </ol>
+    </nav>
+  )
+
   const productUrl = `${SITE_URL}/products/${product.slug}`
   const availability =
     product.status === 'sold'
@@ -307,6 +359,11 @@ export default async function ProductPage({
       <JsonLd data={jsonLd} />
       <div className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+          <div className="space-y-6 lg:hidden">
+            {badges}
+            {breadcrumb}
+          </div>
+
           <div className="relative aspect-square w-full">
             {imgSrc ? (
               <ProductImage
@@ -325,53 +382,8 @@ export default async function ProductPage({
 
           <Reveal>
             <div className="space-y-6">
-              <div className="flex flex-wrap gap-2">
-              {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
-              {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
-              {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
-              <Badge variant="default">
-                {statusLabels[product.status] || product.status}
-              </Badge>
-            </div>
-
-            <nav aria-label="Breadcrumb" className="text-sm font-medium uppercase tracking-wider">
-              <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
-                <li>
-                  <Link href="/" className="transition-colors hover:text-[var(--accent)]">
-                    Home
-                  </Link>
-                </li>
-                <li aria-hidden="true">/</li>
-                <li>
-                  <Link href="/shop" className="transition-colors hover:text-[var(--accent)]">
-                    Shop
-                  </Link>
-                </li>
-                <li aria-hidden="true">/</li>
-                <li>
-                  <Link href="/shop/collections" className="transition-colors hover:text-[var(--accent)]">
-                    Collezioni
-                  </Link>
-                </li>
-                {collectionName && (
-                  <>
-                    <li aria-hidden="true">/</li>
-                    <li>
-                      {collectionSlug ? (
-                        <Link
-                          href={`/shop/collections/${collectionSlug}`}
-                          className="transition-colors hover:text-[var(--accent)]"
-                        >
-                          {collectionName}
-                        </Link>
-                      ) : (
-                        <span className="text-zinc-300">{collectionName}</span>
-                      )}
-                    </li>
-                  </>
-                )}
-              </ol>
-            </nav>
+              <div className="hidden lg:block">{badges}</div>
+              <div className="hidden lg:block">{breadcrumb}</div>
 
             <h1 className="text-3xl font-black text-white uppercase tracking-tight">{product.title}</h1>
 

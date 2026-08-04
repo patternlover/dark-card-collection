@@ -18,6 +18,8 @@ interface ClientListingProps {
   grouped?: boolean
   emptyTitle?: string
   emptySubtitle?: string
+  title?: string
+  subtitle?: string
 }
 
 interface Filters {
@@ -41,6 +43,8 @@ export function ClientListing({
   grouped = true,
   emptyTitle = 'Nessun prodotto trovato.',
   emptySubtitle = 'Prova a modificare i filtri di ricerca.',
+  title,
+  subtitle,
 }: ClientListingProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -121,12 +125,21 @@ export function ClientListing({
     })
   }, [products, filters])
 
-  const resultCount = filtered.length
+  const unique = useMemo(() => {
+    const seen = new Map<string, any>()
+    for (const p of filtered) {
+      const key = p.title || 'Untitled'
+      if (!seen.has(key)) seen.set(key, p)
+    }
+    return [...seen.values()]
+  }, [filtered])
+
   const groups = useMemo(() => (grouped ? groupProducts(filtered) : []), [grouped, filtered])
+  const resultCount = grouped ? groups.length : unique.length
 
   return (
     <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
-      <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-24 lg:mb-0 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto lg:p-5">
+      <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -269,6 +282,15 @@ export function ClientListing({
       </aside>
 
       <div className="min-w-0">
+        {title && (
+          <Reveal>
+            <div className="mb-6 lg:mb-8">
+              <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
+              {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
+            </div>
+          </Reveal>
+        )}
+
         <div className="mb-6">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
@@ -303,7 +325,7 @@ export function ClientListing({
         ) : (
           <Reveal>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((product) => (
+              {unique.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

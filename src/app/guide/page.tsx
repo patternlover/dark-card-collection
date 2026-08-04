@@ -84,14 +84,14 @@ export default function GuideHubPage() {
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
           {guides.map((guide, i) => (
-            <Reveal key={guide.href} delay={i * 70}>
+            <Reveal key={guide.href} delay={i * 70} className="h-full">
               <Link
                 href={guide.href}
-                className="block border-2 border-zinc-700 bg-zinc-900 p-6 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
+                className="flex h-full flex-col border-2 border-zinc-700 bg-zinc-900 p-6 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
               >
                 <h2 className="text-lg font-bold text-white">{guide.title}</h2>
                 <p className="mt-2 text-sm text-zinc-400">{guide.description}</p>
-                <p className="mt-4 text-sm text-[var(--accent)]">Leggi la guida →</p>
+                <p className="mt-auto pt-4 text-sm text-[var(--accent)]">Leggi la guida →</p>
               </Link>
             </Reveal>
           ))}

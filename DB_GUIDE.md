@@ -310,7 +310,8 @@ Tutte le server action di lettura/scrittura chiamano `requireAuth()` e rispondon
 | `DATABASE_URI` | Neon | Connessione Postgres |
 | `PAYLOAD_SECRET` | Payload | Firma sessioni admin + fallback auth cron |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob | Upload/lettura immagini `media` |
-| `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe | Checkout + webhook |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe | Checkout (server) + webhook |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Checkout embedded lato client (stessa chiave di `STRIPE_PUBLISHABLE_KEY`) |
 | `NEXT_PUBLIC_SITE_URL` | - | URL pubblico (success/cancel url) |
 | `RESEND_API_KEY` / `EMAIL_FROM` | Resend | Email conferma ordine (opzionale) |
 | `CRON_SECRET` | - | Auth dei cron (se impostato) |
