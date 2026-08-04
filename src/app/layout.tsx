@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Suspense } from 'react'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/hooks/useCart'
@@ -6,6 +7,7 @@ import { ConsentProvider } from '@/hooks/useConsent'
 import { AnalyticsProvider } from '@/components/layout/AnalyticsProvider'
 import { ConsentModeScript } from '@/components/layout/ConsentModeScript'
 import { LayoutShell } from '@/components/layout/LayoutShell'
+import { RouteProgress } from '@/components/ui/RouteProgress'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
 
@@ -92,6 +94,9 @@ export default function RootLayout({
     <html lang="it">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ConsentModeScript />
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
         <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
         {/* hreflang renderizzato minuscolo per compatibilità crawler (React usa hrefLang di default) */}
         <link rel="alternate" {...({ hreflang: 'it-IT', href: '/' } as React.HTMLAttributes<HTMLLinkElement>)} />

@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { google } from 'googleapis'
-import { setDashSession } from '@/lib/dash-auth'
+import { COOKIE_NAME, SESSION_COOKIE_OPTIONS, signToken } from '@/lib/dash-auth'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, '')
+
+const STATE_COOKIE = 'dcc-oauth-state'
+const STATE_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 600,
+}
 
 function isAllowedEmail(email: string): boolean {
   const raw = process.env.DASHBOARD_GOOGLE_EMAILS || ''
@@ -20,10 +29,13 @@ export async function GET(request: Request) {
   const googleError = url.searchParams.get('error')
 
   const cookieStore = await cookies()
-  const expectedState = cookieStore.get('dcc-oauth-state')?.value
-  cookieStore.delete('dcc-oauth-state')
+  const expectedState = cookieStore.get(STATE_COOKIE)?.value
 
-  const fail = (code: string) => NextResponse.redirect(`${SITE_URL}/dashboard?error=${code}`)
+  const fail = (error: string) => {
+    const res = NextResponse.redirect(`${SITE_URL}/dashboard?error=${error}`)
+    res.cookies.set(STATE_COOKIE, '', { ...STATE_COOKIE_OPTIONS, maxAge: 0 })
+    return res
+  }
 
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
@@ -46,8 +58,10 @@ export async function GET(request: Request) {
 
     if (!isAllowedEmail(payload.email)) return fail('google-not-allowed')
 
-    await setDashSession(`google:${payload.email}`)
-    return NextResponse.redirect(`${SITE_URL}/dashboard`)
+    const res = NextResponse.redirect(`${SITE_URL}/dashboard`)
+    res.cookies.set(COOKIE_NAME, signToken(`google:${payload.email}`), SESSION_COOKIE_OPTIONS)
+    res.cookies.set(STATE_COOKIE, '', { ...STATE_COOKIE_OPTIONS, maxAge: 0 })
+    return res
   } catch (err) {
     console.error('Google OAuth callback error:', err)
     return fail('google-error')

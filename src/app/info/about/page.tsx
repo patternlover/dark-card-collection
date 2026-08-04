@@ -28,7 +28,7 @@ export default function AboutPage() {
         </nav>
 
         <Reveal>
-          <h1 className="text-3xl font-bold text-white mb-8">Chi Siamo</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-8">Chi Siamo</h1>
         </Reveal>
 
         <div className="prose prose-invert max-w-none space-y-6 text-zinc-400">

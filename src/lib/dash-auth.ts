@@ -4,6 +4,14 @@ import { cookies } from 'next/headers'
 export const COOKIE_NAME = 'dcc-dash'
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
+export const SESSION_COOKIE_OPTIONS = {
+  httpOnly: true,
+  sameSite: 'lax' as const,
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: SESSION_TTL_MS / 1000,
+}
+
 function getSecret(): string {
   return process.env.PAYLOAD_SECRET || 'dark-card-collection-dashboard'
 }
@@ -32,13 +40,7 @@ export async function isAuthed(): Promise<boolean> {
 
 export async function setDashSession(value: string): Promise<void> {
   const cookieStore = await cookies()
-  cookieStore.set(COOKIE_NAME, signToken(value), {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: SESSION_TTL_MS / 1000,
-  })
+  cookieStore.set(COOKIE_NAME, signToken(value), SESSION_COOKIE_OPTIONS)
 }
 
 export async function clearDashSession(): Promise<void> {

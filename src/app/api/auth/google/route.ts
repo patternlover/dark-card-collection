@@ -1,6 +1,5 @@
 import crypto from 'crypto'
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, '')
 
@@ -14,14 +13,6 @@ export async function GET() {
     process.env.GOOGLE_OAUTH_REDIRECT_URI || `${SITE_URL}/api/auth/google/callback`
 
   const state = crypto.randomBytes(24).toString('hex')
-  const cookieStore = await cookies()
-  cookieStore.set('dcc-oauth-state', state, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 600,
-  })
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -33,5 +24,13 @@ export async function GET() {
     state,
   })
 
-  return NextResponse.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`)
+  const res = NextResponse.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`)
+  res.cookies.set('dcc-oauth-state', state, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 600,
+  })
+  return res
 }

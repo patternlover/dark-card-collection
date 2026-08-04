@@ -17,7 +17,7 @@ export default function ShippingReturnsPage() {
     <div className="bg-black">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <Reveal>
-          <h1 className="text-3xl font-bold text-white mb-8">Spedizioni e Resi</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-8">Spedizioni e Resi</h1>
           <p className="text-sm text-zinc-500 mb-8">
             Ultimo aggiornamento: 18 luglio 2026
           </p>
