@@ -87,7 +87,7 @@ function SuccessContent() {
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   {proxyImageUrl(item.product?.imageUrl || item.product?.images?.[0]?.image?.url || item.product?.image?.url) ? (
-                    <img src={proxyImageUrl(item.product?.imageUrl || item.product?.images?.[0]?.image?.url || item.product?.image?.url)!} alt={item.product?.title || ''} className="h-10 w-10 rounded object-cover" />
+                    <img src={proxyImageUrl(item.product?.imageUrl || item.product?.images?.[0]?.image?.url || item.product?.image?.url)!} alt={item.product?.title || ''} width={40} height={40} className="h-10 w-10 rounded object-cover" />
                   ) : (
                     <div className="h-10 w-10 rounded bg-zinc-800" />
                   )}

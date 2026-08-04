@@ -1,8 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import { AddToCartButton } from './AddToCartButton'
-import { useConsent } from '@/hooks/useConsent'
 
 interface StickyAddToCartProps {
   product: {
@@ -20,64 +18,28 @@ interface StickyAddToCartProps {
 }
 
 export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartProps) {
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-  const [show, setShow] = useState(false)
-  const { hasInteracted } = useConsent()
-
-  useEffect(() => {
-    let raf = 0
-
-    const update = () => {
-      const el = sentinelRef.current
-      if (!el) return
-      const vh = window.innerHeight || document.documentElement.clientHeight
-      const rect = el.getBoundingClientRect()
-      const buyBoxOut = rect.top < 0 || rect.top >= vh
-      const footer = document.querySelector('footer')
-      const footerTop = footer ? footer.getBoundingClientRect().top : Number.POSITIVE_INFINITY
-      setShow(buyBoxOut && footerTop > vh)
-    }
-
-    update()
-    raf = window.requestAnimationFrame(update)
-    window.addEventListener('scroll', update, { passive: true })
-    window.addEventListener('resize', update)
-    return () => {
-      window.cancelAnimationFrame(raf)
-      window.removeEventListener('scroll', update)
-      window.removeEventListener('resize', update)
-    }
-  }, [])
-
   const displayPrice = product.storePrice || 0
-  const visible = show && hasInteracted
 
   return (
-    <>
-      <div ref={sentinelRef} aria-hidden="true" data-testid="atc-sentinel" />
-
-      <div
-        data-testid="sticky-atc"
-        aria-hidden={!visible}
-        className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-[#FACC15] bg-black/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_0px_0px_#000] backdrop-blur transition-transform duration-300"
-        style={{ transform: visible ? 'translateY(0)' : 'translateY(100%)' }}
-      >
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="min-w-0 shrink-0">
-            <p className="text-lg font-black leading-none text-[#FACC15]">
-              {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
-            </p>
-            <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
-              {maxQuantity > 0
-                ? `${maxQuantity} disponibil${maxQuantity === 1 ? 'e' : 'i'}`
-                : 'Non disponibile'}
-            </p>
-          </div>
-          <div className="w-full max-w-sm sm:max-w-md">
-            <AddToCartButton product={product} maxQuantity={maxQuantity} />
-          </div>
+    <div
+      data-testid="sticky-atc"
+      className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-[#FACC15] bg-black/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_0px_0px_#000] backdrop-blur"
+    >
+      <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+        <div className="min-w-0 shrink-0">
+          <p className="text-lg font-black leading-none text-[#FACC15]">
+            {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
+          </p>
+          <p className="mt-1 text-[11px] font-medium uppercase tracking-wide text-zinc-500">
+            {maxQuantity > 0
+              ? `${maxQuantity} disponibil${maxQuantity === 1 ? 'e' : 'i'}`
+              : 'Non disponibile'}
+          </p>
+        </div>
+        <div className="w-full max-w-sm sm:max-w-md">
+          <AddToCartButton product={product} maxQuantity={maxQuantity} />
         </div>
       </div>
-    </>
+    </div>
   )
 }

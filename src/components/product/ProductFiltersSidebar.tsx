@@ -25,7 +25,7 @@ export function ProductFiltersSidebar({ action, categories = [], collections = [
   const active = hasActiveFilters(params)
 
   return (
-    <aside className="h-fit border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-24 lg:p-5">
+    <aside className="h-fit border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-16 lg:p-5">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

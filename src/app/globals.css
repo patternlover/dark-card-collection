@@ -60,8 +60,8 @@ body {
   box-shadow: 6px 6px 0px 0px #27272a;
 }
 
-/* Gengar hero background */
-@keyframes gengar-bob {
+/* Hero background animations */
+@keyframes hero-bob {
   0%,
   100% {
     transform: translateY(0) rotate(-3deg);
@@ -71,27 +71,27 @@ body {
   }
 }
 
-.animate-gengar-bob {
-  animation: gengar-bob 6s ease-in-out infinite;
+.animate-hero-bob {
+  animation: hero-bob 6s ease-in-out infinite;
 }
 
-@keyframes gengar-glow {
+@keyframes hero-glow {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.35;
   }
   50% {
-    opacity: 0.9;
+    opacity: 0.85;
   }
 }
 
-.animate-gengar-glow {
-  animation: gengar-glow 4.5s ease-in-out infinite;
+.animate-hero-glow {
+  animation: hero-glow 4.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-gengar-bob,
-  .animate-gengar-glow {
+  .animate-hero-bob,
+  .animate-hero-glow {
     animation: none;
   }
 }

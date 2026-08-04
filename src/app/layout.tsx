@@ -36,6 +36,16 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    'max-snippet': -1,
+    'max-image-preview': 'large',
+    'max-video-preview': -1,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
   },
   openGraph: {
     title: 'Dark Card Collection | Pokémon TCG Sigillati',
@@ -61,8 +71,12 @@ export const metadata: Metadata = {
       'Booster Box, ETB e Collection Box Pokémon TCG originali e sigillati. Spedizione gratuita dagli 80 € in Italia.',
     images: ['/og.png'],
   },
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: '/icon.svg',
+    apple: '/apple-touch-icon.png',
   },
   manifest: '/manifest.webmanifest',
   applicationName: 'Dark Card Collection',
@@ -76,6 +90,20 @@ export default function RootLayout({
   return (
     <html lang="it">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
+        {/* hreflang renderizzato minuscolo per compatibilità crawler (React usa hrefLang di default) */}
+        <link rel="alternate" {...({ hreflang: 'it-IT', href: '/' } as React.HTMLAttributes<HTMLLinkElement>)} />
+        <link rel="alternate" {...({ hreflang: 'x-default', href: '/' } as React.HTMLAttributes<HTMLLinkElement>)} />
+        <noscript>
+          <ul className="hidden">
+            <li><a href="/shop">Shop</a></li>
+            <li><a href="/shop/collections">Collezioni</a></li>
+            <li><a href="/guide">Guide</a></li>
+            <li><a href="/info/faq">FAQ</a></li>
+            <li><a href="/info/about">Chi Siamo</a></li>
+            <li><a href="/info/contact">Contatti</a></li>
+          </ul>
+        </noscript>
         <ConsentProvider>
           <AnalyticsProvider>
             <CartProvider>

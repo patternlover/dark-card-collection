@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { getPayloadClient } from '@/lib/payload'
+import { formatCollectionName } from '@/lib/collections'
 
 export async function CollectionsShowcase() {
   let collections: any[] = []
@@ -8,7 +9,7 @@ export async function CollectionsShowcase() {
     const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'collections',
-      limit: 12,
+      limit: 4,
       sort: 'name',
     })
     collections = result.docs
@@ -23,7 +24,7 @@ export async function CollectionsShowcase() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white">
-            Le Collezioni in Vendita
+            Quali collezioni sono in vendita?
           </h2>
           <Link
             href="/shop/collections"
@@ -40,7 +41,7 @@ export async function CollectionsShowcase() {
               href={`/shop/collections/${col.slug}`}
               className="rounded-lg border-2 border-zinc-800 bg-zinc-900 p-4 transition-colors hover:border-[#FACC15]"
             >
-              <h3 className="font-semibold text-white line-clamp-2">{col.name}</h3>
+              <h3 className="font-semibold text-white line-clamp-2">{formatCollectionName(col.name)}</h3>
               {col.releaseDate && (
                 <p className="mt-1 text-xs text-zinc-500">
                   Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}

@@ -40,7 +40,10 @@ export function ProductImage({ src, alt, sizes, priority = false, className }: P
     <img
       src={proxyImageUrl(src) || src}
       alt={alt}
+      width={800}
+      height={800}
       loading={priority ? undefined : 'lazy'}
+      fetchPriority={priority ? 'high' : undefined}
       decoding="async"
       className={`h-full w-full ${className || ''}`}
     />

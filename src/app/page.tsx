@@ -54,6 +54,29 @@ const jsonLd = {
       currenciesAccepted: 'EUR',
       paymentAccepted: 'Carta di credito, debito',
       areaServed: 'IT',
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: 'IT',
+      },
+      knowsAbout: [
+        'Pokémon TCG',
+        'Booster Box',
+        'Elite Trainer Box (ETB)',
+        'Collection Box',
+        'Super Premium Collection',
+        'Carte Pokémon sigillate',
+        'Collezionismo carte Pokémon',
+      ],
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'Catalogo Pokémon TCG sigillati',
+        itemListElement: [
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Booster Box Pokémon' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Elite Trainer Box (ETB)' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Collection Box Pokémon' } },
+          { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'Super Premium Collection (SPC)' } },
+        ],
+      },
       email: 'darkcardcollection@gmail.com',
       contactPoint: {
         '@type': 'ContactPoint',

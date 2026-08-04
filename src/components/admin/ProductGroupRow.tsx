@@ -85,7 +85,7 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
       <tr className="border-b-2 border-zinc-800 bg-zinc-900">
         <td className="px-4 py-3">
           {imgSrc ? (
-            <img src={imgSrc} alt={group.title} className="h-10 w-10 border border-zinc-700 object-cover" loading="lazy" />
+            <img src={imgSrc} alt={group.title} width={40} height={40} className="h-10 w-10 border border-zinc-700 object-cover" loading="lazy" />
           ) : (
             <div className="h-10 w-10 border border-zinc-700 bg-zinc-800 flex items-center justify-center text-zinc-600 text-xs">-</div>
           )}
@@ -129,7 +129,7 @@ export function ProductGroupRow({ group, password, onProductUpdated }: ProductGr
         >
           <td className="px-4 py-2 pl-12">
             {proxyImageUrl(p.imageUrl) ? (
-              <img src={proxyImageUrl(p.imageUrl)!} alt="" className="h-8 w-8 border border-zinc-700 object-cover" loading="lazy" />
+              <img src={proxyImageUrl(p.imageUrl)!} alt="" width={32} height={32} className="h-8 w-8 border border-zinc-700 object-cover" loading="lazy" />
             ) : (
               <div className="h-8 w-8 border border-zinc-700 bg-zinc-800" />
             )}

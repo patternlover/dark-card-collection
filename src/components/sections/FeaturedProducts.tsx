@@ -26,7 +26,7 @@ export async function FeaturedProducts() {
     <section className="bg-black py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">In Evidenza</h2>
+          <h2 className="text-2xl font-bold text-white">Quali prodotti sono in evidenza?</h2>
           <a
             href="/shop"
             className="text-sm text-zinc-400 hover:text-white transition-colors"
