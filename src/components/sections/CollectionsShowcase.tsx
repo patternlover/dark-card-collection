@@ -21,7 +21,7 @@ export async function CollectionsShowcase() {
   if (collections.length === 0) return null
 
   return (
-    <section className="border-t-2 border-zinc-800 bg-black py-16">
+    <section className="border-t-2 border-zinc-800 py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white">

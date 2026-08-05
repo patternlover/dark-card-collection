@@ -84,7 +84,7 @@ function SuccessContent() {
         )}
 
         <Reveal>
-          <h1 className="text-3xl font-bold text-white mb-4">
+          <h1 className="mb-4 text-3xl font-black uppercase tracking-tight text-white">
             {loading ? 'Verifica ordine...' : 'Ordine confermato!'}
           </h1>
         </Reveal>
@@ -171,7 +171,7 @@ export default function CheckoutSuccessPage() {
           <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
             <Loader2 className="h-16 w-16 text-zinc-500 mx-auto mb-6 animate-spin" />
             <Reveal>
-              <h1 className="text-3xl font-bold text-white mb-4">Caricamento...</h1>
+              <h1 className="mb-4 text-3xl font-black uppercase tracking-tight text-white">Caricamento...</h1>
             </Reveal>
           </div>
         </div>

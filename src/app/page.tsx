@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { HeroSection } from '@/components/sections/HeroSection'
+import { HeroBackground } from '@/components/sections/HeroBackground'
 import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
 import { CollectionsShowcase } from '@/components/sections/CollectionsShowcase'
 import { CartSocialProof } from '@/components/sections/CartSocialProof'
@@ -107,10 +108,15 @@ export default function Home() {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <HeroSection />
-      <CartSocialProof />
-      <FeaturedProducts />
-      <CollectionsShowcase />
+      <div className="relative overflow-hidden bg-black">
+        <HeroBackground />
+        <div className="relative z-10">
+          <HeroSection />
+          <CartSocialProof />
+          <FeaturedProducts />
+          <CollectionsShowcase />
+        </div>
+      </div>
       <CtaBanner />
       <TrustBadges />
     </>

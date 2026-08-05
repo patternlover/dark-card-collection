@@ -47,10 +47,10 @@ describe('StickyAddToCart', () => {
     expect(sticky.style.transform).not.toContain('translateY(100%)')
   })
 
-  it('sits above the cookie consent banner so clicks are always possible', () => {
+  it('sits below the cookie consent banner so consent stays clickable', () => {
     renderSticky()
     const sticky = screen.getByTestId('sticky-atc')
-    expect(sticky.className).toContain('z-[110]')
+    expect(sticky.className).toContain('z-[100]')
   })
 
   it('shows the price and stock in the bar', () => {

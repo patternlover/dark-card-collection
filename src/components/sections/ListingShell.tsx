@@ -26,7 +26,7 @@ export function ListingShell({
 }: ListingShellProps) {
   return (
     <div className="bg-black">
-      <div className="mx-auto max-w-7xl px-4 pt-12 pb-10 sm:px-6 lg:px-8 lg:pt-16">
+      <div className="mx-auto max-w-7xl px-4 pt-14 pb-10 sm:px-6 lg:px-8 lg:pt-32">
         <Suspense
           fallback={
             <div className="py-16 text-center">

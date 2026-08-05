@@ -110,7 +110,7 @@ export default function CheckoutPage() {
     <div className="bg-black">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Reveal>
-          <h1 className="mb-8 text-3xl font-bold text-white">Checkout</h1>
+          <h1 className="mb-8 text-3xl font-black uppercase tracking-tight text-white">Checkout</h1>
         </Reveal>
 
         {error && (

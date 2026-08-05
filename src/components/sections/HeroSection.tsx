@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowRight, Zap, PackageCheck, ShieldCheck } from 'lucide-react'
-import { HeroBackground } from './HeroBackground'
 import { Reveal } from '@/components/ui/Reveal'
 
 const stats = [
@@ -11,8 +10,7 @@ const stats = [
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden border-b-2 border-zinc-700 bg-black">
-      <HeroBackground />
+    <section className="relative overflow-hidden border-b-2 border-zinc-700">
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div className="grid items-center gap-14 lg:grid-cols-2">
           <Reveal className="text-center lg:text-left">
