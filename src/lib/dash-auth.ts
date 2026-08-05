@@ -23,9 +23,13 @@ export function signToken(value: string): string {
 }
 
 export function verifyToken(token: string): boolean {
-  const parts = token.split('.')
-  if (parts.length !== 3) return false
-  const [value, ts, sig] = parts
+  const lastDot = token.lastIndexOf('.')
+  if (lastDot === -1) return false
+  const secondLastDot = token.lastIndexOf('.', lastDot - 1)
+  if (secondLastDot === -1) return false
+  const sig = token.slice(lastDot + 1)
+  const ts = token.slice(secondLastDot + 1, lastDot)
+  const value = token.slice(0, secondLastDot)
   const expected = crypto.createHmac('sha256', getSecret()).update(`${value}.${ts}`).digest('hex')
   if (sig !== expected) return false
   if (Date.now() - Number(ts) > SESSION_TTL_MS) return false

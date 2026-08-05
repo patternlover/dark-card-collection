@@ -13,12 +13,6 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
 )
 
-function getAccentColor() {
-  if (typeof window === 'undefined') return '#FACC15'
-  const val = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()
-  return val || '#FACC15'
-}
-
 export default function CheckoutPage() {
   const { items, shipping, total } = useCart()
   const [loading, setLoading] = useState<boolean>(() => (items.length === 0 ? false : true))
@@ -77,18 +71,6 @@ export default function CheckoutPage() {
 
         const checkout = await stripe.createEmbeddedCheckoutPage({
           clientSecret: data.client_secret,
-          appearance: {
-            theme: 'night',
-            variables: {
-              colorPrimary: getAccentColor(),
-              colorBackground: '#0a0a0a',
-              colorText: '#fafafa',
-              colorTextSecondary: '#a1a1aa',
-              borderRadius: '8px',
-            },
-          },
-        } as Parameters<typeof stripe.createEmbeddedCheckoutPage>[0] & {
-          appearance: { theme: 'night'; variables: Record<string, string> }
         })
 
         if (cancelled) return
