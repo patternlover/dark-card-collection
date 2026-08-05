@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { SlidersHorizontal, ChevronDown, Search } from 'lucide-react'
 import { ProductGroupCard } from '@/components/product/ProductGroupCard'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -152,27 +153,59 @@ export function ClientListing({
   const groups = useMemo(() => (grouped ? groupProducts(filtered) : []), [grouped, filtered])
   const resultCount = grouped ? groups.length : unique.length
 
+  const breadcrumbs = useMemo(() => {
+    const crumbs: { label: string; href?: string }[] = [{ label: 'Home', href: '/' }]
+    if (basePath === '/shop') {
+      crumbs.push({ label: 'Shop' })
+    } else if (basePath === '/shop/bestsellers') {
+      crumbs.push({ label: 'Shop', href: '/shop' }, { label: 'Bestseller' })
+    } else if (basePath === '/shop/new-arrivals') {
+      crumbs.push({ label: 'Shop', href: '/shop' }, { label: 'Novità' })
+    } else if (basePath === '/shop/preorders') {
+      crumbs.push({ label: 'Shop', href: '/shop' }, { label: 'In Attesa' })
+    }
+    return crumbs
+  }, [basePath])
+
   return (
-    <div>
-      <div className="mb-4 lg:hidden">
-        <SearchInput value={filters.q} onChange={(v) => updateFilters({ q: v })} />
+    <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start">
+      <div className="hidden lg:block" aria-hidden="true" />
+
+      <div className="min-w-0">
+        <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
+          <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
+            {breadcrumbs.map((crumb, i) => (
+              <li key={crumb.label} className="flex items-center gap-x-2">
+                {i > 0 && <span aria-hidden="true">/</span>}
+                {crumb.href ? (
+                  <Link href={crumb.href} className="transition-colors hover:text-[var(--accent)]">
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span className="text-[var(--accent)] underline decoration-[var(--accent)] decoration-2 underline-offset-8">
+                    {crumb.label}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ol>
+        </nav>
+
+        {title && (
+          <Reveal>
+            <div className="mb-6">
+              <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
+              {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
+            </div>
+          </Reveal>
+        )}
+
+        <div className="mb-6">
+          <SearchInput value={filters.q} onChange={(v) => updateFilters({ q: v })} />
+        </div>
       </div>
 
-      {title && (
-        <Reveal className="hidden lg:block">
-          <div className="mb-8">
-            <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
-            {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
-          </div>
-        </Reveal>
-      )}
-
-      <div className="mb-6 hidden lg:block">
-        <SearchInput value={filters.q} onChange={(v) => updateFilters({ q: v })} />
-      </div>
-
-      <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
-        <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:mt-8 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
+      <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -317,15 +350,6 @@ export function ClientListing({
       </aside>
 
       <div className="min-w-0">
-        {title && (
-          <Reveal className="lg:hidden">
-            <div className="mb-6">
-              <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
-              {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
-            </div>
-          </Reveal>
-        )}
-
         <p className="mb-4 text-xs text-zinc-500">
           {resultCount === 1 ? '1 prodotto' : `${resultCount} prodotti`}
           {active ? ' trovati' : ' disponibili'}
@@ -353,7 +377,6 @@ export function ClientListing({
             </div>
           </Reveal>
         )}
-        </div>
       </div>
     </div>
   )
