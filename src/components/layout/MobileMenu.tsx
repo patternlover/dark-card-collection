@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { X } from 'lucide-react'
 
 interface MobileMenuProps {
@@ -10,7 +11,19 @@ interface MobileMenuProps {
   items: { label: string; href: string }[]
 }
 
+function isNavActive(pathname: string, href: string) {
+  if (href === '/shop') {
+    return pathname === '/shop' || (pathname.startsWith('/shop/') && !pathname.startsWith('/shop/collections'))
+  }
+  if (href === '/shop/collections') {
+    return pathname === '/shop/collections' || pathname.startsWith('/shop/collections/')
+  }
+  return pathname === href
+}
+
 export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
+  const pathname = usePathname()
+
   useEffect(() => {
     if (!isOpen) return
     const original = document.body.style.overflow
@@ -55,7 +68,11 @@ export function MobileMenu({ isOpen, onClose, items }: MobileMenuProps) {
             key={item.href}
             href={item.href}
             onClick={onClose}
-            className="border-b border-zinc-800 py-5 text-2xl font-black uppercase tracking-wide text-white transition-colors hover:text-[var(--accent)]"
+            className={
+              isNavActive(pathname, item.href)
+                ? 'border-b border-zinc-800 py-5 text-2xl font-black uppercase tracking-wide text-[var(--accent)] underline decoration-[var(--accent)] decoration-2 underline-offset-8'
+                : 'border-b border-zinc-800 py-5 text-2xl font-black uppercase tracking-wide text-white transition-colors hover:text-[var(--accent)]'
+            }
           >
             {item.label}
           </Link>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Search, ShoppingBag, Menu, X } from 'lucide-react'
 import { MobileMenu } from './MobileMenu'
 import { useCart } from '@/hooks/useCart'
@@ -14,9 +15,20 @@ const navItems = [
   { label: 'Contatti', href: '/info/contact' },
 ]
 
+function isNavActive(pathname: string, href: string) {
+  if (href === '/shop') {
+    return pathname === '/shop' || (pathname.startsWith('/shop/') && !pathname.startsWith('/shop/collections'))
+  }
+  if (href === '/shop/collections') {
+    return pathname === '/shop/collections' || pathname.startsWith('/shop/collections/')
+  }
+  return pathname === href
+}
+
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { itemCount } = useCart()
+  const pathname = usePathname()
 
   return (
     <header className="sticky top-[var(--banner-h)] z-[130] border-b-2 border-zinc-700 bg-black">
@@ -36,7 +48,11 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-[var(--accent)]"
+                className={
+                  isNavActive(pathname, item.href)
+                    ? 'text-sm font-medium text-[var(--accent)] underline decoration-[var(--accent)] decoration-2 underline-offset-8'
+                    : 'text-sm font-medium text-zinc-400 transition-colors hover:text-[var(--accent)]'
+                }
               >
                 {item.label}
               </Link>

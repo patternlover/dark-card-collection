@@ -35,6 +35,21 @@ const EMPTY_FILTERS: Filters = { q: '', category: '', collection: '', condition:
 const selectClass =
   'w-full border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[var(--accent)] focus:outline-none shadow-[2px_2px_0px_0px_#27272a] disabled:opacity-40 disabled:cursor-not-allowed'
 
+function SearchInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="relative">
+      <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+      <input
+        type="search"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Cerca per nome..."
+        className="w-full border-2 border-zinc-700 bg-zinc-800 py-3 pl-11 pr-4 text-sm text-white placeholder-zinc-500 shadow-[3px_3px_0px_0px_#27272a] focus:border-[var(--accent)] focus:outline-none"
+      />
+    </div>
+  )
+}
+
 export function ClientListing({
   products,
   categories = [],
@@ -138,8 +153,26 @@ export function ClientListing({
   const resultCount = grouped ? groups.length : unique.length
 
   return (
-    <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
-      <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:mt-16 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
+    <div>
+      <div className="mb-4 lg:hidden">
+        <SearchInput value={filters.q} onChange={(v) => updateFilters({ q: v })} />
+      </div>
+
+      {title && (
+        <Reveal className="hidden lg:block">
+          <div className="mb-8">
+            <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
+            {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
+          </div>
+        </Reveal>
+      )}
+
+      <div className="mb-6 hidden lg:block">
+        <SearchInput value={filters.q} onChange={(v) => updateFilters({ q: v })} />
+      </div>
+
+      <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
+        <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:mt-8 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -285,26 +318,13 @@ export function ClientListing({
 
       <div className="min-w-0">
         {title && (
-          <Reveal>
-            <div className="mb-6 lg:mb-8">
+          <Reveal className="lg:hidden">
+            <div className="mb-6">
               <h1 className="text-3xl font-black uppercase tracking-tight text-white">{title}</h1>
               {subtitle && <p className="mt-2 text-zinc-400">{subtitle}</p>}
             </div>
           </Reveal>
         )}
-
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="search"
-              value={filters.q}
-              onChange={(e) => updateFilters({ q: e.target.value })}
-              placeholder="Cerca per nome..."
-              className="w-full border-2 border-zinc-700 bg-zinc-800 py-3 pl-11 pr-4 text-sm text-white placeholder-zinc-500 shadow-[3px_3px_0px_0px_#27272a] focus:border-[var(--accent)] focus:outline-none"
-            />
-          </div>
-        </div>
 
         <p className="mb-4 text-xs text-zinc-500">
           {resultCount === 1 ? '1 prodotto' : `${resultCount} prodotti`}
@@ -333,6 +353,7 @@ export function ClientListing({
             </div>
           </Reveal>
         )}
+        </div>
       </div>
     </div>
   )
