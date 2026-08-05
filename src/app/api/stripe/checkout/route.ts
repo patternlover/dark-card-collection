@@ -64,6 +64,13 @@ export async function POST(req: Request) {
       },
       billing_address_collection: 'required',
       return_url: `${process.env.NEXT_PUBLIC_SITE_URL}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      branding_settings: {
+        display_name: 'Dark Card Collection',
+        background_color: '#0a0a0a',
+        button_color: '#FACC15',
+        border_style: 'rectangular',
+        font_family: 'inter',
+      },
       metadata: {
         productIds: items.map((item: { id: number | string }) => String(item.id)).join(','),
       },

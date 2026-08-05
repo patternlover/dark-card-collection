@@ -19,7 +19,7 @@ export function Header() {
   const { itemCount } = useCart()
 
   return (
-    <header className="sticky top-[var(--banner-h)] z-50 border-b-2 border-zinc-700 bg-black">
+    <header className="sticky top-[var(--banner-h)] z-[130] border-b-2 border-zinc-700 bg-black">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

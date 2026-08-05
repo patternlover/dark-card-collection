@@ -59,7 +59,7 @@ export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartPro
   return createPortal(
     <div
       data-testid="sticky-atc"
-      className="fixed inset-x-0 bottom-0 z-[110] border-t-2 border-[var(--accent)] bg-black pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_0px_0px_#000]"
+      className="fixed inset-x-0 bottom-0 z-[100] border-t-2 border-[var(--accent)] bg-black pb-[env(safe-area-inset-bottom)] shadow-[0_-2px_0px_0px_#000]"
       style={footerOffset > 0 ? { bottom: `${footerOffset}px` } : undefined}
     >
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">

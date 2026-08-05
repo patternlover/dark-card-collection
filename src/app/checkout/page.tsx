@@ -173,13 +173,15 @@ export default function CheckoutPage() {
             </p>
           </div>
 
-          <div className="relative lg:col-span-3">
-            <div id="embedded-checkout" />
-            {loading && !error && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black">
-                <LoadingFallback label="Preparazione del pagamento..." />
-              </div>
-            )}
+          <div className="lg:col-span-3">
+            <div className="relative border-2 border-zinc-700 bg-zinc-900 shadow-[4px_4px_0px_0px_#27272a]">
+              <div id="embedded-checkout" className="min-h-[540px]" />
+              {loading && !error && (
+                <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+                  <LoadingFallback label="Preparazione del pagamento..." />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -9,61 +9,55 @@ interface ConfettiBurstProps {
   onDone: () => void
 }
 
-const COLORS = ['var(--accent)', '#ffffff', '#71717a', '#facc15']
-const PARTICLE_COUNT = 24
-
-function prefersReducedMotion() {
-  if (typeof window === 'undefined') return true
-  return window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-}
+const SPARK_COUNT = 26
 
 export function ConfettiBurst({ x, y, onDone }: ConfettiBurstProps) {
-  const particles = useMemo(() => {
-    if (prefersReducedMotion()) return []
-    return Array.from({ length: PARTICLE_COUNT }, (_, i) => {
-      const angle = (i / PARTICLE_COUNT) * Math.PI * 2 + Math.random() * 0.5
-      const distance = 36 + Math.random() * 42
+  const sparks = useMemo(() => {
+    return Array.from({ length: SPARK_COUNT }, (_, i) => {
+      const angle = (i / SPARK_COUNT) * Math.PI * 2 + (Math.random() - 0.5) * 0.7
+      const distance = 46 + Math.random() * 74
+      const dx = Math.cos(angle) * distance
+      const dy = Math.sin(angle) * distance + 28
       return {
         id: i,
-        dx: Math.cos(angle) * distance,
-        dy: Math.sin(angle) * distance,
-        color: COLORS[i % COLORS.length],
-        width: 5 + Math.random() * 4,
-        height: 5 + Math.random() * 4,
-        delay: Math.random() * 60,
-        rotate: Math.random() * 360,
+        dx: dx.toFixed(1),
+        dy: dy.toFixed(1),
+        rot: ((angle * 180) / Math.PI + 90).toFixed(1),
+        delay: (Math.random() * 70).toFixed(0),
+        len: 8 + Math.random() * 8,
       }
     })
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(onDone, 900)
+    const t = setTimeout(onDone, 850)
     return () => clearTimeout(t)
   }, [onDone])
-
-  if (particles.length === 0) return null
 
   return createPortal(
     <div
       aria-hidden
-      className="pointer-events-none fixed z-[120]"
+      className="pointer-events-none fixed z-[110]"
       style={{ left: x, top: y }}
     >
-      {particles.map((p) => (
+      <span
+        className="spark-flash absolute block rounded-full"
+        style={{ left: -7, top: -7, width: 14, height: 14 }}
+      />
+      {sparks.map((s) => (
         <span
-          key={p.id}
-          className="absolute block rounded-sm"
+          key={s.id}
+          className="spark-bit absolute block"
           style={
             {
-              left: 0,
-              top: 0,
-              width: p.width,
-              height: p.height,
-              backgroundColor: p.color,
-              '--cf-dx': `${p.dx}px`,
-              '--cf-dy': `${p.dy}px`,
-              '--cf-rotate': `${p.rotate}deg`,
-              animation: `confetti-burst 700ms cubic-bezier(0.22, 1, 0.36, 1) ${p.delay}ms forwards`,
+              left: -1.5,
+              top: -1.5,
+              width: 3,
+              height: s.len,
+              '--sp-dx': `${s.dx}px`,
+              '--sp-dy': `${s.dy}px`,
+              '--sp-rot': `${s.rot}deg`,
+              '--sp-delay': `${s.delay}ms`,
             } as React.CSSProperties
           }
         />
