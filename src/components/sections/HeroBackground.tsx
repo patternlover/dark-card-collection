@@ -29,11 +29,11 @@ const OBJECTS = [
 ]
 
 const GLOWS = [
-  { pos: '-right-24 top-0', size: 'h-[420px] w-[420px]', color: 'bg-[var(--accent)]/20', delay: '', spin: '0.04' },
-  { pos: 'left-1/3 top-[6%]', size: 'h-[280px] w-[280px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:2.8s]', spin: '0.05' },
-  { pos: '-left-32 top-[35%]', size: 'h-[380px] w-[380px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:1.4s]', spin: '-0.03' },
-  { pos: '-right-28 top-[55%]', size: 'h-[360px] w-[360px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:3.6s]', spin: '0.03' },
-  { pos: '-left-24 bottom-0', size: 'h-[420px] w-[420px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:4.6s]', spin: '-0.04' },
+  { pos: '-right-24 top-0', size: 'h-[420px] w-[420px]', color: 'bg-[var(--accent)]/20', delay: '' },
+  { pos: 'left-1/3 top-[6%]', size: 'h-[280px] w-[280px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:2.8s]' },
+  { pos: '-left-32 top-[35%]', size: 'h-[380px] w-[380px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:1.4s]' },
+  { pos: '-right-28 top-[55%]', size: 'h-[360px] w-[360px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:3.6s]' },
+  { pos: '-left-24 bottom-0', size: 'h-[420px] w-[420px]', color: 'bg-[var(--accent)]/10', delay: '[animation-delay:4.6s]' },
 ]
 
 export function HeroBackground() {
@@ -60,11 +60,7 @@ export function HeroBackground() {
     const tick = () => {
       if (sy !== lastSy) {
         lastSy = sy
-        const progress = Math.min(1, sy / window.innerHeight)
-        const scale = 1.06 + progress * 0.02
-        const rotateZ = progress * 1.2 + Math.sin(sy * 0.003) * 0.8
-        const translateY = sy * 0.04
-        el.style.transform = `scale(${scale.toFixed(4)}) rotate(${rotateZ.toFixed(3)}deg) translateY(${translateY.toFixed(2)}px)`
+        el.style.transform = `translateY(${(sy * 0.04).toFixed(2)}px)`
         for (const item of items) {
           const speed = parseFloat(item.dataset.spin || '0')
           item.style.rotate = `${((sy * speed) % 360).toFixed(2)}deg`
@@ -92,7 +88,6 @@ export function HeroBackground() {
         <div
           key={`glow-${i}`}
           className={`animate-hero-glow absolute rounded-full blur-3xl ${glow.pos} ${glow.size} ${glow.color} ${glow.delay}`}
-          data-spin={glow.spin}
         />
       ))}
 

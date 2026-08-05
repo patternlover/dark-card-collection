@@ -139,7 +139,7 @@ export function ClientListing({
 
   return (
     <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
-      <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
+      <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:mt-16 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
