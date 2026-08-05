@@ -46,7 +46,7 @@ DASHBOARD_GOOGLE_EMAILS=you@gmail.com,other@gmail.com
 ```
 src/
 ├── app/
-│   ├── layout.tsx                  # Root layout (CartProvider, Header, Footer)
+│   ├── layout.tsx                  # Root layout (RouteProgress, ConsentModeScript, providers)
 │   ├── page.tsx                    # Homepage (force-dynamic, fetches from Payload)
 │   ├── not-found.tsx               # 404 page
 │   ├── error.tsx                   # Error boundary
@@ -64,14 +64,14 @@ src/
 │   │
 │   ├── cart/page.tsx               # Cart page (client, uses CartProvider)
 │   ├── checkout/
-│   │   ├── page.tsx                # Checkout (client, sends to Stripe)
+│   │   ├── page.tsx                # Checkout (client, Stripe Embedded Checkout)
 │   │   └── success/page.tsx        # Post-payment success
 │   │
 │   ├── info/
-│   │   ├── about/page.tsx          # About page
-│   │   ├── faq/page.tsx            # FAQ (client, accordion)
-│   │   ├── contact/page.tsx        # Contact form (client)
-│   │   └── shipping-returns/       # Spedizioni e Resi (richiesto da Stripe)
+│   │   ├── about/page.tsx          # About page (max-w-2xl)
+│   │   ├── faq/page.tsx            # FAQ (client, accordion) (max-w-2xl)
+│   │   ├── contact/page.tsx        # Contact form (client) (max-w-2xl)
+│   │   ├── privacy/terms/shipping-returns/  # Pagine legali (max-w-2xl)
 │   │
 │   ├── api/
 │   │   ├── auth/
@@ -110,37 +110,50 @@ src/
 │   │   ├── EditProductModal.tsx    # Modal for editing a single product variant
 │   │   └── ProductGroupRow.tsx     # Expandable table row with delete for admin
 │   ├── layout/
-│   │   ├── Header.tsx              # Sticky header with nav + cart badge
+│   │   ├── Header.tsx              # Sticky header (offset --banner-h) + cart badge
 │   │   ├── Footer.tsx              # Footer with cleaned links
-│   │   ├── LayoutShell.tsx         # Client wrapper: conditional Header/Footer for admin routes
-│   │   └── MobileMenu.tsx          # Mobile hamburger menu
+│   │   ├── LayoutShell.tsx         # Client wrapper: banner fisso, Header/Footer condizionali
+│   │   ├── MobileMenu.tsx          # Mobile hamburger menu
+│   │   ├── AnalyticsProvider.tsx   # GA4
+│   │   └── ConsentModeScript.tsx   # Google Consent Mode v2
 │   ├── product/
 │   │   ├── ProductCard.tsx         # Product card (links to /products/[slug])
 │   │   ├── ProductGroupCard.tsx    # Grouped card in shop (links to PDP, no variants)
 │   │   ├── ProductGallery.tsx      # Image gallery with thumbnails
 │   │   ├── ProductFilters.tsx      # Reusable filter component (unused in shop)
 │   │   ├── QuickAddButton.tsx      # Cart icon button on cards (client, instant add)
-│   │   └── AddToCartButton.tsx     # Add to cart with feedback
+│   │   ├── AddToCartButton.tsx     # Add to cart with feedback
+│   │   └── StickyAddToCart.tsx     # Sticky ATC in PDP, si solleva quando il footer è visibile
 │   ├── sections/
 │   │   ├── HeroSection.tsx         # Homepage hero
+│   │   ├── HeroBackground.tsx      # Oggetti decorativi con parallasse scroll (data-x/y)
+│   │   ├── ClientListing.tsx       # PLP client: filtri sticky, ricerca, dedup titolo, griglia
+│   │   ├── ListingShell.tsx        # Wrapper PLP (Suspense + padding)
+│   │   ├── FreeShippingBanner.tsx  # Banda "spedizione gratuita dagli 80€" fissa sopra navbar
 │   │   ├── FeaturedProducts.tsx    # Async server component, fetches from Payload
 │   │   └── TrustBadges.tsx         # Trust badges
 │   └── ui/
 │       ├── Badge.tsx               # Status/condition badge
-│       └── CookieConsent.tsx       # GDPR cookie consent banner
+│       ├── CookieConsent.tsx       # GDPR cookie consent banner
+│       ├── RouteProgress.tsx       # Barra di caricamento fluida (rAF)
+│       ├── ConfettiBurst.tsx       # Effetto confetti al click su ATC
+│       └── LoadingFallback.tsx     # Fallback Suspense caricamento
 │
 ├── hooks/
 │   └── useCart.tsx                  # CartProvider + useCart (localStorage)
 │
 ├── lib/
 │   ├── payload.ts                   # getPayloadClient() - cached singleton
-│   ├── stripe.ts                    # Stripe client
+│   ├── stripe.ts                    # Stripe client (lazy getStripe)
+│   ├── dash-auth.ts                 # Auth dashboard: cookie dcc-dash (HMAC), whitelist
 │   ├── group-products.ts            # Groups products by title (variants → parent)
 │   ├── order-email.ts               # Template + invio email conferma ordine (Resend)
 │   ├── google-sheets.ts             # Google Sheets API read/write
 │   ├── image-import.ts              # Download + upload images to Vercel Blob
 │   ├── parse-csv.ts                 # RFC 4180 CSV parser (multilinea/quotes)
 │   ├── proxy-image.ts               # Cardmarket image proxy URL builder
+│   ├── product-image.ts             # Helper immagine prodotto
+│   ├── product-filters.ts           # Opzioni condizione/lingua per filtri
 │   └── analytics.ts                 # GA4 ecommerce dataLayer events
 │
 ├── payload/
@@ -249,7 +262,8 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 
 ## Git Commits
 
-Latest: `8bd85b5` (footer tutto nero) - all on `origin/main`
+Latest: `07cfe77` (UX/UI: loading bar rAF, parallax hero, ATC cyberpunk, fix filtri PLP) - all on `origin/main`.
+Storico recente dettagliato in [`CHANGELOG.md`](./CHANGELOG.md).
 
 ## Footer / Design
 
