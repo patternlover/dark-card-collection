@@ -3,11 +3,8 @@
 import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@/payload.config'
-import { runInventorySync, type SyncFilters, type SyncResult } from '@/lib/inventory-sync'
 import { runReadOnlyQuery, type QueryOutcome } from '@/lib/db-query'
 import { isAuthed, clearDashSession } from '@/lib/dash-auth'
-
-export { type SyncFilters, type SyncResult } from '@/lib/inventory-sync'
 
 async function requireAuth(): Promise<void> {
   if (!(await isAuthed())) {
@@ -216,11 +213,6 @@ export async function updateOrderStatus(id: string, status: string): Promise<Ord
     draft: false,
   })
   return toOrderDTO(res)
-}
-
-export async function runSync(filters?: SyncFilters): Promise<SyncResult> {
-  await requireAuth()
-  return runInventorySync(filters)
 }
 
 export async function runQuery(sql: string): Promise<QueryOutcome> {

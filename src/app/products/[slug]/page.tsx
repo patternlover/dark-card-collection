@@ -230,13 +230,10 @@ export default async function ProductPage({
     { label: 'Shop', href: '/shop' },
     { label: 'Collezioni', href: '/shop/collections' },
   ]
-  if (collectionName) {
-    breadcrumbItems.push(
-      collectionSlug
-        ? { label: collectionName, href: `/shop/collections/${collectionSlug}` }
-        : { label: collectionName },
-    )
+  if (collectionSlug) {
+    breadcrumbItems.push({ label: collectionName, href: `/shop/collections/${collectionSlug}` })
   }
+  breadcrumbItems.push({ label: product.title })
 
   const productUrl = `${SITE_URL}/products/${product.slug}`
   const availability =
@@ -333,8 +330,8 @@ export default async function ProductPage({
       <div className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div className="space-y-6 lg:hidden">
-            {badges}
             <Breadcrumb items={breadcrumbItems} />
+            {badges}
           </div>
 
           <div className="relative aspect-square w-full">
@@ -355,8 +352,8 @@ export default async function ProductPage({
 
           <Reveal>
             <div className="space-y-6">
-              <div className="hidden lg:block">{badges}</div>
               <div className="hidden lg:block"><Breadcrumb items={breadcrumbItems} /></div>
+              <div className="hidden lg:block">{badges}</div>
 
             <h1 className="text-3xl font-black text-white uppercase tracking-tight">{product.title}</h1>
 

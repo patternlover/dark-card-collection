@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import { ClientListing } from '@/components/sections/ClientListing'
+import { ListingSkeleton } from '@/components/ui/ListingSkeleton'
 
 interface ListingShellProps {
   title: string
@@ -27,13 +28,7 @@ export function ListingShell({
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-7xl px-4 pt-14 pb-10 sm:px-6 lg:px-8 lg:pt-16">
-        <Suspense
-          fallback={
-            <div className="py-16 text-center">
-              <p className="text-sm text-zinc-500">Caricamento prodotti...</p>
-            </div>
-          }
-        >
+        <Suspense fallback={<ListingSkeleton />}>
           <ClientListing
             products={products}
             categories={categories}

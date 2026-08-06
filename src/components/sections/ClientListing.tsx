@@ -186,6 +186,11 @@ export function ClientListing({
         <div className="mb-6">
           <SearchInput value={filters.q} onChange={(v) => updateFilters({ q: v })} />
         </div>
+
+        <p className="mb-6 text-xs text-zinc-500">
+          {resultCount === 1 ? '1 prodotto' : `${resultCount} prodotti`}
+          {active ? ' trovati' : ' disponibili'}
+        </p>
       </div>
 
       <aside className="mb-6 border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] lg:sticky lg:top-28 lg:mb-0 lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto lg:p-5">
@@ -333,11 +338,6 @@ export function ClientListing({
       </aside>
 
       <div className="min-w-0">
-        <p className="mb-4 text-xs text-zinc-500">
-          {resultCount === 1 ? '1 prodotto' : `${resultCount} prodotti`}
-          {active ? ' trovati' : ' disponibili'}
-        </p>
-
         {resultCount === 0 ? (
           <div className="py-16 text-center">
             <p className="text-lg text-zinc-500">{emptyTitle}</p>

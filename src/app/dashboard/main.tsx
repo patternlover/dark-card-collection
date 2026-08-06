@@ -8,17 +8,15 @@ import {
   getOverview,
   logout,
   runQuery,
-  runSync,
   searchProducts,
   updateOrderStatus,
   updateProduct,
   type OrderDTO,
   type OverviewData,
   type ProductDTO,
-  type SyncFilters,
 } from './actions'
 
-type Tab = 'overview' | 'products' | 'orders' | 'sync' | 'sql'
+type Tab = 'overview' | 'products' | 'orders' | 'sql'
 
 const STATUS_LABELS: Record<string, string> = {
   listed: 'Disponibile',
@@ -420,105 +418,6 @@ function OrdersTab() {
   )
 }
 
-function SyncTab() {
-  const [syncing, setSyncing] = useState(false)
-  const [filters, setFilters] = useState<SyncFilters>({
-    skipSold: true,
-    skipHold: false,
-    onlyWithImage: false,
-    onlyListed: false,
-  })
-  const [result, setResult] = useState<Awaited<ReturnType<typeof runSync>> | null>(null)
-  const [lastSync, setLastSync] = useState<string | null>(null)
-
-  useEffect(() => {
-    setLastSync(localStorage.getItem('dcc-dash-last-sync'))
-  }, [])
-
-  const handleSync = async () => {
-    setSyncing(true)
-    setResult(null)
-    try {
-      const res = await runSync(filters)
-      setResult(res)
-      if (res.success) {
-        const now = new Date().toLocaleString('it-IT')
-        localStorage.setItem('dcc-dash-last-sync', now)
-        setLastSync(now)
-      }
-    } catch {
-      setResult({ success: false, error: 'Errore durante la sincronizzazione' })
-    } finally {
-      setSyncing(false)
-    }
-  }
-
-  const toggle = (key: keyof SyncFilters) =>
-    setFilters((f) => ({ ...f, [key]: !f[key] }))
-
-  return (
-    <div className="max-w-2xl space-y-5">
-      <div>
-        <h2 className="text-lg font-bold text-zinc-50">Sincronizza inventario</h2>
-        <p className="mt-1 text-sm text-zinc-400">
-          Importa prodotti, categorie, collezioni e immagini dal foglio Google. {lastSync ? `Ultima sincronizzazione: ${lastSync}.` : ''}
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(
-          [
-            ['skipSold', 'Salta i prodotti venduti'],
-            ['skipHold', 'Salta i prodotti in attesa'],
-            ['onlyWithImage', 'Solo prodotti con immagine'],
-            ['onlyListed', 'Solo prodotti listati'],
-          ] as [keyof SyncFilters, string][]
-        ).map(([key, label]) => (
-          <label key={key} className="flex cursor-pointer items-center gap-2 rounded-xl border-2 border-zinc-800 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-200">
-            <input
-              type="checkbox"
-              checked={filters[key]}
-              onChange={() => toggle(key)}
-              className="h-4 w-4 accent-[var(--accent)]"
-            />
-            {label}
-          </label>
-        ))}
-      </div>
-
-      <button
-        onClick={handleSync}
-        disabled={syncing}
-        className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2.5 font-bold text-black transition hover:opacity-90 disabled:opacity-60"
-      >
-        {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        {syncing ? 'Sincronizzazione...' : 'Avvia sincronizzazione'}
-      </button>
-
-      {result ? (
-        <div className={`rounded-xl border-2 p-4 text-sm ${result.success ? 'border-green-500/40 bg-green-500/10' : 'border-red-500/40 bg-red-500/10'}`}>
-          {result.success ? (
-            <div className="space-y-1 text-zinc-200">
-              <p className="font-bold text-green-400">Sincronizzazione completata</p>
-              <p>Righe totali: {result.totalRows} · Saltate: {result.skipped} · Filtrate: {result.filteredOut}</p>
-              <p>Prodotti creati: {result.productsCreated} · Aggiornati: {result.productsUpdated}</p>
-              <p>Categorie: {result.categories} · Collezioni: {result.collections} · Immagini: {result.imagesUploaded}</p>
-              {result.imageErrors && result.imageErrors.length > 0 ? (
-                <p className="text-amber-400">Errori immagini: {result.imageErrors.length}</p>
-              ) : null}
-            </div>
-          ) : (
-            <div className="space-y-1 text-zinc-200">
-              <p className="font-bold text-red-400">{result.error || 'Errore'}</p>
-              {result.details ? <p className="text-xs text-zinc-400">{result.details}</p> : null}
-            </div>
-          )}
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
 function SqlTab() {
   const [sql, setSql] = useState('')
   const [running, setRunning] = useState(false)
@@ -660,7 +559,6 @@ export default function DashboardMain() {
     { key: 'overview', label: 'Panoramica' },
     { key: 'products', label: 'Prodotti' },
     { key: 'orders', label: 'Ordini' },
-    { key: 'sync', label: 'Sincronizzazione' },
     { key: 'sql', label: 'SQL' },
   ]
 
@@ -784,7 +682,6 @@ export default function DashboardMain() {
         ) : null}
         {tab === 'products' ? <ProductsTab /> : null}
         {tab === 'orders' ? <OrdersTab /> : null}
-        {tab === 'sync' ? <SyncTab /> : null}
         {tab === 'sql' ? <SqlTab /> : null}
       </div>
     </div>
