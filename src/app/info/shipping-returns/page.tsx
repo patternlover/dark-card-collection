@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 export const metadata: Metadata = {
   title: 'Spedizioni e Resi',
@@ -16,6 +17,7 @@ export default function ShippingReturnsPage() {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+        <Breadcrumb className="mb-4" items={[{ label: 'Home', href: '/' }, { label: 'Spedizioni e Resi' }]} />
         <Reveal>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-8">Spedizioni e Resi</h1>
           <p className="text-sm text-zinc-500 mb-8">

@@ -5,6 +5,7 @@ import { groupProducts } from '@/lib/group-products'
 import { Badge } from '@/components/ui/Badge'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { ProductCard } from '@/components/product/ProductCard'
 import { ProductImage } from '@/components/product/ProductImage'
 import { StickyAddToCart } from '@/components/product/StickyAddToCart'
@@ -224,46 +225,18 @@ export default async function ProductPage({
     </div>
   )
 
-  const breadcrumb = (
-    <nav aria-label="Breadcrumb" className="text-sm font-medium uppercase tracking-wider">
-      <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
-        <li>
-          <Link href="/" className="transition-colors hover:text-[var(--accent)]">
-            Home
-          </Link>
-        </li>
-        <li aria-hidden="true">/</li>
-        <li>
-          <Link href="/shop" className="transition-colors hover:text-[var(--accent)]">
-            Shop
-          </Link>
-        </li>
-        <li aria-hidden="true">/</li>
-        <li>
-          <Link href="/shop/collections" className="transition-colors hover:text-[var(--accent)]">
-            Collezioni
-          </Link>
-        </li>
-        {collectionName && (
-          <>
-            <li aria-hidden="true">/</li>
-            <li>
-              {collectionSlug ? (
-                <Link
-                  href={`/shop/collections/${collectionSlug}`}
-                  className="transition-colors hover:text-[var(--accent)]"
-                >
-                  {collectionName}
-                </Link>
-              ) : (
-                <span className="text-zinc-300">{collectionName}</span>
-              )}
-            </li>
-          </>
-        )}
-      </ol>
-    </nav>
-  )
+  const breadcrumbItems: { label: string; href?: string }[] = [
+    { label: 'Home', href: '/' },
+    { label: 'Shop', href: '/shop' },
+    { label: 'Collezioni', href: '/shop/collections' },
+  ]
+  if (collectionName) {
+    breadcrumbItems.push(
+      collectionSlug
+        ? { label: collectionName, href: `/shop/collections/${collectionSlug}` }
+        : { label: collectionName },
+    )
+  }
 
   const productUrl = `${SITE_URL}/products/${product.slug}`
   const availability =
@@ -361,7 +334,7 @@ export default async function ProductPage({
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           <div className="space-y-6 lg:hidden">
             {badges}
-            {breadcrumb}
+            <Breadcrumb items={breadcrumbItems} />
           </div>
 
           <div className="relative aspect-square w-full">
@@ -383,7 +356,7 @@ export default async function ProductPage({
           <Reveal>
             <div className="space-y-6">
               <div className="hidden lg:block">{badges}</div>
-              <div className="hidden lg:block">{breadcrumb}</div>
+              <div className="hidden lg:block"><Breadcrumb items={breadcrumbItems} /></div>
 
             <h1 className="text-3xl font-black text-white uppercase tracking-tight">{product.title}</h1>
 

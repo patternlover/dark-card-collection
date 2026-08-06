@@ -8,6 +8,7 @@ import { useCart } from '@/hooks/useCart'
 import { trackPurchase } from '@/lib/analytics'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 interface OrderItem {
   product: { title: string; imageUrl?: string | null; images?: Array<{ image?: { url: string } | null }>; image?: { url: string } | null } | null
@@ -77,6 +78,15 @@ function SuccessContent() {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
+        <Breadcrumb
+          className="mb-6 text-left"
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Checkout', href: '/checkout' },
+            { label: 'Ordine confermato' },
+          ]}
+        />
+
         {loading ? (
           <Loader2 className="h-16 w-16 text-zinc-500 mx-auto mb-6 animate-spin" />
         ) : (

@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -15,17 +15,7 @@ export default function AboutPage() {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
-          <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
-            <li>
-              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
-                Home
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li className="text-zinc-300">Chi Siamo</li>
-          </ol>
-        </nav>
+        <Breadcrumb className="mb-4" items={[{ label: 'Home', href: '/' }, { label: 'Chi Siamo' }]} />
 
         <Reveal>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white mb-8">Chi Siamo</h1>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Trash2, ShoppingBag, Minus, Plus } from 'lucide-react'
 import { useCart, type CartItem } from '@/hooks/useCart'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal, shipping, total } = useCart()
@@ -33,6 +34,7 @@ export default function CartPage() {
   return (
     <div className="bg-black">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+        <Breadcrumb className="mb-4" items={[{ label: 'Home', href: '/' }, { label: 'Carrello' }]} />
         <Reveal>
           <h1 className="mb-8 text-3xl font-black uppercase tracking-tight text-white">Carrello</h1>
         </Reveal>

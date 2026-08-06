@@ -5,6 +5,7 @@ import { groupProducts } from '@/lib/group-products'
 import { ProductGroupCard } from '@/components/product/ProductGroupCard'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -123,32 +124,15 @@ export default async function CollectionPage({
     <div className="bg-black">
       <JsonLd data={[breadcrumbJsonLd, itemListJsonLd]} />
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
-          <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
-            <li>
-              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
-                Home
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li>
-              <Link href="/shop" className="transition-colors hover:text-[var(--accent)]">
-                Shop
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li>
-              <Link
-                href="/shop/collections"
-                className="transition-colors hover:text-[var(--accent)]"
-              >
-                Collezioni
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li className="text-zinc-300">{collection.name}</li>
-          </ol>
-        </nav>
+        <Breadcrumb
+          className="mb-4"
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Shop', href: '/shop' },
+            { label: 'Collezioni', href: '/shop/collections' },
+            { label: collection.name },
+          ]}
+        />
 
         <Reveal>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white">

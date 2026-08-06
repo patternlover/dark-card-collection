@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import type { Metadata } from 'next'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -70,23 +71,14 @@ export default function GuideDoveComprarePage() {
     <div className="bg-black">
       <JsonLd data={[jsonLd, breadcrumbJsonLd]} />
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
-          <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
-            <li>
-              <Link href="/" className="transition-colors hover:text-[var(--accent)]">
-                Home
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li>
-              <Link href="/guide" className="transition-colors hover:text-[var(--accent)]">
-                Guide
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li className="text-zinc-300">Dove comprare</li>
-          </ol>
-        </nav>
+        <Breadcrumb
+          className="mb-4"
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Guide', href: '/guide' },
+            { label: 'Dove comprare' },
+          ]}
+        />
 
         <Reveal>
           <h1 className="text-3xl font-black uppercase tracking-tight text-white">

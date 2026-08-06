@@ -2,11 +2,11 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import { SlidersHorizontal, ChevronDown, Search } from 'lucide-react'
 import { ProductGroupCard } from '@/components/product/ProductGroupCard'
 import { ProductCard } from '@/components/product/ProductCard'
 import { Reveal } from '@/components/ui/Reveal'
+import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { groupProducts } from '@/lib/group-products'
 import { CONDITION_OPTIONS, LANGUAGE_OPTIONS } from '@/lib/product-filters'
 import { trackFilter } from '@/lib/analytics'
@@ -168,28 +168,11 @@ export function ClientListing({
   }, [basePath])
 
   return (
-    <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start">
+    <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
       <div className="hidden lg:block" aria-hidden="true" />
 
       <div className="min-w-0">
-        <nav aria-label="Breadcrumb" className="mb-4 text-sm font-medium uppercase tracking-wider">
-          <ol className="flex flex-wrap items-center gap-x-2 text-zinc-500">
-            {breadcrumbs.map((crumb, i) => (
-              <li key={crumb.label} className="flex items-center gap-x-2">
-                {i > 0 && <span aria-hidden="true">/</span>}
-                {crumb.href ? (
-                  <Link href={crumb.href} className="transition-colors hover:text-[var(--accent)]">
-                    {crumb.label}
-                  </Link>
-                ) : (
-                  <span className="text-[var(--accent)] underline decoration-[var(--accent)] decoration-2 underline-offset-8">
-                    {crumb.label}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ol>
-        </nav>
+        <Breadcrumb className="mb-4" items={breadcrumbs} />
 
         {title && (
           <Reveal>
