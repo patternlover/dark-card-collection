@@ -34,7 +34,7 @@
     "next": "16.3.0",
     "payload": "3.87.1",
     "pg": "^8.22.0",
-    "postcss": "8.5.19",
+    "postcss": "8.5.26",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "sharp": "0.35.3",
@@ -61,7 +61,10 @@
     "overrides": {
       "fast-uri": "^3.1.5",
       "brace-expansion": "^2.1.4",
-      "js-yaml": "^4.3.1"
+      "js-yaml": "^4.3.1",
+      "monaco-editor>dompurify": "^3.4.13",
+      "@esbuild-kit/core-utils>esbuild": "^0.25.0",
+      "@vercel/blob>undici": "^6.28.0"
     }
   }
 }
