@@ -1,27 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
 import { importProductImages, buildImagesField } from '@/lib/image-import'
-
-function verifyAuth(request: Request): boolean {
-  const url = new URL(request.url)
-  const secret = url.searchParams.get('secret')
-
-  const valid = [process.env.CRON_SECRET, process.env.PAYLOAD_SECRET]
-    .filter(Boolean) as string[]
-
-  if (secret && valid.includes(secret)) return true
-
-  const authHeader = request.headers.get('authorization')
-  if (authHeader?.startsWith('Bearer ')) {
-    const token = authHeader.slice(7)
-    if (valid.includes(token)) return true
-  }
-
-  return false
-}
+import { verifyCronSecret } from '@/lib/api-auth'
 
 export async function GET(request: Request) {
-  if (!verifyAuth(request)) {
+  if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

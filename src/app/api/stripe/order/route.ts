@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getStripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 
 export async function GET(req: Request) {
@@ -9,6 +10,23 @@ export async function GET(req: Request) {
     return NextResponse.json(
       { error: 'session_id mancante' },
       { status: 400 }
+    )
+  }
+
+  try {
+    const stripe = getStripe()
+    const session = await stripe.checkout.sessions.retrieve(sessionId)
+
+    if (session.payment_status !== 'paid') {
+      return NextResponse.json(
+        { error: 'Ordine non trovato' },
+        { status: 404 }
+      )
+    }
+  } catch {
+    return NextResponse.json(
+      { error: 'Ordine non trovato' },
+      { status: 404 }
     )
   }
 

@@ -54,6 +54,7 @@ export const Orders: CollectionConfig = {
     {
       name: 'stripeSessionId',
       type: 'text',
+      unique: true,
     },
     {
       name: 'email',

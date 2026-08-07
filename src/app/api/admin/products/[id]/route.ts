@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
 import { updateRowByItemId, productToSheetFields } from '@/lib/google-sheets'
+import { verifySyncPassword } from '@/lib/api-auth'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const password = request.headers.get('x-sync-password')
-  if (password !== process.env.SYNC_PASSWORD && password !== process.env.PAYLOAD_SECRET) {
+  if (!verifySyncPassword(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -58,8 +58,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const password = request.headers.get('x-sync-password')
-  if (password !== process.env.SYNC_PASSWORD && password !== process.env.PAYLOAD_SECRET) {
+  if (!verifySyncPassword(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

@@ -1,15 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPayloadClient } from '@/lib/payload'
-
-function verifyCronAuth(request: Request): boolean {
-  const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
-
-  if (cronSecret && authHeader === `Bearer ${cronSecret}`) return true
-  if (authHeader === `Bearer ${process.env.PAYLOAD_SECRET}`) return true
-
-  return false
-}
+import { verifyCronSecret } from '@/lib/api-auth'
 
 const GOOGLE_SHEET_SALES_URL =
   'https://docs.google.com/spreadsheets/d/1cVAh2HWPEGgYHKlJP4QbQ-zut2-2hoXpAiRw8iDuoiY/gviz/tq?tqx=out:csv&sheet=sales'
@@ -29,7 +20,7 @@ function parseCSV(text: string): Record<string, string>[] {
 }
 
 export async function GET(request: Request) {
-  if (!verifyCronAuth(request)) {
+  if (!verifyCronSecret(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

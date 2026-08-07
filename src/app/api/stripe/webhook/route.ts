@@ -3,6 +3,11 @@ import { getStripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { sendOrderConfirmationEmail } from '@/lib/order-email'
 
+function isDuplicateKeyError(err: unknown): boolean {
+  const msg = err instanceof Error ? err.message : String(err)
+  return msg.includes('duplicate key') || msg.includes('23505') || msg.includes('unique constraint')
+}
+
 export async function POST(req: Request) {
   const stripe = getStripe()
   const body = await req.text()
@@ -37,14 +42,18 @@ export async function POST(req: Request) {
     case 'checkout.session.completed': {
       const session = event.data.object
 
-      const existingOrders = await payload.find({
-        collection: 'orders',
-        where: { stripeSessionId: { equals: session.id } },
-        limit: 1,
-      })
+      if (session.currency !== 'eur') {
+        console.log('Ignored non-EUR session:', session.id)
+        break
+      }
 
-      if (existingOrders.docs.length > 0) {
-        console.log('Order already exists for session:', session.id)
+      if (session.payment_status !== 'paid') {
+        console.log('Ignored unpaid session:', session.id)
+        break
+      }
+
+      if (!session.amount_total || session.amount_total <= 0) {
+        console.log('Ignored session without amount:', session.id)
         break
       }
 
@@ -79,19 +88,47 @@ export async function POST(req: Request) {
         })
       )
 
-      await payload.create({
-        collection: 'orders',
-        data: {
-          orderId: session.id,
-          status: 'paid',
-          items: orderItems as any,
-          total: (session.amount_total || 0) / 100,
-          stripeSessionId: session.id,
-          email: session.customer_details?.email || '',
-        },
-      })
+      try {
+        await payload.create({
+          collection: 'orders',
+          data: {
+            orderId: session.id,
+            status: 'paid',
+            items: orderItems as any,
+            total: (session.amount_total || 0) / 100,
+            stripeSessionId: session.id,
+            email: session.customer_details?.email || '',
+          },
+        })
+      } catch (err) {
+        if (isDuplicateKeyError(err)) {
+          console.log('Order already exists for session:', session.id)
+          break
+        }
+        throw err
+      }
 
       console.log('Order created for session:', session.id)
+
+      for (const item of orderItems) {
+        if (!item.product) continue
+        try {
+          const doc = await payload.findByID({
+            collection: 'products',
+            id: item.product,
+          })
+          const current = Number((doc as any).quantity) || 0
+          await payload.update({
+            collection: 'products',
+            id: item.product,
+            data: {
+              quantity: Math.max(0, current - item.quantity),
+            },
+          })
+        } catch (err) {
+          console.error('Failed to decrement stock for product:', item.product, err)
+        }
+      }
 
       const customerEmail = session.customer_details?.email
       if (customerEmail) {

@@ -3,6 +3,7 @@ import * as migration_20260719_add_image_url from './20260719_add_image_url';
 import * as migration_20260719_add_product_state from './20260719_add_product_state';
 import * as migration_20260720_add_is_visible from './20260720_add_is_visible';
 import * as migration_20260802_202035 from './20260802_202035';
+import * as migration_20260807_add_unique_stripe_session from './20260807_add_unique_stripe_session';
 
 export const migrations = [
   {
@@ -29,5 +30,10 @@ export const migrations = [
     up: migration_20260802_202035.up,
     down: migration_20260802_202035.down,
     name: '20260802_202035'
+  },
+  {
+    up: migration_20260807_add_unique_stripe_session.up,
+    down: migration_20260807_add_unique_stripe_session.down,
+    name: '20260807_add_unique_stripe_session'
   },
 ];

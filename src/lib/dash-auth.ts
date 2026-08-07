@@ -13,7 +13,7 @@ export const SESSION_COOKIE_OPTIONS = {
 }
 
 function getSecret(): string {
-  return process.env.PAYLOAD_SECRET || 'dark-card-collection-dashboard'
+  return process.env.DASH_SESSION_SECRET || process.env.PAYLOAD_SECRET || 'dark-card-collection-dashboard'
 }
 
 export function signToken(value: string): string {
@@ -31,7 +31,8 @@ export function verifyToken(token: string): boolean {
   const ts = token.slice(secondLastDot + 1, lastDot)
   const value = token.slice(0, secondLastDot)
   const expected = crypto.createHmac('sha256', getSecret()).update(`${value}.${ts}`).digest('hex')
-  if (sig !== expected) return false
+  if (sig.length !== expected.length) return false
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return false
   if (Date.now() - Number(ts) > SESSION_TTL_MS) return false
   return true
 }

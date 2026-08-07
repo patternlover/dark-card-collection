@@ -1,55 +1,143 @@
 import { NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
+import { getPayloadClient } from '@/lib/payload'
+import { proxyImageUrl } from '@/lib/proxy-image'
+import { getProductImageInfo } from '@/lib/product-image'
 
 const FREE_SHIPPING_THRESHOLD = 80
 const SHIPPING_COST = 9.99
+const MAX_QUANTITY = 99
+const MAX_ITEMS = 100
 
 export async function POST(req: Request) {
   try {
     const stripe = getStripe()
-    const body = await req.json()
-    const { items, shipping } = body
+    const payload = await getPayloadClient()
 
-    if (!items || items.length === 0) {
+    const body = await req.json()
+    const rawItems = Array.isArray(body?.items) ? body.items : []
+
+    if (rawItems.length === 0) {
       return NextResponse.json(
         { error: 'Nessun prodotto nel carrello' },
         { status: 400 }
       )
     }
 
-    const lineItems = items.map((item: { title: string; price: number; quantity: number; id: number | string; image?: string | null; imageUrl?: string | null; images?: string[] | null }) => {
-      const productImages = item.imageUrl
-        ? [item.imageUrl]
-        : item.images && item.images.length > 0
-          ? item.images.filter(Boolean)
-          : item.image
-            ? [item.image]
-            : []
+    if (rawItems.length > MAX_ITEMS) {
+      return NextResponse.json(
+        { error: 'Troppi prodotti nel carrello' },
+        { status: 400 }
+      )
+    }
 
-      return {
+    const requested: Array<{ id: number; quantity: number }> = []
+    for (const item of rawItems) {
+      const id = Number(item?.id)
+      const quantity = Number(item?.quantity)
+
+      if (!Number.isInteger(id) || id <= 0) {
+        return NextResponse.json(
+          { error: 'Prodotto non valido nel carrello' },
+          { status: 400 }
+        )
+      }
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+        return NextResponse.json(
+          { error: 'Quantità non valida nel carrello' },
+          { status: 400 }
+        )
+      }
+      requested.push({ id, quantity })
+    }
+
+    const ids = [...new Set(requested.map((r) => r.id))]
+
+    const result = await payload.find({
+      collection: 'products',
+      where: { id: { in: ids } },
+      limit: ids.length,
+      depth: 1,
+    })
+
+    const productById = new Map(result.docs.map((p) => [p.id, p]))
+
+    const lineItems = []
+    for (const { id, quantity } of requested) {
+      const product = productById.get(id)
+
+      if (!product) {
+        return NextResponse.json(
+          { error: 'Prodotto non trovato nel carrello' },
+          { status: 400 }
+        )
+      }
+
+      const anyProduct = product as any
+
+      if (anyProduct.isVisible === false) {
+        return NextResponse.json(
+          { error: 'Prodotto non disponibile' },
+          { status: 400 }
+        )
+      }
+
+      if (anyProduct.status !== 'listed' && anyProduct.status !== 'hold') {
+        return NextResponse.json(
+          { error: 'Prodotto non disponibile' },
+          { status: 400 }
+        )
+      }
+
+      const unitPrice = Number(anyProduct.storePrice)
+      if (!unitPrice || unitPrice <= 0) {
+        return NextResponse.json(
+          { error: 'Prezzo non disponibile' },
+          { status: 400 }
+        )
+      }
+
+      const stock = anyProduct.quantity
+      if (stock !== null && stock !== undefined && Number(stock) < quantity) {
+        return NextResponse.json(
+          { error: 'Quantità richiesta non disponibile' },
+          { status: 400 }
+        )
+      }
+
+      const imageUrl = proxyImageUrl(getProductImageInfo(anyProduct).cardUrl)
+
+      lineItems.push({
         price_data: {
           currency: 'eur',
           product_data: {
-            name: item.title,
-            ...(productImages.length > 0 ? { images: productImages.slice(0, 8) } : {}),
+            name: String(anyProduct.title || 'Prodotto'),
+            ...(imageUrl ? { images: [imageUrl] } : {}),
             metadata: {
-              payloadProductId: String(item.id),
+              payloadProductId: String(id),
             },
           },
-          unit_amount: Math.round(item.price * 100),
+          unit_amount: Math.round(unitPrice * 100),
         },
-        quantity: item.quantity,
-      }
-    })
+        quantity,
+      })
+    }
 
-    if (shipping > 0) {
+    const subtotalCents = lineItems.reduce(
+      (sum, li) => sum + li.price_data.unit_amount * li.quantity,
+      0
+    )
+    const shippingCost =
+      subtotalCents >= FREE_SHIPPING_THRESHOLD * 100 ? 0 : SHIPPING_COST
+
+    if (shippingCost > 0) {
       lineItems.push({
         price_data: {
           currency: 'eur',
           product_data: {
             name: 'Spedizione',
           },
-          unit_amount: Math.round(SHIPPING_COST * 100),
+          unit_amount: Math.round(shippingCost * 100),
         },
         quantity: 1,
       })
@@ -72,7 +160,7 @@ export async function POST(req: Request) {
         font_family: 'inter',
       },
       metadata: {
-        productIds: items.map((item: { id: number | string }) => String(item.id)).join(','),
+        productIds: requested.map((r) => String(r.id)).join(','),
       },
     })
 
