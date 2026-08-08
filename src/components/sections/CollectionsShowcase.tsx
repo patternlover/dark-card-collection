@@ -37,10 +37,10 @@ export async function CollectionsShowcase() {
 
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {collections.map((col, i) => (
-            <Reveal key={col.id} delay={i * 70}>
+            <Reveal key={col.id} delay={i * 70} className="h-full">
               <Link
                 href={`/shop/collections/${col.slug}`}
-                className="block border-2 border-zinc-700 bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
+                className="flex h-full flex-col border-2 border-zinc-700 bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
               >
                 <h3 className="font-semibold text-white line-clamp-2">{formatCollectionName(col.name)}</h3>
                 {col.releaseDate && (
@@ -48,7 +48,7 @@ export async function CollectionsShowcase() {
                     Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}
                   </p>
                 )}
-                <p className="mt-3 text-xs text-[var(--accent)]">Vedi prodotti →</p>
+                <p className="mt-auto pt-3 text-xs text-[var(--accent)]">Vedi prodotti →</p>
               </Link>
             </Reveal>
           ))}

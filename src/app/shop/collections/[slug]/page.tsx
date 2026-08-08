@@ -163,9 +163,11 @@ export default async function CollectionPage({
               Prodotti della collezione
             </h2>
             <Reveal>
-              <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="mt-6 columns-1 gap-6 sm:columns-2 xl:columns-3">
                 {groups.map((group) => (
-                  <ProductGroupCard key={group.title} group={group} />
+                  <div key={group.title} className="mb-6 break-inside-avoid">
+                    <ProductGroupCard group={group} />
+                  </div>
                 ))}
               </div>
             </Reveal>

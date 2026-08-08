@@ -8,7 +8,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { groupProducts } from '@/lib/group-products'
-import { CONDITION_OPTIONS, LANGUAGE_OPTIONS } from '@/lib/product-filters'
+import { CONDITION_OPTIONS, LANGUAGE_OPTIONS, computeFilterCounts } from '@/lib/product-filters'
 import { trackFilter } from '@/lib/analytics'
 
 interface ClientListingProps {
@@ -34,7 +34,7 @@ interface Filters {
 const EMPTY_FILTERS: Filters = { q: '', category: '', collection: '', condition: '', language: '' }
 
 const selectClass =
-  'w-full border-2 border-zinc-700 bg-zinc-800 px-3 py-2.5 text-sm text-white focus:border-[var(--accent)] focus:outline-none shadow-[2px_2px_0px_0px_#27272a] disabled:opacity-40 disabled:cursor-not-allowed'
+  'w-full appearance-none border-2 border-zinc-700 bg-zinc-800 py-2.5 pl-3 pr-9 text-sm text-white focus:border-[var(--accent)] focus:outline-none shadow-[2px_2px_0px_0px_#27272a] disabled:opacity-40 disabled:cursor-not-allowed'
 
 function SearchInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   return (
@@ -48,6 +48,52 @@ function SearchInput({ value, onChange }: { value: string; onChange: (value: str
         className="w-full border-2 border-zinc-700 bg-zinc-800 py-3 pl-11 pr-4 text-sm text-white placeholder-zinc-500 shadow-[3px_3px_0px_0px_#27272a] focus:border-[var(--accent)] focus:outline-none"
       />
     </div>
+  )
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+  counts,
+  allLabel,
+  current,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  options: { value: string; label: string }[]
+  counts: Record<string, number>
+  allLabel: string
+  current: string
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-zinc-500">
+        {label}
+      </span>
+      <span className="relative block">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={selectClass}
+        >
+          <option value="">{allLabel}</option>
+          {options.map((opt) => {
+            const count = counts[opt.value] || 0
+            const selected = current === opt.value
+            return (
+              <option key={opt.value} value={opt.value} disabled={!selected && count === 0}>
+                {opt.label}
+                {count > 0 ? ` (${count})` : ''}
+              </option>
+            )
+          })}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+      </span>
+    </label>
   )
 }
 
@@ -112,21 +158,7 @@ export function ClientListing({
     filters.q || filters.category || filters.collection || filters.condition || filters.language,
   )
 
-  const counts = useMemo(() => {
-    const cond: Record<string, number> = {}
-    const lang: Record<string, number> = {}
-    const cat: Record<string, number> = {}
-    const col: Record<string, number> = {}
-    for (const p of products) {
-      if (p.condition) cond[p.condition] = (cond[p.condition] || 0) + 1
-      if (p.language) lang[p.language] = (lang[p.language] || 0) + 1
-      const cid = p.category?.id
-      if (cid != null) cat[String(cid)] = (cat[String(cid)] || 0) + 1
-      const colid = p.collection?.id
-      if (colid != null) col[String(colid)] = (col[String(colid)] || 0) + 1
-    }
-    return { cond, lang, cat, col }
-  }, [products])
+  const counts = useMemo(() => computeFilterCounts(products), [products])
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -168,7 +200,7 @@ export function ClientListing({
   }, [basePath])
 
   return (
-    <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-8">
+    <div className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-6">
       <div className="hidden lg:block" aria-hidden="true" />
 
       <div className="min-w-0">
@@ -227,100 +259,48 @@ export function ClientListing({
             )}
           </div>
 
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-              Condizione
-            </span>
-            <select
-              value={filters.condition}
-              onChange={(e) => handleSelect('condition', e.target.value)}
-              className={selectClass}
-            >
-              <option value="">Tutte le condizioni</option>
-              {CONDITION_OPTIONS.map((opt) => {
-                const count = counts.cond[opt.value] || 0
-                const selected = filters.condition === opt.value
-                return (
-                  <option key={opt.value} value={opt.value} disabled={!selected && count === 0}>
-                    {opt.label}
-                    {count > 0 ? ` (${count})` : ''}
-                  </option>
-                )
-              })}
-            </select>
-          </label>
+          <FilterSelect
+            label="Condizione"
+            value={filters.condition}
+            onChange={(v) => handleSelect('condition', v)}
+            options={CONDITION_OPTIONS}
+            counts={counts.cond}
+            allLabel="Tutte le condizioni"
+            current={filters.condition}
+          />
 
-          <label className="block">
-            <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-              Lingua
-            </span>
-            <select
-              value={filters.language}
-              onChange={(e) => handleSelect('language', e.target.value)}
-              className={selectClass}
-            >
-              <option value="">Tutte le lingue</option>
-              {LANGUAGE_OPTIONS.map((opt) => {
-                const count = counts.lang[opt.value] || 0
-                const selected = filters.language === opt.value
-                return (
-                  <option key={opt.value} value={opt.value} disabled={!selected && count === 0}>
-                    {opt.label}
-                    {count > 0 ? ` (${count})` : ''}
-                  </option>
-                )
-              })}
-            </select>
-          </label>
+          <FilterSelect
+            label="Lingua"
+            value={filters.language}
+            onChange={(v) => handleSelect('language', v)}
+            options={LANGUAGE_OPTIONS}
+            counts={counts.lang}
+            allLabel="Tutte le lingue"
+            current={filters.language}
+          />
 
           {categories.length > 0 && (
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-                Categoria
-              </span>
-              <select
-                value={filters.category}
-                onChange={(e) => handleSelect('category', e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Tutte le categorie</option>
-                {categories.map((cat: any) => {
-                  const count = counts.cat[String(cat.id)] || 0
-                  const selected = filters.category === String(cat.id)
-                  return (
-                    <option key={cat.id} value={String(cat.id)} disabled={!selected && count === 0}>
-                      {cat.name}
-                      {count > 0 ? ` (${count})` : ''}
-                    </option>
-                  )
-                })}
-              </select>
-            </label>
+            <FilterSelect
+              label="Categoria"
+              value={filters.category}
+              onChange={(v) => handleSelect('category', v)}
+              options={categories.map((cat: any) => ({ value: String(cat.id), label: cat.name }))}
+              counts={counts.cat}
+              allLabel="Tutte le categorie"
+              current={filters.category}
+            />
           )}
 
           {collections.length > 0 && (
-            <label className="block">
-              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-                Collezione
-              </span>
-              <select
-                value={filters.collection}
-                onChange={(e) => handleSelect('collection', e.target.value)}
-                className={selectClass}
-              >
-                <option value="">Tutte le collezioni</option>
-                {collections.map((col: any) => {
-                  const count = counts.col[String(col.id)] || 0
-                  const selected = filters.collection === String(col.id)
-                  return (
-                    <option key={col.id} value={String(col.id)} disabled={!selected && count === 0}>
-                      {col.name}
-                      {count > 0 ? ` (${count})` : ''}
-                    </option>
-                  )
-                })}
-              </select>
-            </label>
+            <FilterSelect
+              label="Collezione"
+              value={filters.collection}
+              onChange={(v) => handleSelect('collection', v)}
+              options={collections.map((col: any) => ({ value: String(col.id), label: col.name }))}
+              counts={counts.col}
+              allLabel="Tutte le collezioni"
+              current={filters.collection}
+            />
           )}
 
           <button
@@ -345,17 +325,21 @@ export function ClientListing({
           </div>
         ) : grouped ? (
           <Reveal>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="columns-1 gap-6 sm:columns-2 xl:columns-3">
               {groups.map((group) => (
-                <ProductGroupCard key={group.title} group={group} />
+                <div key={group.title} className="mb-6 break-inside-avoid">
+                  <ProductGroupCard group={group} />
+                </div>
               ))}
             </div>
           </Reveal>
         ) : (
           <Reveal>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="columns-1 gap-6 sm:columns-2 xl:columns-3">
               {unique.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <div key={product.id} className="mb-6 break-inside-avoid">
+                  <ProductCard product={product} />
+                </div>
               ))}
             </div>
           </Reveal>

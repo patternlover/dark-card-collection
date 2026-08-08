@@ -44,7 +44,7 @@ export async function FeaturedProducts() {
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {groups.map((group, i) => (
-              <Reveal key={group.title} delay={i * 80}>
+              <Reveal key={group.title} delay={i * 80} className="h-full">
                 <ProductGroupCard group={group} />
               </Reveal>
             ))}

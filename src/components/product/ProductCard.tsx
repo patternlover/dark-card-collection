@@ -31,10 +31,10 @@ export function ProductCard({ product }: ProductCardProps) {
   const imgUrl = getProductImageInfo(product).cardUrl
 
   return (
-    <div className="group relative border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)]">
+    <div className="group relative flex h-full flex-col border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)]">
       <Link
         href={`/products/${product.slug}`}
-        className="block"
+        className="flex flex-1 flex-col"
       >
         <div className="p-3">
           <div className="relative aspect-square w-full">
@@ -53,7 +53,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        <div className="px-4 pb-4">
+        <div className="mt-auto px-4 pb-4">
           <div className="mb-2 flex flex-wrap gap-1.5">
             {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
             {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
