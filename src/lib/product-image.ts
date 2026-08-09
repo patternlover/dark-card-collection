@@ -26,6 +26,3 @@ export function getProductImageInfo(product: any): ProductImageInfo {
   return { url, cardUrl, pdpUrl }
 }
 
-export function getProductImage(product: any): string | null {
-  return getProductImageInfo(product).url
-}

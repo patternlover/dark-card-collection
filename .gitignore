@@ -28,9 +28,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
-.env
-.env*.local
+# env files (mai versionati: contengono chiavi live)
+.env*
+!.env.example
 
 # vercel
 .vercel
@@ -38,5 +38,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.env*
+
+# payload (rigenerato al build)
 src/payload-generated-schema.ts

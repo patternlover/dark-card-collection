@@ -44,7 +44,7 @@ function getSheetId(): string | null {
   return process.env.GOOGLE_SHEET_ID || null
 }
 
-export async function findRowByItemId(itemId: string): Promise<number | null> {
+async function findRowByItemId(itemId: string): Promise<number | null> {
   const sheets = getSheetsClient()
   const spreadsheetId = getSheetId()
   if (!sheets || !spreadsheetId) return null

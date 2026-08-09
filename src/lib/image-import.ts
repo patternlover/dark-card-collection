@@ -22,14 +22,14 @@ export interface ImageImportResult {
   errors: string[]
 }
 
-export const TARGET_MAX_DIMENSION = 900
+const TARGET_MAX_DIMENSION = 900
 
 /**
  * Normalize, upscale and re-encode an image buffer.
  * Cardmarket thumbnails are usually small (300x300): we upscale them to a
  * consistent size so the storefront can render them sharply on retina.
  */
-export async function processImageBuffer(buffer: Buffer): Promise<{
+async function processImageBuffer(buffer: Buffer): Promise<{
   buffer: Buffer
   mimetype: string
 }> {
@@ -61,7 +61,7 @@ export async function processImageBuffer(buffer: Buffer): Promise<{
  * Parse image URLs from a CSV cell (comma-separated).
  * Handles spaces around commas and trims whitespace.
  */
-export function parseImageUrls(raw: string | undefined): string[] {
+function parseImageUrls(raw: string | undefined): string[] {
   if (!raw || !raw.trim()) return []
   return raw
     .split(',')

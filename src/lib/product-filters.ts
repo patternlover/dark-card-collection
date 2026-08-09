@@ -10,7 +10,7 @@ export const LANGUAGE_OPTIONS = [
   { value: 'chinese', label: 'Cinese' },
 ]
 
-export interface FilterCounts {
+interface FilterCounts {
   cond: Record<string, number>
   lang: Record<string, number>
   cat: Record<string, number>

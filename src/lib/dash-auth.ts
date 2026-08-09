@@ -2,7 +2,7 @@ import crypto from 'crypto'
 import { cookies } from 'next/headers'
 
 export const COOKIE_NAME = 'dcc-dash'
-export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000
 
 export const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
@@ -22,7 +22,7 @@ export function signToken(value: string): string {
   return `${data}.${sig}`
 }
 
-export function verifyToken(token: string): boolean {
+function verifyToken(token: string): boolean {
   const lastDot = token.lastIndexOf('.')
   if (lastDot === -1) return false
   const secondLastDot = token.lastIndexOf('.', lastDot - 1)
@@ -41,11 +41,6 @@ export async function isAuthed(): Promise<boolean> {
   const cookieStore = await cookies()
   const token = cookieStore.get(COOKIE_NAME)?.value
   return token ? verifyToken(token) : false
-}
-
-export async function setDashSession(value: string): Promise<void> {
-  const cookieStore = await cookies()
-  cookieStore.set(COOKIE_NAME, signToken(value), SESSION_COOKIE_OPTIONS)
 }
 
 export async function clearDashSession(): Promise<void> {

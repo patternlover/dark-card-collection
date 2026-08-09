@@ -1,12 +1,12 @@
 import type { Payload } from 'payload'
 
-export interface OrderEmailItem {
+interface OrderEmailItem {
   title: string
   quantity: number
   price: number
 }
 
-export interface OrderEmailData {
+interface OrderEmailData {
   orderId: string
   customerEmail: string
   items: OrderEmailItem[]
@@ -23,7 +23,7 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
-export function buildOrderConfirmationHtml(data: OrderEmailData): string {
+function buildOrderConfirmationHtml(data: OrderEmailData): string {
   const storeName = data.storeName || 'Dark Card Collection'
   const rows = data.items
     .map(
