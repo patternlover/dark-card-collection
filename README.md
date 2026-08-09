@@ -2,6 +2,8 @@
 
 Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs.
 
+**Documentazione completa**: [`docs/`](./docs/) — overview, setup, database, SEO, security, design.
+
 ## Tech Stack
 
 - **Framework**: Next.js 15 (App Router)

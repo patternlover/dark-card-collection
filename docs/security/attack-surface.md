@@ -1,4 +1,4 @@
-# ATTACK_SURFACE.md — Dark Card Collection
+# Superficie d'Attacco — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)**.
 Superficie d'attacco del progetto, endpooint per endpoint, con autenticazione e controllo autorizzativo richiesti/rilevati.

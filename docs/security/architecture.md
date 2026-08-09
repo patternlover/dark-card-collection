@@ -1,4 +1,4 @@
-# SECURITY_ARCHITECTURE.md — Dark Card Collection
+# Architettura di Sicurezza — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)** — aggiornare a ogni modifica.
 Documento generato con metodo: inventario tecnico (Fase 1 del piano di sicurezza) + analisi statica del repository `main@717ea4b`.
@@ -88,7 +88,7 @@ Tabelle Payload (snake_case gestito da adapter):
 | Admin prodotti (`/admin/products`) | password statica condivisa (`x-sync-password`) | CRUD prodotti + scrittura Google Sheets |
 | Cron/system | Bearer `CRON_SECRET` o `PAYLOAD_SECRET` | import/price update/backfill immagini |
 
-**Riscontro**: nessun vero RBAC (un solo livello admin). Access control delle collection Payload: **default di Payload 3** = richiede utente autenticato per REST/Admin; le pagine storefront usano la **Local API** (che salta l'access control) filtrando per `status`/`isVisible`. Da verificare con test (vedi SECURITY_TEST_PLAN).
+**Riscontro**: nessun vero RBAC (un solo livello admin). Access control delle collection Payload: **default di Payload 3** = richiede utente autenticato per REST/Admin; le pagine storefront usano la **Local API** (che salta l'access control) filtrando per `status`/`isVisible`. Da verificare con test (vedi [`test-plan.md`](./test-plan.md)).
 
 ---
 

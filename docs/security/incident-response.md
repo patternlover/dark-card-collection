@@ -1,4 +1,4 @@
-# INCIDENT_RESPONSE_TECHNICAL.md — Dark Card Collection
+# Incident Response — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)**.
 Runbook tecnico per il team. Ogni runbook segue: rilevazione → contenimento → revoca credenziali → rotazione secret → isolamento servizi → conservazione evidenze → verifica integrità → ripristino → monitoraggio successivo → post-mortem tecnico.
@@ -22,7 +22,7 @@ Regole: non cancellare evidenze, non distruggere log, coordinarsi con il proprie
 - Non sovrascrivere/non cancellare.
 
 ### Post-incidente
-- Monitoraggio esteso (24-72h), post-mortem tecnico, aggiornamento THREAT_MODEL/RESIDUAL_RISKS.
+- Monitoraggio esteso (24-72h), post-mortem tecnico, aggiornamento [`threat-model.md`](./threat-model.md)/[`residual-risks.md`](./residual-risks.md).
 
 ---
 
@@ -30,7 +30,7 @@ Regole: non cancellare evidenze, non distruggere log, coordinarsi con il proprie
 
 - **Rilevazione**: login anomali, sessioni multiple, modifiche sospette (prezzi, stati ordine), alert rate limit.
 - **Contenimento**: revoca immediata — ruotare `PAYLOAD_SECRET` (invalida sessioni CMS e cookie `dcc-dash` firmati), bloccare l'utente Payload, rimuovere l'email dall'allowlist `DASHBOARD_GOOGLE_EMAILS`.
-- **Rotazione secret**: v. SECRETS_MANAGEMENT.md §3.1/3.4.
+- **Rotazione secret**: v. [`secrets-management.md`](./secrets-management.md) §3.1/3.4.
 - **Isolamento**: sospendere gli endpoint admin (dietro flag/firewall) se necessario.
 - **Evidenze**: log accessi, modifiche audit (post REQ-12).
 - **Verifica integrità**: controllare Products/Orders/Users per modifiche non autorizzate (importi, stati, email).
@@ -42,7 +42,7 @@ Regole: non cancellare evidenze, non distruggere log, coordinarsi con il proprie
 
 - **Rilevazione**: uso anomalo (errori 401, picchi chiamate), key esposta in repo/bundle/log.
 - **Contenimento**: revocare subito la key dal provider.
-- **Rotazione**: v. SECRETS_MANAGEMENT.md §3.2/3.4.
+- **Rotazione**: v. [`secrets-management.md`](./secrets-management.md) §3.2/3.4.
 - **Isolamento**: se la key dà accesso a dati, limitare l'account/scope.
 - **Evidenze**: log del provider (Vercel, Stripe, Google).
 - **Verifica integrità**: dati toccati (blob, sheet, sessioni Stripe).

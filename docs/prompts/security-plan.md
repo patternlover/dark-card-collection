@@ -621,16 +621,16 @@ Non eseguire attività distruttive o intrusive in produzione senza autorizzazion
 
 Crea questi file:
 
-- `docs/security/SECURITY_ARCHITECTURE.md`
-- `docs/security/SECURITY_GUIDE.md`
-- `docs/security/THREAT_MODEL.md`
-- `docs/security/ATTACK_SURFACE.md`
-- `docs/security/SECURITY_REQUIREMENTS.md`
-- `docs/security/SECURITY_TEST_PLAN.md`
-- `docs/security/INCIDENT_RESPONSE_TECHNICAL.md`
-- `docs/security/SECRETS_MANAGEMENT.md`
-- `docs/security/SECURITY_CHANGELOG.md`
-- `docs/security/RESIDUAL_RISKS.md`
+- `docs/security/architecture.md`
+- `docs/security/guide.md`
+- `docs/security/threat-model.md`
+- `docs/security/attack-surface.md`
+- `docs/security/requirements.md`
+- `docs/security/test-plan.md`
+- `docs/security/incident-response.md`
+- `docs/security/secrets-management.md`
+- `docs/security/changelog.md`
+- `docs/security/residual-risks.md`
 
 Crea inoltre, quando compatibile con il progetto:
 

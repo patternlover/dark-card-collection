@@ -1,4 +1,4 @@
-# SECRETS_MANAGEMENT.md — Dark Card Collection
+# Gestione Segreti — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)**.
 Gestione dei segreti: inventario (senza valori), separazione per ambiente, rotazione, revoca, secret scanning. Nessun valore segreto è riportato in questo documento (regola del piano).

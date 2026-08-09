@@ -107,8 +107,8 @@ Tutti e 7 i punti implementati, test 24/24, build ok, deployato e verificato in 
 ## Comandi utili
 
 ```bash
-npm test                                   # test Vitest (24/24)
-NODE_OPTIONS="--max-old-space-size=4096" npm run build   # build locale (workaround heap WSL)
+pnpm test                                   # test Vitest (24/24)
+NODE_OPTIONS="--max-old-space-size=4096" pnpm build   # build locale (workaround heap WSL)
 npx vercel env ls production               # elenco variabili (timestamps = creazione, non modifica)
 npx vercel env pull /tmp/env.prod --environment=production --yes   # valori (mascherati [SENSITIVE] se criptati)
 npx vercel --prod                          # deploy

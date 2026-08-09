@@ -1,4 +1,4 @@
-# SECURITY_TEST_PLAN.md — Dark Card Collection
+# Piano di Test — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)** — tutti i test `DA ESEGUIRE` salvo diversa indicazione. Classificazione: `AUTO` (automatico/vitest), `MAN` (manuale), `STG` (solo staging), `PROD` (solo con autorizzazione esplicita), `PENT` (da affidare a penetration tester).
 

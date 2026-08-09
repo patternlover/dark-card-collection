@@ -1,4 +1,4 @@
-# RESIDUAL_RISKS.md — Dark Card Collection
+# Rischi Residui — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)** — aggiornare a ogni modifica/verifica. Documenta rischi residui, limiti, assunzioni e test ancora necessari. Il sistema NON è "100% sicuro".
 
@@ -41,7 +41,7 @@ Stato: **bozza iniziale (Fase A)** — aggiornare a ogni modifica/verifica. Docu
 - Le GitHub Actions usate sono quelle ufficiali e non modificate.
 
 ## 3. Test ancora necessari (sintesi)
-Vedi SECURITY_TEST_PLAN.md: T-01..T-36. In particolare da eseguire subito (staging):
+Vedi [`test-plan.md`](./test-plan.md): T-01..T-36. In particolare da eseguire subito (staging):
 - T-01, T-02 (manipolazione prezzo, BOLA)
 - T-26 (`pnpm audit` / osv)
 - T-14 (header, HSTS)

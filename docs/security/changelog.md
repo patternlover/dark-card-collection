@@ -1,4 +1,4 @@
-# SECURITY_CHANGELOG.md — Dark Card Collection
+# Changelog Sicurezza — Dark Card Collection
 
 Registro cronologico delle attività di sicurezza (analisi, modifiche, test). Formato: data | attività | file | rischio mitigato | test | stato.
 
@@ -14,7 +14,7 @@ Registro cronologico delle attività di sicurezza (analisi, modifiche, test). Fo
 - `.github/workflows/ci.yml`: aggiunto step `pnpm audit --prod` (bloccante) tra install e typecheck.
 - `package.json`: script `lint` da `next lint` (rimosso in Next 16) → `tsc --noEmit`.
 - `tsconfig.json`: aggiornamento automatico Next 16 (`jsx: react-jsx`, include `.next/dev/types`).
-- **Risultato `pnpm audit --prod`: 61 → 22 vuln (0 high, 18 moderate, 4 low).** Restano solo transitive senza fix disponibile (vedi `RESIDUAL_RISKS.md`).
+- **Risultato `pnpm audit --prod`: 61 → 22 vuln (0 high, 18 moderate, 4 low).** Restano solo transitive senza fix disponibile (vedi [`residual-risks.md`](./residual-risks.md)).
 - Test: `next build` PASSED (Next 16.3.0 + Turbopack), `vitest` 24/24 PASSED.
 
 ### REQ-01 — Prezzo server-side al checkout
@@ -43,7 +43,7 @@ Registro cronologico delle attività di sicurezza (analisi, modifiche, test). Fo
   - Idempotenza: create ordine + catch errore UNIQUE (`duplicate key`/`23505`) → sessione già processata, skip. Eliminato il TOCTOU find-then-create.
   - **Stock decrementato** dopo creazione ordine (clamp a 0), una sola volta per sessione.
 - Mitiga **VULN-006 (High)**.
-- **Rischio residuo**: decremento stock read-modify-write non atomico tra sessioni concorrenti diverse sullo stesso prodotto (rischio overselling minimo, shop single-tenant). Documentato in `RESIDUAL_RISKS.md`.
+- **Rischio residuo**: decremento stock read-modify-write non atomico tra sessioni concorrenti diverse sullo stesso prodotto (rischio overselling minimo, shop single-tenant). Documentato in [`residual-risks.md`](./residual-risks.md).
 
 ### Test eseguiti in questa sessione
 | Test | Esito |
@@ -64,15 +64,15 @@ Registro cronologico delle attività di sicurezza (analisi, modifiche, test). Fo
 ## 2026-08-06 — Baseline (Fase A: analisi, nessuna modifica al codice)
 
 ### Analisi completata
-- Inventario tecnico completo (architettura, API, DB, integrazioni, ambienti, segreti, CI/CD). → `SECURITY_ARCHITECTURE.md`
-- Superficie d'attacco per endpoint. → `ATTACK_SURFACE.md`
-- Threat model STRIDE + OWASP (16 minacce, T01–T16). → `THREAT_MODEL.md`
-- Requisiti di sicurezza prioritizzati (REQ-01..REQ-15). → `SECURITY_REQUIREMENTS.md`
-- Guida tecnica di sicurezza. → `SECURITY_GUIDE.md`
-- Piano di test (T-01..T-36). → `SECURITY_TEST_PLAN.md`
-- Gestione segreti e rotazione. → `SECRETS_MANAGEMENT.md`
-- Runbook incident response tecnico. → `INCIDENT_RESPONSE_TECHNICAL.md`
-- Rischi residui. → `RESIDUAL_RISKS.md`
+- Inventario tecnico completo (architettura, API, DB, integrazioni, ambienti, segreti, CI/CD). → [`architecture.md`](./architecture.md)
+- Superficie d'attacco per endpoint. → [`attack-surface.md`](./attack-surface.md)
+- Threat model STRIDE + OWASP (16 minacce, T01–T16). → [`threat-model.md`](./threat-model.md)
+- Requisiti di sicurezza prioritizzati (REQ-01..REQ-15). → [`requirements.md`](./requirements.md)
+- Guida tecnica di sicurezza. → [`guide.md`](./guide.md)
+- Piano di test (T-01..T-36). → [`test-plan.md`](./test-plan.md)
+- Gestione segreti e rotazione. → [`secrets-management.md`](./secrets-management.md)
+- Runbook incident response tecnico. → [`incident-response.md`](./incident-response.md)
+- Rischi residui. → [`residual-risks.md`](./residual-risks.md)
 
 ### Risultati principali
 | ID | Severità | Descrizione sintetica |

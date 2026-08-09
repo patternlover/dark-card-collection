@@ -2,7 +2,7 @@
 
 ## Overview
 
-E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + PostgreSQL (Neon.io) + Stripe + Vercel.
+E-commerce Pokémon TCG sealed products. Next.js 16.3.0 + Payload CMS 3.87.1 + PostgreSQL (Neon.io) + Stripe + Vercel.
 
 - **Live URL**: https://darkcardcollection.com
 - **Admin**: https://darkcardcollection.com/admin
@@ -12,8 +12,8 @@ E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + Postgre
 
 | Component | Choice |
 |-----------|--------|
-| Framework | Next.js 15.4.11 (App Router) |
-| CMS | Payload CMS 3.86.0 |
+| Framework | Next.js 16.3.0 (App Router) |
+| CMS | Payload CMS 3.87.1 |
 | Database | PostgreSQL via Neon.io |
 | Payments | Stripe (live mode) |
 | Email | Resend (`@payloadcms/email-resend`) |
@@ -24,17 +24,19 @@ E-commerce Pokémon TCG sealed products. Next.js 15 + Payload CMS 3.86 + Postgre
 
 ## Environment Variables
 
+> Valori di esempio. I nomi ufficiali delle variabili sono in [`.env.example`](../../.env.example).
+
 ```env
-DATABASE_URI=postgresql://neondb_owner:npg_xxx@ep-xxx.neon.tech/neondb?sslmode=require
-PAYLOAD_SECRET=442145e4b83f1b07d85efd0a068ba673c05f41d0de582f1f5f664a95745cdd55
-NEXT_PUBLIC_SITE_URL=https://darkcardcollection.com
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_live_...
-BLOB_READ_WRITE_TOKEN=vercel_blob_...
-RESEND_API_KEY=re_...
-EMAIL_FROM=noreply@darkcardcollection.com
+DATABASE_URI=postgresql://user:password@host.neon.tech/dbname?sslmode=require
+PAYLOAD_SECRET=your-32-char-random-secret
+NEXT_PUBLIC_SITE_URL=https://your-site.com
+STRIPE_SECRET_KEY=sk_live_your_key_here
+STRIPE_PUBLISHABLE_KEY=pk_live_your_key_here
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_your_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
+BLOB_READ_WRITE_TOKEN=vercel_blob_your_token_here
+RESEND_API_KEY=re_your_resend_api_key
+EMAIL_FROM=noreply@your-site.com
 CRON_SECRET=your-cron-secret
 GOOGLE_CLIENT_ID=your-oauth-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-oauth-client-secret
@@ -46,116 +48,145 @@ DASHBOARD_GOOGLE_EMAILS=you@gmail.com,other@gmail.com
 ```
 src/
 ├── app/
-│   ├── layout.tsx                  # Root layout (RouteProgress, ConsentModeScript, providers)
-│   ├── page.tsx                    # Homepage (force-dynamic, fetches from Payload)
-│   ├── not-found.tsx               # 404 page
-│   ├── error.tsx                   # Error boundary
-│   ├── globals.css
-│   │
-│   ├── shop/
-│   │   ├── page.tsx                # /shop - product listing with filters + search
-│   │   ├── bestsellers/page.tsx    # /shop/bestsellers - featured products
-│   │   ├── new-arrivals/page.tsx   # /shop/new-arrivals - newest products
-│   │   ├── preorders/page.tsx      # /shop/preorders - hold status products
-│   │   └── collections/page.tsx    # /shop/collections - collection list from Payload
-│   │
-│   ├── products/
-│   │   └── [slug]/page.tsx         # Product detail page
-│   │
-│   ├── cart/page.tsx               # Cart page (client, uses CartProvider)
-│   ├── checkout/
-│   │   ├── page.tsx                # Checkout (client, Stripe Embedded Checkout)
-│   │   └── success/page.tsx        # Post-payment success
-│   │
-│   ├── info/
-│   │   ├── about/page.tsx          # About page (max-w-2xl)
-│   │   ├── faq/page.tsx            # FAQ (client, accordion) (max-w-2xl)
-│   │   ├── contact/page.tsx        # Contact form (client) (max-w-2xl)
-│   │   ├── privacy/terms/shipping-returns/  # Pagine legali (max-w-2xl)
-│   │
+│   ├── (payload)/                  # Payload CMS admin (auto-generated)
+│   ├── admin/
+│   │   └── products/page.tsx       # /admin/products - variant management + delete
 │   ├── api/
-│   │   ├── auth/
-│   │   │   └── google/
-│   │   │       ├── route.ts          # GET /api/auth/google - starts OAuth flow (state nonce cookie)
-│   │   │       └── callback/route.ts # GET callback - exchanges code, verifies ID token + email whitelist, sets dcc-dash cookie
 │   │   ├── admin/
-│   │   │   ├── products/
-│   │   │   │   ├── route.ts       # GET list products + PATCH update + DELETE variant
-│   │   │   │   └── [id]/
-│   │   │   │       └── route.ts   # PATCH update single product + DELETE variant (no Sheets)
-│   │   ├── stripe/
-│   │   │   ├── checkout/route.ts   # Creates Stripe checkout session
-│   │   │   └── webhook/route.ts    # Stripe webhook (checkout.session.completed) + invio email conferma
+│   │   │   ├── backfill-images/route.ts
+│   │   │   └── products/
+│   │   │       ├── route.ts        # GET list + PATCH update + DELETE variant
+│   │   │       └── [id]/route.ts   # PATCH update single product + DELETE variant
+│   │   ├── auth/google/
+│   │   │   ├── route.ts            # GET /api/auth/google - starts OAuth flow (state nonce cookie)
+│   │   │   └── callback/route.ts   # GET callback - exchanges code, verifies ID token + email whitelist, sets dcc-dash cookie
 │   │   ├── contact/route.ts        # Contact form API (saves to messages collection)
 │   │   ├── cron/
 │   │   │   ├── import/route.ts     # Daily import from Google Sheets (3am)
 │   │   │   └── prices/route.ts     # Daily price update from sales (4am)
-│   │   └── products/
-│   │       └── import/route.ts     # Manual import endpoint
-│   │
-│   ├── admin/
-│   │   └── products/
-│   │       └── page.tsx            # /admin/products - variant management + delete
-│   │
+│   │   ├── products/import/route.ts # Manual import endpoint
+│   │   ├── proxy-image/route.ts    # Cardmarket image proxy
+│   │   └── stripe/
+│   │       ├── checkout/route.ts   # Creates Stripe checkout session
+│   │       ├── order/route.ts      # Order creation endpoint
+│   │       └── webhook/route.ts    # Stripe webhook (checkout.session.completed) + order confirmation email
+│   ├── cart/
+│   │   ├── page.tsx                # Cart page (client, uses CartProvider)
+│   │   └── loading.tsx
+│   ├── checkout/
+│   │   ├── page.tsx                # Checkout (client, Stripe Embedded Checkout)
+│   │   ├── loading.tsx
+│   │   └── success/page.tsx        # Post-payment success
 │   ├── dashboard/
 │   │   ├── page.tsx                # /dashboard - admin hub (Google OAuth auth, whitelist)
 │   │   ├── actions.ts              # Server actions: products, orders, sync, SQL
 │   │   ├── login.tsx               # Login screen: "Accedi con Google" (only)
 │   │   └── main.tsx                # Dashboard UI: overview, products, orders, sync, SQL tabs
-│   │
-│   └── (payload)/                  # Payload admin (auto-generated)
-│
+│   ├── guide/
+│   │   ├── page.tsx                # /guide - guide index
+│   │   ├── loading.tsx
+│   │   ├── come-scegliere-booster-box/page.tsx
+│   │   ├── dove-comprare-carte-pokemon-originali/page.tsx
+│   │   └── etb-cosa-sono-elite-trainer-box/page.tsx
+│   ├── info/
+│   │   ├── about/page.tsx          # About page (max-w-2xl)
+│   │   ├── contact/page.tsx        # Contact form (client) (max-w-2xl)
+│   │   ├── faq/page.tsx            # FAQ (client, accordion) (max-w-2xl)
+│   │   ├── privacy/page.tsx
+│   │   ├── shipping-returns/page.tsx
+│   │   ├── terms/page.tsx
+│   │   └── loading.tsx
+│   ├── products/
+│   │   ├── [slug]/page.tsx         # Product detail page
+│   │   └── loading.tsx
+│   ├── shop/
+│   │   ├── page.tsx                # /shop - product listing with filters + search
+│   │   ├── loading.tsx
+│   │   ├── bestsellers/page.tsx    # /shop/bestsellers - featured products
+│   │   ├── new-arrivals/page.tsx   # /shop/new-arrivals - newest products
+│   │   ├── preorders/page.tsx      # /shop/preorders - hold status products
+│   │   ├── collections/
+│   │   │   ├── page.tsx            # /shop/collections - collection list from Payload
+│   │   │   └── [slug]/page.tsx     # /shop/collections/[slug]
+│   │   └── categories/
+│   │       └── [slug]/page.tsx     # /shop/categories/[slug]
+│   ├── error.tsx                   # Error boundary
+│   ├── global-error.tsx            # Global error boundary
+│   ├── globals.css
+│   ├── icon.svg
+│   ├── layout.tsx                  # Root layout (RouteProgress, ConsentModeScript, providers)
+│   ├── manifest.ts
+│   ├── not-found.tsx               # 404 page
+│   ├── page.tsx                    # Homepage (force-dynamic, fetches from Payload)
+│   ├── robots.ts
+│   ├── sitemap.ts
+│   ├── llms.txt
+│   ├── llms-full.txt
+│   ├── .well-known/
+│   └── security.txt/
 ├── components/
 │   ├── admin/
 │   │   ├── EditProductModal.tsx    # Modal for editing a single product variant
 │   │   └── ProductGroupRow.tsx     # Expandable table row with delete for admin
+│   ├── contact/
+│   │   └── ContactForm.tsx         # Contact form component
 │   ├── layout/
-│   │   ├── Header.tsx              # Sticky header (offset --banner-h) + cart badge
-│   │   ├── Footer.tsx              # Footer with cleaned links
-│   │   ├── LayoutShell.tsx         # Client wrapper: banner fisso, Header/Footer condizionali
-│   │   ├── MobileMenu.tsx          # Mobile hamburger menu
 │   │   ├── AnalyticsProvider.tsx   # GA4
-│   │   └── ConsentModeScript.tsx   # Google Consent Mode v2
+│   │   ├── ConsentModeScript.tsx   # Google Consent Mode v2
+│   │   ├── Footer.tsx              # Footer with cleaned links
+│   │   ├── Header.tsx              # Sticky header (offset --banner-h) + cart badge
+│   │   ├── LayoutShell.tsx         # Client wrapper: banner fisso, Header/Footer condizionali
+│   │   └── MobileMenu.tsx          # Mobile hamburger menu
 │   ├── product/
-│   │   ├── ProductCard.tsx         # Product card (links to /products/[slug])
-│   │   ├── ProductGroupCard.tsx    # Grouped card in shop (links to PDP, no variants)
-│   │   ├── ProductGallery.tsx      # Image gallery with thumbnails
-│   │   ├── ProductFilters.tsx      # Reusable filter component (unused in shop)
-│   │   ├── QuickAddButton.tsx      # Cart icon button on cards (client, instant add)
 │   │   ├── AddToCartButton.tsx     # Add to cart with feedback
+│   │   ├── ProductCard.tsx         # Product card (links to /products/[slug])
+│   │   ├── ProductFilters.tsx      # Reusable filter component
+│   │   ├── ProductGallery.tsx      # Image gallery with thumbnails
+│   │   ├── ProductGroupCard.tsx    # Grouped card in shop (links to PDP, no variants)
+│   │   ├── ProductImage.tsx        # Product image helper
+│   │   ├── QuickAddButton.tsx      # Cart icon button on cards (client, instant add)
 │   │   └── StickyAddToCart.tsx     # Sticky ATC in PDP, si solleva quando il footer è visibile
 │   ├── sections/
-│   │   ├── HeroSection.tsx         # Homepage hero
-│   │   ├── HeroBackground.tsx      # Oggetti decorativi con parallasse scroll (data-x/y)
+│   │   ├── CartSocialProof.tsx     # Social proof bar on cart
 │   │   ├── ClientListing.tsx       # PLP client: filtri sticky, ricerca, dedup titolo, griglia
-│   │   ├── ListingShell.tsx        # Wrapper PLP (Suspense + padding)
-│   │   ├── FreeShippingBanner.tsx  # Banda "spedizione gratuita dagli 80€" fissa sopra navbar
+│   │   ├── CollectionsShowcase.tsx # Collections showcase section
+│   │   ├── CtaBanner.tsx           # CTA banner section
 │   │   ├── FeaturedProducts.tsx    # Async server component, fetches from Payload
+│   │   ├── FreeShippingBanner.tsx  # Banda "spedizione gratuita dagli 80€" fissa sopra navbar
+│   │   ├── HeroBackground.tsx      # Oggetti decorativi con parallasse scroll (data-x/y)
+│   │   ├── HeroSection.tsx         # Homepage hero
+│   │   ├── ListingShell.tsx        # Wrapper PLP (Suspense + padding)
 │   │   └── TrustBadges.tsx         # Trust badges
+│   ├── seo/
+│   │   └── JsonLd.tsx              # JSON-LD structured data
 │   └── ui/
 │       ├── Badge.tsx               # Status/condition badge
-│       ├── CookieConsent.tsx       # GDPR cookie consent banner
-│       ├── RouteProgress.tsx       # Barra di caricamento fluida (rAF)
+│       ├── Breadcrumb.tsx          # Breadcrumb navigation
 │       ├── ConfettiBurst.tsx       # Effetto confetti al click su ATC
-│       └── LoadingFallback.tsx     # Fallback Suspense caricamento
-│
+│       ├── CookieConsent.tsx       # GDPR cookie consent banner
+│       ├── ListingSkeleton.tsx     # Skeleton loader for listings
+│       ├── LoadingFallback.tsx     # Fallback Suspense caricamento
+│       ├── Reveal.tsx              # Reveal animation wrapper
+│       └── RouteProgress.tsx       # Barra di caricamento fluida (rAF)
 ├── hooks/
-│   └── useCart.tsx                  # CartProvider + useCart (localStorage)
-│
+│   ├── useCart.tsx                 # CartProvider + useCart (localStorage)
+│   └── useConsent.tsx              # Consent management hook
 ├── lib/
-│   ├── payload.ts                   # getPayloadClient() - cached singleton
-│   ├── stripe.ts                    # Stripe client (lazy getStripe)
-│   ├── dash-auth.ts                 # Auth dashboard: cookie dcc-dash (HMAC), whitelist
-│   ├── group-products.ts            # Groups products by title (variants → parent)
-│   ├── order-email.ts               # Template + invio email conferma ordine (Resend)
-│   ├── google-sheets.ts             # Google Sheets API read/write
-│   ├── image-import.ts              # Download + upload images to Vercel Blob
-│   ├── parse-csv.ts                 # RFC 4180 CSV parser (multilinea/quotes)
-│   ├── proxy-image.ts               # Cardmarket image proxy URL builder
-│   ├── product-image.ts             # Helper immagine prodotto
-│   ├── product-filters.ts           # Opzioni condizione/lingua per filtri
-│   └── analytics.ts                 # GA4 ecommerce dataLayer events
-│
+│   ├── analytics.ts                # GA4 ecommerce dataLayer events
+│   ├── api-auth.ts                 # API authentication helpers
+│   ├── collections.ts              # Collection helpers
+│   ├── dash-auth.ts                # Auth dashboard: cookie dcc-dash (HMAC), whitelist
+│   ├── db-query.ts                 # Read-only SQL runner (dashboard SQL tab)
+│   ├── google-sheets.ts            # Google Sheets API read/write
+│   ├── group-products.ts           # Groups products by title (variants → parent)
+│   ├── image-import.ts             # Download + upload images to Vercel Blob
+│   ├── order-email.ts              # Template + invio email conferma ordine (Resend)
+│   ├── parse-csv.ts                # RFC 4180 CSV parser (multilinea/quotes)
+│   ├── payload.ts                  # getPayloadClient() - cached singleton
+│   ├── product-filters.ts          # Opzioni condizione/lingua per filtri
+│   ├── product-image.ts            # Helper immagine prodotto
+│   ├── proxy-image.ts              # Cardmarket image proxy URL builder
+│   └── stripe.ts                   # Stripe client (lazy getStripe)
 ├── payload/
 │   ├── collections/
 │   │   ├── Products/index.ts       # 20 fields (see schema below)
@@ -168,15 +199,31 @@ src/
 │   └── globals/
 │       ├── SiteSettings/index.ts   # siteName, description
 │       └── Header/index.ts         # navItems (links array)
-│
-└── scripts/
-    └── import-products.ts          # Google Sheets → Payload import
+└── migrations/
+    ├── index.ts
+    ├── 20260719_131233.ts
+    ├── 20260719_131233.json
+    ├── 20260719_add_image_url.ts
+    ├── 20260719_add_product_state.ts
+    ├── 20260720_add_is_visible.ts
+    ├── 20260802_202035.ts
+    ├── 20260802_202035.json
+    └── 20260807_add_unique_stripe_session.ts
 ```
 
 ```
-tests/                            # Unit test Vitest (group-products, parse-csv)
+tests/                            # Unit test Vitest (group-products, parse-csv, cart, product-filters, sticky-add-to-cart)
 .github/workflows/ci.yml          # CI: tsc --noEmit + vitest + next build
 vitest.config.ts
+next.config.ts
+tsconfig.json
+payload.config.ts
+vercel.json
+package.json
+.env.example
+scripts/                          # at repo root (not under src/)
+├── create-admin.mjs
+└── import-products.ts
 ```
 
 ## Payload Collections Schema
@@ -263,7 +310,7 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 ## Git Commits
 
 Latest: `07cfe77` (UX/UI: loading bar rAF, parallax hero, ATC cyberpunk, fix filtri PLP) - all on `origin/main`.
-Storico recente dettagliato in [`CHANGELOG.md`](./CHANGELOG.md).
+Storico recente dettagliato in [`changelog.md`](./changelog.md).
 
 ## Footer / Design
 

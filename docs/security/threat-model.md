@@ -1,4 +1,4 @@
-# THREAT_MODEL.md — Dark Card Collection
+# Threat Model — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)**.
 Metodologie: STRIDE, OWASP ASVS 5.0, OWASP Top 10:2025, principio del minimo privilegio, defense-in-depth, Zero Trust.
@@ -97,7 +97,7 @@ Livelli rischio: `C` = Critical, `H` = High, `M` = Medium, `L` = Low.
 - **Preventivo**: vincolo UNIQUE su `orders.stripeSessionId` + insert con gestione conflitto; verificare `session.currency`, `session.payment_status === 'paid'`, `session.amount_total`; usare `idempotency` key; gestire `checkout.session.async_payment_succeeded`, `charge.refunded`, `payment_intent.payment_failed`.
 - **Detective**: log eventi webhook con `event.id`, alert su errori/duplicati.
 - **Risposta**: deduplica, correzione ordini, analisi.
-- **Test**: replay, doppio invio, importo/valuta diversi, ordine già esistente (vedi SECURITY_TEST_PLAN).
+- **Test**: replay, doppio invio, importo/valuta diversi, ordine già esistente (vedi [`test-plan.md`](./test-plan.md)).
 - **Residuo**: eventi di tipo non gestito (default log) non processati.
 
 ### T08 — Assenza di rate limiting e anti-abuso

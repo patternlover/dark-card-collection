@@ -1,9 +1,9 @@
-# SECURITY_GUIDE.md — Dark Card Collection
+# Guida di Sicurezza — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)**.
 Guida tecnica di sicurezza specifica per questo progetto: regole operative per chi sviluppa, deploya e opera. Strutturata per dominio (auth, authz, API/input, PostgreSQL, Stripe, frontend, segreti, supply chain/CI, logging, dati).
 
-> Riferimenti: SECURITY_ARCHITECTURE.md, THREAT_MODEL.md, ATTACK_SURFACE.md, SECURITY_REQUIREMENTS.md, SECRETS_MANAGEMENT.md, SECURITY_TEST_PLAN.md, INCIDENT_RESPONSE_TECHNICAL.md, RESIDUAL_RISKS.md.
+> Riferimenti: [`architecture.md`](./architecture.md), [`threat-model.md`](./threat-model.md), [`attack-surface.md`](./attack-surface.md), [`requirements.md`](./requirements.md), [`secrets-management.md`](./secrets-management.md), [`test-plan.md`](./test-plan.md), [`incident-response.md`](./incident-response.md), [`residual-risks.md`](./residual-risks.md).
 
 ---
 
@@ -12,7 +12,7 @@ Guida tecnica di sicurezza specifica per questo progetto: regole operative per c
 - **Minimo privilegio** per ruoli, DB, token cloud e service account.
 - **Zero trust**: mai fidarsi del client (prezzi, id, ruoli, flag); ogni richiesta è autenticata e autorizzata server-side.
 - **Defense in depth**: validazione + autorizzazione + rate limit + logging + alert.
-- Mai dichiarare il sistema "100% sicuro": ogni modifica registra rischi residui (RESIDUAL_RISKS.md).
+- Mai dichiarare il sistema "100% sicuro": ogni modifica registra rischi residui ([`residual-risks.md`](./residual-risks.md)).
 
 ---
 
@@ -79,7 +79,7 @@ Regole applicate (✓) e da applicare (☐):
 - Redirect: sempre a URL assoluti configurati (niente open redirect) ✓.
 
 ## 7. Segreti e configurazione
-Vedi SECRETS_MANAGEMENT.md per l'inventario completo e la procedura di rotazione.
+Vedi [`secrets-management.md`](./secrets-management.md) per l'inventario completo e la procedura di rotazione.
 Regole:
 - Nessun segreto in repo; `.env*` gitignored ✓ (`.env.local`, `.env.prod` presenti solo in locale).
 - Non riusare `PAYLOAD_SECRET` come bearer token API (REQ-04).

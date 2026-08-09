@@ -1,4 +1,4 @@
-# SECURITY_REQUIREMENTS.md — Dark Card Collection
+# Requisiti di Sicurezza — Dark Card Collection
 
 Stato: **bozza iniziale (Fase A)**.
 Lista prioritaria dei rischi + requisiti di sicurezza derivati (controlli e test obbligatori). Ogni requisito ha ID, severità e criterio di accettazione. Aggiornare in Fase B quando un requisito viene implementato.
@@ -37,7 +37,7 @@ Lista prioritaria dei rischi + requisiti di sicurezza derivati (controlli e test
 - Rimuovere l'uso di `PAYLOAD_SECRET` come bearer token per cron/admin API; introdurre secret dedicati (`CRON_SECRET`, `SYNC_PASSWORD` → sostituire con auth dashboard OAuth o secret per-endpoint con rotazione).
 - Confronto secret con `crypto.timingSafeEqual` (lunghezze uguali prima).
 - Rimuovere il passaggio di secret in query string (`backfill-images?secret=`): accettare solo `Authorization: Bearer`.
-- Procedura di rotazione documentata in SECRETS_MANAGEMENT.md (inclusa l'invalidazione delle sessioni dashboard via `PAYLOAD_SECRET`).
+- Procedura di rotazione documentata in [`secrets-management.md`](./secrets-management.md) (inclusa l'invalidazione delle sessioni dashboard via `PAYLOAD_SECRET`).
 **Test**: verifica che nessun endpoint accetti `PAYLOAD_SECRET` come credenziale; timing test.
 **Criterio di accettazione**: nessun riuso di `PAYLOAD_SECRET` in API; nessun secret in URL.
 
@@ -118,7 +118,7 @@ Lista prioritaria dei rischi + requisiti di sicurezza derivati (controlli e test
 ---
 
 ## 2. Test obbligatori (mappa)
-Vedi SECURITY_TEST_PLAN.md per l'elenco completo. I requisiti REQ-01..REQ-15 hanno test dedicati elencati qui sopra; ogni test ha stato iniziale `DA ESEGUIRE` e viene aggiornato in Fase B.
+Vedi [`test-plan.md`](./test-plan.md) per l'elenco completo. I requisiti REQ-01..REQ-15 hanno test dedicati elencati qui sopra; ogni test ha stato iniziale `DA ESEGUIRE` e viene aggiornato in Fase B.
 
 ---
 
@@ -126,5 +126,5 @@ Vedi SECURITY_TEST_PLAN.md per l'elenco completo. I requisiti REQ-01..REQ-15 han
 - Non eseguire modifiche distruttive/invasive in produzione senza approvazione.
 - Non cancellare dati.
 - Non modificare il DB di produzione senza migration reversibile e rollback.
-- Non ruotare credenziali senza documentare prima la procedura (SECRETS_MANAGEMENT.md).
+- Non ruotare credenziali senza documentare prima la procedura ([`secrets-management.md`](./secrets-management.md)).
 - Non mostrare/inserire segreti nei report.
