@@ -309,8 +309,7 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 
 ## Git Commits
 
-Latest: `07cfe77` (UX/UI: loading bar rAF, parallax hero, ATC cyberpunk, fix filtri PLP) - all on `origin/main`.
-Storico recente dettagliato in [`changelog.md`](./changelog.md).
+Latest: `4f4e227` (orchestrator config) - seguita dalla riorganizzazione docs (`f818ce1`) e dal cleanup codice (`1599feb`). Storico recente dettagliato in [`changelog.md`](./changelog.md).
 
 ## Footer / Design
 

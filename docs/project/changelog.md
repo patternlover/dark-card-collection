@@ -1,7 +1,47 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **UX/UI (7 task)** — deployato su `darkcardcollection.com` (commit `07cfe77`).
+Ultima sessione: **Docs + cleanup** — riorganizzazione documentazione e pulizia codice (commit `f818ce1`, `1599feb`).
+
+---
+
+## Sessione recente 4 — PLP/checkout/hero + SEO + hardening · commit `07cfe77` → `4f4e227`
+
+Interventi dal `07cfe77` in poi: layout filtri PLP, breadcrumb, checkout embedded, hero scroll,
+SEO `/llms-full.txt`, hardening sicurezza, pulizia deps, config orchestrator.
+
+### PLP — layout filtri secondo spec + breadcrumb
+- **File**: `src/app/shop/page.tsx`, `src/components/sections/{ListingShell,ClientListing}.tsx`, `src/components/ui/Breadcrumb.tsx`
+- Griglia 2x2 desktop (Row1: breadcrumb+titolo+search; Row2: filtri+listato), mobile: path/titolo/desc → searchbar → dropdown filtri → listato.
+- Componente `Breadcrumb` riutilizzabile con path attivo sottolineato, applicato a tutte le pagine (shop, PDP, cart, checkout, success, privacy, terms, shipping-returns).
+- Skeleton PLP per caricamento uniforme; listato a masonry; card filtri allineate con la prima card; gap filtri/listato (`lg:gap-8`); distanza filtri/navbar (`lg:mt-16 aside`, listato `lg:pt-16`).
+- `ProductFilters.tsx`/`ProductGallery.tsx` rimossi (morti, sostituiti dai nuovi componenti).
+
+### Hero LP — movimento scroll fluido
+- **File**: `src/components/sections/HeroBackground.tsx`
+- Niente scale/rotate sul layer (solo parallax translateY), glow non ruotati, rotazione oggetti su se stessi guidata dallo scroll (desktop+mobile). Rispetta `prefers-reduced-motion`.
+
+### Checkout — branding dark/yellow embedded
+- **File**: `src/app/checkout/page.tsx`, `src/lib/stripe.ts`
+- Rimosso `appearance` embedded (fix `initEmbeddedCheckout`), contenitore neobrutal, gerarchia z-index (navbar>cookie banner), confetti spark da mobile.
+
+### Dashboard + nav
+- Rimossa tab "Sincronizzazione" da `/dashboard` (sync solo via cron).
+- Sottolineatura voce di menu attiva (current path) in `Header` e `MobileMenu`.
+
+### Security + deps
+- Hardening checkout/order/webhook/auth (`b6aaa0a`): prezzo server-side, protezione `/api/stripe/order`, idempotenza webhook + stock.
+- Upgrade: next 16.3, payload 3.87.1, sharp 0.35.3.
+- `pnpm audit` pulito: dompurify 3.4.13, esbuild 0.25, undici 6.28, postcss 8.5.26, override nanoid 3.3.17 (GHSA-2v37-7h3g-55p8).
+
+### SEO
+- **File**: `src/app/llms-full.txt/route.ts`, `src/app/llms.txt/route.ts`
+- Aggiunto `/llms-full.txt` con catalogo dinamico; aggiornato `llms.txt`.
+
+### Infra AI + docs
+- Config orchestrator lean (`4f4e227`): `.opencode/oh-my-opencode-slim.json` + `orchestrator_append.md` (budget richieste).
+- Riorganizzazione documentazione (`f818ce1`): file root obsoleti migrati in `docs/` kebab-case + `AGENTS.md`.
+- Cleanup codice (`1599feb`): export non usati resi privati, componenti morti rimossi, deps superflue eliminate.
 
 ---
 
@@ -94,11 +134,14 @@ Tutti e 7 i punti implementati, test 24/24, build ok, deployato e verificato in 
 |------|-------|
 | Stripe | CSP fixata e live. **DA FARE**: test di pagamento reale (carta) end-to-end, verifica webhook live `whsec_live_...` |
 | Google dashboard | Cookie su response verificati. **DA FARE**: test end-to-end dal browser desktop (account autorizzato → dashboard) |
-| Caricamento | Barra rAF fluida attiva |
-| Hero | Parallasse scroll attivo |
+| PLP | Layout filtri 2x2/mobile, breadcrumb, skeleton, masonry, distanza navbar — attivi |
+| Hero | Movimento scroll fluido (translateY + rotazione oggetti) — attivo |
+| Checkout | Embedded con branding dark/yellow, confetti — attivo |
 | Filtri PLP | Altezza stabile, distanza da navbar aumentata |
 | ATC | Pop cyberpunk accent, cursore mano |
 | Info | Larghezza uniforme `max-w-2xl` |
+| SEO | `/llms-full.txt` attivo; audit in `docs/seo/audit.md` |
+| Security | Hardening checkout/order/webhook/applied; REQ-08..15 non ancora applicati (vedi `docs/security/changelog.md`) |
 
 **In attesa del segnale del proprietario per procedere con i fix Stripe/Google.**
 
