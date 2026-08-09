@@ -452,21 +452,7 @@ export default async function ProductPage({
             <Reveal>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {relatedGroups.slice(0, 4).map((g: any) => (
-                <ProductCard
-                  key={g.title}
-                  product={{
-                    id: 0,
-                    title: g.title,
-                    slug: g.slug,
-                    storePrice: g.sellingPrice,
-                    status: 'listed' as const,
-                    condition: g.products[0]?.condition || '',
-                    language: g.products[0]?.language || '',
-                    category: g.category,
-                    collection: g.collection,
-                    imageUrl: g.image,
-                  }}
-                />
+                <ProductCard key={g.title} group={g} />
               ))}
             </div>
             </Reveal>

@@ -56,7 +56,6 @@ export default async function ShopPage() {
       categories={categories}
       collections={collections}
       products={products}
-      grouped
     />
   )
 }

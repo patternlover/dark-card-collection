@@ -64,7 +64,6 @@ export default async function BestsellersPage() {
       categories={categories}
       collections={collections}
       products={products}
-      grouped={false}
     />
   )
 }

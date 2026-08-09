@@ -1,20 +1,25 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Loader2, LogOut, Play, Search } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Loader2, LogOut, Play, Plus, Search } from 'lucide-react'
 import {
-  deleteProduct,
+  getCategories,
+  getCollections,
   getOrders,
   getOverview,
   logout,
   runQuery,
   searchProducts,
   updateOrderStatus,
-  updateProduct,
+  type CategoryOption,
+  type CollectionOption,
   type OrderDTO,
   type OverviewData,
   type ProductDTO,
 } from './actions'
+import { groupProducts } from '@/lib/group-products'
+import { ProductGroupRow } from '@/components/dashboard/ProductGroupRow'
+import { CreateProductModal } from '@/components/dashboard/CreateProductModal'
 
 type Tab = 'overview' | 'products' | 'orders' | 'sql'
 
@@ -52,32 +57,22 @@ function StatCard({ label, value, hint }: { label: string; value: string | numbe
   )
 }
 
-interface RowDraft {
-  storePrice: string
-  compareAtPrice: string
-  quantity: string
-  status: string
-  isVisible: boolean
-  featured: boolean
-}
-
 function ProductsTab() {
   const [products, setProducts] = useState<ProductDTO[]>([])
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
-  const [drafts, setDrafts] = useState<Record<string, RowDraft>>({})
-  const [saving, setSaving] = useState<Record<string, boolean>>({})
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const searchRef = useRef(query)
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+  const [categories, setCategories] = useState<CategoryOption[]>([])
+  const [collections, setCollections] = useState<CollectionOption[]>([])
+  const [showCreate, setShowCreate] = useState(false)
 
   const load = useCallback(async (q: string) => {
     setLoading(true)
     try {
-      const res = await searchProducts(q)
+      const res = await searchProducts({ search: q })
       setProducts(res)
     } catch {
-      setError('Errore nel caricamento prodotti')
+      setMessage({ text: 'Errore nel caricamento prodotti', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -85,81 +80,13 @@ function ProductsTab() {
 
   useEffect(() => {
     load('')
+    getCategories().then(setCategories).catch(() => {})
+    getCollections().then(setCollections).catch(() => {})
   }, [load])
 
-  const draft = (p: ProductDTO): RowDraft =>
-    drafts[p.id] ?? {
-      storePrice: p.storePrice != null ? String(p.storePrice) : '',
-      compareAtPrice: p.compareAtPrice != null ? String(p.compareAtPrice) : '',
-      quantity: String(p.quantity ?? 0),
-      status: p.status,
-      isVisible: p.isVisible,
-      featured: p.featured ?? false,
-    }
+  const notify = (text: string, type: 'success' | 'error' = 'success') => setMessage({ text, type })
 
-  const setField = (id: string, field: keyof RowDraft, value: string | boolean) => {
-    const base = products.find((p) => p.id === id)
-    if (!base) return
-    setDrafts((prev) => ({
-      ...prev,
-      [id]: { ...(prev[id] ?? draft(base)), [field]: value },
-    }))
-  }
-
-  const handleSave = async (id: string) => {
-    const base = products.find((p) => p.id === id)
-    const d = drafts[id]
-    if (!base || !d) return
-    setSaving((s) => ({ ...s, [id]: true }))
-    setMessage(null)
-    setError(null)
-    try {
-      await updateProduct(id, {
-        storePrice: d.storePrice === '' ? null : Number(d.storePrice),
-        compareAtPrice: d.compareAtPrice === '' ? null : Number(d.compareAtPrice),
-        quantity: Number(d.quantity) || 0,
-        status: d.status,
-        isVisible: d.isVisible,
-        featured: d.featured,
-      })
-      const res = await searchProducts(searchRef.current)
-      setProducts(res)
-      setDrafts((prev) => {
-        const next = { ...prev }
-        delete next[id]
-        return next
-      })
-      setMessage('Prodotto aggiornato')
-    } catch {
-      setError('Errore durante il salvataggio')
-    } finally {
-      setSaving((s) => ({ ...s, [id]: false }))
-    }
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Eliminare definitivamente questo prodotto?')) return
-    try {
-      await deleteProduct(id)
-      setProducts((p) => p.filter((x) => x.id !== id))
-      setMessage('Prodotto eliminato')
-    } catch {
-      setError('Errore durante l\'eliminazione')
-    }
-  }
-
-  const isDirty = (p: ProductDTO) => {
-    const d = drafts[p.id]
-    if (!d) return false
-    return (
-      d.storePrice !== String(p.storePrice ?? '') ||
-      d.compareAtPrice !== String(p.compareAtPrice ?? '') ||
-      d.quantity !== String(p.quantity ?? 0) ||
-      d.status !== p.status ||
-      d.isVisible !== p.isVisible ||
-      d.featured !== (p.featured ?? false)
-    )
-  }
+  const groups = useMemo(() => groupProducts(products), [products])
 
   return (
     <div className="space-y-4">
@@ -168,10 +95,7 @@ function ProductsTab() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
           <input
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-              searchRef.current = e.target.value
-            }}
+            onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') load(query)
             }}
@@ -185,137 +109,58 @@ function ProductsTab() {
         >
           Cerca
         </button>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition hover:opacity-90"
+        >
+          <Plus className="h-4 w-4" /> Nuovo Prodotto
+        </button>
       </div>
 
       {message ? (
-        <p className="rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-400">{message}</p>
-      ) : null}
-      {error ? (
-        <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>
+        <p
+          className={`rounded-lg border px-3 py-2 text-sm ${
+            message.type === 'error'
+              ? 'border-red-500/40 bg-red-500/10 text-red-400'
+              : 'border-green-500/40 bg-green-500/10 text-green-400'
+          }`}
+        >
+          {message.text}
+        </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded-xl border-2 border-zinc-800">
-        <table className="w-full min-w-[900px] text-left text-sm">
-          <thead className="bg-zinc-900 text-xs font-bold uppercase tracking-widest text-zinc-500">
-            <tr>
-              <th className="px-4 py-3">Prodotto</th>
-              <th className="px-4 py-3">Prezzo (€)</th>
-              <th className="px-4 py-3">Prezzo barrato</th>
-              <th className="px-4 py-3">Qtà</th>
-              <th className="px-4 py-3">Stato</th>
-              <th className="px-4 py-3">Visibile</th>
-              <th className="px-4 py-3">In evidenza</th>
-              <th className="px-4 py-3 text-right">Azioni</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-zinc-800 bg-zinc-950/60">
-            {loading ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-zinc-500">
-                  Caricamento...
-                </td>
-              </tr>
-            ) : products.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-zinc-500">
-                  Nessun prodotto trovato
-                </td>
-              </tr>
-            ) : (
-              products.map((p) => {
-                const d = draft(p)
-                return (
-                  <tr key={p.id} className="hover:bg-zinc-900/50">
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-zinc-100">{p.title}</p>
-                      <p className="text-xs text-zinc-500">{p.itemId || p.id}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={d.storePrice}
-                        onChange={(e) => setField(p.id, 'storePrice', e.target.value)}
-                        className="w-24 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-50 outline-none focus:border-[var(--accent)]"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={d.compareAtPrice}
-                        onChange={(e) => setField(p.id, 'compareAtPrice', e.target.value)}
-                        className="w-24 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-50 outline-none focus:border-[var(--accent)]"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        min="0"
-                        value={d.quantity}
-                        onChange={(e) => setField(p.id, 'quantity', e.target.value)}
-                        className="w-16 rounded border border-zinc-700 bg-zinc-950 px-2 py-1 text-zinc-50 outline-none focus:border-[var(--accent)]"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={d.status}
-                        onChange={(e) => setField(p.id, 'status', e.target.value)}
-                        className={`rounded border border-zinc-700 bg-zinc-950 px-2 py-1 font-semibold outline-none ${STATUS_COLORS[d.status] ?? 'text-zinc-100'}`}
-                      >
-                        <option value="listed">Disponibile</option>
-                        <option value="hold">In Attesa</option>
-                        <option value="sold">Venduto</option>
-                      </select>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => setField(p.id, 'isVisible', !d.isVisible)}
-                        aria-label="Toggle visibilità"
-                        className={`relative h-6 w-11 rounded-full transition ${d.isVisible ? 'bg-[var(--accent)]' : 'bg-zinc-700'}`}
-                      >
-                        <span
-                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-zinc-50 transition-all ${d.isVisible ? 'left-[22px]' : 'left-0.5'}`}
-                        />
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => setField(p.id, 'featured', !d.featured)}
-                        aria-label="Toggle in evidenza"
-                        className={`relative h-6 w-11 rounded-full transition ${d.featured ? 'bg-[var(--accent)]' : 'bg-zinc-700'}`}
-                      >
-                        <span
-                          className={`absolute top-0.5 h-5 w-5 rounded-full bg-zinc-50 transition-all ${d.featured ? 'left-[22px]' : 'left-0.5'}`}
-                        />
-                      </button>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleSave(p.id)}
-                          disabled={!isDirty(p) || saving[p.id]}
-                          className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-bold text-black transition hover:opacity-90 disabled:opacity-40"
-                        >
-                          {saving[p.id] ? 'Salvataggio...' : 'Salva'}
-                        </button>
-                        <button
-                          onClick={() => handleDelete(p.id)}
-                          className="rounded-lg border border-red-500/50 px-2 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10"
-                        >
-                          Elimina
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+      {loading ? (
+        <p className="text-sm text-zinc-500">Caricamento...</p>
+      ) : groups.length === 0 ? (
+        <p className="text-sm text-zinc-500">Nessun prodotto trovato</p>
+      ) : (
+        <div className="space-y-3">
+          {groups.map((g) => (
+            <ProductGroupRow
+              key={g.title}
+              group={g}
+              categories={categories}
+              collections={collections}
+              onChanged={() => load(query)}
+              onNotify={notify}
+            />
+          ))}
+        </div>
+      )}
+
+      {showCreate ? (
+        <CreateProductModal
+          categories={categories}
+          collections={collections}
+          onClose={() => setShowCreate(false)}
+          onCreated={() => {
+            setShowCreate(false)
+            notify('Prodotto creato')
+            load(query)
+          }}
+          onError={(msg) => notify(msg, 'error')}
+        />
+      ) : null}
     </div>
   )
 }

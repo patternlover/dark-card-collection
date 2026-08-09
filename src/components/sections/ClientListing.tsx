@@ -3,7 +3,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { SlidersHorizontal, ChevronDown, Search } from 'lucide-react'
-import { ProductGroupCard } from '@/components/product/ProductGroupCard'
 import { ProductCard } from '@/components/product/ProductCard'
 import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
@@ -16,7 +15,6 @@ interface ClientListingProps {
   categories?: any[]
   collections?: any[]
   basePath: string
-  grouped?: boolean
   emptyTitle?: string
   emptySubtitle?: string
   title?: string
@@ -102,7 +100,6 @@ export function ClientListing({
   categories = [],
   collections = [],
   basePath,
-  grouped = true,
   emptyTitle = 'Nessun prodotto trovato.',
   emptySubtitle = 'Prova a modificare i filtri di ricerca.',
   title,
@@ -173,17 +170,8 @@ export function ClientListing({
     })
   }, [products, filters])
 
-  const unique = useMemo(() => {
-    const seen = new Map<string, any>()
-    for (const p of filtered) {
-      const key = p.title || 'Untitled'
-      if (!seen.has(key)) seen.set(key, p)
-    }
-    return [...seen.values()]
-  }, [filtered])
-
-  const groups = useMemo(() => (grouped ? groupProducts(filtered) : []), [grouped, filtered])
-  const resultCount = grouped ? groups.length : unique.length
+  const groups = useMemo(() => groupProducts(filtered), [filtered])
+  const resultCount = groups.length
 
   const breadcrumbs = useMemo(() => {
     const crumbs: { label: string; href?: string }[] = [{ label: 'Home', href: '/' }]
@@ -323,22 +311,12 @@ export function ClientListing({
             <p className="text-lg text-zinc-500">{emptyTitle}</p>
             <p className="mt-2 text-sm text-zinc-600">{emptySubtitle}</p>
           </div>
-        ) : grouped ? (
+        ) : (
           <Reveal>
             <div className="columns-1 gap-6 sm:columns-2 xl:columns-3">
               {groups.map((group) => (
                 <div key={group.title} className="mb-6 break-inside-avoid">
-                  <ProductGroupCard group={group} />
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        ) : (
-          <Reveal>
-            <div className="columns-1 gap-6 sm:columns-2 xl:columns-3">
-              {unique.map((product) => (
-                <div key={product.id} className="mb-6 break-inside-avoid">
-                  <ProductCard product={product} />
+                  <ProductCard group={group} />
                 </div>
               ))}
             </div>

@@ -56,7 +56,6 @@ export default async function PreordersPage() {
       categories={categories}
       collections={collections}
       products={products}
-      grouped={false}
     />
   )
 }

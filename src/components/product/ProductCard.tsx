@@ -1,47 +1,36 @@
 import Link from 'next/link'
 import { Badge } from '@/components/ui/Badge'
-import { getProductImageInfo } from '@/lib/product-image'
 import { ProductImage } from './ProductImage'
 import { QuickAddButton } from './QuickAddButton'
-
-interface Product {
-  id: number | string
-  title: string
-  slug: string
-  price?: number
-  storePrice?: number
-  compareAtPrice?: number
-  status: 'listed' | 'hold' | 'sold'
-  isPreorder?: boolean
-  condition: string
-  language: string
-  category?: { name: string } | null
-  collection?: { name: string } | null
-  image?: { url: string; alt: string } | null
-  images?: Array<{ image?: { url: string; alt: string } | null }> | null
-  imageUrl?: string | null
-}
+import type { ProductGroup } from '@/lib/group-products'
 
 interface ProductCardProps {
-  product: Product
+  group: ProductGroup
 }
 
-export function ProductCard({ product }: ProductCardProps) {
-  const displayPrice = product.storePrice || 0
-  const imgUrl = getProductImageInfo(product).cardUrl
+export function ProductCard({ group }: ProductCardProps) {
+  const imgSrc = group.imageCard || group.image
+  const collectionName = group.collection?.name || ''
+
+  const cheapest = group.products.find(
+    (p: any) => (p.status === 'listed' || p.status === 'hold') && p.storePrice && p.storePrice > 0,
+  )
+
+  const isPreorderOrHold = group.products.some(
+    (p: any) => p.isPreorder || p.status === 'hold',
+  )
+  const isMint = group.products.some((p: any) => p.condition === 'mint')
+  const isGraded = group.products.some((p: any) => p.condition === 'graded')
 
   return (
     <div className="group relative flex h-full flex-col border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)]">
-      <Link
-        href={`/products/${product.slug}`}
-        className="flex flex-1 flex-col"
-      >
+      <Link href={`/products/${group.slug}`} className="flex flex-1 flex-col">
         <div className="p-3">
           <div className="relative aspect-square w-full">
-            {imgUrl ? (
+            {imgSrc ? (
               <ProductImage
-                src={imgUrl}
-                alt={product.title}
+                src={imgSrc}
+                alt={group.title}
                 sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
                 className="border border-zinc-800 object-cover"
               />
@@ -54,28 +43,38 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="mt-auto px-4 pb-4">
+          {collectionName && (
+            <p className="mb-1 text-[11px] uppercase tracking-wider text-zinc-500">{collectionName}</p>
+          )}
+
           <div className="mb-2 flex flex-wrap gap-1.5">
-            {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
-            {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
-            {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
+            {isPreorderOrHold && <Badge variant="preorder">In Attesa</Badge>}
+            {isMint && <Badge variant="new">Sigillato</Badge>}
+            {isGraded && <Badge variant="bestseller">Graded</Badge>}
           </div>
 
           <h3 className="text-sm font-semibold text-white line-clamp-2 leading-tight">
-            {product.title}
+            {group.title}
           </h3>
 
-          <div className="mt-3 flex items-center justify-between gap-2 pr-14">
+          <div className="mt-3 pr-14">
             <span className="text-lg font-bold text-[var(--accent)]">
-              {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : ''}
+              {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : ''}
             </span>
-            <span className="shrink-0 text-[10px] uppercase tracking-wider text-zinc-500">{product.language}</span>
+            {group.totalQuantity > 0 && (
+              <p className="mt-1 text-xs font-medium text-zinc-500">
+                {group.totalQuantity} disponibil{group.totalQuantity === 1 ? 'e' : 'i'}
+              </p>
+            )}
           </div>
         </div>
       </Link>
 
-      <div className="absolute bottom-3 right-3">
-        <QuickAddButton product={product as any} />
-      </div>
+      {cheapest && (
+        <div className="absolute bottom-3 right-3">
+          <QuickAddButton product={cheapest} maxQuantity={group.totalQuantity} />
+        </div>
+      )}
     </div>
   )
 }

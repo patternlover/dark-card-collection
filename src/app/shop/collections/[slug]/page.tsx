@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayloadClient } from '@/lib/payload'
 import { groupProducts } from '@/lib/group-products'
-import { ProductGroupCard } from '@/components/product/ProductGroupCard'
+import { ProductCard } from '@/components/product/ProductCard'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
@@ -166,7 +166,7 @@ export default async function CollectionPage({
               <div className="mt-6 columns-1 gap-6 sm:columns-2 xl:columns-3">
                 {groups.map((group) => (
                   <div key={group.title} className="mb-6 break-inside-avoid">
-                    <ProductGroupCard group={group} />
+                    <ProductCard group={group} />
                   </div>
                 ))}
               </div>

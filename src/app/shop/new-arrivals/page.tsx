@@ -56,7 +56,6 @@ export default async function NewArrivalsPage() {
       categories={categories}
       collections={collections}
       products={products}
-      grouped={false}
     />
   )
 }

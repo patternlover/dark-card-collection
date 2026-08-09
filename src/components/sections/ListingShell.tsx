@@ -9,7 +9,6 @@ interface ListingShellProps {
   categories?: any[]
   collections?: any[]
   products: any[]
-  grouped?: boolean
   emptyTitle?: string
   emptySubtitle?: string
 }
@@ -21,7 +20,6 @@ export function ListingShell({
   categories = [],
   collections = [],
   products,
-  grouped = true,
   emptyTitle,
   emptySubtitle,
 }: ListingShellProps) {
@@ -34,7 +32,6 @@ export function ListingShell({
             categories={categories}
             collections={collections}
             basePath={action}
-            grouped={grouped}
             emptyTitle={emptyTitle}
             emptySubtitle={emptySubtitle}
             title={title}
