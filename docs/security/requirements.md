@@ -33,13 +33,7 @@ Lista prioritaria dei rischi + requisiti di sicurezza derivati (controlli e test
 **Criterio di accettazione**: nessuna vulnerabilità High/Critical non accettata sulle dipendenze runtime.
 
 ### REQ-04 [High] — Secret amministrativi dedicati e confronti sicuri
-**Controlli**:
-- Rimuovere l'uso di `PAYLOAD_SECRET` come bearer token per cron/admin API; introdurre secret dedicati (`CRON_SECRET`, `SYNC_PASSWORD` → sostituire con auth dashboard OAuth o secret per-endpoint con rotazione).
-- Confronto secret con `crypto.timingSafeEqual` (lunghezze uguali prima).
-- Rimuovere il passaggio di secret in query string (`backfill-images?secret=`): accettare solo `Authorization: Bearer`.
-- Procedura di rotazione documentata in [`secrets-management.md`](./secrets-management.md) (inclusa l'invalidazione delle sessioni dashboard via `PAYLOAD_SECRET`).
-**Test**: verifica che nessun endpoint accetti `PAYLOAD_SECRET` come credenziale; timing test.
-**Criterio di accettazione**: nessun riuso di `PAYLOAD_SECRET` in API; nessun secret in URL.
+**Stato 2026-08-09**: ✅ **RISOLTO per rimozione** — il flusso legacy (admin prodotti a password statica, cron import/prices, `/api/products/import`, backfill-images) è stato **eliminato**. Il management prodotti passa alle Server Actions della dashboard (Google OAuth, cookie HMAC). Nessun bearer statico rimane: rimossi `CRON_SECRET`, `SYNC_PASSWORD`, `GOOGLE_SERVICE_ACCOUNT`, `GOOGLE_SHEET_ID`. Resta il requisito residuo di non riusare `PAYLOAD_SECRET` come credenziale API (vedi `secrets-management.md`).
 
 ### REQ-05 [High] — Sessione dashboard revocabile e SQL runner limitato
 **Controlli**:
@@ -78,10 +72,7 @@ Lista prioritaria dei rischi + requisiti di sicurezza derivati (controlli e test
 **Criterio di accettazione**: nessuna risposta oltre i limiti; nessun host fuori allowlist.
 
 ### REQ-10 [Medium] — Feed Google Sheets non esposto pubblicamente
-**Controlli**:
-- Utilizzare l'API del service account (scope minimi, es. `spreadsheets.readonly` per import + `spreadsheets` per updateRow) invece degli URL `gviz` pubblici; o rendere i fogli privati con accesso solo al SA.
-**Test**: accesso anonimo all'URL → 403/errore.
-**Criterio di accettazione**: dati (costi acquisto, vendite) non leggibili anonimamente.
+**Stato 2026-08-09**: ✅ **OBSOLETO** — il feed Google Sheets (import/prices) è stato **rimosso** insieme al flusso legacy. Nessun foglio esterno viene più letto/scritto.
 
 ### REQ-11 [Medium] — Errori generici e no stack trace verso il client
 **Controlli**:

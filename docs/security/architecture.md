@@ -19,10 +19,8 @@ E-commerce custom (nessuna piattaforma SaaS tipo Shopify) per la vendita di prod
 | Pagamenti | Stripe (Checkout embedded) | SDK `stripe 22.3.2`, `@stripe/stripe-js 9.10.0` |
 | Email transazionali | Resend (Payload email adapter) | `@payloadcms/email-resend 3.86.0` |
 | Storage immagini | Vercel Blob | `@payloadcms/storage-vercel-blob 3.86.0` |
-| Feed manager | Google Sheets (inventory/sales) letti via URL CSV `gviz`, scritture via API `googleapis` | `googleapis ^173.0.0` |
 | Frontend UI | React 19, TailwindCSS 4 | — |
 | Auth admin | Google OAuth 2.0 (email allowlist) + Payload auth locale | — |
-| Job/cron | Vercel Cron (`/api/cron/*`) | — |
 | Deploy | Vercel (framework nextjs) | — |
 | CI/CD | GitHub Actions (`.github/workflows/ci.yml`) | — |
 | Package manager | pnpm 10 | lockfile `pnpm-lock.yaml` |
@@ -32,18 +30,15 @@ E-commerce custom (nessuna piattaforma SaaS tipo Shopify) per la vendita di prod
 - `src/app/` — pagine storefront (RSC + client), dashboard, admin CMS, `sitemap.ts`, `robots.ts`, `manifest.ts`, `security.txt` (vuoto).
 - `src/app/api/` — route handler custom:
   - `stripe/checkout` (POST), `stripe/webhook` (POST), `stripe/order` (GET)
-  - `admin/products` (GET), `admin/products/[id]` (PATCH/DELETE), `admin/backfill-images` (GET)
-  - `cron/import` (GET), `cron/prices` (GET)
-  - `products/import` (POST)
   - `auth/google` (GET), `auth/google/callback` (GET)
   - `contact` (POST), `proxy-image` (GET)
 - `src/app/(payload)/` — REST API di Payload (`/api/{collection}`) e admin UI (`/admin`).
 - `src/payload/collections/` — `Products`, `Categories`, `Collections`, `Orders`, `Users`, `Media`, `Messages`; globals `SiteSettings`, `Header`.
-- `src/lib/` — `payload.ts`, `stripe.ts`, `dash-auth.ts`, `db-query.ts`, `google-sheets.ts`, `image-import.ts`, `order-email.ts`, `analytics.ts`, `proxy-image.ts`, `parse-csv.ts`, ecc.
+- `src/lib/` — `payload.ts`, `stripe.ts`, `dash-auth.ts`, `db-query.ts`, `group-products.ts`, `slug.ts`, `order-email.ts`, `analytics.ts`, `proxy-image.ts`, `product-image.ts`, ecc.
 - `src/hooks/useCart.tsx` — carrello in `localStorage`.
 - `src/migrations/` — migration Payload (`20260719_*`, `20260802_*`, `index.ts`).
-- `scripts/` — `create-admin.mjs`, `import-products.ts`.
-- `tests/` — vitest: `cart.test.tsx`, `group-products.test.ts`, `parse-csv.test.ts`, `sticky-add-to-cart.test.tsx`.
+- `scripts/` — `create-admin.mjs`.
+- `tests/` — vitest: `cart.test.tsx`, `group-products.test.ts`, `product-filters.test.ts`, `slug.test.ts`, `sticky-add-to-cart.test.tsx`.
 
 ---
 
@@ -83,10 +78,8 @@ Tabelle Payload (snake_case gestito da adapter):
 | Ruolo | Autenticazione | Permessi |
 |---|---|---|
 | Anonimo (cliente) | nessuna | lettura prodotti/categorie/collezioni (storefront), crea ordine di pagamento, invia messaggio contatto |
-| Admin Dashboard (`/dashboard`) | Google OAuth + allowlist email `DASHBOARD_GOOGLE_EMAILS` | gestione prodotti (prezzo/q.tà/stato/visibilità), ordini (stato), **SQL read-only su TUTTE le tabelle**, logout |
+| Admin Dashboard (`/dashboard`) | Google OAuth + allowlist email `DASHBOARD_GOOGLE_EMAILS` | gestione prodotti (CRUD, raggruppati per varianti), ordini (stato), **SQL read-only su TUTTE le tabelle**, logout |
 | Admin CMS (`/admin`) | Payload local auth (email+password) | pannello Payload integrale (tutte le collection) |
-| Admin prodotti (`/admin/products`) | password statica condivisa (`x-sync-password`) | CRUD prodotti + scrittura Google Sheets |
-| Cron/system | Bearer `CRON_SECRET` o `PAYLOAD_SECRET` | import/price update/backfill immagini |
 
 **Riscontro**: nessun vero RBAC (un solo livello admin). Access control delle collection Payload: **default di Payload 3** = richiede utente autenticato per REST/Admin; le pagine storefront usano la **Local API** (che salta l'access control) filtrando per `status`/`isVisible`. Da verificare con test (vedi [`test-plan.md`](./test-plan.md)).
 
@@ -106,7 +99,6 @@ Tabelle Payload (snake_case gestito da adapter):
 - `/api/stripe/order` GET `?session_id=`:
   - Auth: **nessuna**. Restituisce email+items+total. → **CRITICO (BOLA / IDOR / esposizione dati)**.
 - `/api/contact` POST: invio modulo contatto (no rate limit).
-- `/api/admin/products*`, `/api/admin/backfill-images`, `/api/cron/*`, `/api/products/import`: autenticati con secret statici.
 - `/api/proxy-image` GET `?url=`: proxy immagini Cardmarket con allowlist host.
 
 ### 5.3 Backend → PostgreSQL
@@ -123,19 +115,16 @@ Tabelle Payload (snake_case gestito da adapter):
 - Gestione: `checkout.session.completed` (crea ordine, invia email), `payment_intent.payment_failed` (solo log).
 - **Mancanze**: idempotenza sotto race, vincolo UNIQUE su `stripeSessionId`, check valuta/importo lato server contro il carrello reale, decremento stock, gestione refund/dispute.
 
-### 5.6 Job → Database
-- Cron Vercel `/api/cron/import` (03:00) e `/api/cron/prices` (04:00): leggono CSV Google Sheets pubblici e scrivono su Payload (Local API). Auth: Bearer `CRON_SECRET`/`PAYLOAD_SECRET`.
-- Rischio: SSRF tramite `image_url` nel foglio (importa immagini da URL arbitrari), dipendenza da sheet pubblico.
+### 5.6 (rimosso) Job cron Google Sheets
+Cron import/prices e backfill immagini **rimossi** (2026-08): nessun feed esterno scrive più sul DB.
 
-### 5.7 Feed manager → servizi esterni
-- Google Sheets letto via URL `gviz` hardcoded e pubblico. Scrittura via service account (`GOOGLE_SERVICE_ACCOUNT` env) con scope `spreadsheets` (read/write).
-- Rischio: se il foglio è pubblico, **costo di acquisto e storico vendite sono esposti**; scope del service account da restringere.
+### 5.7 (rimosso) Feed manager Sheets
+`google-sheets.ts`, `image-import.ts`, `parse-csv.ts` rimossi insieme al flusso legacy.
 
 ### 5.8 Pannello admin → API
 - `/dashboard` (Google OAuth, cookie firmato HMAC, TTL 7gg, HttpOnly+SameSite Lax+Secure in prod) → Server Actions (`requireAuth`).
 - `/admin` (Payload auth locale) → REST Payload.
-- `/admin/products` (password statica in header `x-sync-password`) → `/api/admin/products`.
-- Rischio: sessione dashboard non revocabile lato server, MFA assente, password condivisa.
+- Rischio: sessione dashboard non revocabile lato server, MFA assente.
 
 ### 5.9 Pipeline → Infrastruttura
 - `ci.yml`: solo `pnpm install`, `tsc`, `vitest`, `next build`. Nessun SAST/DAST/secret-scan/dependency-scan. Secret usati in CI: placeholder locali.
@@ -151,7 +140,7 @@ CSP: `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com` →
 
 ## 7. Logging / Monitoring / Backup (stato rilevato)
 - **Logging**: solo `console.log/error` sparsi. **Nessun request ID / correlation ID**, **nessun audit log** per accessi admin, modifiche prezzo, refund, export, login falliti.
-- **Errori**: `String(error)` esposto in risposte JSON di diversi endpoint (`/api/admin/products`, `/api/cron/*`, `/api/products/import`) → info disclosure.
+- **Errori**: `String(error)` esposto in risposte JSON di alcuni endpoint (`/api/stripe/checkout`, `/api/contact`) → info disclosure. Gli endpoint legacy admin/cron che lo esponevano sono stati rimossi (2026-08-09).
 - **Monitoring**: nessuna configurazione nel repo (affidato a Vercel). Nessun alerting definito.
 - **Backup**: nessuna configurazione backup/restore nel repo. Da verificare sul provider DB (Neon/Supabase/altro) e su Vercel Blob.
 - **Rate limiting**: **assente su tutti gli endpoint** (checkout, contact, auth, cron, proxy).
@@ -162,14 +151,12 @@ CSP: `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com` →
 | Asset | Criticità |
 |---|---|
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | critico |
-| `PAYLOAD_SECRET` | critico (firma token dashboard + secret auth cron/admin) |
+| `PAYLOAD_SECRET` | critico (firma sessioni admin + cookie dashboard) |
 | `DATABASE_URI` | critico |
 | `BLOB_READ_WRITE_TOKEN` | alto (read/write) |
-| `GOOGLE_SERVICE_ACCOUNT` + `GOOGLE_SHEET_ID` | alto |
+| `DASH_SESSION_SECRET` | alto (firma cookie `/dashboard`) |
 | `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` | alto |
 | `RESEND_API_KEY` | alto |
-| `CRON_SECRET` | alto |
-| `SYNC_PASSWORD` | alto (controllo admin prodotti) |
 | Tabella `users` (hash+salt) | critico |
 | Tabella `orders` (PII clienti) | critico |
 | `products.price` (costo acquisto) | alto |
@@ -180,11 +167,10 @@ CSP: `script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com` →
 ## 9. Osservazioni di verifica rimandate
 Non verificabili staticamente dal solo repository (servono test/accesso a staging):
 1. Esposizione pubblica di PostgreSQL (regole di rete provider) e TLS su connessione DB.
-2. Impostazione di sharing del Google Sheet (pubblico vs privato).
-3. Presenza di HSTS, CSP e header reali in produzione (curl).
-4. Eventuali key `pk_/sk_` inline nel bundle client di produzione.
-5. Source map in produzione.
-6. Configurazione webhook Stripe (HTTPS, evento `checkout.session.completed`).
-7. Backup cifrati + test di restore.
-8. Branch protection / approval rules su GitHub.
-9. Comportamento access control Payload di default su REST (test).
+2. Presenza di HSTS, CSP e header reali in produzione (curl).
+3. Eventuali key `pk_/sk_` inline nel bundle client di produzione.
+4. Source map in produzione.
+5. Configurazione webhook Stripe (HTTPS, evento `checkout.session.completed`).
+6. Backup cifrati + test di restore.
+7. Branch protection / approval rules su GitHub.
+8. Comportamento access control Payload di default su REST (test).

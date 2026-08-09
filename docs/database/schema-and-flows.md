@@ -32,7 +32,7 @@ di varianti (lingua/condizione/prezzo) raggruppato dallo shop.
 
 ### 2.1 `products`
 
-Ogni item dell'inventario. Fonte iniziale: riga del Google Sheets (import cron).
+Ogni item dell'inventario. Gestito direttamente dal dashboard (`/dashboard`, tab "Prodotti").
 
 | Campo | Tipo Payload | Obblig. | Unico | Default | Descrizione |
 |---|---|---|---|---|---|
@@ -44,18 +44,18 @@ Ogni item dell'inventario. Fonte iniziale: riga del Google Sheets (import cron).
 | `price` | number | - | - | `0` | **Costo di acquisto** (quanto abbiamo pagato noi) |
 | `compareAtPrice` | number | - | - | - | Prezzo barrato / target price |
 | `status` | select | - | - | `listed` | `listed` = Disponibile, `hold` = In Attesa, `sold` = Venduto |
-| `productState` | text | - | - | - | Stato grezzo originale dal foglio (es. `LISTED`, `HOLD`, `WATCH`) |
+| `productState` | text | - | - | - | Stato grezzo (origini dal flusso legacy foglio: es. `LISTED`, `HOLD`, `WATCH`) |
 | `isPreorder` | checkbox | - | - | `false` | **Pre-ordine / In Attesa**: visibile in `/shop/preorders` ed acquistabile |
 | `condition` | select | - | - | `near-mint` | `mint`, `near-mint`, `lightly-played`, `moderately-played`, `heavily-played`, `damaged`, `graded` |
 | `category` | relationship → `categories` | - | - | - | Categoria (es. Booster Box, Sealed) |
-| `collection` | relationship → `collections` | - | - | - | Set/collezione (primo valore del campo `set` del foglio) |
+| `collection` | relationship → `collections` | - | - | - | Set/collezione (primo valore del campo `set`, origine flusso legacy) |
 | `language` | select | - | - | `italian` | `italian`, `english`, `chinese`, `japanese` |
 | `cardNumber` | text | - | - | - | Numero carta (inventario) |
 | `rarity` | select | - | - | - | `common`, `uncommon`, `rare`, `rare-holo`, `ultra-rare`, `secret-rare` |
 | `quantity` | number | - | - | `1` | Quantità (per ora sempre 1: ogni riga è un item fisico) |
 | `imageUrl` | text | - | - | - | **URL diretto dell'immagine** (hotlink Cardmarket, solitamente miniatura 300x300). Usato come fallback |
 | `images` | array di upload → `media` | - | - | - | **Immagini ufficiali caricate su Vercel Blob** (tabella join `products_images`). Prioritario sullo storefront |
-| `averageSalePrice` | number (readOnly) | - | - | - | Prezzo medio di vendita storico (calcolato dal cron prezzi dal foglio sales) |
+| `averageSalePrice` | number (readOnly) | - | - | - | Prezzo medio di vendita storico (senza feed automatico dal 2026-08) |
 | `lastPriceUpdate` | date (readOnly) | - | - | - | Ultimo aggiornamento di `averageSalePrice` |
 | `featured` | checkbox | - | - | `false` | Evidenziato |
 | `isVisible` | checkbox | - | - | `true` | **Mostra/nascondi nello shop** (indipendente dallo stato) |
@@ -69,9 +69,8 @@ Nota: nel DB c'è una colonna legacy `image_id` non più usata dalla collection
 - `/shop/preorders` mostra i prodotti con `isPreorder = true` **e** `isVisible = true`
   (da una recente modifica non filtra più sul solo `status = hold`).
 - Il badge "In Attesa" compare quando `isPreorder = true` **oppure** `status = hold`.
-- **Import e durevolezza**: il cron di import non declassa più un prodotto già `listed`
-  a `hold` (né riattiva `isPreorder`): una volta messo in shop, un item resta `listed`
-  finché non viene nascosto via `isVisible` o cambiato manualmente.
+- **Durevolezza**: un prodotto messo in shop resta `listed` finché non viene nascosto
+  via `isVisible` o cambiato manualmente dal dashboard.
 - Lo status `sold` attualmente **non** viene ancora impostato dal webhook Stripe
   (è un bug noto / Fase 1 del piano): un item venduto resta `listed` e ricomprerabile.
 
@@ -155,7 +154,7 @@ Messaggi dal form contatti.
 ## 4. Chiavi e relazioni (mappa)
 
 ```
-products.itemId ────────────────► chiave inventario (foglio), univoca
+products.itemId ────────────────► chiave inventario, univoca
 products.slug ──────────────────► chiave URL, univoca
 products.category ──────────────► categories.id      (molti-a-uno)
 products.collection ────────────► collections.id     (molti-a-uno)
@@ -165,8 +164,7 @@ header.logo ────────────────────► medi
 ```
 
 - Le relazioni sono referenziate per `id` numerico (intero, auto-increment).
-- La "chiave di negozio" è `itemId`: l'import la usa per fare upsert (trova per `itemId`,
-  aggiorna se esiste, altrimenti crea).
+- La "chiave di negozio" è `itemId` (univoca): originariamente usata dall'import Sheets per l'upsert (find-by-`itemId`), oggi è solo una chiave di inventario.
 
 ---
 
@@ -179,23 +177,13 @@ Due "canali" convivono:
    passando da `/api/proxy-image` (proxy pass-through, cache 7gg) per evitare hotlink.
 2. **`images[]`** → collection `media` (Vercel Blob) - immagini **ufficiali e ottimizzate**.
    Lo storefront le preferisce: prima `sizes.card.url` (card 400px), poi
-   `sizes.pdp.url` (900px), poi `url` pieno.
-
-**Ottimizzazione all'import** (`src/lib/image-import.ts`, funzione `processImageBuffer`):
-- decodifica con `sharp`, normalizza rotazione EXIF
-- se più piccola di 900px la **upscala** (lanczos3) a 900px - questo rende le miniature
-  300x300 molto più pulite a schermo
-- ri-encoder in **JPEG qualità 88 (mozjpeg)**
-- upload in `media` con `alt` = titolo prodotto
+   `sizes.pdp.url` (900px), poi `url` pieno. Le immagini si caricano/collegano dal
+   pannello Payload (`/admin`).
 
 **Rendering** (`src/components/product/ProductImage.tsx`):
 - se l'URL è Vercel Blob (`*.blob.vercel-storage.com`) usa `next/image` (serve WebP/AVIF
   alla dimensione giusta grazie a `sizes`)
 - altrimenti ricade su `<img>` + proxy
-
-**Backfill immagini** (per prodotti già in DB senza immagini):
-`GET /api/admin/backfill-images?secret={CRON_SECRET|PAYLOAD_SECRET}` - scarica `imageUrl`,
-ottimizza, carica su Blob e collega `images[]`. Idempotente (salta chi ha già immagini).
 
 ---
 
@@ -222,49 +210,31 @@ ottimizza, carica su Blob e collega `images[]`. Idempotente (salta chi ha già i
 (niente `status='sold'`, `quantity=0`, `isVisible=false`). È la prima fase del piano
 ("sold flow") da implementare.
 
-### 6.2 Import inventario (Google Sheets → DB)
+### 6.2 Gestione prodotti (dashboard → Payload)
 
-Fonte: foglio "inventory" (`GOOGLE_SHEET_CSV_URL`), letto via endpoint CSV di Google.
+L'import da Google Sheets è stato **rimosso**: i prodotti si creano/modificano
+direttamente nel dashboard (`/dashboard`, tab "Prodotti") via server action
+(`createProduct` / `updateProduct` / `deleteProduct` in `src/app/dashboard/actions.ts`).
 
-Per ogni riga del foglio l'import:
-- legge `item_id`, `product_name`, `category`, `set`, `condition`, `language`,
-  `product_state`, `store_price`, `target_price`, `unitary_gross_price`, `image_url`;
-- salta le righe senza `item_id`/nome e quelle con `product_state = SOLD`;
-- **upsert per `itemId`** (aggiorna il prodotto esistente o lo crea con `isVisible=true`);
-- mappa `condition`/`language`/`status` (es. `HOLD` → `status='hold'`, `isPreorder=true`);
-- importa e collega le immagini da `image_url` (come in §5).
+### 6.3 Prezzi medi di vendita
 
-Trigger disponibili:
-- **cron notturno**: `GET /api/cron/import` alle 03:00 UTC (`vercel.json`). Richiede
-  `Authorization: Bearer {CRON_SECRET|PAYLOAD_SECRET}`.
-- **dashboard → Sincronizzazione**: tab del pannello `/dashboard`
-  (filtri skipSold/skipHold/onlyWithImage/onlyListed). La vecchia pagina `/admin/sync`
-  è stata **eliminata**: il sync manuale ora vive solo qui.
-- **script manuale**: `pnpm import-products` (`scripts/import-products.ts`).
-
-⚠️ **Nota**: i cron Vercel non inviano header custom → se `CRON_SECRET` non è presente,
-il cron restituisce 401 e **non importa nulla**. Da risolvere (query param o dashboard).
-
-### 6.3 Prezzi medi di vendita (foglio "sales")
-
-Cron `GET /api/cron/prices` alle 04:00 UTC:
-- legge il foglio "sales" (`item_id`, `sale_price`);
-- calcola la media per `itemId`;
-- aggiorna `products.averageSalePrice` e `lastPriceUpdate`.
+Il cron `/api/cron/prices` (foglio "sales") è stato **rimosso** insieme al flusso
+Sheets. `products.averageSalePrice` e `lastPriceUpdate` restano nel DB ma non hanno
+più un feed automatico.
 
 Il PDP mostra "Prezzo medio di vendita" se `averageSalePrice` > 0.
 
 ### 6.4 Preordini / "In Attesa" (`isPreorder`)
 
-- Il campo `isPreorder` viene impostato dall'import quando `product_state = HOLD`.
+- Il campo `isPreorder` si imposta manualmente dal dashboard (modale prodotto).
 - `/shop/preorders` mostra i prodotti con `isPreorder=true` e `isVisible=true`.
 - Il badge "In Attesa" è mostrato quando `isPreorder=true` o `status=hold`.
 - Per decisione, i preordini **restano acquistabili** (add to cart attivo).
 
-### 6.5 Backfill immagini
+### 6.5 Immagini
 
-`GET /api/admin/backfill-images?secret=...` - come da §5. Utile per popolare le
-immagini Blob di prodotti esistenti senza reimportare tutto.
+Le immagini si impostano via `imageUrl` dal dashboard (o dal pannello Payload). Il
+route `/api/admin/backfill-images` è stato rimosso con il flusso legacy.
 
 ### 6.6 Dashboard (`/dashboard`)
 
@@ -282,15 +252,14 @@ Pannello di gestione interno in `src/app/dashboard/` con auth **reale**:
   stock basso ≤1), valore inventario (somma `storePrice × quantity` dei `listed`
   visibili), ordini per stato e fatturato (somma `total` di `paid`+`shipped`+
   `delivered`), ultimi 8 ordini.
-- **Prodotti**: ricerca (titolo/itemId/descrizione), modifica inline di
-  `storePrice`, `compareAtPrice`, `quantity`, `status`, `isVisible`, `featured`
-  (server action `updateProduct`) ed eliminazione (`deleteProduct`).
+- **Prodotti**: ricerca (titolo/itemId/descrizione), prodotti **raggruppati per
+  `title`** in gruppi espandibili (variants): ogni riga mostra lingua, condizione,
+  prezzo, quantità e stato. Azioni: toggle visibilità shop (tutto il gruppo),
+  modifica (modale con tutti i campi via `updateProduct`), creazione ("Nuovo
+  Prodotto" via `createProduct`), eliminazione di singole varianti o dell'intero
+  gruppo (`deleteProduct`).
 - **Ordini**: lista con cambio status (`pending`/`paid`/`shipped`/`delivered`/
   `cancelled`) via `updateOrderStatus`.
-- **Sincronizzazione**: esegue `runInventorySync(filters)` — logica estratta in
-  `src/lib/inventory-sync.ts` (non più legata a `/admin/sync`, che è stato eliminato)
-  — con i filtri skipSold/skipHold/onlyWithImage/onlyListed e lo stato "ultimo run"
-  salvato in localStorage.
 - **SQL (sola lettura)**: tab che esegue query **read-only** sul DB via
   `runReadOnlyQuery` (`src/lib/db-query.ts`, pool `pg` lazy su `DATABASE_URI`).
   Protezioni: whitelist di soli comandi `SELECT/SHOW/EXPLAIN/WITH`, blocco di
@@ -308,14 +277,13 @@ Tutte le server action di lettura/scrittura chiamano `requireAuth()` e rispondon
 | Variabile | Dove | Uso |
 |---|---|---|
 | `DATABASE_URI` | Neon | Connessione Postgres |
-| `PAYLOAD_SECRET` | Payload | Firma sessioni admin + fallback auth cron |
+| `PAYLOAD_SECRET` | Payload | Firma sessioni admin + fallback sessione dashboard |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob | Upload/lettura immagini `media` |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe | Checkout (server) + webhook |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe | Checkout embedded lato client (stessa chiave di `STRIPE_PUBLISHABLE_KEY`) |
 | `NEXT_PUBLIC_SITE_URL` | - | URL pubblico (success/cancel url) |
 | `RESEND_API_KEY` / `EMAIL_FROM` | Resend | Email conferma ordine (opzionale) |
-| `CRON_SECRET` | - | Auth dei cron (se impostato) |
-| `SYNC_PASSWORD` | - | Auth delle API `/api/admin/products` (variant management) |
+| `DASH_SESSION_SECRET` | - | Firma HMAC cookie sessione `/dashboard` (fallback: `PAYLOAD_SECRET`) |
 | `GOOGLE_CLIENT_ID` | Google Cloud | OAuth Client ID per il login dashboard (web) |
 | `GOOGLE_CLIENT_SECRET` | Google Cloud | OAuth Client Secret |
 | `GOOGLE_OAUTH_REDIRECT_URI` | - | Redirect URI OAuth (default `${NEXT_PUBLIC_SITE_URL}/api/auth/google/callback`) |
@@ -331,6 +299,6 @@ Tutte le server action di lettura/scrittura chiamano `requireAuth()` e rispondon
    expectedRoi, marketPrice, notes, soldDate, salePrice…) + collection `Sales`
    (piattaforma, commissioni, shipping, profitto, ROI reale, stripeSessionId).
 3. **Flusso inserimento manuale** - form admin "Nuovo item" con generazione `itemId`/`slug`.
-4. **Rimozione Google Sheets** - solo quando Looker Studio (su Neon) sostituirà le
-   dashboard; poi eliminare cron import/prices, il tab sync della dashboard
-   (la pagina `/admin/sync` è già stata rimossa), `google-sheets.ts`, ecc.
+4. ✅ **Rimozione Google Sheets** - fatto (cron import/prices, `/admin/products`,
+   `google-sheets.ts`, `parse-csv.ts`, `image-import.ts`, `api-auth.ts`, script
+   `import-products.ts` rimossi; gestione prodotti nel dashboard).

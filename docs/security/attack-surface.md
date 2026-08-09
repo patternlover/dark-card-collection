@@ -1,6 +1,6 @@
 # Superficie d'Attacco — Dark Card Collection
 
-Stato: **bozza iniziale (Fase A)**.
+Stato: **bozza iniziale (Fase A)** — aggiornata 2026-08-09 (rimozione flusso legacy Sheets/admin).
 Superficie d'attacco del progetto, endpooint per endpoint, con autenticazione e controllo autorizzativo richiesti/rilevati.
 
 ---
@@ -23,12 +23,8 @@ Superficie d'attacco del progetto, endpooint per endpoint, con autenticazione e 
 | `/admin/*` (Payload UI) | GET/POST | Payload local auth (email+password) | default Payload | brute force login (no MFA, no rate limit visibile), account admin unico |
 | `/api/auth/google` | GET | — | state cookie (HMAC non richiesto, random 24 byte) | basso |
 | `/api/auth/google/callback` | GET | OAuth code + state | verifica state, id_token audience, allowlist email | confronto state con `!==` (timing), token non revocabile, sessione non legata a verifica allowlist a ogni richiesta |
-| `/api/admin/products` | GET | header `x-sync-password` vs `SYNC_PASSWORD` o `PAYLOAD_SECRET` | presente | **password statica condivisa**, confronto non constant-time, `PAYLOAD_SECRET` usato come auth API, nessun audit, nessun MFA |
-| `/api/admin/products/[id]` | PATCH/DELETE | idem | idem + allowlist campi aggiornabili | stesso + scrittura Google Sheets, cancellazione dati |
-| `/api/admin/backfill-images` | GET | `?secret=` o `Authorization: Bearer` vs `CRON_SECRET`/`PAYLOAD_SECRET` | presente | secret in query string (log/referrer), `PAYLOAD_SECRET` riusato |
-| `/api/cron/import` | GET | `Authorization: Bearer CRON_SECRET`/`PAYLOAD_SECRET` | presente | SSRF via `image_url` del foglio, dipendenza da sheet pubblico, no rate limit |
-| `/api/cron/prices` | GET | idem | presente | — |
-| `/api/products/import` | POST | `Authorization: Bearer PAYLOAD_SECRET` | presente | segreti in header ok, ma riuso del secret CMS |
+
+> **Rimossi 2026-08-09** con il flusso legacy Google Sheets: `/api/admin/products`, `/api/admin/products/[id]`, `/api/admin/backfill-images`, `/api/cron/import`, `/api/cron/prices`, `/api/products/import`, `/admin/products` (pagina). Il management prodotti passa esclusivamente alle Server Actions della dashboard OAuth.
 
 ## 3. Server Actions (dashboard)
 
@@ -46,7 +42,7 @@ Access control: default Payload 3 = richiede utente autenticato per tutte le ope
 
 - DB PostgreSQL: **da verificare** che non sia esposto pubblicamente; connessione TLS obbligatoria.
 - Vercel Blob: bucket con token read-write in produzione.
-- Vercel Cron: due job (`/api/cron/import`, `/api/cron/prices`).
+- Vercel Cron: nessun job (rimossi 2026-08 `/api/cron/import`, `/api/cron/prices`).
 - Domain: `darkcardcollection.com`, TLS gestito da Vercel; **HSTS assente**.
 - GitHub: `main` branch; nessuna branch protection verificabile dal repo.
 
@@ -65,13 +61,11 @@ Access control: default Payload 3 = richiede utente autenticato per tutte le ope
 | Checkout (prezzo/q.tà) | alta | alto | **Critico** |
 | `/api/stripe/order` BOLA | media | alto | **Critico** |
 | Dipendenze Next/sharp (CVE) | alta | medio-alto | **Alto** |
-| Password admin statica | media | alto | **Alto** |
 | Sessione dashboard non revocabile + SQL runner | media | alto | **Alto** |
 | Overselling / nessun decremento stock | media | medio | **Alto** |
 | Webhook non idempotente | media | medio | **Alto** |
 | No rate limiting | alta | medio | **Alto** |
 | CSP permissivo | media | medio | Medio |
 | proxy-image SSRF-lite / no limiti | media | medio | Medio |
-| Sheet pubblico (costi acquisto) | media | medio | Medio |
 | Errori che esponono dettagli | media | basso | Medio |
 | No HSTS | bassa | medio | Medio |

@@ -18,9 +18,8 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 
 - Product catalog with categories and collections
 - Products grouped by name (variants hidden from customers)
-- Google Sheets integration for inventory management
 - Stripe Checkout for secure payments
-- Admin dashboard at `/dashboard` with product management and sync tools
+- Admin dashboard at `/dashboard` with product management (grouped by variants, edit/create/delete) and orders
 - Responsive design with mobile menu
 - Product filtering by condition, language, category, collection
 - Product detail page with stock info, variant availability, short description and a sticky add-to-cart bar (the only purchase button: shows price, stock and quantity selector, appears when the buy box scrolls out of view on mobile and desktop, hides near the footer)
@@ -28,10 +27,9 @@ Pokemon TCG e-commerce store for sealed products, single cards, and graded slabs
 - Social proof bar on the homepage ("N collezionisti hanno aggiunto al carrello nelle ultime 24 ore")
 - Footer pinned to the bottom on short pages (flex layout shell with all-black background)
 - Free shipping over €80 in Italy (displayed in a banner below the navbar and in a dedicated CTA section on the homepage)
-- Hold/SPC products shown in the shop as one grouped card with total stock (listings are kept durable against the daily import cron)
-- Variant management with edit and delete (Payload-only, no Sheets impact)
+- Hold/SPC products shown in the shop as one grouped card with total stock
+- Variant management with edit and delete (Payload-only)
 - Product visibility toggle (`isVisible`) - control which products appear in the shop independently of status
-- Daily cron jobs for import and price updates
 - GA4 ecommerce tracking via GTM
 - SEO: `robots.txt`, `sitemap.xml`, manifest, SVG favicon, OG metadata, JSON-LD structured data
 - Neobrutalism design: yellow accent (`#FACC15`) on brand elements, all-black footer with legal links in the bottom bar
@@ -56,7 +54,7 @@ dark_card_collection (Neon PostgreSQL)
 ├── collections                  # Expansions/sets (es. "Prismatic Evolutions")
 │   └── id, name, slug (unique), description, release_date
 ├── products                     # Storefront variants (grouped by title)
-│   ├── id, title, slug (unique), item_id (unique, from Google Sheets)
+│   ├── id, title, slug (unique), item_id (unique inventory key)
 │   ├── pricing: price, store_price, compare_at_price, average_sale_price, last_price_update
 │   ├── state: status (enum: listed|hold|sold), product_state, is_preorder, is_visible, featured
 │   ├── details: description, condition (enum), language (enum), rarity, card_number
@@ -100,7 +98,7 @@ Payload internals (managed automatically): `payload_kv`, `payload_preferences` (
 pnpm test
 ```
 
-Unit tests live in `tests/` and cover the pure lib modules (`group-products.ts`, `parse-csv.ts`) and the sticky add-to-cart visibility logic (`sticky-add-to-cart.test.tsx`, rendered in a DOM environment).
+Unit tests live in `tests/` and cover the pure lib modules (`group-products.ts`, `slug.ts`, `product-filters.ts`, `cart.ts`) and the sticky add-to-cart visibility logic (`sticky-add-to-cart.test.tsx`, rendered in a DOM environment).
 
 ## CI
 
@@ -134,9 +132,7 @@ STRIPE_WEBHOOK_SECRET=whsec_live_...
 BLOB_READ_WRITE_TOKEN=vercel_blob_...
 RESEND_API_KEY=re_...
 EMAIL_FROM=noreply@darkcardcollection.com
-CRON_SECRET=your-cron-secret
-SYNC_PASSWORD=your-admin-password
-GOOGLE_SERVICE_ACCOUNT=...
+DASH_SESSION_SECRET=your-dash-session-secret
 GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
 DASHBOARD_GOOGLE_EMAILS=you@gmail.com
@@ -179,37 +175,22 @@ On WSL the type-check phase can run out of heap memory. If the build crashes wit
 NODE_OPTIONS="--max-old-space-size=6144" pnpm build
 ```
 
-## Google Sheets Import
+## Gestione Prodotti
 
-Products are imported from a Google Sheets document with an `inventory` tab.
+I prodotti sono gestiti direttamente dal dashboard (`/dashboard`, tab "Prodotti"), senza sincronizzazione esterna.
 
-### Sheet Structure
+### Variant Management
 
-| Column | Description |
-|--------|-------------|
-| `item_id` | Unique identifier (e.g. PUR-0001-01) |
-| `product_name` | Product title |
-| `category` | ETB, Collection, SPC, Tin, etc. |
-| `language` | ITA, ENG, CIN |
-| `set` | Card set name |
-| `condition` | SEALED, NM, EXC, GD, LP, PL, PSA, BGS |
-| `product_state` | LISTED, HOLD, SOLD |
-| `target_price` | Target selling price (mapped to `storePrice`) |
-| `unitary_gross_price` | Purchase cost |
-| `store_price` | Strikethrough price (mapped to `compareAtPrice`) |
+- I prodotti con lo stesso `title` sono raggruppati come **variants** e mostrati come un solo "parent product" nello shop.
+- Nel dashboard i gruppi sono espandibili: ogni riga mostra una variante con lingua, condizione, prezzo e stock.
+- Stock totale = somma delle quantità delle varianti · Prezzo di vendita = `storePrice` minimo del gruppo.
+- Da un gruppo si può: modificare (modale con tutti i campi), creare, eliminare singole varianti o l'intero gruppo, toggle visibilità shop.
 
-### Import via Script
+### Product Visibility
 
-```bash
-pnpm payload run import-products
-```
-
-### Import via API
-
-```bash
-curl -X POST https://your-site.vercel.app/api/products/import \
-  -H "Authorization: Bearer YOUR_PAYLOAD_SECRET"
-```
+- Each product has an `isVisible` field (default: `true`)
+- Toggle visibility per product group in `/dashboard` (tab "Prodotti") using the eye icon
+- Products with `isVisible: false` are hidden from the shop regardless of status
 
 ## Admin
 
@@ -222,8 +203,7 @@ To enable it:
 4. Without credentials the Google button is hidden and the dashboard is not accessible.
 
 - **Accesso dashboard**: `GET /api/auth/google` starts the OAuth flow, `/api/auth/google/callback` verifies the ID token and sets the signed `dcc-dash` cookie (HMAC-SHA256, 7 days, httpOnly).
-- **Gestione Prodotti** (`/admin/products`): View, edit, and delete product variants. Products are grouped by name; expand a group to see individual variants with language, condition, price, and stock.
-- **Sincronizzazione** (`/dashboard`, tab "Sincronizzazione"): Trigger a manual sync from Google Sheets with import filters.
+- **Gestione Prodotti** (`/dashboard`, tab "Prodotti"): View, edit, and delete product variants. Products are grouped by name; expand a group to see individual variants with language, condition, price, and stock. Create new products from the "Nuovo Prodotto" button.
 - **SQL read-only** (`/dashboard`, tab "SQL"): Run read-only SQL queries (SELECT/SHOW/EXPLAIN/WITH only, destructive keywords blocked, max 500 rows).
 - **Payload CMS** (`/admin`): Native Payload admin panel. Full frontend to query and edit every collection (products, categories, collections, orders, messages, media, users) and global (header, site settings). Sign in with the admin user account.
 
@@ -241,19 +221,16 @@ Login at `https://darkcardcollection.com/admin`. Change the password from the "P
 
 ### Variant Management
 
-- Products from Google Sheets are imported as variants (same title, different `itemId`)
-- Variants are only visible in `/admin/products` - the storefront shows grouped parent products
+- Products are grouped by `title` as variants — the storefront shows only the "parent product"
 - Stock = sum of all variant quantities
 - Selling price = lowest `storePrice` across variants
-- Deleting a variant removes it from Payload only; the Google Sheet row is preserved
+- Deleting a variant removes it from Payload only
 
 ### Product Visibility
 
 - Each product has an `isVisible` field (default: `true`)
-- Toggle visibility per product group in `/admin/products` using the eye icon
+- Toggle visibility per product group in `/dashboard` (tab "Prodotti") using the eye icon
 - Products with `isVisible: false` are hidden from the shop regardless of status
-- New products imported from Google Sheets default to `isVisible: true`
-- Re-syncing from Google Sheets preserves your visibility settings
 
 ## Project Structure
 
@@ -261,29 +238,26 @@ Login at `https://darkcardcollection.com/admin`. Change the password from the "P
 src/
 ├── app/
 │   ├── (payload)/              # Payload CMS admin
-│   ├── admin/
-│   │   └── products/page.tsx   # Variant management + delete
 │   ├── dashboard/
 │   │   ├── page.tsx            # Admin dashboard hub (Google OAuth auth)
 │   │   ├── login.tsx           # Google-only login screen
-│   │   ├── actions.ts          # Server actions: products, orders, sync, SQL
-│   │   └── main.tsx            # Dashboard UI: overview, products, orders, sync, SQL tabs
+│   │   ├── actions.ts          # Server actions: products, orders, SQL
+│   │   └── main.tsx            # Dashboard UI: overview, products, orders, SQL tabs
 │   ├── shop/                   # Product listing with filters
 │   ├── products/[slug]/        # Product detail page (parent only)
 │   ├── cart/                   # Shopping cart
 │   ├── checkout/               # Stripe checkout
 │   └── api/                    # API routes (incl. /api/auth/google OAuth flow)
 ├── components/
-│   ├── admin/                  # EditProductModal, ProductGroupRow
+│   ├── dashboard/              # ProductGroupRow, EditProductModal, CreateProductModal
 │   ├── layout/                 # Header, Footer, MobileMenu
-│   ├── product/                # ProductCard, ProductGroupCard, AddToCartButton
+│   ├── product/                # ProductCard, AddToCartButton
 │   ├── sections/               # Hero, FeaturedProducts, TrustBadges
 │   └── ui/                     # Badge, CookieConsent
 ├── lib/
 │   ├── group-products.ts       # Groups variants by title
-│   ├── google-sheets.ts        # Google Sheets API
-│   ├── image-import.ts         # Image download + upload
 │   ├── proxy-image.ts          # Cardmarket image proxy
+│   ├── slug.ts                 # Slugify helper
 │   ├── analytics.ts            # GA4 ecommerce events
 │   ├── dash-auth.ts            # Signed dashboard session (HMAC cookie)
 │   ├── db-query.ts             # Read-only SQL runner (dashboard SQL tab)
@@ -301,13 +275,6 @@ This project is configured for Vercel deployment with automatic Payload migratio
 ```bash
 vercel --prod
 ```
-
-### Cron Jobs
-
-| Endpoint | Schedule | Description |
-|----------|----------|-------------|
-| `/api/cron/import` | Daily 3:00 AM | Import products from Google Sheets |
-| `/api/cron/prices` | Daily 4:00 AM | Update average sale prices |
 
 ## License
 

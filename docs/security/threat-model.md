@@ -1,15 +1,17 @@
 # Threat Model — Dark Card Collection
 
-Stato: **bozza iniziale (Fase A)**.
+Stato: **bozza iniziale (Fase A)** — aggiornata 2026-08-09.
 Metodologie: STRIDE, OWASP ASVS 5.0, OWASP Top 10:2025, principio del minimo privilegio, defense-in-depth, Zero Trust.
 Livelli rischio: `C` = Critical, `H` = High, `M` = Medium, `L` = Low.
+
+> **Nota 2026-08-09**: il flusso legacy (admin `/admin/products` a password statica, API `/api/admin/*`, cron `/api/cron/*`, import `/api/products/import`, feed Google Sheets) è stato **rimosso**. Le minacce T08–T11 e le parti di T14/T15 relative a quel sistema sono da considerarsi storiche (registro dell'analisi pre-rimozione).
 
 ---
 
 ## 1. Premesse e assunzioni
 
 - Attaccanti considerati: clienti anonimi, attaccanti esterni, utenti con accesso admin (dashboard/CMS) di livello basso, insider con accesso repo/CI, supply chain.
-- L'applicazione è monolitica Next.js su Vercel; DB gestito esternamente (provider non verificato). Presenza di due pannelli admin + un pannello prodotti a password statica.
+- L'applicazione è monolitica Next.js su Vercel; DB gestito esternamente (provider non verificato). Presenza di due pannelli admin (dashboard OAuth + CMS Payload).
 - Il carrello vive in `localStorage` ed è **non attendibile**.
 
 ---

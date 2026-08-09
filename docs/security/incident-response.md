@@ -67,10 +67,10 @@ Regole: non cancellare evidenze, non distruggere log, coordinarsi con il proprie
 - **Correzione**: query parametrizzate (verificare che non ce ne siano di concatenate).
 - **Monitoraggio**: 72h su errori DB e pattern.
 
-## 5. Data leakage (ordini/PII via BOLA, sheet pubblico, backup)
+## 5. Data leakage (ordini/PII via BOLA, export non autorizzato)
 
-- **Rilevazione**: scraping, accessi anomali a `/api/stripe/order`, share pubblico del foglio.
-- **Contenimento**: disattivare l'endpoint/esporre meno dati (REQ-02), rendere privato il foglio.
+- **Rilevazione**: scraping, accessi anomali a `/api/stripe/order`, dump/export non autorizzati.
+- **Contenimento**: disattivare l'endpoint/esporre meno dati (REQ-02), revocare token/sessioni coinvolti.
 - **Evidenze**: log accessi.
 - **Verifica**: quali record sono stati letti; se PII esposta → gestire secondo procedure (il piano esclude l'aspetto normativo).
 - **Ripristino**: ripristinare la superficie minima; rotazione sessioni coinvolte.

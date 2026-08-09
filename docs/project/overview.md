@@ -37,7 +37,7 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 BLOB_READ_WRITE_TOKEN=vercel_blob_your_token_here
 RESEND_API_KEY=re_your_resend_api_key
 EMAIL_FROM=noreply@your-site.com
-CRON_SECRET=your-cron-secret
+DASH_SESSION_SECRET=your-dash-session-secret
 GOOGLE_CLIENT_ID=your-oauth-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-oauth-client-secret
 DASHBOARD_GOOGLE_EMAILS=you@gmail.com,other@gmail.com
@@ -49,22 +49,11 @@ DASHBOARD_GOOGLE_EMAILS=you@gmail.com,other@gmail.com
 src/
 ├── app/
 │   ├── (payload)/                  # Payload CMS admin (auto-generated)
-│   ├── admin/
-│   │   └── products/page.tsx       # /admin/products - variant management + delete
 │   ├── api/
-│   │   ├── admin/
-│   │   │   ├── backfill-images/route.ts
-│   │   │   └── products/
-│   │   │       ├── route.ts        # GET list + PATCH update + DELETE variant
-│   │   │       └── [id]/route.ts   # PATCH update single product + DELETE variant
 │   │   ├── auth/google/
 │   │   │   ├── route.ts            # GET /api/auth/google - starts OAuth flow (state nonce cookie)
 │   │   │   └── callback/route.ts   # GET callback - exchanges code, verifies ID token + email whitelist, sets dcc-dash cookie
 │   │   ├── contact/route.ts        # Contact form API (saves to messages collection)
-│   │   ├── cron/
-│   │   │   ├── import/route.ts     # Daily import from Google Sheets (3am)
-│   │   │   └── prices/route.ts     # Daily price update from sales (4am)
-│   │   ├── products/import/route.ts # Manual import endpoint
 │   │   ├── proxy-image/route.ts    # Cardmarket image proxy
 │   │   └── stripe/
 │   │       ├── checkout/route.ts   # Creates Stripe checkout session
@@ -79,9 +68,9 @@ src/
 │   │   └── success/page.tsx        # Post-payment success
 │   ├── dashboard/
 │   │   ├── page.tsx                # /dashboard - admin hub (Google OAuth auth, whitelist)
-│   │   ├── actions.ts              # Server actions: products, orders, sync, SQL
+│   │   ├── actions.ts              # Server actions: products, orders, SQL
 │   │   ├── login.tsx               # Login screen: "Accedi con Google" (only)
-│   │   └── main.tsx                # Dashboard UI: overview, products, orders, sync, SQL tabs
+│   │   └── main.tsx                # Dashboard UI: overview, products, orders, SQL tabs
 │   ├── guide/
 │   │   ├── page.tsx                # /guide - guide index
 │   │   ├── loading.tsx
@@ -173,19 +162,16 @@ src/
 │   └── useConsent.tsx              # Consent management hook
 ├── lib/
 │   ├── analytics.ts                # GA4 ecommerce dataLayer events
-│   ├── api-auth.ts                 # API authentication helpers
 │   ├── collections.ts              # Collection helpers
 │   ├── dash-auth.ts                # Auth dashboard: cookie dcc-dash (HMAC), whitelist
 │   ├── db-query.ts                 # Read-only SQL runner (dashboard SQL tab)
-│   ├── google-sheets.ts            # Google Sheets API read/write
 │   ├── group-products.ts           # Groups products by title (variants → parent)
-│   ├── image-import.ts             # Download + upload images to Vercel Blob
 │   ├── order-email.ts              # Template + invio email conferma ordine (Resend)
-│   ├── parse-csv.ts                # RFC 4180 CSV parser (multilinea/quotes)
 │   ├── payload.ts                  # getPayloadClient() - cached singleton
 │   ├── product-filters.ts          # Opzioni condizione/lingua per filtri
 │   ├── product-image.ts            # Helper immagine prodotto
 │   ├── proxy-image.ts              # Cardmarket image proxy URL builder
+│   ├── slug.ts                     # Slugify helper (dashboard + PDP)
 │   └── stripe.ts                   # Stripe client (lazy getStripe)
 ├── payload/
 │   ├── collections/
@@ -212,7 +198,7 @@ src/
 ```
 
 ```
-tests/                            # Unit test Vitest (group-products, parse-csv, cart, product-filters, sticky-add-to-cart)
+tests/                            # Unit test Vitest (group-products, slug, cart, product-filters, sticky-add-to-cart)
 .github/workflows/ci.yml          # CI: tsc --noEmit + vitest + next build
 vitest.config.ts
 next.config.ts
@@ -222,8 +208,7 @@ vercel.json
 package.json
 .env.example
 scripts/                          # at repo root (not under src/)
-├── create-admin.mjs
-└── import-products.ts
+└── create-admin.mjs
 ```
 
 ## Payload Collections Schema
@@ -233,7 +218,7 @@ scripts/                          # at repo root (not under src/)
 |-------|------|-------|
 | title | text | required |
 | slug | text | required, unique |
-| itemId | text | unique, from Google Sheets |
+| itemId | text | unique identifier (es. PUR-0001-01) |
 | storePrice | number | actual selling price |
 | price | number | purchase cost (default 0) |
 | compareAtPrice | number | strikethrough/target price |
@@ -253,21 +238,6 @@ scripts/                          # at repo root (not under src/)
 
 ### Payload `id` type is `string | number` - always cast with `as number` when creating orders.
 
-## Cron Jobs (vercel.json)
-- `/api/cron/import` - daily at 3am, imports from Google Sheets inventory tab
-- `/api/cron/prices` - daily at 4am, calculates average sale price from sales tab
-- Auth: Bearer token with `CRON_SECRET` or `PAYLOAD_SECRET`
-
-## Google Sheets
-
-**Inventory tab** (16 rows):
-Headers: `item_id, product_name, category, language, set, condition, purchase_id, purchase_date, unitary_net_price, unitary_gross_price, product_state, hold_days, hold_end_date, target_price, expected_ROI, market_price, volatile_ROI, notes`
-
-**Sales tab** (1 row):
-Headers: `sale_id, item_id, listing_date, sale_date, platform, unitary_gross_price, platform_fee, payment_fee, shipping_fee, gross_price, sale_price, profit, real_ROI, real_hold_days`
-
-**Import logic**: product_state=SOLD → skip; SEALED→mint, NM→near-mint, etc.; ITA→italian, ENG→english, CIN→chinese; IRL→skip
-
 ## Key Decisions
 
 1. **Shop page route**: `/shop` directory (NOT route group `(shop)`) to avoid conflict with root `page.tsx`
@@ -279,16 +249,16 @@ Headers: `sale_id, item_id, listing_date, sale_date, platform, unitary_gross_pri
 
 ## Variant Products Logic
 
-Products in Google Sheets are imported as individual rows (variants). Each row becomes a Payload product with the same `title` but different `itemId`, `language`, `condition`, and `storePrice`. Variants represent the same product purchased from suppliers on different dates/orders.
+Products are grouped by `title` as variants (same title, different `itemId`, `language`, `condition`, `storePrice`). Variants represent the same product purchased from suppliers on different dates/orders. Products are created/edited directly in the dashboard (`/dashboard`, tab "Prodotti"); there is no external import source.
 
 - **Variants are NOT exposed to customers** - shop and PDP show only the "parent product" (grouped by `title`)
 - **Stock** = sum of `quantity` across all variants with the same title
-- **Selling price** = minimum `storePrice` (target_price from Sheets) across variants
+- **Selling price** = minimum `storePrice` across variants
 - **Grouping** is done by `groupProducts()` in `src/lib/group-products.ts`
 - **PDP** fetches all variants by title, groups them, and shows aggregate info (total stock, available languages/conditions as text)
-- **Admin** (`/admin/products`) shows variants in expandable rows - this is the ONLY place variants are visible
-- **Delete variant**: removes from Payload only, does NOT affect Google Sheets (same row stays in the sheet for import history)
-- **Visibility toggle**: `isVisible` field controls whether a product group appears in the shop. Admin toggles via eye icon in `/admin/products`. Sync preserves existing visibility settings.
+- **Admin** (`/dashboard`, tab "Prodotti") shows variants in expandable groups - this is the ONLY place variants are visible
+- **Delete variant/group**: removes from Payload only
+- **Visibility toggle**: `isVisible` field controls whether a product group appears in the shop. Admin toggles via eye icon in the dashboard.
 
 ## Known Issues / TODO
 
@@ -309,7 +279,7 @@ Products in Google Sheets are imported as individual rows (variants). Each row b
 
 ## Git Commits
 
-Latest: `4f4e227` (orchestrator config) - seguita dalla riorganizzazione docs (`f818ce1`) e dal cleanup codice (`1599feb`). Storico recente dettagliato in [`changelog.md`](./changelog.md).
+Latest: `f30618e` (dashboard prodotti raggruppati + PLP card canonica) — seguita dalla rimozione del sistema legacy Google Sheets (import/cron/admin). Storico recente dettagliato in [`changelog.md`](./changelog.md).
 
 ## Footer / Design
 

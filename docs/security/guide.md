@@ -28,13 +28,11 @@ Guida tecnica di sicurezza specifica per questo progetto: regole operative per c
 - Mai fidarsi di: ruolo/userId/prezzo/stato ordine/sconti dal client, hidden input, local storage.
 - Ogni endpoint privato: autenticazione + autorizzazione sulla **risorsa** (ownership).
 - Correggere `/api/stripe/order` (REQ-02): verifica sessione Stripe server-side, nessun PII non necessario.
-- Admin API: eliminare la password statica condivisa e il riuso di `PAYLOAD_SECRET` (REQ-04); integrare con il dashboard OAuth e RBAC.
-- Separare customer/staff/admin/super-admin come da requisito; attualmente esiste un solo livello admin.
+- Admin API: la password statica condivisa e il riuso di `PAYLOAD_SECRET` sono stati **eliminati** (2026-08-09) rimuovendo il flusso legacy (REQ-04) — il management passa al dashboard OAuth. Separare customer/staff/admin/super-admin come da requisito; attualmente esiste un solo livello admin.
 - Audit per: rimborsi, export, cancellazioni, modifiche prezzo, modifiche ruolo (REQ-12).
 
 ## 3. API e validazione input
 - `POST /api/stripe/checkout`: accettare solo `{items:[{id,quantity}]}`; prezzi/totale/spedizione calcolati dal DB (REQ-01).
-- Schema/allowlist campi: già presente in `/api/admin/products/[id]` (array `allowed`) ✓ — estendere lo stesso pattern ovunque.
 - Query parametrizzate: garantite da Payload e dal runner `pg` (nessuna concatenazione) ✓.
 - Limiti: dimensione body, numero item (≤20), lunghezza campi (contact), profondità payload; timeout su fetch esterni.
 - CORS: assente (stesso origin) ✓; `proxy-image` restituisce `Access-Control-Allow-Origin: *` → valutare restrizione.

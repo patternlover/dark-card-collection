@@ -13,7 +13,6 @@
     "payload": "payload",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
-    "import-products": "payload run scripts/import-products.ts",
     "create-admin": "node scripts/create-admin.mjs"
   },
   "dependencies": {

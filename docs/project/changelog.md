@@ -1,7 +1,33 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Docs + cleanup** — riorganizzazione documentazione e pulizia codice (commit `f818ce1`, `1599feb`).
+Ultima sessione: **Dashboard prodotti + rimozione legacy Google Sheets** — prodotti raggruppati nel dashboard (edit/create modale), `/admin/products` e import/sync/cron rimosso.
+
+---
+
+## Sessione recente 5 — Dashboard prodotti + rimozione legacy Google Sheets · commit `f30618e` → (rimozione legacy Sheets)
+
+Interventi dal `f30618e` in poi: gestione prodotti unificata in `/dashboard`, rimozione totale del flusso Google Sheets e di `/admin/products`.
+
+### Dashboard — tab Prodotti raggruppati per varianti
+- **File**: `src/app/dashboard/main.tsx`, `src/app/dashboard/actions.ts`, `src/components/dashboard/{ProductGroupRow,EditProductModal,CreateProductModal}.tsx`, `src/lib/slug.ts`
+- `ProductGroupRow` espandibile: thumb, badge stato/condizione/lingua, prezzo "da", qty totale, toggle visibilità gruppo (eye), delete gruppo/variante, edit parent/varianti.
+- `EditProductModal` con tutti i campi (title, slug, itemId, descrizione, prezzi, stato, condizione, lingua, categoria, collezione, quantità, cardNumber, rarità, imageUrl, featured, isVisible).
+- `CreateProductModal` → nuovo prodotto da tab Prodotti (bottone "Nuovo Prodotto"); slug auto-generato con dedup (`src/lib/slug.ts`).
+- `actions.ts`: `searchProducts` con filtri (search/status/category/collection/withImage), `getCategories`/`getCollections`, `createProduct`, `updateProduct` full-field, `OrderDTO` con items + `stripeSessionId`.
+
+### PLP — ProductCard canonica
+- **File**: `src/components/product/ProductCard.tsx`, `ProductGroupCard.tsx` (eliminato)
+- `ProductCard` ora riceve `group: ProductGroup` (badge preordine/sigillato/graded, collezione, prezzo di gruppo, qty disponibili, QuickAdd con `maxQuantity`).
+- Applicata a shop, bestseller, new-arrivals, preorders, categorie, collezioni, related PDP, FeaturedProducts; rimosso il prop `grouped` da `ListingShell`/`ClientListing`.
+
+### Rimozione legacy Google Sheets (solo database)
+- **Eliminati**: `/admin/products` (page + `api/admin/products` + `api/admin/backfill-images`), `/api/cron/import`, `/api/cron/prices`, `/api/products/import`, `src/components/admin/*`, `src/lib/{google-sheets,image-import,parse-csv,api-auth}.ts`, `scripts/import-products.ts`, `tests/parse-csv.test.ts`.
+- **Env rimosse da `.env.example`**: `CRON_SECRET`, `SYNC_PASSWORD`, `GOOGLE_SERVICE_ACCOUNT`, `GOOGLE_SHEET_ID`.
+- **vercel.json**: rimossi i crons `/api/cron/import` (3am) e `/api/cron/prices` (4am).
+- **package.json**: rimosso script `import-products`. `googleapis` resta in deps (usato da OAuth Google callback).
+- Nota operativa: rimuovere anche l'eventuale cron `/api/cron/import` e `/api/cron/prices` dal dashboard Vercel (non più presenti in `vercel.json`).
+- Documentazione aggiornata: `README.md`, `AGENTS.md`, `docs/project/overview.md`, `docs/database/schema-and-flows.md`, `docs/security/{architecture,secrets-management}.md`.
 
 ---
 
@@ -134,7 +160,9 @@ Tutti e 7 i punti implementati, test 24/24, build ok, deployato e verificato in 
 |------|-------|
 | Stripe | CSP fixata e live. **DA FARE**: test di pagamento reale (carta) end-to-end, verifica webhook live `whsec_live_...` |
 | Google dashboard | Cookie su response verificati. **DA FARE**: test end-to-end dal browser desktop (account autorizzato → dashboard) |
-| PLP | Layout filtri 2x2/mobile, breadcrumb, skeleton, masonry, distanza navbar — attivi |
+| Dashboard prodotti | Tab Prodotti con gruppi per varianti, edit/create modale, toggle visibilità, delete — attivo; `/admin/products` rimosso |
+| Google Sheets | Import/sync/cron/`/admin/products` rimossi — solo database (cron Vercel da togliere se ancora configurato) |
+| PLP | Layout filtri 2x2/mobile, breadcrumb, skeleton, masonry, distanza navbar — attivi; card canonica `ProductCard` (group) |
 | Hero | Movimento scroll fluido (translateY + rotazione oggetti) — attivo |
 | Checkout | Embedded con branding dark/yellow, confetti — attivo |
 | Filtri PLP | Altezza stabile, distanza da navbar aumentata |
@@ -142,8 +170,6 @@ Tutti e 7 i punti implementati, test 24/24, build ok, deployato e verificato in 
 | Info | Larghezza uniforme `max-w-2xl` |
 | SEO | `/llms-full.txt` attivo; audit in `docs/seo/audit.md` |
 | Security | Hardening checkout/order/webhook/applied; REQ-08..15 non ancora applicati (vedi `docs/security/changelog.md`) |
-
-**In attesa del segnale del proprietario per procedere con i fix Stripe/Google.**
 
 ---
 

@@ -20,7 +20,6 @@
 - Lint/typecheck: `pnpm lint` (= `tsc --noEmit`)
 - Test: `pnpm test` (unit test in `tests/`)
 - Build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build`
-- Import da Sheets: `pnpm import-products`
 - Admin user: `ADMIN_EMAIL=... ADMIN_PASSWORD=... pnpm create-admin`
 
 ## Regole
@@ -32,13 +31,13 @@
 - Filtro visibilità storefront: `AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }]`.
 - Il checkout crea `price_data` ad-hoc (niente Stripe Products); il webhook usa `product.metadata.payloadProductId` per creare l'order.
 - Payload `id` è `string | number`: castare SEMPRE con `as number` quando si creano ordini.
-- Test: se tocchi `group-products.ts`, `parse-csv.ts` o la logica sticky ATC, aggiorna i test in `tests/`.
+- Test: se tocchi `group-products.ts`, `slug.ts` o la logica sticky ATC, aggiorna i test in `tests/`.
 - Build process: `payload generate:db-schema && payload migrate && next build` — la schema DB è sempre in sync con il config Payload.
 
 ## Struttura chiave
-- `src/app/` → route (shop, products/[slug], cart, checkout, dashboard, admin/products, api/*)
-- `src/components/` → layout/, product/, sections/, ui/, admin/
-- `src/lib/` → logica pura e client: payload, stripe, google-sheets, group-products, dash-auth, order-email
+- `src/app/` → route (shop, products/[slug], cart, checkout, dashboard, api/*)
+- `src/components/` → layout/, product/, sections/, ui/, dashboard/
+- `src/lib/` → logica pura e client: payload, stripe, group-products, slug, dash-auth, db-query, order-email
 - `src/payload/collections/` → Products, Categories, Collections, Orders, Users, Media, Messages
 - `src/payload/globals/` → SiteSettings, Header
 - `src/migrations/` → migration Payload (genera da build)
@@ -52,7 +51,6 @@
 - Verifica SEMPRE `pnpm lint` e `pnpm test` prima di chiudere.
 
 ## Note operative
-- `/dashboard` e `/admin/products` sono protetti da Google OAuth (whitelist `DASHBOARD_GOOGLE_EMAILS`).
-- Cron Vercel: `/api/cron/import` (3am), `/api/cron/prices` (4am), auth Bearer con `CRON_SECRET`/`PAYLOAD_SECRET`.
+- `/dashboard` è protetto da Google OAuth (whitelist `DASHBOARD_GOOGLE_EMAILS`).
 - WSL: `tsc --noEmit` e `pnpm build` possono andare in OOM — usare la build con heap aumentata. `pnpm generate:types` può andare in timeout.
 - Footer: dati business (BUSINESS in `Footer.tsx`) e `CONTACT_EMAIL` ancora placeholder.
