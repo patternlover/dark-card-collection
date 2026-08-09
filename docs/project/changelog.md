@@ -1,11 +1,11 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Dashboard prodotti + rimozione legacy Google Sheets** — prodotti raggruppati nel dashboard (edit/create modale), `/admin/products` e import/sync/cron rimosso.
+Ultima sessione: **Dashboard prodotti + rimozione legacy Google Sheets** (commit `f30618e` → `4333c9d`).
 
 ---
 
-## Sessione recente 5 — Dashboard prodotti + rimozione legacy Google Sheets · commit `f30618e` → (rimozione legacy Sheets)
+## Sessione recente 5 — Dashboard prodotti + rimozione legacy Google Sheets · commit `f30618e` → `4333c9d`
 
 Interventi dal `f30618e` in poi: gestione prodotti unificata in `/dashboard`, rimozione totale del flusso Google Sheets e di `/admin/products`.
 
