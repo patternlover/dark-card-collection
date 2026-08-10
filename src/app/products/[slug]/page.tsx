@@ -43,7 +43,13 @@ export async function generateMetadata({
     const payload = await getPayloadClient()
     const result = await payload.find({
       collection: 'products',
-      where: { slug: { equals: slug } },
+      where: {
+        and: [
+          { slug: { equals: slug } },
+          { is_visible: { equals: true } },
+          { status: { in: ['listed', 'hold'] } },
+        ],
+      },
       limit: 1,
       depth: 1,
     })
@@ -135,7 +141,13 @@ export default async function ProductPage({
 
   const result = await payload.find({
     collection: 'products',
-    where: { slug: { equals: slug } },
+    where: {
+      and: [
+        { slug: { equals: slug } },
+        { is_visible: { equals: true } },
+        { status: { in: ['listed', 'hold'] } },
+      ],
+    },
     limit: 1,
     depth: 1,
   })
@@ -148,7 +160,13 @@ export default async function ProductPage({
 
   const allVariants = await payload.find({
     collection: 'products',
-    where: { title: { equals: product.title } },
+    where: {
+      and: [
+        { title: { equals: product.title } },
+        { is_visible: { equals: true } },
+        { status: { in: ['listed', 'hold'] } },
+      ],
+    },
     limit: 100,
     depth: 1,
   })
