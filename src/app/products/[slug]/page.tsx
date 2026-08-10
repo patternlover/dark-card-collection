@@ -120,47 +120,43 @@ export default async function ProductPage({
   let group: any = null
   let relatedGroups: any[] = []
 
-  try {
-    const payload = await getPayloadClient()
+  const payload = await getPayloadClient()
 
-    const result = await payload.find({
-      collection: 'products',
-      where: { slug: { equals: slug } },
-      limit: 1,
-    })
+  const result = await payload.find({
+    collection: 'products',
+    where: { slug: { equals: slug } },
+    limit: 1,
+  })
 
-    if (result.docs.length === 0) {
-      notFound()
-    }
-
-    product = result.docs[0]
-
-    const allVariants = await payload.find({
-      collection: 'products',
-      where: { title: { equals: product.title } },
-      limit: 100,
-    })
-
-    const groups = groupProducts(allVariants.docs)
-    group = groups[0] || null
-
-    if (product?.collection) {
-      const colId = typeof product.collection === 'object' ? product.collection.id : product.collection
-      const related = await payload.find({
-        collection: 'products',
-        where: {
-          and: [
-            { collection: { equals: colId } },
-            { id: { not_equals: product.id } },
-            { status: { equals: 'listed' } },
-          ],
-        },
-        limit: 50,
-      })
-      relatedGroups = groupProducts(related.docs)
-    }
-  } catch {
+  if (result.docs.length === 0) {
     notFound()
+  }
+
+  product = result.docs[0]
+
+  const allVariants = await payload.find({
+    collection: 'products',
+    where: { title: { equals: product.title } },
+    limit: 100,
+  })
+
+  const groups = groupProducts(allVariants.docs)
+  group = groups[0] || null
+
+  if (product?.collection) {
+    const colId = typeof product.collection === 'object' ? product.collection.id : product.collection
+    const related = await payload.find({
+      collection: 'products',
+      where: {
+        and: [
+          { collection: { equals: colId } },
+          { id: { not_equals: product.id } },
+          { status: { equals: 'listed' } },
+        ],
+      },
+      limit: 50,
+    })
+    relatedGroups = groupProducts(related.docs)
   }
 
   if (!product || !group) notFound()
