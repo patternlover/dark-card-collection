@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ShoppingBag, Package, Tag, Layers, MessageSquare, Settings, Terminal, LogOut, Menu, X } from 'lucide-react'
+import { LayoutDashboard, ShoppingBag, Package, Tag, Layers, Receipt, MessageSquare, Settings, Terminal, LogOut, Menu, X } from 'lucide-react'
 import { logout } from '@/app/dashboard/actions'
 
 interface NavItem {
@@ -23,6 +23,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Catalogo',
     items: [
+      { href: '/dashboard/acquisti', label: 'Acquisti', icon: Receipt },
       { href: '/dashboard/prodotti', label: 'Prodotti', icon: Package },
       { href: '/dashboard/categorie', label: 'Categorie', icon: Tag },
       { href: '/dashboard/collezioni', label: 'Collezioni', icon: Layers },

@@ -1,7 +1,20 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Performance + sicurezza dashboard · messaggi paginati · storico sessioni**.
+Ultima sessione: **Modulo Acquisti e Vendite Esterne**.
+
+---
+
+## Sessione recente 8 — Modulo Acquisti (Purchases) e Vendite Esterne
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-10-purchases-and-external-sales.md`). Implementato il modulo completo degli acquisti (fornitori/edicole/supermercati) con carico automatico in inventario/catalogo, e la gestione delle vendite esterne (Vinted, Wallapop, eBay, Subito, Altro) con tracciamento della piattaforma, prezzo e quantità.
+
+### Nuove funzionalità
+- **Collection `Purchases`**: Tabella/collection Payload CMS per tracciare gli acquisti (costo di acquisto, quantità, negozio, data, note).
+- **Dashboard `/dashboard/acquisti`**: Sezione dedicata per visualizzare, cercare e registrare nuovi acquisti, con creazione automatica del prodotto in inventario (`Products`).
+- **Vendite Esterne**: Pulsante e modale `ExternalSaleModal` in `/dashboard/prodotti` (vista tabella e card) per registrare vendite su piattaforme esterne, scalare lo stock e registrare la transazione negli ordini (`Orders`).
+
+**Verifica**: `pnpm test` (26/26 test) ✅.
 
 ---
 

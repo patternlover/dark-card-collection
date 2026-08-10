@@ -13,6 +13,7 @@ import { Collections } from './payload/collections/Collections'
 import { Orders } from './payload/collections/Orders'
 import { Media } from './payload/collections/Media'
 import { Messages } from './payload/collections/Messages'
+import { Purchases } from './payload/collections/Purchases'
 import { SiteSettings } from './payload/globals/SiteSettings'
 import { Header } from './payload/globals/Header'
 
@@ -23,7 +24,7 @@ export default buildConfig({
   admin: {
     disable: true,
   },
-  collections: [Products, Categories, Collections, Orders, Media, Messages],
+  collections: [Products, Categories, Collections, Orders, Media, Messages, Purchases],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
   sharp,

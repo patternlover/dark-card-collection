@@ -5,6 +5,7 @@ import type {
   CategoryOption,
   CollectionOption,
   CreateProductData,
+  ProductDTO,
 } from '@/app/dashboard/actions'
 import { createProduct } from '@/app/dashboard/actions'
 import { Button, Field, Input, Modal, Select, Textarea } from './ui'
@@ -58,6 +59,7 @@ const RARITY_OPTIONS = [
 interface CreateProductModalProps {
   categories: CategoryOption[]
   collections: CollectionOption[]
+  initialProduct?: ProductDTO
   onClose: () => void
   onCreated: () => void
   onError: (msg: string) => void
@@ -66,34 +68,35 @@ interface CreateProductModalProps {
 export function CreateProductModal({
   categories,
   collections,
+  initialProduct,
   onClose,
   onCreated,
   onError,
 }: CreateProductModalProps) {
   const [form, setForm] = useState({
-    title: '',
+    title: initialProduct?.title || '',
     slug: '',
-    itemGroupId: '',
-    description: '',
-    price: '',
-    salePrice: '',
+    itemGroupId: initialProduct?.itemGroupId || '',
+    description: initialProduct?.description || '',
+    price: String(initialProduct?.price ?? ''),
+    salePrice: String(initialProduct?.salePrice ?? ''),
     costOfGoodsSold: '',
-    status: 'listed',
-    availability: 'in_stock',
-    isPreorder: false,
-    grade: 'near-mint',
-    condition: 'used',
-    productType: '',
-    googleProductCategory: '',
-    language: 'italian',
-    category: '',
-    collection: '',
-    cardNumber: '',
-    rarity: '',
+    status: initialProduct?.status || 'listed',
+    availability: initialProduct?.availability || 'in_stock',
+    isPreorder: initialProduct?.isPreorder || false,
+    grade: initialProduct?.grade || 'near-mint',
+    condition: initialProduct?.condition || 'used',
+    productType: initialProduct?.productType || '',
+    googleProductCategory: initialProduct?.googleProductCategory || '',
+    language: initialProduct?.language || 'italian',
+    category: String(initialProduct?.category?.id || ''),
+    collection: String(initialProduct?.collection?.id || ''),
+    cardNumber: initialProduct?.cardNumber || '',
+    rarity: initialProduct?.rarity || '',
     quantity: '1',
-    imageLink: '',
-    featured: false,
-    isVisible: true,
+    imageLink: initialProduct?.imageLink || '',
+    featured: initialProduct?.featured || false,
+    isVisible: initialProduct?.isVisible ?? true,
   })
   const [saving, setSaving] = useState(false)
 
@@ -142,7 +145,7 @@ export function CreateProductModal({
 
   return (
     <Modal
-      title="Nuovo Prodotto"
+      title={initialProduct ? 'Duplica Prodotto' : 'Nuovo Prodotto'}
       onClose={onClose}
       footer={
         <>
@@ -150,7 +153,7 @@ export function CreateProductModal({
             Annulla
           </Button>
           <Button onClick={handleCreate} disabled={saving || !form.title.trim()}>
-            {saving ? 'Creazione...' : 'Crea Prodotto'}
+            {saving ? 'Creazione...' : initialProduct ? 'Duplica Prodotto' : 'Crea Prodotto'}
           </Button>
         </>
       }

@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Eye, EyeOff, Pencil, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Copy, Eye, EyeOff, Pencil, ShoppingBag, Trash2 } from 'lucide-react'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import type { ProductGroup } from '@/lib/group-products'
 import type { CategoryOption, CollectionOption, ProductDTO } from '@/app/dashboard/actions'
 import { deleteProduct, updateProduct } from '@/app/dashboard/actions'
 import { EditProductModal } from './EditProductModal'
+import { CreateProductModal } from './CreateProductModal'
+import { ExternalSaleModal } from './ExternalSaleModal'
 import {
   GRADE_LABELS,
   LANGUAGE_LABELS,
@@ -42,6 +44,8 @@ export function ProductGroupRow({
 }: ProductGroupRowProps) {
   const [expanded, setExpanded] = useState(false)
   const [editingVariant, setEditingVariant] = useState<ProductDTO | null>(null)
+  const [duplicatingVariant, setDuplicatingVariant] = useState<ProductDTO | null>(null)
+  const [externalSaleProduct, setExternalSaleProduct] = useState<ProductDTO | null>(null)
   const [busy, setBusy] = useState(false)
 
   const anyVisible = group.products.some((p) => p.isVisible !== false)
@@ -65,7 +69,7 @@ export function ProductGroupRow({
   }
 
   const deleteGroup = async () => {
-    if (!confirm(`Eliminare definitivamente "${group.title}" (${group.variantCount} varianti)?`)) return
+    if (!confirm(`Eliminare definitivamente "${group.title}" (${group.variantCount} lotti)?`)) return
     setBusy(true)
     try {
       onRemove(group.products.map((p) => String(p.id)))
@@ -80,7 +84,7 @@ export function ProductGroupRow({
   }
 
   const deleteVariant = async (id: string) => {
-    if (!confirm('Eliminare definitivamente questa variante?')) return
+    if (!confirm('Eliminare definitivamente questo lotto?')) return
     setBusy(true)
     try {
       onRemove([id])
@@ -124,7 +128,7 @@ export function ProductGroupRow({
             {statuses.map((s) => (
               <StatusBadge key={s} status={s} />
             ))}
-            <Badge tone="neutral">{group.variantCount} varianti</Badge>
+            <Badge tone="neutral">{group.variantCount} lotti</Badge>
           </div>
         </button>
 
@@ -205,13 +209,13 @@ export function ProductGroupRow({
                 <p className="text-sm font-semibold text-[var(--ui-text)]">{euro.format(p.price ?? 0)}</p>
                 <p className="w-10 text-right text-xs text-[var(--ui-text-muted)]">qty {p.quantity ?? 0}</p>
                 <StatusBadge status={p.status || 'listed'} />
-                <div className="flex items-center gap-2">
+                 <div className="flex items-center gap-2">
                   <Button
                     variant="secondary"
                     size="sm"
                     onClick={() => setEditingVariant(p as unknown as ProductDTO)}
                     disabled={busy}
-                    title="Modifica variante"
+                    title="Modifica lotto"
                     className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -219,9 +223,29 @@ export function ProductGroupRow({
                   <Button
                     variant="secondary"
                     size="sm"
+                    onClick={() => setDuplicatingVariant(p as unknown as ProductDTO)}
+                    disabled={busy}
+                    title="Duplica lotto"
+                    className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setExternalSaleProduct(p as unknown as ProductDTO)}
+                    disabled={busy}
+                    title="Registra vendita esterna (Vinted, Wallapop...)"
+                    className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     onClick={() => deleteVariant(String(p.id))}
                     disabled={busy}
-                    title="Elimina variante"
+                    title="Elimina lotto"
                     className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -243,6 +267,32 @@ export function ProductGroupRow({
             onPatch(String(saved.id), saved)
             setEditingVariant(null)
             onNotify('Prodotto salvato', 'success')
+          }}
+          onError={(msg) => onNotify(msg, 'error')}
+        />
+      )}
+      {duplicatingVariant && (
+        <CreateProductModal
+          initialProduct={duplicatingVariant}
+          categories={categories}
+          collections={collections}
+          onClose={() => setDuplicatingVariant(null)}
+          onCreated={() => {
+            setDuplicatingVariant(null)
+            onNotify('Prodotto duplicato', 'success')
+            onChanged()
+          }}
+          onError={(msg) => onNotify(msg, 'error')}
+        />
+      )}
+      {externalSaleProduct && (
+        <ExternalSaleModal
+          product={externalSaleProduct}
+          onClose={() => setExternalSaleProduct(null)}
+          onSuccess={() => {
+            setExternalSaleProduct(null)
+            onNotify('Vendita esterna registrata con successo')
+            onChanged()
           }}
           onError={(msg) => onNotify(msg, 'error')}
         />

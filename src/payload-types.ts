@@ -73,6 +73,7 @@ export interface Config {
     orders: Order;
     media: Media;
     messages: Message;
+    purchases: Purchase;
     'payload-kv': PayloadKv;
     users: User;
     'payload-locked-documents': PayloadLockedDocument;
@@ -87,6 +88,7 @@ export interface Config {
     orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     messages: MessagesSelect<false> | MessagesSelect<true>;
+    purchases: PurchasesSelect<false> | PurchasesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -323,6 +325,44 @@ export interface Message {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchases".
+ */
+export interface Purchase {
+  id: number;
+  /**
+   * Titolo del prodotto acquistato
+   */
+  title: string;
+  /**
+   * Prezzo di acquisto unitario (€)
+   */
+  cost_of_goods_sold: number;
+  /**
+   * Quantità acquistata
+   */
+  quantity: number;
+  /**
+   * Luogo o fornitore (es. Edicola Via Roma, Supermercato X)
+   */
+  store?: string | null;
+  /**
+   * Data di acquisto
+   */
+  purchase_date?: string | null;
+  /**
+   * Note aggiuntive sull acquisto
+   */
+  notes?: string | null;
+  /**
+   * Prodotto in inventario collegato
+   */
+  linked_product?: (number | null) | Product;
+  status?: ('received' | 'pending' | 'archived') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -393,6 +433,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'messages';
         value: number | Message;
+      } | null)
+    | ({
+        relationTo: 'purchases';
+        value: number | Purchase;
       } | null)
     | ({
         relationTo: 'users';
@@ -579,6 +623,22 @@ export interface MessagesSelect<T extends boolean = true> {
   message?: T;
   read?: T;
   replied?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "purchases_select".
+ */
+export interface PurchasesSelect<T extends boolean = true> {
+  title?: T;
+  cost_of_goods_sold?: T;
+  quantity?: T;
+  store?: T;
+  purchase_date?: T;
+  notes?: T;
+  linked_product?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -851,3 +851,173 @@ export async function updateHeader(data: HeaderDTO): Promise<HeaderDTO> {
       : [],
   }
 }
+
+export interface PurchaseDTO {
+  id: string
+  title: string
+  costOfGoodsSold: number
+  quantity: number
+  store?: string | null
+  purchaseDate?: string | null
+  notes?: string | null
+  status?: string | null
+  linkedProductId?: string | null
+}
+
+export async function getPurchases(opts: { search?: string; page?: number; limit?: number } = {}): Promise<{ docs: PurchaseDTO[]; total: number; totalPages: number }> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const page = opts.page || 1
+  const limit = opts.limit || 25
+  const where: any = {}
+  if (opts.search) {
+    where.or = [
+      { title: { contains: opts.search } },
+      { store: { contains: opts.search } },
+    ]
+  }
+  const res = await payload.find({
+    collection: 'purchases',
+    where,
+    page,
+    limit,
+    sort: '-purchaseDate',
+    depth: 1,
+  })
+  return {
+    docs: res.docs.map((d: any) => ({
+      id: String(d.id),
+      title: d.title || '',
+      costOfGoodsSold: d.cost_of_goods_sold ?? 0,
+      quantity: d.quantity ?? 1,
+      store: d.store ?? null,
+      purchaseDate: d.purchase_date ?? null,
+      notes: d.notes ?? null,
+      status: d.status ?? 'received',
+      linkedProductId: d.linked_product ? String(d.linked_product.id ?? d.linked_product) : null,
+    })),
+    total: res.totalDocs,
+    totalPages: res.totalPages,
+  }
+}
+
+export async function createPurchase(data: {
+  title: string
+  costOfGoodsSold: number
+  quantity: number
+  store?: string | null
+  purchaseDate?: string | null
+  notes?: string | null
+  status?: string | null
+  autoCreateProduct?: boolean
+  productPrice?: number | null
+  category?: string | number | null
+  collection?: string | number | null
+  imageLink?: string | null
+}): Promise<PurchaseDTO> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  const title = (data.title || '').trim()
+  if (!title) throw new Error('Il titolo è obbligatorio')
+
+  let productId: string | undefined = undefined
+
+  if (data.autoCreateProduct !== false) {
+    const prodRes = await createProduct({
+      title,
+      costOfGoodsSold: data.costOfGoodsSold,
+      quantity: data.quantity,
+      price: data.productPrice ?? (data.costOfGoodsSold ? Number((data.costOfGoodsSold * 1.3).toFixed(2)) : 0),
+      status: 'listed',
+      category: data.category || undefined,
+      collection: data.collection || undefined,
+      imageLink: data.imageLink || undefined,
+    })
+    productId = prodRes.id
+  }
+
+  const res = await payload.create({
+    collection: 'purchases',
+    data: {
+      title,
+      cost_of_goods_sold: data.costOfGoodsSold,
+      quantity: data.quantity,
+      store: data.store || undefined,
+      purchase_date: data.purchaseDate || undefined,
+      notes: data.notes || undefined,
+      status: data.status || 'received',
+      linked_product: productId ? Number(productId) : undefined,
+    } as any,
+  })
+
+  return {
+    id: String(res.id),
+    title: (res as any).title || '',
+    costOfGoodsSold: (res as any).cost_of_goods_sold ?? 0,
+    quantity: (res as any).quantity ?? 1,
+    store: (res as any).store ?? null,
+    purchaseDate: (res as any).purchase_date ?? null,
+    notes: (res as any).notes ?? null,
+    status: (res as any).status ?? 'received',
+    linkedProductId: productId || null,
+  }
+}
+
+export async function deletePurchase(id: string): Promise<void> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  await payload.delete({ collection: 'purchases', id })
+}
+
+export async function recordExternalSale(data: {
+  productId: string
+  quantity: number
+  platform: string // vinted, wallapop, ebay, subito, altro
+  salePrice: number
+}): Promise<void> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  const prodRes = await payload.findByID({ collection: 'products', id: data.productId })
+  if (!prodRes) throw new Error('Prodotto non trovato in inventario')
+
+  const currentQty = (prodRes as any).quantity ?? 0
+  const soldQty = Math.max(1, data.quantity)
+  const newQty = Math.max(0, currentQty - soldQty)
+  const newStatus = newQty === 0 ? 'sold' : (prodRes as any).status
+
+  await payload.update({
+    collection: 'products',
+    id: data.productId,
+    data: {
+      quantity: newQty,
+      status: newStatus,
+    },
+  })
+
+  const transactionId = `EXT-${data.platform.toUpperCase()}-${Date.now()}`
+  const totalValue = data.salePrice * soldQty
+
+  await payload.create({
+    collection: 'orders',
+    data: {
+      transaction_id: transactionId,
+      customer_name: `Vendita Esterna (${data.platform})`,
+      customer_email: `ext-${data.platform.toLowerCase()}@darkcardcollection.com`,
+      items: [
+        {
+          product: Number(data.productId),
+          title: (prodRes as any).title || 'Prodotto',
+          quantity: soldQty,
+          price: data.salePrice,
+        },
+      ],
+      value: totalValue,
+      currency: 'EUR',
+      shipping: 0,
+      tax: 0,
+      status: 'completed',
+    } as any,
+  })
+}

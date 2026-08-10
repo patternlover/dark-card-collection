@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, Eye, EyeOff, Pencil, Trash2 } from 'lucide-react'
+import { ChevronDown, Copy, Eye, EyeOff, Pencil, ShoppingBag, Trash2 } from 'lucide-react'
 import type { ProductGroup } from '@/lib/group-products'
 import type { CategoryOption, CollectionOption, ProductDTO } from '@/app/dashboard/actions'
 import { deleteProduct, updateProduct } from '@/app/dashboard/actions'
 import { EditProductModal } from './EditProductModal'
-import { GRADE_LABELS, LANGUAGE_LABELS, StatusBadge, VariantThumb } from './productShared'
+import { CreateProductModal } from './CreateProductModal'
+import { ExternalSaleModal } from './ExternalSaleModal'
+import { GRADE_LABELS, LANGUAGE_LABELS, StatusBadge } from './productShared'
 import { Button, Table, TBody, Td, Th, THead, Tr } from './ui'
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
@@ -38,6 +40,8 @@ export function ProductTable({
 }: ProductTableProps) {
   const [expandedTitle, setExpandedTitle] = useState<string | null>(null)
   const [editingVariant, setEditingVariant] = useState<ProductDTO | null>(null)
+  const [duplicatingVariant, setDuplicatingVariant] = useState<ProductDTO | null>(null)
+  const [externalSaleProduct, setExternalSaleProduct] = useState<ProductDTO | null>(null)
   const [busy, setBusy] = useState(false)
 
   const toggleVisible = async (group: ProductGroup) => {
@@ -58,7 +62,7 @@ export function ProductTable({
   }
 
   const deleteGroup = async (group: ProductGroup) => {
-    if (!confirm(`Eliminare definitivamente "${group.title}" (${group.variantCount} varianti)?`)) return
+    if (!confirm(`Eliminare definitivamente "${group.title}" (${group.variantCount} lotti)?`)) return
     setBusy(true)
     try {
       onRemove(group.products.map((p) => String(p.id)))
@@ -73,7 +77,7 @@ export function ProductTable({
   }
 
   const deleteVariant = async (id: string) => {
-    if (!confirm('Eliminare definitivamente questa variante?')) return
+    if (!confirm('Eliminare definitivamente questo lotto?')) return
     setBusy(true)
     try {
       onRemove([id])
@@ -97,7 +101,7 @@ export function ProductTable({
             <Th>Stato</Th>
             <Th>Prezzo</Th>
             <Th>Qty</Th>
-            <Th>Varianti</Th>
+            <Th>Lotti</Th>
             <Th className="text-right">Azioni</Th>
           </Tr>
         </THead>
@@ -110,20 +114,22 @@ export function ProductTable({
               group.products.find((p) => p.itemGroupId)?.itemGroupId || ''
 
             return (
-              <GroupRows
-                key={group.title}
-                group={group}
-                expanded={expanded}
-                anyVisible={anyVisible}
-                statuses={statuses}
-                firstItemGroupId={firstItemGroupId}
-                busy={busy}
-                onToggle={() => setExpandedTitle(expanded ? null : group.title)}
-                onToggleVisible={() => toggleVisible(group)}
-                onDeleteGroup={() => deleteGroup(group)}
-                onEditVariant={(p) => setEditingVariant(p)}
-                onDeleteVariant={(id) => deleteVariant(id)}
-              />
+                <GroupRows
+                  key={group.title}
+                  group={group}
+                  expanded={expanded}
+                  anyVisible={anyVisible}
+                  statuses={statuses}
+                  firstItemGroupId={firstItemGroupId}
+                  busy={busy}
+                  onToggle={() => setExpandedTitle(expanded ? null : group.title)}
+                  onToggleVisible={() => toggleVisible(group)}
+                  onDeleteGroup={() => deleteGroup(group)}
+                  onEditVariant={(p) => setEditingVariant(p)}
+                  onDuplicateVariant={(p) => setDuplicatingVariant(p)}
+                  onExternalSale={(p) => setExternalSaleProduct(p)}
+                  onDeleteVariant={(id) => deleteVariant(id)}
+                />
             )
           })}
         </TBody>
@@ -138,6 +144,32 @@ export function ProductTable({
             onPatch(String(saved.id), saved)
             setEditingVariant(null)
             onNotify('Prodotto salvato', 'success')
+          }}
+          onError={(msg) => onNotify(msg, 'error')}
+        />
+      ) : null}
+      {duplicatingVariant ? (
+        <CreateProductModal
+          initialProduct={duplicatingVariant}
+          categories={categories}
+          collections={collections}
+          onClose={() => setDuplicatingVariant(null)}
+          onCreated={() => {
+            setDuplicatingVariant(null)
+            onNotify('Prodotto duplicato', 'success')
+            onChanged()
+          }}
+          onError={(msg) => onNotify(msg, 'error')}
+        />
+      ) : null}
+      {externalSaleProduct ? (
+        <ExternalSaleModal
+          product={externalSaleProduct}
+          onClose={() => setExternalSaleProduct(null)}
+          onSuccess={() => {
+            setExternalSaleProduct(null)
+            onNotify('Vendita esterna registrata con successo')
+            onChanged()
           }}
           onError={(msg) => onNotify(msg, 'error')}
         />
@@ -157,6 +189,8 @@ function GroupRows({
   onToggleVisible,
   onDeleteGroup,
   onEditVariant,
+  onDuplicateVariant,
+  onExternalSale,
   onDeleteVariant,
 }: {
   group: ProductGroup
@@ -169,6 +203,8 @@ function GroupRows({
   onToggleVisible: () => void
   onDeleteGroup: () => void
   onEditVariant: (p: ProductDTO) => void
+  onDuplicateVariant: (p: ProductDTO) => void
+  onExternalSale: (p: ProductDTO) => void
   onDeleteVariant: (id: string) => void
 }) {
   return (
@@ -176,7 +212,6 @@ function GroupRows({
       <Tr onClick={onToggle}>
         <Td>
           <div className="flex items-center gap-3">
-            <VariantThumb product={group.products[0]} />
             <span className="max-w-[280px] truncate font-medium text-[var(--ui-text)]">
               {group.title}
             </span>
@@ -264,7 +299,6 @@ function GroupRows({
               <div className="divide-y divide-[var(--ui-border)]/80">
                 {group.products.map((p) => (
                   <div key={p.id} className="flex flex-wrap items-center gap-3 bg-[var(--ui-bg)]/40 px-4 py-3 pl-16">
-                    <VariantThumb product={p} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-[var(--ui-text)]">{p.title}</p>
                       <p className="mt-0.5 text-xs text-[var(--ui-text-muted)]">
@@ -286,7 +320,7 @@ function GroupRows({
                         size="sm"
                         onClick={() => onEditVariant(p as unknown as ProductDTO)}
                         disabled={busy}
-                        title="Modifica variante"
+                        title="Modifica lotto"
                         className={rowButtonClass()}
                       >
                         <Pencil className="h-3.5 w-3.5" />
@@ -294,9 +328,29 @@ function GroupRows({
                       <Button
                         variant="secondary"
                         size="sm"
+                        onClick={() => onDuplicateVariant(p as unknown as ProductDTO)}
+                        disabled={busy}
+                        title="Duplica lotto"
+                        className={rowButtonClass()}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onExternalSale(p as unknown as ProductDTO)}
+                        disabled={busy}
+                        title="Registra vendita esterna (Vinted, Wallapop...)"
+                        className={rowButtonClass()}
+                      >
+                        <ShoppingBag className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => onDeleteVariant(String(p.id))}
                         disabled={busy}
-                        title="Elimina variante"
+                        title="Elimina lotto"
                         className={rowButtonClass(true)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
