@@ -291,7 +291,7 @@ export function ProductGroupRow({
           onClose={() => setExternalSaleProduct(null)}
           onSuccess={() => {
             setExternalSaleProduct(null)
-            onNotify('Vendita esterna registrata con successo')
+            onNotify('Vendita esterna registrata con successo', 'success')
             onChanged()
           }}
           onError={(msg) => onNotify(msg, 'error')}
