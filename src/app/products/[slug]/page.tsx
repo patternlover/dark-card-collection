@@ -22,6 +22,16 @@ function absoluteUrl(url: string | null | undefined): string | null {
   return `${SITE_URL}${url}`
 }
 
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  if (isNaN(d.getTime())) return ''
+  const day = String(d.getUTCDate()).padStart(2, '0')
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0')
+  const year = d.getUTCFullYear()
+  return `${day}/${month}/${year}`
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -422,7 +432,7 @@ export default async function ProductPage({
                 </p>
                 {product.last_price_update && (
                   <p className="mt-1 text-xs text-zinc-600">
-                    Aggiornato: {new Date(product.last_price_update).toLocaleDateString('it-IT')}
+                    Aggiornato: {formatDate(product.last_price_update)}
                   </p>
                 )}
               </div>
