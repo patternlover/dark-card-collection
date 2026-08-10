@@ -881,7 +881,7 @@ export async function getPurchases(opts: { search?: string; page?: number; limit
     where,
     page,
     limit,
-    sort: '-purchaseDate',
+    sort: '-purchase_date',
     depth: 1,
   })
   return {
