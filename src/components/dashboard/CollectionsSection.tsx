@@ -59,23 +59,24 @@ export function CollectionsSection() {
     setError(null)
     try {
       if (form.id) {
-        await updateCollection(form.id, {
+        const saved = await updateCollection(form.id, {
           name: form.name.trim() || undefined,
           slug: form.slug.trim() || undefined,
           description: form.description.trim() || null,
           releaseDate: form.releaseDate || null,
         })
+        setCollections((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
       } else {
-        await createCollection({
+        const saved = await createCollection({
           name: form.name,
           slug: form.slug,
           description: form.description,
           releaseDate: form.releaseDate || null,
         })
+        setCollections((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
       }
       setForm(null)
       setNotice(form.id ? 'Collezione aggiornata' : 'Collezione creata')
-      await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Errore durante il salvataggio')
     } finally {
@@ -89,8 +90,8 @@ export function CollectionsSection() {
     setError(null)
     try {
       await deleteCollection(c.id)
+      setCollections((prev) => prev.filter((x) => x.id !== c.id))
       setNotice('Collezione eliminata')
-      await load()
     } catch {
       setError('Errore durante l\'eliminazione')
     } finally {

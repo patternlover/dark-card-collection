@@ -36,19 +36,28 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     title: 'Sistema',
     items: [
       { href: '/dashboard/impostazioni', label: 'Impostazioni', icon: Settings },
-      { href: '/dashboard/sql', label: 'SQL', icon: Terminal },
     ],
   },
 ]
+
+function navGroups(sqlEnabled: boolean): { title: string; items: NavItem[] }[] {
+  const groups = NAV_GROUPS.map((g) => ({ ...g, items: [...g.items] }))
+  if (sqlEnabled) {
+    const sistema = groups.find((g) => g.title === 'Sistema')
+    sistema?.items.push({ href: '/dashboard/sql', label: 'SQL', icon: Terminal })
+  }
+  return groups
+}
 
 function isActive(pathname: string, href: string): boolean {
   if (href === '/dashboard') return pathname === '/dashboard'
   return pathname.startsWith(href)
 }
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({ children, sqlEnabled }: { children: React.ReactNode; sqlEnabled: boolean }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const groups = navGroups(sqlEnabled)
 
   const sidebar = (
     <div className="flex h-full flex-col">
@@ -62,7 +71,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-5">
-        {NAV_GROUPS.map((group) => (
+        {groups.map((group) => (
           <div key={group.title}>
             <p className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">
               {group.title}

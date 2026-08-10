@@ -1,9 +1,8 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { getPayload } from 'payload'
-import config from '@/payload.config'
-import { runReadOnlyQuery, type QueryOutcome } from '@/lib/db-query'
+import { runReadOnlyQuery, isDashSqlEnabled, type QueryOutcome } from '@/lib/db-query'
+import { getPayloadClient } from '@/lib/payload'
 import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
 
@@ -16,10 +15,6 @@ async function requireAuth(): Promise<void> {
 export async function logout(): Promise<void> {
   await clearDashSession()
   redirect('/')
-}
-
-async function getPayloadClient() {
-  return getPayload({ config })
 }
 
 export interface CategoryOption {
@@ -175,16 +170,36 @@ function toOrderDTO(doc: any): OrderDTO {
   }
 }
 
-export async function getOverview(): Promise<OverviewData> {
-  await requireAuth()
-  const payload = await getPayloadClient()
+const OVERVIEW_PRODUCTS_SQL = `
+  SELECT
+    COUNT(*)::int AS total,
+    COUNT(*) FILTER (WHERE status = 'listed')::int AS listed,
+    COUNT(*) FILTER (WHERE status = 'hold')::int AS hold,
+    COUNT(*) FILTER (WHERE status = 'sold')::int AS sold,
+    COUNT(*) FILTER (WHERE is_visible IS DISTINCT FROM false)::int AS visible,
+    COUNT(*) FILTER (WHERE is_visible IS DISTINCT FROM false AND COALESCE(quantity, 0) <= 1)::int AS low_stock,
+    COALESCE(SUM(CASE WHEN status = 'listed' AND is_visible IS DISTINCT FROM false
+      THEN COALESCE(price, 0) * COALESCE(quantity, 0) END), 0)::float8 AS inventory_value
+  FROM products
+`
 
-  const [productsRes, ordersRes] = await Promise.all([
-    payload.find({ collection: 'products', limit: 1000, draft: false }),
-    payload.find({ collection: 'orders', limit: 1000, sort: '-createdAt', depth: 1, draft: false }),
-  ])
+const OVERVIEW_ORDERS_SQL = `
+  SELECT
+    COUNT(*)::int AS total,
+    COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+    COUNT(*) FILTER (WHERE status = 'paid')::int AS paid,
+    COUNT(*) FILTER (WHERE status = 'shipped')::int AS shipped,
+    COUNT(*) FILTER (WHERE status = 'delivered')::int AS delivered,
+    COUNT(*) FILTER (WHERE status = 'cancelled')::int AS cancelled,
+    COALESCE(SUM(CASE WHEN status IN ('paid','shipped','delivered') THEN COALESCE(value, 0) END), 0)::float8 AS revenue
+  FROM orders
+`
 
-  const products = productsRes.docs
+function num(v: unknown): number {
+  return typeof v === 'number' ? v : Number(v || 0)
+}
+
+function computeOverviewFromDocs(products: any[], orders: any[]): OverviewData {
   const listed = products.filter((p) => p.status === 'listed')
   const hold = products.filter((p) => p.status === 'hold')
   const sold = products.filter((p) => p.status === 'sold')
@@ -194,7 +209,6 @@ export async function getOverview(): Promise<OverviewData> {
     .filter((p) => p.is_visible !== false)
     .reduce((sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 0), 0)
 
-  const orders = ordersRes.docs
   const ordersByStatus: OverviewData['orders'] = {
     total: orders.length,
     pending: 0,
@@ -223,6 +237,52 @@ export async function getOverview(): Promise<OverviewData> {
     orders: ordersByStatus,
     revenue,
     recentOrders: orders.slice(0, 8).map(toOrderDTO),
+  }
+}
+
+export async function getOverview(): Promise<OverviewData> {
+  await requireAuth()
+
+  const [pRes, oRes, ordersRes] = await Promise.all([
+    runReadOnlyQuery(OVERVIEW_PRODUCTS_SQL),
+    runReadOnlyQuery(OVERVIEW_ORDERS_SQL),
+    getPayloadClient().then((payload) =>
+      payload.find({ collection: 'orders', limit: 8, sort: '-createdAt', depth: 1, draft: false }),
+    ),
+  ])
+
+  if (pRes.error || oRes.error) {
+    const payload = await getPayloadClient()
+    const [productsRes, allOrdersRes] = await Promise.all([
+      payload.find({ collection: 'products', limit: 1000, draft: false }),
+      payload.find({ collection: 'orders', limit: 1000, sort: '-createdAt', depth: 1, draft: false }),
+    ])
+    return computeOverviewFromDocs(productsRes.docs, allOrdersRes.docs)
+  }
+
+  const p = pRes.rows[0] || {}
+  const o = oRes.rows[0] || {}
+
+  return {
+    products: {
+      total: num(p.total),
+      listed: num(p.listed),
+      hold: num(p.hold),
+      sold: num(p.sold),
+      visible: num(p.visible),
+      lowStock: num(p.low_stock),
+    },
+    inventoryValue: num(p.inventory_value),
+    orders: {
+      total: num(o.total),
+      pending: num(o.pending),
+      paid: num(o.paid),
+      shipped: num(o.shipped),
+      delivered: num(o.delivered),
+      cancelled: num(o.cancelled),
+    },
+    revenue: num(o.revenue),
+    recentOrders: ordersRes.docs.map(toOrderDTO),
   }
 }
 
@@ -454,6 +514,16 @@ export async function updateOrderStatus(id: string, status: string): Promise<Ord
 
 export async function runQuery(sql: string): Promise<QueryOutcome> {
   await requireAuth()
+  if (!isDashSqlEnabled()) {
+    return {
+      columns: [],
+      rows: [],
+      rowCount: 0,
+      timeMs: 0,
+      truncated: false,
+      error: 'Sezione SQL disabilitata in questo ambiente',
+    }
+  }
   return runReadOnlyQuery(sql)
 }
 
@@ -462,23 +532,23 @@ export interface DbTableInfo {
   rowCount: number
 }
 
+const DB_OVERVIEW_SQL = `
+  SELECT t.table_name,
+         COALESCE(s.n_live_tup, 0)::int AS row_count
+  FROM information_schema.tables t
+  LEFT JOIN pg_stat_user_tables s ON s.relname = t.table_name
+  WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+  ORDER BY t.table_name
+`
+
 export async function getDbOverview(): Promise<DbTableInfo[]> {
   await requireAuth()
-  const tablesRes = await runReadOnlyQuery(
-    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' ORDER BY table_name",
-  )
-  if (tablesRes.error) return []
-  const tables = tablesRes.rows
-    .map((r) => r.table_name)
-    .filter((t): t is string => typeof t === 'string' && t.length > 0)
-
-  const result: DbTableInfo[] = []
-  for (const table of tables) {
-    const countRes = await runReadOnlyQuery(`SELECT COUNT(*) AS c FROM "${table}"`)
-    const rowCount = countRes.error ? 0 : Number(countRes.rows[0]?.c || 0)
-    result.push({ table, rowCount })
-  }
-  return result
+  if (!isDashSqlEnabled()) return []
+  const res = await runReadOnlyQuery(DB_OVERVIEW_SQL)
+  if (res.error) return []
+  return res.rows
+    .map((r) => ({ table: String(r.table_name || ''), rowCount: num(r.row_count) }))
+    .filter((t) => t.table.length > 0)
 }
 
 export async function deleteProduct(id: string): Promise<void> {
@@ -657,52 +727,55 @@ export interface MessageDTO {
   createdAt: string
 }
 
-export async function getMessages(): Promise<MessageDTO[]> {
-  await requireAuth()
-  const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'messages', limit: 500, sort: '-createdAt', draft: false })
-  return res.docs.map((d: any) => ({
-    id: String(d.id),
-    name: d.name || '',
-    email: d.email || '',
-    subject: d.subject ?? null,
-    message: d.message ?? null,
-    read: Boolean(d.read),
-    replied: Boolean(d.replied),
-    createdAt: d.createdAt ?? new Date().toISOString(),
-  }))
+export interface MessagesPage {
+  messages: MessageDTO[]
+  total: number
 }
 
-export async function toggleMessageRead(id: string, read: boolean): Promise<MessageDTO> {
+export async function getMessagesPage(page = 1, pageSize = 20): Promise<MessagesPage> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.update({ collection: 'messages', id, data: { read } as any })
+  const res = await payload.find({
+    collection: 'messages',
+    limit: pageSize,
+    page,
+    sort: '-createdAt',
+    draft: false,
+  })
   return {
-    id: String(res.id),
-    name: (res as any).name || '',
-    email: (res as any).email || '',
-    subject: (res as any).subject ?? null,
-    message: (res as any).message ?? null,
-    read: Boolean((res as any).read),
-    replied: Boolean((res as any).replied),
-    createdAt: (res as any).createdAt ?? new Date().toISOString(),
+    messages: res.docs.map((d: any) => ({
+      id: String(d.id),
+      name: d.name || '',
+      email: d.email || '',
+      subject: d.subject ?? null,
+      message: null,
+      read: Boolean(d.read),
+      replied: Boolean(d.replied),
+      createdAt: d.createdAt ?? new Date().toISOString(),
+    })),
+    total: res.totalDocs,
   }
 }
 
-export async function toggleMessageReplied(id: string, replied: boolean): Promise<MessageDTO> {
+export async function getMessageBody(id: string): Promise<string | null> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.update({ collection: 'messages', id, data: { replied } as any })
-  return {
-    id: String(res.id),
-    name: (res as any).name || '',
-    email: (res as any).email || '',
-    subject: (res as any).subject ?? null,
-    message: (res as any).message ?? null,
-    read: Boolean((res as any).read),
-    replied: Boolean((res as any).replied),
-    createdAt: (res as any).createdAt ?? new Date().toISOString(),
-  }
+  const res = await payload.findByID({ collection: 'messages', id, draft: false })
+  return (res as any).message ?? null
+}
+
+export async function toggleMessageRead(id: string, read: boolean): Promise<{ id: string; read: boolean }> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  await payload.update({ collection: 'messages', id, data: { read } as any })
+  return { id: String(id), read }
+}
+
+export async function toggleMessageReplied(id: string, replied: boolean): Promise<{ id: string; replied: boolean }> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  await payload.update({ collection: 'messages', id, data: { replied } as any })
+  return { id: String(id), replied }
 }
 
 export async function deleteMessage(id: string): Promise<void> {

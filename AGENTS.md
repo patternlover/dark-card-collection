@@ -3,7 +3,7 @@
 ## Identità
 - E-commerce Pokémon TCG (sealed products, carte singole, slab) su **darkcardcollection.com**.
 - Repo: `github.com/patternlover/dark-card-collection` · branch `main` · git identity: `patternlover` (edocavalcanti@gmail.com).
-- Contesto completo: [`docs/project/overview.md`](docs/project/overview.md) (architettura, schema, decisioni) · `README.md` (setup, deploy) · [`docs/database/schema-and-flows.md`](docs/database/schema-and-flows.md) (schema DB) · [`docs/project/changelog.md`](docs/project/changelog.md) (storico).
+- Contesto completo: [`docs/project/overview.md`](docs/project/overview.md) (architettura, schema, decisioni) · `README.md` (setup, deploy) · [`docs/database/schema-and-flows.md`](docs/database/schema-and-flows.md) (schema DB) · [`docs/project/changelog.md`](docs/project/changelog.md) (storico) · [`docs/project/sessions/`](docs/project/sessions/README.md) (storico per sessione OpenCode: plan + changelog).
 
 ## Stack
 - Next.js (App Router) + TypeScript strict
@@ -32,6 +32,7 @@
 - Payload `id` è `string | number`: castare SEMPRE con `as number` quando si creano ordini.
 - Test: se tocchi `group-products.ts`, `slug.ts` o la logica sticky ATC, aggiorna i test in `tests/`.
 - Build process: `payload generate:db-schema && payload migrate && next build` — la schema DB è sempre in sync con il config Payload.
+- Ogni sessione OpenCode deve avere un file plan+changelog in `docs/project/sessions/` (vedi README lì) e aggiornare `docs/project/changelog.md`. Creare il plan PRIMA di iniziare, compilare il changelog a fine sessione.
 
 ## Struttura chiave
 - `src/app/` → route (shop, products/[slug], cart, checkout, dashboard, api/*)

@@ -1,4 +1,5 @@
 import { isAuthed } from '@/lib/dash-auth'
+import { isDashSqlEnabled } from '@/lib/db-query'
 import DashboardLogin from './login'
 import { DashboardShell } from '@/components/dashboard/DashboardShell'
 
@@ -11,5 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     return <DashboardLogin />
   }
 
-  return <DashboardShell>{children}</DashboardShell>
+  return (
+    <DashboardShell sqlEnabled={isDashSqlEnabled()}>{children}</DashboardShell>
+  )
 }

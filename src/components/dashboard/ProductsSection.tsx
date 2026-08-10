@@ -83,6 +83,19 @@ export function ProductsSection() {
 
   const groups = useMemo(() => groupProducts(products), [products])
 
+  const patchProduct = useCallback((id: string, patch: Partial<ProductDTO>) => {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)))
+  }, [])
+
+  const removeProducts = useCallback((ids: string[]) => {
+    const set = new Set(ids)
+    setProducts((prev) => {
+      const removed = prev.filter((p) => set.has(p.id)).length
+      if (removed > 0) setTotal((t) => Math.max(0, t - removed))
+      return prev.filter((p) => !set.has(p.id))
+    })
+  }, [])
+
   const runSearch = () => {
     setPage(1)
     load({ page: 1, search: query })
@@ -199,6 +212,8 @@ export function ProductsSection() {
               group={g}
               categories={categories}
               collections={collections}
+              onPatch={patchProduct}
+              onRemove={removeProducts}
               onChanged={() => load()}
               onNotify={notify}
             />

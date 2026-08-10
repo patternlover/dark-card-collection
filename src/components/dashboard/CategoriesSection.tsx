@@ -52,21 +52,22 @@ export function CategoriesSection() {
     setError(null)
     try {
       if (form.id) {
-        await updateCategory(form.id, {
+        const saved = await updateCategory(form.id, {
           name: form.name.trim() || undefined,
           slug: form.slug.trim() || undefined,
           description: form.description.trim() || null,
         })
+        setCategories((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
       } else {
-        await createCategory({
+        const saved = await createCategory({
           name: form.name,
           slug: form.slug,
           description: form.description,
         })
+        setCategories((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
       }
       setForm(null)
       setNotice(form.id ? 'Categoria aggiornata' : 'Categoria creata')
-      await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Errore durante il salvataggio')
     } finally {
@@ -80,8 +81,8 @@ export function CategoriesSection() {
     setError(null)
     try {
       await deleteCategory(c.id)
+      setCategories((prev) => prev.filter((x) => x.id !== c.id))
       setNotice('Categoria eliminata')
-      await load()
     } catch {
       setError('Errore durante l\'eliminazione')
     } finally {

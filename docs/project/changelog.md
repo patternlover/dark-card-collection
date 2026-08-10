@@ -1,7 +1,34 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Allineamento schema Google Merchant/GA4** (in corso).
+Ultima sessione: **Performance + sicurezza dashboard · messaggi paginati · storico sessioni**.
+
+---
+
+## Sessione recente 7 — Performance + sicurezza dashboard · messaggi paginati
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-10-dashboard-perf-sec.md`). Dashboard più reattiva, chiusi i buchi di sicurezza dalla review (sezione SQL, form contatti), inbox messaggi paginato, introdotto lo storico sessioni.
+
+### Performance
+- **File**: `src/app/dashboard/actions.ts`, `src/lib/db-query.ts`
+- `actions.ts` usa il client Payload in cache (`@/lib/payload`) invece di ricrearlo a ogni chiamata.
+- `getOverview`: aggregazioni SQL (`COUNT`/`SUM FILTER`) al posto di scaricare 1000+1000 documenti; solo 8 ordini recenti via Payload; fallback al vecchio percorso se le query falliscono.
+- `getDbOverview`: una singola query (era N+1 su ogni tabella).
+- Aggiornamenti ottimistici: toggle visibilità, edit variante (`EditProductModal` restituisce il DTO salvato), delete gruppo/variante, create/edit/delete categorie e collezioni. Refetch solo su errore.
+
+### Sicurezza
+- `runReadOnlyQuery`: transazione **read-only** (`BEGIN READ ONLY`) + `statement_timeout = 10s` + `ROLLBACK` in `finally`.
+- Sezione SQL dietro flag `ENABLE_DASH_SQL` (default: on in dev, off in prod). Nav nascosta quando off, `sql/page.tsx` mostra messaggio. `.env.example` aggiornato.
+- `/api/contact`: honeypot `website` (falso successo), rate limit 3/ora per IP, max lunghezza campi. `ContactForm` invia l'honeypot.
+
+### Messaggi
+- `getMessages` → `getMessagesPage` (paginato, 20/pagina, senza corpo) + `getMessageBody` caricato lazy all'espansione; toggle read/replied ottimistici con revert.
+
+### Altro
+- Rimosso `src/app/dashboard/main.tsx` (legacy non importato).
+- Storico sessioni OpenCode introdotto (`docs/project/sessions/README.md`) + regola in `AGENTS.md`.
+
+**Verifica**: `pnpm lint` ✅ · `pnpm test` 26/26 ✅ · build + deploy Vercel.
 
 ---
 

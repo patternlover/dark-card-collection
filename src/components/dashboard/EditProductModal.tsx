@@ -65,7 +65,7 @@ interface EditProductModalProps {
   categories: CategoryOption[]
   collections: CollectionOption[]
   onClose: () => void
-  onSaved: () => void
+  onSaved: (saved: ProductDTO) => void
   onError: (msg: string) => void
 }
 
@@ -136,8 +136,8 @@ export function EditProductModal({
         featured: form.featured,
         isVisible: form.isVisible,
       }
-      await updateProduct(product.id, patch)
-      onSaved()
+      const saved = await updateProduct(product.id, patch)
+      onSaved(saved)
     } catch (err) {
       onError(err instanceof Error ? err.message : String(err))
     } finally {

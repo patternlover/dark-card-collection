@@ -17,6 +17,13 @@ const ALLOWED_PREFIXES = ['select', 'show', 'explain', 'with']
 const FORBIDDEN_KEYWORDS =
   /\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|comment|analyze|vacuum|copy|merge|upsert)\b/i
 
+export function isDashSqlEnabled(): boolean {
+  const flag = process.env.ENABLE_DASH_SQL
+  if (flag === 'true') return true
+  if (flag === 'false') return false
+  return process.env.NODE_ENV !== 'production'
+}
+
 export interface QueryOutcome {
   columns: string[]
   rows: Record<string, unknown>[]
@@ -70,6 +77,8 @@ export async function runReadOnlyQuery(sql: string): Promise<QueryOutcome> {
   try {
     const client = await getPool().connect()
     try {
+      await client.query("SET statement_timeout = '10s'")
+      await client.query('BEGIN READ ONLY')
       const res = await client.query<QueryResultRow>({
         text: trimmed,
         rowLimit: MAX_ROWS + 1,
@@ -85,6 +94,7 @@ export async function runReadOnlyQuery(sql: string): Promise<QueryOutcome> {
         truncated,
       }
     } finally {
+      await client.query('ROLLBACK').catch(() => {})
       client.release()
     }
   } catch (err) {

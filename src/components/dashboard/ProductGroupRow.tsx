@@ -52,6 +52,8 @@ interface ProductGroupRowProps {
   group: ProductGroup
   categories: CategoryOption[]
   collections: CollectionOption[]
+  onPatch: (id: string, patch: Partial<ProductDTO>) => void
+  onRemove: (ids: string[]) => void
   onChanged: () => void
   onNotify: (msg: string, type: 'success' | 'error') => void
 }
@@ -83,6 +85,8 @@ export function ProductGroupRow({
   group,
   categories,
   collections,
+  onPatch,
+  onRemove,
   onChanged,
   onNotify,
 }: ProductGroupRowProps) {
@@ -97,14 +101,16 @@ export function ProductGroupRow({
   const collectionName = group.collection?.name || ''
 
   const toggleVisible = async () => {
+    const target = !anyVisible
+    for (const p of group.products) onPatch(String(p.id), { isVisible: target })
     setBusy(true)
     try {
       await Promise.all(
-        group.products.map((p) => updateProduct(String(p.id), { isVisible: !anyVisible })),
+        group.products.map((p) => updateProduct(String(p.id), { isVisible: target })),
       )
-      onChanged()
     } catch (err) {
       onNotify(err instanceof Error ? err.message : String(err), 'error')
+      onChanged()
     } finally {
       setBusy(false)
     }
@@ -114,11 +120,12 @@ export function ProductGroupRow({
     if (!confirm(`Eliminare definitivamente "${group.title}" (${group.variantCount} varianti)?`)) return
     setBusy(true)
     try {
+      onRemove(group.products.map((p) => String(p.id)))
       await Promise.all(group.products.map((p) => deleteProduct(String(p.id))))
       onNotify(`"${group.title}" eliminato`, 'success')
-      onChanged()
     } catch (err) {
       onNotify(err instanceof Error ? err.message : String(err), 'error')
+      onChanged()
     } finally {
       setBusy(false)
     }
@@ -128,11 +135,12 @@ export function ProductGroupRow({
     if (!confirm('Eliminare definitivamente questa variante?')) return
     setBusy(true)
     try {
+      onRemove([id])
       await deleteProduct(id)
       onNotify('Variante eliminata', 'success')
-      onChanged()
     } catch (err) {
       onNotify(err instanceof Error ? err.message : String(err), 'error')
+      onChanged()
     } finally {
       setBusy(false)
     }
@@ -271,10 +279,10 @@ export function ProductGroupRow({
           categories={categories}
           collections={collections}
           onClose={() => setEditingVariant(null)}
-          onSaved={() => {
+          onSaved={(saved) => {
+            onPatch(String(saved.id), saved)
             setEditingVariant(null)
             onNotify('Prodotto salvato', 'success')
-            onChanged()
           }}
           onError={(msg) => onNotify(msg, 'error')}
         />
