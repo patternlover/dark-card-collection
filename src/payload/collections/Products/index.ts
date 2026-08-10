@@ -18,11 +18,10 @@ export const Products: CollectionConfig = {
       unique: true,
     },
     {
-      name: 'itemId',
+      name: 'item_group_id',
       type: 'text',
-      unique: true,
       admin: {
-        description: 'Unique identifier from Google Sheets (e.g. PUR-0001-01)',
+        description: 'Google Merchant item_group_id: chiave della carta (varianti dello stesso prodotto)',
       },
     },
     {
@@ -30,28 +29,42 @@ export const Products: CollectionConfig = {
       type: 'textarea',
     },
     {
-      name: 'storePrice',
+      name: 'price',
       type: 'number',
       min: 0,
       admin: {
-        description: 'Actual selling price in the store',
+        description: 'Prezzo di vendita (Merchant price)',
       },
     },
     {
-      name: 'price',
+      name: 'sale_price',
+      type: 'number',
+      min: 0,
+      admin: {
+        description: 'Prezzo di confronto / barrato (Merchant sale_price)',
+      },
+    },
+    {
+      name: 'cost_of_goods_sold',
       type: 'number',
       defaultValue: 0,
       min: 0,
       admin: {
-        description: 'Purchase cost (from Google Sheets)',
+        description: 'Costo di acquisto (Merchant cost_of_goods_sold)',
       },
     },
     {
-      name: 'compareAtPrice',
-      type: 'number',
-      min: 0,
+      name: 'availability',
+      type: 'select',
+      options: [
+        { label: 'In stock', value: 'in_stock' },
+        { label: 'Out of stock', value: 'out_of_stock' },
+        { label: 'Preorder', value: 'preorder' },
+        { label: 'Backorder', value: 'backorder' },
+      ],
+      defaultValue: 'in_stock',
       admin: {
-        description: 'Target price / strikethrough price',
+        description: 'Disponibilità Google (auto da status, quantity e is_preorder)',
       },
     },
     {
@@ -65,22 +78,20 @@ export const Products: CollectionConfig = {
       defaultValue: 'listed',
     },
     {
-      name: 'productState',
-      type: 'text',
-      admin: {
-        description: 'Raw product_state from Google Sheets (e.g. LISTED, HOLD, WATCH)',
-      },
-    },
-    {
-      name: 'isPreorder',
-      type: 'checkbox',
-      defaultValue: false,
-      admin: {
-        description: 'Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile',
-      },
-    },
-    {
       name: 'condition',
+      type: 'select',
+      options: [
+        { label: 'New', value: 'new' },
+        { label: 'Refurbished', value: 'refurbished' },
+        { label: 'Used', value: 'used' },
+      ],
+      defaultValue: 'used',
+      admin: {
+        description: 'Condizione Google (sealed = new, carte singole = used)',
+      },
+    },
+    {
+      name: 'grade',
       type: 'select',
       options: [
         { label: 'Mint', value: 'mint' },
@@ -92,6 +103,17 @@ export const Products: CollectionConfig = {
         { label: 'Graded', value: 'graded' },
       ],
       defaultValue: 'near-mint',
+      admin: {
+        description: 'Grado della carta (TCG)',
+      },
+    },
+    {
+      name: 'is_preorder',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description: 'Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile',
+      },
     },
     {
       name: 'category',
@@ -102,6 +124,20 @@ export const Products: CollectionConfig = {
       name: 'collection',
       type: 'relationship',
       relationTo: 'collections',
+    },
+    {
+      name: 'product_type',
+      type: 'text',
+      admin: {
+        description: 'Merchant product_type (es. nome collezione/categoria)',
+      },
+    },
+    {
+      name: 'google_product_category',
+      type: 'text',
+      admin: {
+        description: 'Merchant google_product_category (ID o percorso tassonomia Google)',
+      },
     },
     {
       name: 'language',
@@ -115,7 +151,7 @@ export const Products: CollectionConfig = {
       defaultValue: 'italian',
     },
     {
-      name: 'cardNumber',
+      name: 'card_number',
       type: 'text',
     },
     {
@@ -137,17 +173,17 @@ export const Products: CollectionConfig = {
       min: 0,
     },
     {
-      name: 'imageUrl',
+      name: 'image_link',
       type: 'text',
       admin: {
-        description: 'Direct product image URL (e.g. from Cardmarket)',
+        description: 'URL immagine principale (Merchant image_link, es. da Cardmarket)',
       },
     },
     {
       name: 'images',
       type: 'array',
       admin: {
-        description: 'Additional product images (uploaded via admin)',
+        description: 'Immagini aggiuntive (upload via dashboard)',
       },
       fields: [
         {
@@ -158,18 +194,18 @@ export const Products: CollectionConfig = {
       ],
     },
     {
-      name: 'averageSalePrice',
+      name: 'average_sale_price',
       type: 'number',
       admin: {
-        description: 'Average selling price from sales history (auto-calculated)',
+        description: 'Prezzo medio di vendita storico (auto-calcolato)',
         readOnly: true,
       },
     },
     {
-      name: 'lastPriceUpdate',
+      name: 'last_price_update',
       type: 'date',
       admin: {
-        description: 'Last time average price was recalculated',
+        description: 'Ultima ricalcolazione del prezzo medio',
         readOnly: true,
       },
     },
@@ -179,7 +215,7 @@ export const Products: CollectionConfig = {
       defaultValue: false,
     },
     {
-      name: 'isVisible',
+      name: 'is_visible',
       type: 'checkbox',
       defaultValue: true,
       admin: {

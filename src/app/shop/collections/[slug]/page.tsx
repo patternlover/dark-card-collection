@@ -69,7 +69,7 @@ export default async function CollectionPage({
         AND: [
           { collection: { equals: colId } },
           { status: { in: ['listed', 'hold'] } },
-          { isVisible: { equals: true } },
+          { is_visible: { equals: true } },
         ],
       },
       limit: 100,

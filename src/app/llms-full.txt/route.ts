@@ -173,7 +173,7 @@ async function getCatalogSection(): Promise<string> {
         where: {
           and: [
             { status: { in: ['listed', 'hold'] } },
-            { isVisible: { equals: true } },
+            { is_visible: { equals: true } },
           ],
         },
         limit: 500,
@@ -196,7 +196,7 @@ async function getCatalogSection(): Promise<string> {
           : 'prezzo su richiesta'
       const availability = group.products.some((p: any) => p.status === 'listed')
         ? 'Disponibile'
-        : group.products.some((p: any) => p.isPreorder || p.status === 'hold')
+        : group.products.some((p: any) => p.is_preorder || p.status === 'hold')
           ? 'In attesa (preorder)'
           : 'Venduto'
       return `- [${group.title}](${SITE_URL}/products/${group.slug}) - Prezzo: ${price} - Disponibilità: ${availability}`

@@ -11,7 +11,6 @@ import { Products } from './payload/collections/Products'
 import { Categories } from './payload/collections/Categories'
 import { Collections } from './payload/collections/Collections'
 import { Orders } from './payload/collections/Orders'
-import { Users } from './payload/collections/Users'
 import { Media } from './payload/collections/Media'
 import { Messages } from './payload/collections/Messages'
 import { SiteSettings } from './payload/globals/SiteSettings'
@@ -22,13 +21,9 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
-    user: Users.slug,
-    importMap: {
-      baseDir: path.resolve(dirname),
-      importMapFile: './app/(payload)/admin/importMap.js',
-    },
+    disable: true,
   },
-  collections: [Products, Categories, Collections, Orders, Users, Media, Messages],
+  collections: [Products, Categories, Collections, Orders, Media, Messages],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
   sharp,

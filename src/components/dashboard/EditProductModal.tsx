@@ -16,7 +16,7 @@ const STATUS_OPTIONS = [
   { value: 'sold', label: 'Venduto' },
 ]
 
-const CONDITION_OPTIONS = [
+const GRADE_OPTIONS = [
   { value: 'mint', label: 'Mint / Sigillato' },
   { value: 'near-mint', label: 'Near Mint' },
   { value: 'lightly-played', label: 'Lightly Played' },
@@ -24,6 +24,19 @@ const CONDITION_OPTIONS = [
   { value: 'heavily-played', label: 'Heavily Played' },
   { value: 'damaged', label: 'Damaged' },
   { value: 'graded', label: 'Graded' },
+]
+
+const CONDITION_OPTIONS = [
+  { value: 'used', label: 'Usato' },
+  { value: 'new', label: 'Nuovo' },
+  { value: 'refurbished', label: 'Rigenerato' },
+]
+
+const AVAILABILITY_OPTIONS = [
+  { value: 'in_stock', label: 'Disponibile' },
+  { value: 'out_of_stock', label: 'Esaurito' },
+  { value: 'preorder', label: 'Pre-Ordine' },
+  { value: 'backorder', label: 'Backorder' },
 ]
 
 const LANGUAGE_OPTIONS = [
@@ -67,22 +80,25 @@ export function EditProductModal({
   const [form, setForm] = useState({
     title: product.title || '',
     slug: product.slug || '',
-    itemId: product.itemId || '',
+    itemGroupId: product.itemGroupId || '',
     description: product.description || '',
-    storePrice: product.storePrice != null ? String(product.storePrice) : '',
     price: product.price != null ? String(product.price) : '',
-    compareAtPrice: product.compareAtPrice != null ? String(product.compareAtPrice) : '',
+    salePrice: product.salePrice != null ? String(product.salePrice) : '',
+    costOfGoodsSold: product.costOfGoodsSold != null ? String(product.costOfGoodsSold) : '',
     status: product.status || 'listed',
-    productState: product.productState || '',
+    availability: product.availability || 'in_stock',
     isPreorder: product.isPreorder ?? false,
-    condition: product.condition || 'near-mint',
+    grade: product.grade || 'near-mint',
+    condition: product.condition || 'used',
+    productType: product.productType || '',
+    googleProductCategory: product.googleProductCategory || '',
     language: product.language || 'italian',
     category: product.category?.id ? String(product.category.id) : '',
     collection: product.collection?.id ? String(product.collection.id) : '',
     cardNumber: product.cardNumber || '',
     rarity: product.rarity || '',
     quantity: product.quantity != null ? String(product.quantity) : '1',
-    imageUrl: product.imageUrl || '',
+    imageLink: product.imageLink || '',
     featured: product.featured ?? false,
     isVisible: product.isVisible ?? true,
   })
@@ -98,22 +114,25 @@ export function EditProductModal({
       const patch: UpdateProductPatch = {
         title: form.title.trim() || product.title,
         slug: form.slug.trim(),
-        itemId: form.itemId.trim() || null,
+        itemGroupId: form.itemGroupId.trim() || null,
         description: form.description.trim() || null,
-        storePrice: form.storePrice === '' ? null : Number(form.storePrice),
         price: form.price === '' ? null : Number(form.price),
-        compareAtPrice: form.compareAtPrice === '' ? null : Number(form.compareAtPrice),
+        salePrice: form.salePrice === '' ? null : Number(form.salePrice),
+        costOfGoodsSold: form.costOfGoodsSold === '' ? null : Number(form.costOfGoodsSold),
         status: form.status,
-        productState: form.productState.trim() || null,
+        availability: form.availability,
         isPreorder: form.isPreorder,
+        grade: form.grade,
         condition: form.condition,
+        productType: form.productType.trim() || null,
+        googleProductCategory: form.googleProductCategory.trim() || null,
         language: form.language,
         category: form.category ? Number(form.category) : null,
         collection: form.collection ? Number(form.collection) : null,
         cardNumber: form.cardNumber.trim() || null,
         rarity: form.rarity || null,
         quantity: Number(form.quantity) || 0,
-        imageUrl: form.imageUrl.trim() || null,
+        imageLink: form.imageLink.trim() || null,
         featured: form.featured,
         isVisible: form.isVisible,
       }
@@ -149,11 +168,11 @@ export function EditProductModal({
               />
             </div>
             <div>
-              <label className={labelClass}>Item ID</label>
+              <label className={labelClass}>Item Group ID</label>
               <input
                 type="text"
-                value={form.itemId}
-                onChange={(e) => handleChange('itemId', e.target.value)}
+                value={form.itemGroupId}
+                onChange={(e) => handleChange('itemGroupId', e.target.value)}
                 className={inputClass}
               />
             </div>
@@ -170,14 +189,16 @@ export function EditProductModal({
               />
             </div>
             <div>
-              <label className={labelClass}>Product State</label>
-              <input
-                type="text"
-                value={form.productState}
-                onChange={(e) => handleChange('productState', e.target.value)}
-                placeholder="AVAILABLE, HOLD, SOLD..."
+              <label className={labelClass}>Disponibilità</label>
+              <select
+                value={form.availability}
+                onChange={(e) => handleChange('availability', e.target.value)}
                 className={inputClass}
-              />
+              >
+                {AVAILABILITY_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -188,8 +209,8 @@ export function EditProductModal({
                 type="number"
                 step="0.01"
                 min="0"
-                value={form.storePrice}
-                onChange={(e) => handleChange('storePrice', e.target.value)}
+                value={form.price}
+                onChange={(e) => handleChange('price', e.target.value)}
                 className={inputClass}
               />
             </div>
@@ -199,8 +220,8 @@ export function EditProductModal({
                 type="number"
                 step="0.01"
                 min="0"
-                value={form.price}
-                onChange={(e) => handleChange('price', e.target.value)}
+                value={form.costOfGoodsSold}
+                onChange={(e) => handleChange('costOfGoodsSold', e.target.value)}
                 className={inputClass}
               />
             </div>
@@ -210,8 +231,8 @@ export function EditProductModal({
                 type="number"
                 step="0.01"
                 min="0"
-                value={form.compareAtPrice}
-                onChange={(e) => handleChange('compareAtPrice', e.target.value)}
+                value={form.salePrice}
+                onChange={(e) => handleChange('salePrice', e.target.value)}
                 className={inputClass}
               />
             </div>
@@ -231,6 +252,18 @@ export function EditProductModal({
               </select>
             </div>
             <div>
+              <label className={labelClass}>Grado</label>
+              <select
+                value={form.grade}
+                onChange={(e) => handleChange('grade', e.target.value)}
+                className={inputClass}
+              >
+                {GRADE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
               <label className={labelClass}>Condizione</label>
               <select
                 value={form.condition}
@@ -242,6 +275,9 @@ export function EditProductModal({
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Lingua</label>
               <select
@@ -254,9 +290,6 @@ export function EditProductModal({
                 ))}
               </select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Quantità</label>
               <input
@@ -276,6 +309,9 @@ export function EditProductModal({
                 className={inputClass}
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <label className={labelClass}>Rarità</label>
               <select
@@ -287,6 +323,26 @@ export function EditProductModal({
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className={labelClass}>Product Type (Google)</label>
+              <input
+                type="text"
+                value={form.productType}
+                onChange={(e) => handleChange('productType', e.target.value)}
+                placeholder="es. Trading Card Game"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>Google Product Category</label>
+              <input
+                type="text"
+                value={form.googleProductCategory}
+                onChange={(e) => handleChange('googleProductCategory', e.target.value)}
+                placeholder="es. Toys & Games > Trading Card Game Cards"
+                className={inputClass}
+              />
             </div>
           </div>
 
@@ -320,11 +376,11 @@ export function EditProductModal({
           </div>
 
           <div>
-            <label className={labelClass}>Image URL</label>
+            <label className={labelClass}>Image Link</label>
             <input
               type="url"
-              value={form.imageUrl}
-              onChange={(e) => handleChange('imageUrl', e.target.value)}
+              value={form.imageLink}
+              onChange={(e) => handleChange('imageLink', e.target.value)}
               placeholder="https://..."
               className={inputClass}
             />

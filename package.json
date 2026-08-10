@@ -13,7 +13,7 @@
     "payload": "payload",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
-    "create-admin": "node scripts/create-admin.mjs"
+    "backfill:google-schema": "tsx scripts/backfill-google-schema.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.87.1",

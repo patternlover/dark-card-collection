@@ -15,8 +15,8 @@ function mediaDoc(product: any): any {
 export function getProductImageInfo(product: any): ProductImageInfo {
   const media = mediaDoc(product)
   const fallback =
-    typeof product?.imageUrl === 'string' && product.imageUrl
-      ? product.imageUrl
+    typeof product?.image_link === 'string' && product.image_link
+      ? product.image_link
       : null
 
   const url = media?.url || fallback

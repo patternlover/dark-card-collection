@@ -13,8 +13,8 @@ interface QuickAddButtonProps {
     id: number | string
     title: string
     slug: string
-    storePrice: number | null
-    imageUrl?: string | null
+    price: number | null
+    image_link?: string | null
     status: string
     quantity?: number
   }
@@ -26,7 +26,7 @@ export function QuickAddButton({ product, maxQuantity }: QuickAddButtonProps) {
   const [burst, setBurst] = useState<{ x: number; y: number; id: number } | null>(null)
   const { addItem } = useCart()
 
-  const price = product.storePrice || 0
+  const price = product.price || 0
   const isAvailable = (product.status === 'listed' || product.status === 'hold') && price > 0
   const maxQty = Math.max(1, Math.floor(maxQuantity ?? product.quantity ?? 1))
 

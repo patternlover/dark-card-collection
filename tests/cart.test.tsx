@@ -34,7 +34,7 @@ function QuickHarness() {
   return (
     <div>
       <QuickAddButton
-        product={{ id: 2, title: 'Box', slug: 'box', storePrice: 20, status: 'listed', quantity: 1 }}
+        product={{ id: 2, title: 'Box', slug: 'box', price: 20, status: 'listed', quantity: 1 }}
         maxQuantity={7}
       />
       <span data-testid="qty">{items[0]?.quantity ?? 0}</span>

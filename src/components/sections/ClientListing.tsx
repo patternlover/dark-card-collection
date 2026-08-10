@@ -7,7 +7,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 import { groupProducts } from '@/lib/group-products'
-import { CONDITION_OPTIONS, LANGUAGE_OPTIONS, computeFilterCounts } from '@/lib/product-filters'
+import { GRADE_OPTIONS, LANGUAGE_OPTIONS, computeFilterCounts } from '@/lib/product-filters'
 import { trackFilter } from '@/lib/analytics'
 
 interface ClientListingProps {
@@ -25,11 +25,11 @@ interface Filters {
   q: string
   category: string
   collection: string
-  condition: string
+  grade: string
   language: string
 }
 
-const EMPTY_FILTERS: Filters = { q: '', category: '', collection: '', condition: '', language: '' }
+const EMPTY_FILTERS: Filters = { q: '', category: '', collection: '', grade: '', language: '' }
 
 const selectClass =
   'w-full appearance-none border-2 border-zinc-700 bg-zinc-800 py-2.5 pl-3 pr-9 text-sm text-white focus:border-[var(--accent)] focus:outline-none shadow-[2px_2px_0px_0px_#27272a] disabled:opacity-40 disabled:cursor-not-allowed'
@@ -112,7 +112,7 @@ export function ClientListing({
     q: searchParams.get('q') || '',
     category: searchParams.get('category') || '',
     collection: searchParams.get('collection') || '',
-    condition: searchParams.get('condition') || '',
+    grade: searchParams.get('grade') || '',
     language: searchParams.get('language') || '',
   }))
 
@@ -122,7 +122,7 @@ export function ClientListing({
       if (next.q) sp.set('q', next.q)
       if (next.category) sp.set('category', next.category)
       if (next.collection) sp.set('collection', next.collection)
-      if (next.condition) sp.set('condition', next.condition)
+      if (next.grade) sp.set('grade', next.grade)
       if (next.language) sp.set('language', next.language)
       const qs = sp.toString()
       return qs ? `${basePath}?${qs}` : basePath
@@ -141,7 +141,7 @@ export function ClientListing({
     [router, buildUrl],
   )
 
-  const handleSelect = (key: 'category' | 'collection' | 'condition' | 'language', value: string) => {
+  const handleSelect = (key: 'category' | 'collection' | 'grade' | 'language', value: string) => {
     trackFilter(key, value)
     updateFilters({ [key]: value })
   }
@@ -152,7 +152,7 @@ export function ClientListing({
   }
 
   const active = Boolean(
-    filters.q || filters.category || filters.collection || filters.condition || filters.language,
+    filters.q || filters.category || filters.collection || filters.grade || filters.language,
   )
 
   const counts = useMemo(() => computeFilterCounts(products), [products])
@@ -164,7 +164,7 @@ export function ClientListing({
       }
       if (filters.category && String(p.category?.id) !== filters.category) return false
       if (filters.collection && String(p.collection?.id) !== filters.collection) return false
-      if (filters.condition && p.condition !== filters.condition) return false
+      if (filters.grade && p.grade !== filters.grade) return false
       if (filters.language && p.language !== filters.language) return false
       return true
     })
@@ -248,13 +248,13 @@ export function ClientListing({
           </div>
 
           <FilterSelect
-            label="Condizione"
-            value={filters.condition}
-            onChange={(v) => handleSelect('condition', v)}
-            options={CONDITION_OPTIONS}
+            label="Grado"
+            value={filters.grade}
+            onChange={(v) => handleSelect('grade', v)}
+            options={GRADE_OPTIONS}
             counts={counts.cond}
-            allLabel="Tutte le condizioni"
-            current={filters.condition}
+            allLabel="Tutti i gradi"
+            current={filters.grade}
           />
 
           <FilterSelect

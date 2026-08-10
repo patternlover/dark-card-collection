@@ -1,7 +1,39 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Dashboard prodotti + rimozione legacy Google Sheets** (commit `f30618e` → `4333c9d`).
+Ultima sessione: **Allineamento schema Google Merchant/GA4** (in corso).
+
+---
+
+## Sessione recente 6 — Allineamento schema Google Merchant/GA4
+
+Rinominazione dei campi Products/Orders ai nomi Google Merchant Center e GA4, con migration manuale, script di backfill/dedup e refactor completo del frontend.
+
+### Schema Payload (collections Products + Orders)
+- **File**: `src/payload/collections/Products/index.ts`, `src/payload/collections/Orders/index.ts`, `src/payload-types.ts`
+- Renames Products: `store_price→price` (prezzo vendita), `price→cost_of_goods_sold` (costo), `compare_at_price→sale_price` (prezzo barrato), `image_url→image_link`, `condition→grade` (grado TCG, enum rinominato `enum_products_condition→enum_products_grade`).
+- Drop: `item_id`, `product_state`.
+- Nuovi Products: `item_group_id`, `product_type`, `google_product_category`, `availability` (enum `in_stock/out_of_stock/preorder/backorder`, default `in_stock`), `condition` Google (enum `new/refurbished/used`, default `used`).
+- Renames Orders: `order_id→transaction_id`, `total→value`; nuovi: `currency` (default EUR), `shipping`, `tax`.
+
+### Migration + backfill
+- **File**: `src/migrations/20260809_google_schema.ts`, `src/migrations/index.ts`, `scripts/backfill-google-schema.ts`, `package.json`
+- Migration manuale: rename colonne/type enum, drop `item_id`/`product_state`, new enums, backfill `availability` (preorder se `is_preorder`, `out_of_stock` se status sold o quantity ≤ 0), orders `currency='EUR'`, `shipping=0`, `tax=0`. Down completo.
+- Script post-deploy `pnpm backfill:google-schema`: backfill `item_group_id` da slugify(title) + dedup per `title|language|grade` (survivor = maggior qty, pareggio updated_at più recente; somma quantità, merge immagini, delete altre righe).
+
+### Refactor frontend
+- **File**: `src/lib/{group-products,product-image}.ts`, `src/components/product/*`, `src/app/products/[slug]/page.tsx`, `src/components/sections/FeaturedProducts.tsx`, `src/app/api/stripe/*`, `src/app/checkout/success/page.tsx`, `src/app/llms-full.txt/route.ts`, shop pages.
+- Shop, PDP, cart e checkout usano `price`, `image_link`, `grade` (label TCG), `is_preorder`, `is_visible`, `item_group_id` (sku PDP); webhook crea order con `transaction_id`/`value`/`currency`/`shipping`; `/api/stripe/order` query per `stripe_session_id`.
+- Filtro shop rinominato `condition→grade` (URL `?grade=`), import `CONDITION_OPTIONS→GRADE_OPTIONS` (`src/lib/product-filters.ts`, `src/components/sections/ClientListing.tsx`).
+
+### Dashboard
+- **File**: `src/app/dashboard/actions.ts`, `src/app/dashboard/main.tsx`, `src/components/dashboard/{CreateProductModal,EditProductModal,ProductGroupRow}.tsx`
+- DTO e query aggiornati (price, sale_price, cost_of_goods_sold, availability, grade, condition Google, product_type, google_product_category, image_link, average_sale_price, last_price_update, transaction_id/value); `PATCH_FIELD_MAP` camelCase→snake_case; create/edit product con i nuovi campi.
+
+### Test + note operative
+- **File**: `tests/{group-products,cart,sticky-add-to-cart,product-filters}.test.ts`
+- 26/26 test verdi; `pnpm lint` (tsc) pulito.
+- La migration si applica al deploy (build esegue `payload migrate`); dopo il deploy lanciare `pnpm backfill:google-schema`.
 
 ---
 

@@ -10,10 +10,9 @@ const product = {
   title: 'Test Box',
   slug: 'test-box',
   price: 100,
-  storePrice: 100,
   image: null,
   images: null,
-  imageUrl: null,
+  image_link: null,
   status: 'listed',
 }
 

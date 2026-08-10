@@ -1,4 +1,4 @@
-export const CONDITION_OPTIONS = [
+export const GRADE_OPTIONS = [
   { value: 'mint', label: 'Sigillato' },
   { value: 'near-mint', label: 'Near Mint' },
   { value: 'graded', label: 'Graded' },
@@ -31,7 +31,7 @@ export function computeFilterCounts(products: any[]): FilterCounts {
 
   for (const p of products) {
     const title = p.title || 'Untitled'
-    addToSet(cond, p.condition, title)
+    addToSet(cond, p.grade, title)
     addToSet(lang, p.language, title)
     const cid = p.category?.id
     if (cid != null) addToSet(cat, String(cid), title)

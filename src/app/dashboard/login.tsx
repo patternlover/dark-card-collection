@@ -1,8 +1,6 @@
 'use client'
 
-interface DashboardLoginProps {
-  error?: string
-}
+import { useSearchParams } from 'next/navigation'
 
 const ERROR_MESSAGES: Record<string, string> = {
   'google-not-configured': 'Accesso Google non configurato.',
@@ -37,7 +35,9 @@ function GoogleIcon() {
   )
 }
 
-export default function DashboardLogin({ error }: DashboardLoginProps) {
+export default function DashboardLogin() {
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
   const message = error ? ERROR_MESSAGES[error] || 'Errore durante l\'accesso.' : null
 
   return (

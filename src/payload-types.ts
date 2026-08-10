@@ -71,10 +71,10 @@ export interface Config {
     categories: Category;
     collections: Collection;
     orders: Order;
-    users: User;
     media: Media;
     messages: Message;
     'payload-kv': PayloadKv;
+    users: User;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -85,10 +85,10 @@ export interface Config {
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
     collections: CollectionsSelect<false> | CollectionsSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
-    users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     messages: MessagesSelect<false> | MessagesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    users: UsersSelect<false> | UsersSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -142,45 +142,60 @@ export interface Product {
   title: string;
   slug: string;
   /**
-   * Unique identifier from Google Sheets (e.g. PUR-0001-01)
+   * Google Merchant item_group_id: chiave della carta (varianti dello stesso prodotto)
    */
-  itemId?: string | null;
+  item_group_id?: string | null;
   description?: string | null;
   /**
-   * Actual selling price in the store
-   */
-  storePrice?: number | null;
-  /**
-   * Purchase cost (from Google Sheets)
+   * Prezzo di vendita (Merchant price)
    */
   price?: number | null;
   /**
-   * Target price / strikethrough price
+   * Prezzo di confronto / barrato (Merchant sale_price)
    */
-  compareAtPrice?: number | null;
+  sale_price?: number | null;
+  /**
+   * Costo di acquisto (Merchant cost_of_goods_sold)
+   */
+  cost_of_goods_sold?: number | null;
+  /**
+   * Disponibilità Google (auto da status, quantity e is_preorder)
+   */
+  availability?: ('in_stock' | 'out_of_stock' | 'preorder' | 'backorder') | null;
   status?: ('listed' | 'hold' | 'sold') | null;
   /**
-   * Raw product_state from Google Sheets (e.g. LISTED, HOLD, WATCH)
+   * Condizione Google (sealed = new, carte singole = used)
    */
-  productState?: string | null;
+  condition?: ('new' | 'refurbished' | 'used') | null;
+  /**
+   * Grado della carta (TCG)
+   */
+  grade?:
+    ('mint' | 'near-mint' | 'lightly-played' | 'moderately-played' | 'heavily-played' | 'damaged' | 'graded') | null;
   /**
    * Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile
    */
-  isPreorder?: boolean | null;
-  condition?:
-    ('mint' | 'near-mint' | 'lightly-played' | 'moderately-played' | 'heavily-played' | 'damaged' | 'graded') | null;
+  is_preorder?: boolean | null;
   category?: (number | null) | Category;
   collection?: (number | null) | Collection;
+  /**
+   * Merchant product_type (es. nome collezione/categoria)
+   */
+  product_type?: string | null;
+  /**
+   * Merchant google_product_category (ID o percorso tassonomia Google)
+   */
+  google_product_category?: string | null;
   language?: ('italian' | 'english' | 'chinese' | 'japanese') | null;
-  cardNumber?: string | null;
+  card_number?: string | null;
   rarity?: ('common' | 'uncommon' | 'rare' | 'rare-holo' | 'ultra-rare' | 'secret-rare') | null;
   quantity?: number | null;
   /**
-   * Direct product image URL (e.g. from Cardmarket)
+   * URL immagine principale (Merchant image_link, es. da Cardmarket)
    */
-  imageUrl?: string | null;
+  image_link?: string | null;
   /**
-   * Additional product images (uploaded via admin)
+   * Immagini aggiuntive (upload via dashboard)
    */
   images?:
     | {
@@ -189,18 +204,18 @@ export interface Product {
       }[]
     | null;
   /**
-   * Average selling price from sales history (auto-calculated)
+   * Prezzo medio di vendita storico (auto-calcolato)
    */
-  averageSalePrice?: number | null;
+  average_sale_price?: number | null;
   /**
-   * Last time average price was recalculated
+   * Ultima ricalcolazione del prezzo medio
    */
-  lastPriceUpdate?: string | null;
+  last_price_update?: string | null;
   featured?: boolean | null;
   /**
    * Mostra il prodotto nello shop (indipendente dallo stato)
    */
-  isVisible?: boolean | null;
+  is_visible?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -272,7 +287,7 @@ export interface Media {
  */
 export interface Order {
   id: number;
-  orderId: string;
+  transaction_id: string;
   status?: ('pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled') | null;
   items?:
     | {
@@ -282,37 +297,14 @@ export interface Order {
         id?: string | null;
       }[]
     | null;
-  total: number;
-  stripeSessionId?: string | null;
+  value: number;
+  currency?: string | null;
+  shipping?: number | null;
+  tax?: number | null;
+  stripe_session_id?: string | null;
   email: string;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
- */
-export interface User {
-  id: number;
-  name?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
-    | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
-      }[]
-    | null;
-  password?: string | null;
-  collection: 'users';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -348,6 +340,31 @@ export interface PayloadKv {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -370,16 +387,16 @@ export interface PayloadLockedDocument {
         value: number | Order;
       } | null)
     | ({
-        relationTo: 'users';
-        value: number | User;
-      } | null)
-    | ({
         relationTo: 'media';
         value: number | Media;
       } | null)
     | ({
         relationTo: 'messages';
         value: number | Message;
+      } | null)
+    | ({
+        relationTo: 'users';
+        value: number | User;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -430,32 +447,35 @@ export interface PayloadMigration {
 export interface ProductsSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
-  itemId?: T;
+  item_group_id?: T;
   description?: T;
-  storePrice?: T;
   price?: T;
-  compareAtPrice?: T;
+  sale_price?: T;
+  cost_of_goods_sold?: T;
+  availability?: T;
   status?: T;
-  productState?: T;
-  isPreorder?: T;
   condition?: T;
+  grade?: T;
+  is_preorder?: T;
   category?: T;
   collection?: T;
+  product_type?: T;
+  google_product_category?: T;
   language?: T;
-  cardNumber?: T;
+  card_number?: T;
   rarity?: T;
   quantity?: T;
-  imageUrl?: T;
+  image_link?: T;
   images?:
     | T
     | {
         image?: T;
         id?: T;
       };
-  averageSalePrice?: T;
-  lastPriceUpdate?: T;
+  average_sale_price?: T;
+  last_price_update?: T;
   featured?: T;
-  isVisible?: T;
+  is_visible?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -487,7 +507,7 @@ export interface CollectionsSelect<T extends boolean = true> {
  * via the `definition` "orders_select".
  */
 export interface OrdersSelect<T extends boolean = true> {
-  orderId?: T;
+  transaction_id?: T;
   status?: T;
   items?:
     | T
@@ -497,34 +517,14 @@ export interface OrdersSelect<T extends boolean = true> {
         price?: T;
         id?: T;
       };
-  total?: T;
-  stripeSessionId?: T;
+  value?: T;
+  currency?: T;
+  shipping?: T;
+  tax?: T;
+  stripe_session_id?: T;
   email?: T;
   updatedAt?: T;
   createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users_select".
- */
-export interface UsersSelect<T extends boolean = true> {
-  name?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  email?: T;
-  resetPasswordToken?: T;
-  resetPasswordExpiration?: T;
-  salt?: T;
-  hash?: T;
-  loginAttempts?: T;
-  lockUntil?: T;
-  sessions?:
-    | T
-    | {
-        id?: T;
-        createdAt?: T;
-        expiresAt?: T;
-      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -589,6 +589,28 @@ export interface MessagesSelect<T extends boolean = true> {
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  updatedAt?: T;
+  createdAt?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+  sessions?:
+    | T
+    | {
+        id?: T;
+        createdAt?: T;
+        expiresAt?: T;
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

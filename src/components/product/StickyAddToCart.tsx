@@ -10,10 +10,9 @@ interface StickyAddToCartProps {
     title: string
     slug: string
     price: number
-    storePrice?: number | null
     image?: { url: string; alt: string } | null
     images?: Array<{ image?: { url: string; alt: string } | null }> | null
-    imageUrl?: string | null
+    image_link?: string | null
     status: string
   }
   maxQuantity?: number
@@ -52,7 +51,7 @@ export function StickyAddToCart({ product, maxQuantity = 1 }: StickyAddToCartPro
     }
   }, [mounted])
 
-  const displayPrice = product.storePrice || 0
+  const displayPrice = product.price || 0
 
   if (!mounted) return null
 

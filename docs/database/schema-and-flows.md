@@ -3,7 +3,7 @@
 Guida leggibile di tutta la struttura dati (Payload CMS su PostgreSQL/Neon) e di come
 funzionano i flussi principali del sito (acquisto, import inventario, preordini, immagini).
 
-> Stato al 2026-08-04. I file "sorgente di verità" sono le collection in
+> Stato al 2026-08-09. I file "sorgente di verità" sono le collection in
 > `src/payload/collections/*` e i global in `src/payload/globals/*`. Il DB è generato
 > da Payload con `pnpm build` (`payload generate:db-schema && payload migrate`).
 
@@ -37,42 +37,45 @@ Ogni item dell'inventario. Gestito direttamente dal dashboard (`/dashboard`, tab
 | Campo | Tipo Payload | Obblig. | Unico | Default | Descrizione |
 |---|---|---|---|---|---|
 | `title` | text | ✅ | - | - | Nome prodotto mostrato nello shop (es. "Collezione Illustrazione Primi Compagni d'Avventura Serie 2") |
-| `slug` | text | ✅ | ✅ | - | URL friendly (`/products/{slug}`). Generato da `itemId` (`pur-0001-01`) |
-| `itemId` | text | - | ✅ | - | Identificativo univoco inventario (es. `PUR-0001-01`). La "chiave" del sistema |
+| `slug` | text | ✅ | ✅ | - | URL friendly (`/products/{slug}`) |
+| `item_group_id` | text | - | - | - | **Google Merchant item_group_id**: chiave della carta (slug del titolo) per raggruppare le varianti dello stesso prodotto |
 | `description` | textarea | - | - | - | Descrizione (mostrata in PDP) |
-| `storePrice` | number | - | - | - | **Prezzo di vendita** nello shop (quello che paga il cliente) |
-| `price` | number | - | - | `0` | **Costo di acquisto** (quanto abbiamo pagato noi) |
-| `compareAtPrice` | number | - | - | - | Prezzo barrato / target price |
+| `price` | number | - | - | - | **Prezzo di vendita** nello shop (quello che paga il cliente, Merchant `price`) |
+| `sale_price` | number | - | - | - | Prezzo barrato / di confronto (Merchant `sale_price`) |
+| `cost_of_goods_sold` | number | - | - | - | **Costo di acquisto** (quanto abbiamo pagato noi, Merchant `cost_of_goods_sold`) |
+| `availability` | select | - | - | `in_stock` | Merchant `availability`: `in_stock`, `out_of_stock`, `preorder`, `backorder` |
 | `status` | select | - | - | `listed` | `listed` = Disponibile, `hold` = In Attesa, `sold` = Venduto |
-| `productState` | text | - | - | - | Stato grezzo (origini dal flusso legacy foglio: es. `LISTED`, `HOLD`, `WATCH`) |
-| `isPreorder` | checkbox | - | - | `false` | **Pre-ordine / In Attesa**: visibile in `/shop/preorders` ed acquistabile |
-| `condition` | select | - | - | `near-mint` | `mint`, `near-mint`, `lightly-played`, `moderately-played`, `heavily-played`, `damaged`, `graded` |
+| `condition` | select | - | - | `used` | Merchant `condition` Google: `new`, `refurbished`, `used` |
+| `grade` | select | - | - | `near-mint` | Grado della carta: `mint`, `near-mint`, `lightly-played`, `moderately-played`, `heavily-played`, `damaged`, `graded` |
+| `is_preorder` | checkbox | - | - | `false` | **Pre-ordine / In Attesa**: visibile in `/shop/preorders` ed acquistabile |
 | `category` | relationship → `categories` | - | - | - | Categoria (es. Booster Box, Sealed) |
-| `collection` | relationship → `collections` | - | - | - | Set/collezione (primo valore del campo `set`, origine flusso legacy) |
+| `collection` | relationship → `collections` | - | - | - | Set/collezione |
+| `product_type` | text | - | - | - | Merchant `product_type` (es. nome collezione/categoria) |
+| `google_product_category` | text | - | - | - | Merchant `google_product_category` (ID o percorso tassonomia Google) |
 | `language` | select | - | - | `italian` | `italian`, `english`, `chinese`, `japanese` |
-| `cardNumber` | text | - | - | - | Numero carta (inventario) |
+| `card_number` | text | - | - | - | Numero carta (inventario) |
 | `rarity` | select | - | - | - | `common`, `uncommon`, `rare`, `rare-holo`, `ultra-rare`, `secret-rare` |
-| `quantity` | number | - | - | `1` | Quantità (per ora sempre 1: ogni riga è un item fisico) |
-| `imageUrl` | text | - | - | - | **URL diretto dell'immagine** (hotlink Cardmarket, solitamente miniatura 300x300). Usato come fallback |
+| `quantity` | number | - | - | `1` | Quantità |
+| `image_link` | text | - | - | - | **URL diretto dell'immagine** (hotlink Cardmarket, Merchant `image_link`). Usato come fallback |
 | `images` | array di upload → `media` | - | - | - | **Immagini ufficiali caricate su Vercel Blob** (tabella join `products_images`). Prioritario sullo storefront |
-| `averageSalePrice` | number (readOnly) | - | - | - | Prezzo medio di vendita storico (senza feed automatico dal 2026-08) |
-| `lastPriceUpdate` | date (readOnly) | - | - | - | Ultimo aggiornamento di `averageSalePrice` |
+| `average_sale_price` | number (readOnly) | - | - | - | Prezzo medio di vendita storico (senza feed automatico dal 2026-08) |
+| `last_price_update` | date (readOnly) | - | - | - | Ultimo aggiornamento di `average_sale_price` |
 | `featured` | checkbox | - | - | `false` | Evidenziato |
-| `isVisible` | checkbox | - | - | `true` | **Mostra/nascondi nello shop** (indipendente dallo stato) |
+| `is_visible` | checkbox | - | - | `true` | **Mostra/nascondi nello shop** (indipendente dallo stato) |
 
 Nota: nel DB c'è una colonna legacy `image_id` non più usata dalla collection
 (resto di uno schema precedente): ignorarla.
 
 **Regole di business attuali:**
-- Lo shop `/shop` mostra i prodotti con `status` in (`listed`, `hold`) **e** `isVisible = true`
+- Lo shop `/shop` mostra i prodotti con `status` in (`listed`, `hold`) **e** `is_visible = true`
   (in pratica: tutti i prodotti con un prezzo > 0 e visibili, anche se "in attesa").
-- `/shop/preorders` mostra i prodotti con `isPreorder = true` **e** `isVisible = true`
-  (da una recente modifica non filtra più sul solo `status = hold`).
-- Il badge "In Attesa" compare quando `isPreorder = true` **oppure** `status = hold`.
+- `/shop/preorders` mostra i prodotti con `is_preorder = true` **e** `is_visible = true`.
+- Il badge "In Attesa" compare quando `is_preorder = true` **oppure** `status = hold`.
 - **Durevolezza**: un prodotto messo in shop resta `listed` finché non viene nascosto
-  via `isVisible` o cambiato manualmente dal dashboard.
+  via `is_visible` o cambiato manualmente dal dashboard.
 - Lo status `sold` attualmente **non** viene ancora impostato dal webhook Stripe
   (è un bug noto / Fase 1 del piano): un item venduto resta `listed` e ricomprerabile.
+- `availability` è derivabile da `is_preorder` / `status` / `quantity` (script `pnpm backfill:google-schema`).
 
 ### 2.2 `categories`
 
@@ -108,11 +111,14 @@ Ordine creato dal webhook Stripe dopo un pagamento riuscito.
 
 | Campo | Tipo | Obblig. | Descrizione |
 |---|---|---|---|
-| `orderId` | text | ✅ | = `session.id` di Stripe (usato come titolo in admin) |
+| `transaction_id` | text | ✅ | = `session.id` di Stripe (usato come titolo in admin e come `transaction_id` GA4) |
 | `status` | select | - | `pending` (default), `paid`, `shipped`, `delivered`, `cancelled` |
 | `items` | array | - | Riga d'ordine: `product` (relationship → `products`, obblig.), `quantity` (number, min 1, obblig.), `price` (number, obblig.) |
-| `total` | number | ✅ | Totale pagato in euro |
-| `stripeSessionId` | text | - | Id sessione Stripe (usato per deduplicare i webhook) |
+| `value` | number | ✅ | Totale pagato in euro (GA4 `value`) |
+| `currency` | text | - | `EUR` (default) |
+| `shipping` | number | - | Costo spedizione (default 0) |
+| `tax` | number | - | Imposta (default 0) |
+| `stripe_session_id` | text | - | Id sessione Stripe (usato per deduplicare i webhook) |
 | `email` | email | ✅ | Email del cliente |
 
 ### 2.6 `users`
@@ -154,7 +160,7 @@ Messaggi dal form contatti.
 ## 4. Chiavi e relazioni (mappa)
 
 ```
-products.itemId ────────────────► chiave inventario, univoca
+products.item_group_id ──────────► chiave Merchant: slug del titolo (varianti dello stesso prodotto)
 products.slug ──────────────────► chiave URL, univoca
 products.category ──────────────► categories.id      (molti-a-uno)
 products.collection ────────────► collections.id     (molti-a-uno)
@@ -164,7 +170,8 @@ header.logo ────────────────────► medi
 ```
 
 - Le relazioni sono referenziate per `id` numerico (intero, auto-increment).
-- La "chiave di negozio" è `itemId` (univoca): originariamente usata dall'import Sheets per l'upsert (find-by-`itemId`), oggi è solo una chiave di inventario.
+- La "chiave di negozio" (Merchant `item_group_id`) è lo slug del `title`: raggruppa le
+  varianti dello stesso prodotto (lingua/grade/prezzo). Non è univoca per design.
 
 ---
 
@@ -172,7 +179,7 @@ header.logo ────────────────────► medi
 
 Due "canali" convivono:
 
-1. **`imageUrl`** - URL esterno (Cardmarket `product-images.s3.cardmarket.com/...`).
+1. **`image_link`** - URL esterno (Cardmarket `product-images.s3.cardmarket.com/...`).
    È in genere una **miniatura 300x300**. Lo storefront lo usa solo come fallback,
    passando da `/api/proxy-image` (proxy pass-through, cache 7gg) per evitare hotlink.
 2. **`images[]`** → collection `media` (Vercel Blob) - immagini **ufficiali e ottimizzate**.
@@ -199,9 +206,9 @@ Due "canali" convivono:
 3. Cliente paga su Stripe.
 4. Stripe invia il webhook `checkout.session.completed` a `/api/stripe/webhook`:
    - verifica firma (`STRIPE_WEBHOOK_SECRET`);
-   - **dedup**: se esiste già un order con lo stesso `stripeSessionId` → esce;
+   - **dedup**: se esiste già un order con lo stesso `stripe_session_id` → esce;
    - recupera i line items, mappa ogni riga al prodotto via `metadata.payloadProductId`;
-   - crea un **Order** con `status='paid'`, `items[]`, `total`, `email`;
+   - crea un **Order** con `status='paid'`, `items[]`, `value`, `currency`, `shipping`, `email`;
    - invia l'email di conferma via Resend (`sendOrderConfirmationEmail`) se configurata;
      se fallisce, logga ma l'ordine resta salvato.
 5. Reindirizzamento a `/checkout/success?session_id=...`.
@@ -219,21 +226,21 @@ direttamente nel dashboard (`/dashboard`, tab "Prodotti") via server action
 ### 6.3 Prezzi medi di vendita
 
 Il cron `/api/cron/prices` (foglio "sales") è stato **rimosso** insieme al flusso
-Sheets. `products.averageSalePrice` e `lastPriceUpdate` restano nel DB ma non hanno
+Sheets. `products.average_sale_price` e `last_price_update` restano nel DB ma non hanno
 più un feed automatico.
 
-Il PDP mostra "Prezzo medio di vendita" se `averageSalePrice` > 0.
+Il PDP mostra "Prezzo medio di vendita" se `average_sale_price` > 0.
 
-### 6.4 Preordini / "In Attesa" (`isPreorder`)
+### 6.4 Preordini / "In Attesa" (`is_preorder`)
 
-- Il campo `isPreorder` si imposta manualmente dal dashboard (modale prodotto).
-- `/shop/preorders` mostra i prodotti con `isPreorder=true` e `isVisible=true`.
-- Il badge "In Attesa" è mostrato quando `isPreorder=true` o `status=hold`.
+- Il campo `is_preorder` si imposta manualmente dal dashboard (modale prodotto).
+- `/shop/preorders` mostra i prodotti con `is_preorder=true` e `is_visible=true`.
+- Il badge "In Attesa" è mostrato quando `is_preorder=true` o `status=hold`.
 - Per decisione, i preordini **restano acquistabili** (add to cart attivo).
 
 ### 6.5 Immagini
 
-Le immagini si impostano via `imageUrl` dal dashboard (o dal pannello Payload). Il
+Le immagini si impostano via `image_link` dal dashboard (o dal pannello Payload). Il
 route `/api/admin/backfill-images` è stato rimosso con il flusso legacy.
 
 ### 6.6 Dashboard (`/dashboard`)
@@ -249,11 +256,11 @@ Pannello di gestione interno in `src/app/dashboard/` con auth **reale**:
   whitelist** `DASHBOARD_GOOGLE_EMAILS` (lista separata da virgole). L'utente loggato è
   registrato nel cookie come `google:<email>`.
 - **Panoramica**: conteggi prodotti per stato (`listed`/`hold`/`sold`/`visibili`/
-  stock basso ≤1), valore inventario (somma `storePrice × quantity` dei `listed`
-  visibili), ordini per stato e fatturato (somma `total` di `paid`+`shipped`+
+  stock basso ≤1), valore inventario (somma `price × quantity` dei `listed`
+  visibili), ordini per stato e fatturato (somma `value` di `paid`+`shipped`+
   `delivered`), ultimi 8 ordini.
-- **Prodotti**: ricerca (titolo/itemId/descrizione), prodotti **raggruppati per
-  `title`** in gruppi espandibili (variants): ogni riga mostra lingua, condizione,
+- **Prodotti**: ricerca (titolo/item_group_id/descrizione), prodotti **raggruppati per
+  `title`** in gruppi espandibili (variants): ogni riga mostra lingua, grado,
   prezzo, quantità e stato. Azioni: toggle visibilità shop (tutto il gruppo),
   modifica (modale con tutti i campi via `updateProduct`), creazione ("Nuovo
   Prodotto" via `createProduct`), eliminazione di singole varianti o dell'intero
@@ -293,12 +300,14 @@ Tutte le server action di lettura/scrittura chiamano `requireAuth()` e rispondon
 
 ## 8. Prossimi passi (roadmap concordata)
 
-1. **Sold flow** - webhook marca `status='sold'`, `quantity=0`, `isVisible=false`;
-   `groupProducts` calcola prezzi/stock solo dai varianti `listed`; shop filtra per `isVisible`.
-2. **Schema esteso** - nuovi campi Products (purchaseDate, holdEndDate, targetPrice,
-   expectedRoi, marketPrice, notes, soldDate, salePrice…) + collection `Sales`
-   (piattaforma, commissioni, shipping, profitto, ROI reale, stripeSessionId).
-3. **Flusso inserimento manuale** - form admin "Nuovo item" con generazione `itemId`/`slug`.
+1. **Sold flow** - webhook marca `status='sold'`, `quantity=0`, `is_visible=false`;
+   `groupProducts` calcola prezzi/stock solo dai varianti `listed`; shop filtra per `is_visible`.
+2. **Feed Google Merchant** - feed prodotti (`price`, `sale_price`, `cost_of_goods_sold`,
+   `availability`, `condition`, `item_group_id`, `product_type`, `google_product_category`)
+   pronti per l'export (schema già allineato, 2026-08-09).
+3. **Schema esteso** - nuovi campi Products (purchaseDate, holdEndDate, targetPrice,
+   expectedRoi, marketPrice, notes, soldDate…) + collection `Sales`
+   (piattaforma, commissioni, shipping, profitto, ROI reale, stripe_session_id).
 4. ✅ **Rimozione Google Sheets** - fatto (cron import/prices, `/admin/products`,
    `google-sheets.ts`, `parse-csv.ts`, `image-import.ts`, `api-auth.ts`, script
    `import-products.ts` rimossi; gestione prodotti nel dashboard).

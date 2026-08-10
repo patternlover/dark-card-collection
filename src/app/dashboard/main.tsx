@@ -70,7 +70,7 @@ function ProductsTab() {
     setLoading(true)
     try {
       const res = await searchProducts({ search: q })
-      setProducts(res)
+      setProducts(res.docs)
     } catch {
       setMessage({ text: 'Errore nel caricamento prodotti', type: 'error' })
     } finally {
@@ -99,7 +99,7 @@ function ProductsTab() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') load(query)
             }}
-            placeholder="Cerca per titolo, itemId o descrizione..."
+            placeholder="Cerca per titolo, item_group_id o descrizione..."
             className="w-full rounded-lg border-2 border-zinc-700 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-50 outline-none focus:border-[var(--accent)]"
           />
         </div>
@@ -227,7 +227,7 @@ function OrdersTab() {
             ) : (
               orders.map((o) => (
                 <tr key={o.id} className="hover:bg-zinc-900/50">
-                  <td className="px-4 py-3 font-semibold text-zinc-100">{o.orderId || o.id}</td>
+                          <td className="px-4 py-3 font-semibold text-zinc-100">{o.transactionId || o.id}</td>
                   <td className="px-4 py-3 text-zinc-400">
                     {new Date(o.createdAt).toLocaleDateString('it-IT', {
                       day: '2-digit',
@@ -239,7 +239,7 @@ function OrdersTab() {
                   </td>
                   <td className="px-4 py-3 text-zinc-400">{o.email || '—'}</td>
                   <td className="px-4 py-3 text-zinc-400">{o.itemCount}</td>
-                  <td className="px-4 py-3 font-semibold text-zinc-100">{euro.format(o.total || 0)}</td>
+                          <td className="px-4 py-3 font-semibold text-zinc-100">{euro.format(o.value || 0)}</td>
                   <td className="px-4 py-3">
                     <select
                       value={o.status}
@@ -492,7 +492,7 @@ export default function DashboardMain() {
                     <tbody className="divide-y divide-zinc-800 bg-zinc-950/60">
                       {overview.recentOrders.map((o) => (
                         <tr key={o.id} className="hover:bg-zinc-900/50">
-                          <td className="px-4 py-3 font-semibold text-zinc-100">{o.orderId || o.id}</td>
+                  <td className="px-4 py-3 font-semibold text-zinc-100">{o.transactionId || o.id}</td>
                           <td className="px-4 py-3 text-zinc-400">
                             {new Date(o.createdAt).toLocaleDateString('it-IT', {
                               day: '2-digit',
@@ -503,7 +503,7 @@ export default function DashboardMain() {
                             })}
                           </td>
                           <td className="px-4 py-3 text-zinc-400">{o.itemCount}</td>
-                          <td className="px-4 py-3 font-semibold text-zinc-100">{euro.format(o.total || 0)}</td>
+                  <td className="px-4 py-3 font-semibold text-zinc-100">{euro.format(o.value || 0)}</td>
                           <td className={`px-4 py-3 font-semibold ${STATUS_COLORS[o.status] ?? 'text-zinc-100'}`}>
                             {STATUS_LABELS[o.status] ?? o.status}
                           </td>

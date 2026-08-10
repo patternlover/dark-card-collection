@@ -13,14 +13,14 @@ export function ProductCard({ group }: ProductCardProps) {
   const collectionName = group.collection?.name || ''
 
   const cheapest = group.products.find(
-    (p: any) => (p.status === 'listed' || p.status === 'hold') && p.storePrice && p.storePrice > 0,
+    (p: any) => (p.status === 'listed' || p.status === 'hold') && p.price && p.price > 0,
   )
 
   const isPreorderOrHold = group.products.some(
-    (p: any) => p.isPreorder || p.status === 'hold',
+    (p: any) => p.is_preorder || p.status === 'hold',
   )
-  const isMint = group.products.some((p: any) => p.condition === 'mint')
-  const isGraded = group.products.some((p: any) => p.condition === 'graded')
+  const isMint = group.products.some((p: any) => p.grade === 'mint')
+  const isGraded = group.products.some((p: any) => p.grade === 'graded')
 
   return (
     <div className="group relative flex h-full flex-col border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)]">

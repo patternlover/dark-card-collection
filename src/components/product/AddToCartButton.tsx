@@ -14,10 +14,9 @@ interface AddToCartButtonProps {
     title: string
     slug: string
     price: number
-    storePrice?: number | null
     image?: { url: string; alt: string } | null
     images?: Array<{ image?: { url: string; alt: string } | null }> | null
-    imageUrl?: string | null
+    image_link?: string | null
     status: string
   }
   maxQuantity?: number
@@ -29,7 +28,7 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
   const [burst, setBurst] = useState<{ x: number; y: number; id: number } | null>(null)
   const { addItem } = useCart()
 
-  const displayPrice = product.storePrice || 0
+  const displayPrice = product.price || 0
   const isAvailable = (product.status === 'listed' || product.status === 'hold') && displayPrice > 0
   const maxQty = Math.max(1, Math.floor(maxQuantity))
 

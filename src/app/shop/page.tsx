@@ -24,7 +24,7 @@ export default async function ShopPage() {
     const result = await payload.find({
       collection: 'products',
       where: {
-        AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }],
+        AND: [{ status: { in: ['listed', 'hold'] } }, { is_visible: { equals: true } }],
       },
       limit: 50,
       sort: '-createdAt',

@@ -11,7 +11,7 @@ import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 interface OrderItem {
-  product: { title: string; imageUrl?: string | null; images?: Array<{ image?: { url: string } | null }>; image?: { url: string } | null } | null
+  product: { title: string; image_link?: string | null; images?: Array<{ image?: { url: string } | null }>; image?: { url: string } | null } | null
   quantity: number
   price: number
 }
@@ -25,8 +25,8 @@ function SuccessContent() {
   const { clearCart } = useCart()
   const clearedRef = useRef(false)
   const [order, setOrder] = useState<{
-    orderId: string
-    total: number
+    transactionId: string
+    value: number
     email: string
     items: OrderItem[]
   } | null>(null)
@@ -52,7 +52,7 @@ function SuccessContent() {
           if (!alreadyTracked) {
             sessionStorage.setItem(TRACKED_KEY, sessionId)
             trackPurchase(
-              data.order.orderId,
+              data.order.transactionId,
               data.order.items.map((item: OrderItem) => ({
                 item_id: item.product?.title || '',
                 item_name: item.product?.title || '',
@@ -60,7 +60,7 @@ function SuccessContent() {
                 currency: 'EUR',
                 quantity: item.quantity,
               })),
-              data.order.total,
+              data.order.value,
             )
           }
         }
@@ -111,13 +111,13 @@ function SuccessContent() {
               Dettagli ordine
             </h2>
             <p className="text-xs text-zinc-600 mb-4">
-              Ordine #{order.orderId.slice(-8).toUpperCase()}
+              Ordine #{order.transactionId.slice(-8).toUpperCase()}
             </p>
             <div className="space-y-2 text-sm">
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  {proxyImageUrl(item.product?.imageUrl || item.product?.images?.[0]?.image?.url || item.product?.image?.url) ? (
-                    <img src={proxyImageUrl(item.product?.imageUrl || item.product?.images?.[0]?.image?.url || item.product?.image?.url)!} alt={item.product?.title || ''} width={40} height={40} className="h-10 w-10 rounded object-cover" />
+                  {proxyImageUrl(item.product?.image_link || item.product?.images?.[0]?.image?.url || item.product?.image?.url) ? (
+                    <img src={proxyImageUrl(item.product?.image_link || item.product?.images?.[0]?.image?.url || item.product?.image?.url)!} alt={item.product?.title || ''} width={40} height={40} className="h-10 w-10 rounded object-cover" />
                   ) : (
                     <div className="h-10 w-10 rounded bg-zinc-800" />
                   )}
@@ -131,7 +131,7 @@ function SuccessContent() {
               ))}
               <div className="border-t border-zinc-800 pt-2 flex justify-between font-medium">
                 <span className="text-white">Totale</span>
-                <span className="text-white">€{order.total.toFixed(2)}</span>
+                <span className="text-white">€{order.value.toFixed(2)}</span>
               </div>
             </div>
           </div>

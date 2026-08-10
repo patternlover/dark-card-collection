@@ -92,11 +92,13 @@ export async function POST(req: Request) {
         await payload.create({
           collection: 'orders',
           data: {
-            orderId: session.id,
+            transaction_id: session.id,
             status: 'paid',
             items: orderItems as any,
-            total: (session.amount_total || 0) / 100,
-            stripeSessionId: session.id,
+            value: (session.amount_total || 0) / 100,
+            currency: 'EUR',
+            shipping: (session.shipping_cost?.amount_total || 0) / 100,
+            stripe_session_id: session.id,
             email: session.customer_details?.email || '',
           },
         })

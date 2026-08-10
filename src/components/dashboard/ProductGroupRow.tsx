@@ -29,7 +29,7 @@ const STATUS_BADGES: Record<string, string> = {
   sold: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/40',
 }
 
-const CONDITION_LABELS: Record<string, string> = {
+const GRADE_LABELS: Record<string, string> = {
   mint: 'Mint',
   'near-mint': 'NM',
   'lightly-played': 'LP',
@@ -92,7 +92,7 @@ export function ProductGroupRow({
 
   const anyVisible = group.products.some((p) => p.isVisible !== false)
   const statuses = Array.from(new Set(group.products.map((p) => p.status || 'listed')))
-  const firstItemId = group.products.find((p) => p.itemId)?.itemId || ''
+  const firstItemGroupId = group.products.find((p) => p.item_group_id)?.item_group_id || ''
   const categoryName = group.category?.name || ''
   const collectionName = group.collection?.name || ''
 
@@ -160,7 +160,7 @@ export function ProductGroupRow({
         >
           <p className="truncate text-sm font-bold text-white hover:text-[var(--accent)]">{group.title}</p>
           <p className="mt-0.5 truncate text-xs text-zinc-500">
-            {[firstItemId, categoryName, collectionName].filter(Boolean).join(' · ') || '—'}
+            {[firstItemGroupId, categoryName, collectionName].filter(Boolean).join(' · ') || '—'}
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1">
             {statuses.map((s) => (
@@ -231,14 +231,14 @@ export function ProductGroupRow({
                   <p className="mt-0.5 text-xs text-zinc-500">
                     {[
                       p.language ? (LANGUAGE_LABELS[p.language] || p.language) : null,
-                      p.condition ? (CONDITION_LABELS[p.condition] || p.condition) : null,
-                      p.itemId ? `ID ${p.itemId}` : null,
+                      p.grade ? (GRADE_LABELS[p.grade] || p.grade) : null,
+                      p.item_group_id ? `ID ${p.item_group_id}` : null,
                     ]
                       .filter(Boolean)
                       .join(' · ') || '—'}
                   </p>
                 </div>
-                <p className="text-sm font-bold text-white">{euro.format(p.storePrice ?? 0)}</p>
+                <p className="text-sm font-bold text-white">{euro.format(p.price ?? 0)}</p>
                 <p className="w-10 text-right text-xs text-zinc-500">qty {p.quantity ?? 0}</p>
                 <StatusBadge status={p.status || 'listed'} />
                 <div className="flex items-center gap-2">

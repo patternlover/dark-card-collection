@@ -3,11 +3,11 @@ import type { CollectionConfig } from 'payload'
 export const Orders: CollectionConfig = {
   slug: 'orders',
   admin: {
-    useAsTitle: 'orderId',
+    useAsTitle: 'transaction_id',
   },
   fields: [
     {
-      name: 'orderId',
+      name: 'transaction_id',
       type: 'text',
       required: true,
     },
@@ -47,12 +47,27 @@ export const Orders: CollectionConfig = {
       ],
     },
     {
-      name: 'total',
+      name: 'value',
       type: 'number',
       required: true,
     },
     {
-      name: 'stripeSessionId',
+      name: 'currency',
+      type: 'text',
+      defaultValue: 'EUR',
+    },
+    {
+      name: 'shipping',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      name: 'tax',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      name: 'stripe_session_id',
       type: 'text',
       unique: true,
     },

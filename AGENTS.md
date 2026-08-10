@@ -20,7 +20,6 @@
 - Lint/typecheck: `pnpm lint` (= `tsc --noEmit`)
 - Test: `pnpm test` (unit test in `tests/`)
 - Build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build`
-- Admin user: `ADMIN_EMAIL=... ADMIN_PASSWORD=... pnpm create-admin`
 
 ## Regole
 - Usa SEMPRE `pnpm`, mai npm.
@@ -28,7 +27,7 @@
 - Non cambiare mai git user.name/user.email.
 - Modifiche a collections Payload richiedono: `payload generate:types` + nuova migration (`payload migrate:create`) prima di buildare.
 - I prodotti vengono raggruppati per `title` (variants) — la logica è in `src/lib/group-products.ts`. Non esporre i variants nel frontend: shop e PDP mostrano solo il "parent product".
-- Filtro visibilità storefront: `AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }]`.
+- Filtro visibilità storefront: `AND: [{ status: { in: ['listed', 'hold'] } }, { is_visible: { equals: true } }]`.
 - Il checkout crea `price_data` ad-hoc (niente Stripe Products); il webhook usa `product.metadata.payloadProductId` per creare l'order.
 - Payload `id` è `string | number`: castare SEMPRE con `as number` quando si creano ordini.
 - Test: se tocchi `group-products.ts`, `slug.ts` o la logica sticky ATC, aggiorna i test in `tests/`.
@@ -38,7 +37,7 @@
 - `src/app/` → route (shop, products/[slug], cart, checkout, dashboard, api/*)
 - `src/components/` → layout/, product/, sections/, ui/, dashboard/
 - `src/lib/` → logica pura e client: payload, stripe, group-products, slug, dash-auth, db-query, order-email
-- `src/payload/collections/` → Products, Categories, Collections, Orders, Users, Media, Messages
+- `src/payload/collections/` → Products, Categories, Collections, Orders, Media, Messages
 - `src/payload/globals/` → SiteSettings, Header
 - `src/migrations/` → migration Payload (genera da build)
 - `tests/` → unit test Vitest

@@ -175,11 +175,10 @@ src/
 │   └── stripe.ts                   # Stripe client (lazy getStripe)
 ├── payload/
 │   ├── collections/
-│   │   ├── Products/index.ts       # 20 fields (see schema below)
+│   │   ├── Products/index.ts       # 22 fields (see schema below)
 │   │   ├── Categories/index.ts     # name, slug, description
 │   │   ├── Collections/index.ts    # name, slug, description, releaseDate
-│   │   ├── Orders/index.ts         # orderId, items, status, total, stripeSessionId
-│   │   ├── Users/index.ts          # email, password
+│   │   ├── Orders/index.ts         # transaction_id, items, status, value, stripe_session_id
 │   │   ├── Media/index.ts          # upload field
 │   │   └── Messages/index.ts       # name, email, subject, message, read, replied
 │   └── globals/
@@ -194,7 +193,9 @@ src/
     ├── 20260720_add_is_visible.ts
     ├── 20260802_202035.ts
     ├── 20260802_202035.json
-    └── 20260807_add_unique_stripe_session.ts
+    ├── 20260807_add_unique_stripe_session.ts
+    └── 20260809_google_schema.ts
+└── ... (nuove migration generate da `pnpm build`)
 ```
 
 ```
@@ -208,7 +209,7 @@ vercel.json
 package.json
 .env.example
 scripts/                          # at repo root (not under src/)
-└── create-admin.mjs
+└── backfill-google-schema.ts     # backfill item_group_id/availability + dedup righe duplicate
 ```
 
 ## Payload Collections Schema
@@ -218,23 +219,28 @@ scripts/                          # at repo root (not under src/)
 |-------|------|-------|
 | title | text | required |
 | slug | text | required, unique |
-| itemId | text | unique identifier (es. PUR-0001-01) |
-| storePrice | number | actual selling price |
-| price | number | purchase cost (default 0) |
-| compareAtPrice | number | strikethrough/target price |
+| item_group_id | text | Google Merchant item_group_id: slug del titolo (varianti stesso prodotto) |
+| price | number | actual selling price (Merchant price) |
+| sale_price | number | strikethrough/compare price (Merchant sale_price) |
+| cost_of_goods_sold | number | purchase cost (Merchant cost_of_goods_sold) |
+| availability | select | in_stock / out_of_stock / preorder / backorder (Merchant availability) |
 | status | select | listed / hold / sold |
-| condition | select | mint / near-mint / lightly-played / moderately-played / heavily-played / damaged / graded |
+| condition | select | new / refurbished / used (Merchant condition) |
+| grade | select | mint / near-mint / lightly-played / moderately-played / heavily-played / damaged / graded |
 | category | relationship → categories | |
 | collection | relationship → collections | |
+| product_type | text | Merchant product_type |
+| google_product_category | text | Merchant google_product_category (ID o percorso tassonomia) |
 | language | select | italian / english / chinese / japanese |
-| cardNumber | text | |
+| card_number | text | |
 | rarity | select | common / uncommon / rare / rare-holo / ultra-rare / secret-rare |
 | quantity | number | default 1 |
-| image | upload → media | |
-| averageSalePrice | number | auto-calculated from sales |
-| lastPriceUpdate | date | |
+| image_link | text | URL esterno (Cardmarket), fallback rispetto a images[] |
+| images | array → media | immagini ufficiali su Vercel Blob |
+| average_sale_price | number | auto-calculated from sales |
+| last_price_update | date | |
 | featured | checkbox | default false |
-| isVisible | checkbox | default true, controls shop visibility independently of status |
+| is_visible | checkbox | default true, controls shop visibility independently of status |
 
 ### Payload `id` type is `string | number` - always cast with `as number` when creating orders.
 
@@ -244,21 +250,21 @@ scripts/                          # at repo root (not under src/)
 2. **Cart**: localStorage via CartProvider context, not server-side
 3. **Checkout**: Creates ad-hoc Stripe price_data (no Stripe Products), passes Payload product IDs in metadata
 4. **Webhook**: Reads `product.metadata.payloadProductId` from Stripe to create order with correct Payload relationship
-5. **Products collection**: Both LISTED and HOLD products can be shown on shop, controlled by `isVisible` field
-6. **Storefront visibility filter**: `AND: [{ status: { in: ['listed', 'hold'] } }, { isVisible: { equals: true } }]` on shop page (hold products with a price stay visible)
+5. **Products collection**: Both LISTED and HOLD products can be shown on shop, controlled by `is_visible` field
+6. **Storefront visibility filter**: `AND: [{ status: { in: ['listed', 'hold'] } }, { is_visible: { equals: true } }]` on shop page (hold products with a price stay visible)
 
 ## Variant Products Logic
 
-Products are grouped by `title` as variants (same title, different `itemId`, `language`, `condition`, `storePrice`). Variants represent the same product purchased from suppliers on different dates/orders. Products are created/edited directly in the dashboard (`/dashboard`, tab "Prodotti"); there is no external import source.
+Products are grouped by `title` as variants (same title, different `item_group_id`, `language`, `grade`, `price`). Variants represent the same product purchased from suppliers on different dates/orders. Products are created/edited directly in the dashboard (`/dashboard`, tab "Prodotti"); there is no external import source.
 
 - **Variants are NOT exposed to customers** - shop and PDP show only the "parent product" (grouped by `title`)
 - **Stock** = sum of `quantity` across all variants with the same title
-- **Selling price** = minimum `storePrice` across variants
+- **Selling price** = minimum `price` across variants
 - **Grouping** is done by `groupProducts()` in `src/lib/group-products.ts`
-- **PDP** fetches all variants by title, groups them, and shows aggregate info (total stock, available languages/conditions as text)
+- **PDP** fetches all variants by title, groups them, and shows aggregate info (total stock, available languages/grades as text)
 - **Admin** (`/dashboard`, tab "Prodotti") shows variants in expandable groups - this is the ONLY place variants are visible
 - **Delete variant/group**: removes from Payload only
-- **Visibility toggle**: `isVisible` field controls whether a product group appears in the shop. Admin toggles via eye icon in the dashboard.
+- **Visibility toggle**: `is_visible` field controls whether a product group appears in the shop. Admin toggles via eye icon in the dashboard.
 
 ## Known Issues / TODO
 

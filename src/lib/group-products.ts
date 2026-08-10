@@ -37,11 +37,11 @@ export function groupProducts(products: any[]): ProductGroup[] {
       const langA = LANG_ORDER[a.language] ?? 99
       const langB = LANG_ORDER[b.language] ?? 99
       if (langA !== langB) return langA - langB
-      return (a.storePrice || Infinity) - (b.storePrice || Infinity)
+      return (a.price || Infinity) - (b.price || Infinity)
     })
 
     const prices = sorted
-      .map((p: any) => p.storePrice)
+      .map((p: any) => p.price)
       .filter((p: any) => p != null && p > 0)
 
     const sellingPrice = prices.length > 0 ? Math.min(...prices) : 0
@@ -51,7 +51,7 @@ export function groupProducts(products: any[]): ProductGroup[] {
       (p: any) =>
         p.images?.[0]?.image?.url ||
         (typeof p.image === 'object' && p.image?.url) ||
-        p.imageUrl,
+        p.image_link,
     )
     const imageInfo = getProductImageInfo(firstWithImage || {})
 

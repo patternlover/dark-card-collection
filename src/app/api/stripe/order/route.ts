@@ -34,7 +34,7 @@ export async function GET(req: Request) {
 
   const orders = await payload.find({
     collection: 'orders',
-    where: { stripeSessionId: { equals: sessionId } },
+    where: { stripe_session_id: { equals: sessionId } },
     limit: 1,
     depth: 2,
   })
@@ -50,8 +50,8 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     order: {
-      orderId: order.orderId,
-      total: order.total,
+      transactionId: order.transaction_id,
+      value: order.value,
       email: order.email,
       status: order.status,
       items: order.items,

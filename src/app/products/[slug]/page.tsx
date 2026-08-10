@@ -40,7 +40,7 @@ export async function generateMetadata({
     if (!product) return { title: 'Prodotto non trovato' }
 
     const price =
-      product.storePrice && product.storePrice > 0 ? `€${product.storePrice.toFixed(2)}` : ''
+      product.price && product.price > 0 ? `€${product.price.toFixed(2)}` : ''
     const collectionName =
       typeof product.collection === 'object' && product.collection?.name
         ? product.collection.name
@@ -57,7 +57,7 @@ export async function generateMetadata({
 
     const firstImage = product.images?.[0]?.image
     const imageUrl = absoluteUrl(
-      product.imageUrl || (firstImage && typeof firstImage === 'object' ? firstImage.url : null),
+      product.image_link || (firstImage && typeof firstImage === 'object' ? firstImage.url : null),
     )
 
     return {
@@ -99,7 +99,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
   japanese: 'Giapponese',
 }
 
-const CONDITION_LABELS: Record<string, string> = {
+const GRADE_LABELS: Record<string, string> = {
   mint: 'Sigillato',
   'near-mint': 'Near Mint',
   'lightly-played': 'Lightly Played',
@@ -165,7 +165,7 @@ export default async function ProductPage({
 
   if (!product || !group) notFound()
 
-  const displayPrice = product.storePrice || 0
+  const displayPrice = product.price || 0
 
   const statusLabels: Record<string, string> = {
     listed: 'Disponibile',
@@ -201,24 +201,24 @@ export default async function ProductPage({
       .map((p: any) => LANGUAGE_LABELS[p.language] || p.language)
   )]
 
-  const availableConditions = [...new Set(
+  const availableGrades = [...new Set(
     group.products
-      .filter((p: any) => p.status === 'listed' && p.condition)
-      .map((p: any) => CONDITION_LABELS[p.condition] || p.condition)
+      .filter((p: any) => p.status === 'listed' && p.grade)
+      .map((p: any) => GRADE_LABELS[p.grade] || p.grade)
   )]
 
   const imgSrc = group.imagePdp || group.image
 
   const buyableProduct =
     group.products.find(
-      (p: any) => (p.status === 'listed' || p.status === 'hold') && p.storePrice && p.storePrice > 0,
+      (p: any) => (p.status === 'listed' || p.status === 'hold') && p.price && p.price > 0,
     ) || product
 
   const badges = (
     <div className="flex flex-wrap gap-2">
-      {product.condition === 'mint' && <Badge variant="new">Sigillato</Badge>}
-      {product.condition === 'graded' && <Badge variant="bestseller">Graded</Badge>}
-      {(product.isPreorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
+      {product.grade === 'mint' && <Badge variant="new">Sigillato</Badge>}
+      {product.grade === 'graded' && <Badge variant="bestseller">Graded</Badge>}
+      {(product.is_preorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
       <Badge variant="default">
         {statusLabels[product.status] || product.status}
       </Badge>
@@ -239,11 +239,17 @@ export default async function ProductPage({
   const availability =
     product.status === 'sold'
       ? 'https://schema.org/OutOfStock'
-      : product.status === 'hold' || product.isPreorder
+      : product.status === 'hold' || product.is_preorder
         ? 'https://schema.org/PreOrder'
         : 'https://schema.org/InStock'
   const schemaImageUrl = absoluteUrl(group.imagePdp || group.image)
   const priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  const itemCondition =
+    product.condition === 'refurbished'
+      ? 'https://schema.org/RefurbishedCondition'
+      : product.condition === 'new'
+        ? 'https://schema.org/NewCondition'
+        : 'https://schema.org/UsedCondition'
 
   const jsonLd = [
     {
@@ -272,7 +278,7 @@ export default async function ProductPage({
       name: product.title,
       ...(schemaImageUrl ? { image: [schemaImageUrl] } : {}),
       description: product.description || `${product.title} - Dark Card Collection`,
-      ...(product.itemId ? { sku: product.itemId } : {}),
+      ...(product.item_group_id ? { sku: product.item_group_id } : {}),
       offers: {
         '@type': 'Offer',
         '@id': `${productUrl}#offer`,
@@ -280,7 +286,7 @@ export default async function ProductPage({
         priceCurrency: 'EUR',
         price: displayPrice > 0 ? displayPrice.toFixed(2) : '0',
         availability,
-        itemCondition: 'https://schema.org/NewCondition',
+        itemCondition,
         priceValidUntil,
         seller: { '@type': 'Organization', name: 'Dark Card Collection', url: SITE_URL },
         shippingDetails: {
@@ -365,9 +371,9 @@ export default async function ProductPage({
               <span className="text-3xl font-black text-[var(--accent)]">
                 {displayPrice > 0 ? `€${displayPrice.toFixed(2)}` : 'Prezzo in arrivo'}
               </span>
-              {product.compareAtPrice && product.compareAtPrice > displayPrice && (
+              {product.sale_price && product.sale_price > displayPrice && (
                 <span className="text-lg font-medium text-zinc-500 line-through">
-                  €{product.compareAtPrice.toFixed(2)}
+                  €{product.sale_price.toFixed(2)}
                 </span>
               )}
               {group.totalQuantity > 0 && (
@@ -383,9 +389,9 @@ export default async function ProductPage({
               </div>
             )}
 
-            {availableConditions.length > 0 && (
+            {availableGrades.length > 0 && (
               <div className="text-sm text-zinc-400">
-                <span className="text-zinc-500">Condizioni:</span> {availableConditions.join(', ')}
+                <span className="text-zinc-500">Condizioni:</span> {availableGrades.join(', ')}
               </div>
             )}
 
@@ -410,14 +416,14 @@ export default async function ProductPage({
               </div>
             )}
 
-            {product.averageSalePrice && (
+            {product.average_sale_price && (
               <div className="rounded-lg border border-zinc-800 p-4">
                 <p className="text-sm text-zinc-400">
-                  Prezzo medio di vendita: <span className="font-bold text-white">€{product.averageSalePrice.toFixed(2)}</span>
+                  Prezzo medio di vendita: <span className="font-bold text-white">€{product.average_sale_price.toFixed(2)}</span>
                 </p>
-                {product.lastPriceUpdate && (
+                {product.last_price_update && (
                   <p className="mt-1 text-xs text-zinc-600">
-                    Aggiornato: {new Date(product.lastPriceUpdate).toLocaleDateString('it-IT')}
+                    Aggiornato: {new Date(product.last_price_update).toLocaleDateString('it-IT')}
                   </p>
                 )}
               </div>

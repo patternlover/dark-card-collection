@@ -75,7 +75,7 @@ export async function POST(req: Request) {
 
       const anyProduct = product as any
 
-      if (anyProduct.isVisible === false) {
+      if (anyProduct.is_visible === false) {
         return NextResponse.json(
           { error: 'Prodotto non disponibile' },
           { status: 400 }
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
         )
       }
 
-      const unitPrice = Number(anyProduct.storePrice)
+      const unitPrice = Number(anyProduct.price)
       if (!unitPrice || unitPrice <= 0) {
         return NextResponse.json(
           { error: 'Prezzo non disponibile' },

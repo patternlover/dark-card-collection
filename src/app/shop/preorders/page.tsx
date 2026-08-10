@@ -24,7 +24,7 @@ export default async function PreordersPage() {
     const result = await payload.find({
       collection: 'products',
       where: {
-        AND: [{ isPreorder: { equals: true } }, { isVisible: { equals: true } }],
+        AND: [{ is_preorder: { equals: true } }, { is_visible: { equals: true } }],
       },
       limit: 50,
       sort: '-createdAt',
