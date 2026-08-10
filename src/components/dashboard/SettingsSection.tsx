@@ -9,6 +9,18 @@ import {
   updateSiteSettings,
   type HeaderNavItem,
 } from '@/app/dashboard/actions'
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Field,
+  Input,
+  PageHeader,
+  Textarea,
+} from './ui'
 
 export function SettingsSection() {
   const [siteName, setSiteName] = useState('')
@@ -61,99 +73,80 @@ export function SettingsSection() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-black text-zinc-50">Impostazioni</h1>
-        <p className="mt-1 text-sm text-zinc-400">Dati del sito e voci di navigazione dell'header.</p>
-      </div>
+      <PageHeader title="Impostazioni" description="Dati del sito e voci di navigazione dell'header." />
 
-      {error ? (
-        <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-          {error}
-        </p>
-      ) : null}
-      {notice ? (
-        <p className="rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-400">
-          {notice}
-        </p>
-      ) : null}
+      {error ? <Alert tone="danger">{error}</Alert> : null}
+      {notice ? <Alert tone="success">{notice}</Alert> : null}
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Caricamento...</p>
+        <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
       ) : (
         <>
-          <section className="rounded-xl border-2 border-zinc-800 bg-zinc-950/60 p-5">
-            <h2 className="text-lg font-black text-zinc-100">Informazioni sito</h2>
-            <div className="mt-4 space-y-3">
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-                  Nome sito
-                </span>
-                <input
+          <Card>
+            <CardHeader>
+              <CardTitle>Informazioni sito</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Field label="Nome sito" htmlFor="site-name">
+                <Input
+                  id="site-name"
                   value={siteName}
                   onChange={(e) => setSiteName(e.target.value)}
-                  className="w-full rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 outline-none focus:border-[var(--accent)]"
                 />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-zinc-500">
-                  Descrizione / tagline
-                </span>
-                <textarea
+              </Field>
+              <Field label="Descrizione / tagline" htmlFor="site-description">
+                <Textarea
+                  id="site-description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 outline-none focus:border-[var(--accent)]"
                 />
-              </label>
-            </div>
-          </section>
+              </Field>
+            </CardContent>
+          </Card>
 
-          <section className="rounded-xl border-2 border-zinc-800 bg-zinc-950/60 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-black text-zinc-100">Menu header</h2>
-              <button
-                onClick={addNav}
-                className="flex items-center gap-1.5 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-[var(--accent)] hover:text-[var(--accent)]"
-              >
+          <Card>
+            <CardHeader>
+              <CardTitle>Menu header</CardTitle>
+              <Button variant="secondary" size="sm" onClick={addNav}>
                 <Plus className="h-3.5 w-3.5" /> Aggiungi voce
-              </button>
-            </div>
-            <div className="mt-4 space-y-2">
-              {navItems.map((item, i) => (
-                <div key={i} className="flex flex-wrap items-center gap-2">
-                  <input
-                    value={item.label}
-                    onChange={(e) => updateNav(i, { label: e.target.value })}
-                    placeholder="Etichetta"
-                    className="min-w-[160px] flex-1 rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 outline-none focus:border-[var(--accent)]"
-                  />
-                  <input
-                    value={item.url}
-                    onChange={(e) => updateNav(i, { url: e.target.value })}
-                    placeholder="/pagina"
-                    className="min-w-[160px] flex-1 rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-50 outline-none focus:border-[var(--accent)]"
-                  />
-                  <button
-                    onClick={() => removeNav(i)}
-                    disabled={navItems.length <= 1}
-                    className="rounded-lg border-2 border-zinc-700 p-2 text-zinc-400 hover:border-red-500/50 hover:text-red-400 disabled:opacity-30"
-                    aria-label="Rimuovi voce"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {navItems.map((item, i) => (
+                  <div key={i} className="flex flex-wrap items-center gap-2">
+                    <Input
+                      value={item.label}
+                      onChange={(e) => updateNav(i, { label: e.target.value })}
+                      placeholder="Etichetta"
+                      className="min-w-[160px] flex-1"
+                    />
+                    <Input
+                      value={item.url}
+                      onChange={(e) => updateNav(i, { url: e.target.value })}
+                      placeholder="/pagina"
+                      className="min-w-[160px] flex-1"
+                    />
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => removeNav(i)}
+                      disabled={navItems.length <= 1}
+                      aria-label="Rimuovi voce"
+                      className="p-2 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="flex justify-end">
-            <button
-              onClick={save}
-              disabled={busy}
-              className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2.5 text-sm font-bold text-black disabled:opacity-50"
-            >
+            <Button onClick={save} disabled={busy}>
               <Save className="h-4 w-4" /> {busy ? 'Salvataggio...' : 'Salva impostazioni'}
-            </button>
+            </Button>
           </div>
         </>
       )}

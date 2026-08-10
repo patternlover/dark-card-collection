@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
 import type {
   CategoryOption,
   CollectionOption,
   CreateProductData,
 } from '@/app/dashboard/actions'
 import { createProduct } from '@/app/dashboard/actions'
+import { Button, Field, Input, Modal, Select, Textarea } from './ui'
 
 const STATUS_OPTIONS = [
   { value: 'listed', label: 'Disponibile' },
@@ -54,10 +54,6 @@ const RARITY_OPTIONS = [
   { value: 'ultra-rare', label: 'Ultra Rare' },
   { value: 'secret-rare', label: 'Secret Rare' },
 ]
-
-const inputClass =
-  'w-full border-2 border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-[var(--accent)] focus:outline-none'
-const labelClass = 'block text-xs text-zinc-500 mb-1 font-medium'
 
 interface CreateProductModalProps {
   categories: CategoryOption[]
@@ -142,304 +138,272 @@ export function CreateProductModal({
     }
   }
 
+  const checkboxClass = 'h-4 w-4 accent-[var(--ui-accent)]'
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border-2 border-zinc-700 bg-zinc-950 p-6 shadow-[6px_6px_0px_0px_#27272a]">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-xl font-black uppercase tracking-tight text-white">Nuovo Prodotto</h2>
-          <button onClick={onClose} className="text-zinc-500 transition-colors hover:text-[var(--accent)]">
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Titolo *</label>
-              <input
-                type="text"
-                value={form.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Item Group ID</label>
-              <input
-                type="text"
-                value={form.itemGroupId}
-                onChange={(e) => handleChange('itemGroupId', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Slug</label>
-              <input
-                type="text"
-                value={form.slug}
-                onChange={(e) => handleChange('slug', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Disponibilità</label>
-              <select
-                value={form.availability}
-                onChange={(e) => handleChange('availability', e.target.value)}
-                className={inputClass}
-              >
-                {AVAILABILITY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Prezzo Vendita (€)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.price}
-                onChange={(e) => handleChange('price', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Costo Acquisto (€)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.costOfGoodsSold}
-                onChange={(e) => handleChange('costOfGoodsSold', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Prezzo Barrato (€)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.salePrice}
-                onChange={(e) => handleChange('salePrice', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Stato</label>
-              <select
-                value={form.status}
-                onChange={(e) => handleChange('status', e.target.value)}
-                className={inputClass}
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Grado</label>
-              <select
-                value={form.grade}
-                onChange={(e) => handleChange('grade', e.target.value)}
-                className={inputClass}
-              >
-                {GRADE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Condizione</label>
-              <select
-                value={form.condition}
-                onChange={(e) => handleChange('condition', e.target.value)}
-                className={inputClass}
-              >
-                {CONDITION_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Lingua</label>
-              <select
-                value={form.language}
-                onChange={(e) => handleChange('language', e.target.value)}
-                className={inputClass}
-              >
-                {LANGUAGE_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Quantità</label>
-              <input
-                type="number"
-                min="0"
-                value={form.quantity}
-                onChange={(e) => handleChange('quantity', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Card Number</label>
-              <input
-                type="text"
-                value={form.cardNumber}
-                onChange={(e) => handleChange('cardNumber', e.target.value)}
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={labelClass}>Rarità</label>
-              <select
-                value={form.rarity}
-                onChange={(e) => handleChange('rarity', e.target.value)}
-                className={inputClass}
-              >
-                {RARITY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Product Type (Google)</label>
-              <input
-                type="text"
-                value={form.productType}
-                onChange={(e) => handleChange('productType', e.target.value)}
-                placeholder="es. Trading Card Game"
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>Google Product Category</label>
-              <input
-                type="text"
-                value={form.googleProductCategory}
-                onChange={(e) => handleChange('googleProductCategory', e.target.value)}
-                placeholder="es. Toys & Games > Trading Card Game Cards"
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>Categoria</label>
-              <select
-                value={form.category}
-                onChange={(e) => handleChange('category', e.target.value)}
-                className={inputClass}
-              >
-                <option value="">—</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Collezione</label>
-              <select
-                value={form.collection}
-                onChange={(e) => handleChange('collection', e.target.value)}
-                className={inputClass}
-              >
-                <option value="">—</option>
-                {collections.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className={labelClass}>Image Link</label>
-            <input
-              type="url"
-              value={form.imageLink}
-              onChange={(e) => handleChange('imageLink', e.target.value)}
-              placeholder="https://..."
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>Descrizione</label>
-            <textarea
-              value={form.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              rows={3}
-              className={`${inputClass} resize-none`}
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center gap-6">
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.featured}
-                onChange={(e) => handleChange('featured', e.target.checked)}
-                className="h-4 w-4 accent-[var(--accent)]"
-              />
-              <span className="text-sm font-medium text-zinc-300">In Evidenza</span>
-            </label>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.isPreorder}
-                onChange={(e) => handleChange('isPreorder', e.target.checked)}
-                className="h-4 w-4 accent-[var(--accent)]"
-              />
-              <span className="text-sm font-medium text-zinc-300">Pre-Ordine</span>
-            </label>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.isVisible}
-                onChange={(e) => handleChange('isVisible', e.target.checked)}
-                className="h-4 w-4 accent-[var(--accent)]"
-              />
-              <span className="text-sm font-medium text-zinc-300">Visibile nello shop</span>
-            </label>
-          </div>
-        </div>
-
-        <div className="mt-6 flex items-center justify-end gap-3 border-t-2 border-zinc-800 pt-4">
-          <button
-            onClick={onClose}
-            className="rounded-lg border-2 border-zinc-700 px-4 py-2 text-sm text-zinc-400 transition-colors hover:border-zinc-500 hover:text-white"
-          >
+    <Modal
+      title="Nuovo Prodotto"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
             Annulla
-          </button>
-          <button
-            onClick={handleCreate}
-            disabled={saving || !form.title.trim()}
-            className="rounded-lg border-2 border-[var(--accent)] bg-[var(--accent)] px-6 py-2 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          </Button>
+          <Button onClick={handleCreate} disabled={saving || !form.title.trim()}>
             {saving ? 'Creazione...' : 'Crea Prodotto'}
-          </button>
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Titolo *" htmlFor="cp-title">
+            <Input
+              id="cp-title"
+              type="text"
+              value={form.title}
+              onChange={(e) => handleChange('title', e.target.value)}
+            />
+          </Field>
+          <Field label="Item Group ID" htmlFor="cp-item-group">
+            <Input
+              id="cp-item-group"
+              type="text"
+              value={form.itemGroupId}
+              onChange={(e) => handleChange('itemGroupId', e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Slug" htmlFor="cp-slug">
+            <Input
+              id="cp-slug"
+              type="text"
+              value={form.slug}
+              onChange={(e) => handleChange('slug', e.target.value)}
+            />
+          </Field>
+          <Field label="Disponibilità" htmlFor="cp-availability">
+            <Select
+              id="cp-availability"
+              value={form.availability}
+              onChange={(e) => handleChange('availability', e.target.value)}
+            >
+              {AVAILABILITY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Prezzo Vendita (€)" htmlFor="cp-price">
+            <Input
+              id="cp-price"
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.price}
+              onChange={(e) => handleChange('price', e.target.value)}
+            />
+          </Field>
+          <Field label="Costo Acquisto (€)" htmlFor="cp-cogs">
+            <Input
+              id="cp-cogs"
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.costOfGoodsSold}
+              onChange={(e) => handleChange('costOfGoodsSold', e.target.value)}
+            />
+          </Field>
+          <Field label="Prezzo Barrato (€)" htmlFor="cp-sale-price">
+            <Input
+              id="cp-sale-price"
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.salePrice}
+              onChange={(e) => handleChange('salePrice', e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Stato" htmlFor="cp-status">
+            <Select
+              id="cp-status"
+              value={form.status}
+              onChange={(e) => handleChange('status', e.target.value)}
+            >
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Grado" htmlFor="cp-grade">
+            <Select
+              id="cp-grade"
+              value={form.grade}
+              onChange={(e) => handleChange('grade', e.target.value)}
+            >
+              {GRADE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Condizione" htmlFor="cp-condition">
+            <Select
+              id="cp-condition"
+              value={form.condition}
+              onChange={(e) => handleChange('condition', e.target.value)}
+            >
+              {CONDITION_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Lingua" htmlFor="cp-language">
+            <Select
+              id="cp-language"
+              value={form.language}
+              onChange={(e) => handleChange('language', e.target.value)}
+            >
+              {LANGUAGE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Quantità" htmlFor="cp-quantity">
+            <Input
+              id="cp-quantity"
+              type="number"
+              min="0"
+              value={form.quantity}
+              onChange={(e) => handleChange('quantity', e.target.value)}
+            />
+          </Field>
+          <Field label="Card Number" htmlFor="cp-card-number">
+            <Input
+              id="cp-card-number"
+              type="text"
+              value={form.cardNumber}
+              onChange={(e) => handleChange('cardNumber', e.target.value)}
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Rarità" htmlFor="cp-rarity">
+            <Select
+              id="cp-rarity"
+              value={form.rarity}
+              onChange={(e) => handleChange('rarity', e.target.value)}
+            >
+              {RARITY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Product Type (Google)" htmlFor="cp-product-type">
+            <Input
+              id="cp-product-type"
+              type="text"
+              value={form.productType}
+              onChange={(e) => handleChange('productType', e.target.value)}
+              placeholder="es. Trading Card Game"
+            />
+          </Field>
+          <Field label="Google Product Category" htmlFor="cp-gpc">
+            <Input
+              id="cp-gpc"
+              type="text"
+              value={form.googleProductCategory}
+              onChange={(e) => handleChange('googleProductCategory', e.target.value)}
+              placeholder="es. Toys & Games > Trading Card Game Cards"
+            />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Field label="Categoria" htmlFor="cp-category">
+            <Select
+              id="cp-category"
+              value={form.category}
+              onChange={(e) => handleChange('category', e.target.value)}
+            >
+              <option value="">—</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Collezione" htmlFor="cp-collection">
+            <Select
+              id="cp-collection"
+              value={form.collection}
+              onChange={(e) => handleChange('collection', e.target.value)}
+            >
+              <option value="">—</option>
+              {collections.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+
+        <Field label="Image Link" htmlFor="cp-image-link">
+          <Input
+            id="cp-image-link"
+            type="url"
+            value={form.imageLink}
+            onChange={(e) => handleChange('imageLink', e.target.value)}
+            placeholder="https://..."
+          />
+        </Field>
+
+        <Field label="Descrizione" htmlFor="cp-description">
+          <Textarea
+            id="cp-description"
+            value={form.description}
+            onChange={(e) => handleChange('description', e.target.value)}
+          />
+        </Field>
+
+        <div className="flex flex-wrap items-center gap-6">
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.featured}
+              onChange={(e) => handleChange('featured', e.target.checked)}
+              className={checkboxClass}
+            />
+            <span className="text-sm font-medium text-[var(--ui-text-muted)]">In Evidenza</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.isPreorder}
+              onChange={(e) => handleChange('isPreorder', e.target.checked)}
+              className={checkboxClass}
+            />
+            <span className="text-sm font-medium text-[var(--ui-text-muted)]">Pre-Ordine</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.isVisible}
+              onChange={(e) => handleChange('isVisible', e.target.checked)}
+              className={checkboxClass}
+            />
+            <span className="text-sm font-medium text-[var(--ui-text-muted)]">Visibile nello shop</span>
+          </label>
         </div>
       </div>
-    </div>
+    </Modal>
   )
 }

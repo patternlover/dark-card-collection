@@ -61,11 +61,11 @@ export function DashboardShell({ children, sqlEnabled }: { children: React.React
 
   const sidebar = (
     <div className="flex h-full flex-col">
-      <div className="border-b-2 border-zinc-800 px-5 py-5">
+      <div className="border-b border-[var(--ui-border)] px-5 py-5">
         <Link href="/dashboard" onClick={() => setOpen(false)} className="block">
-          <p className="text-xs font-bold uppercase tracking-widest text-zinc-500">Area Riservata</p>
-          <p className="text-xl font-black text-zinc-50">
-            Dark<span className="text-[var(--accent)]">CMS</span>
+          <p className="text-xs font-medium uppercase tracking-widest text-[var(--ui-text-faint)]">Area Riservata</p>
+          <p className="text-xl font-bold text-[var(--ui-text)]">
+            Dark<span className="text-[var(--ui-accent)]">CMS</span>
           </p>
         </Link>
       </div>
@@ -73,7 +73,7 @@ export function DashboardShell({ children, sqlEnabled }: { children: React.React
       <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-5">
         {groups.map((group) => (
           <div key={group.title}>
-            <p className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">
+            <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
               {group.title}
             </p>
             <ul className="space-y-0.5">
@@ -84,10 +84,10 @@ export function DashboardShell({ children, sqlEnabled }: { children: React.React
                     <Link
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold transition ${
+                      className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition ${
                         active
-                          ? 'border-2 border-[var(--accent)] bg-zinc-900 text-[var(--accent)] shadow-[2px_2px_0px_0px_rgba(250,204,21,0.6)]'
-                          : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100'
+                          ? 'bg-[var(--ui-accent-soft)] text-[var(--ui-accent-hover)]'
+                          : 'text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface-alt)] hover:text-[var(--ui-text)]'
                       }`}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
@@ -101,10 +101,10 @@ export function DashboardShell({ children, sqlEnabled }: { children: React.React
         ))}
       </nav>
 
-      <div className="border-t-2 border-zinc-800 p-3">
+      <div className="border-t border-[var(--ui-border)] p-3">
         <button
           onClick={() => logout()}
-          className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-semibold text-zinc-400 transition hover:bg-red-500/10 hover:text-red-400"
+          className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium text-[var(--ui-text-muted)] transition hover:bg-[var(--ui-danger-soft)] hover:text-[var(--ui-danger)]"
         >
           <LogOut className="h-4 w-4" /> Esci
         </button>
@@ -113,29 +113,29 @@ export function DashboardShell({ children, sqlEnabled }: { children: React.React
   )
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r-2 border-zinc-800 bg-zinc-950 lg:block">
+    <div className="min-h-screen bg-[var(--ui-bg)]">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-60 border-r border-[var(--ui-border)] bg-[var(--ui-bg)] lg:block">
         {sidebar}
       </aside>
 
       {open ? (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/70" onClick={() => setOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 border-r-2 border-zinc-800 bg-zinc-950">
+          <aside className="absolute inset-y-0 left-0 w-72 border-r border-[var(--ui-border)] bg-[var(--ui-bg)]">
             {sidebar}
           </aside>
         </div>
       ) : null}
 
       <div className="lg:pl-60">
-        <div className="sticky top-0 z-30 flex items-center justify-between border-b-2 border-zinc-800 bg-zinc-950/90 px-4 py-3 backdrop-blur lg:hidden">
-          <p className="text-sm font-black text-zinc-50">
-            Dark<span className="text-[var(--accent)]">CMS</span>
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-[var(--ui-border)] bg-[var(--ui-bg)]/90 px-4 py-3 backdrop-blur lg:hidden">
+          <p className="text-sm font-bold text-[var(--ui-text)]">
+            Dark<span className="text-[var(--ui-accent)]">CMS</span>
           </p>
           <button
             onClick={() => setOpen((o) => !o)}
             aria-label="Apri menu"
-            className="rounded-lg border-2 border-zinc-700 p-2 text-zinc-300"
+            className="rounded-md border border-[var(--ui-border-strong)] p-2 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>

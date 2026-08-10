@@ -41,3 +41,4 @@ next-env.d.ts
 
 # payload (rigenerato al build)
 src/payload-generated-schema.ts
+build.log

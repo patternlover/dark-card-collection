@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
+import { ChevronLeft, ChevronRight, LayoutGrid, LayoutList, Plus, Search } from 'lucide-react'
 import {
   getCategories,
   getCollections,
@@ -12,7 +12,19 @@ import {
 } from '@/app/dashboard/actions'
 import { groupProducts } from '@/lib/group-products'
 import { ProductGroupRow } from '@/components/dashboard/ProductGroupRow'
+import { ProductTable } from '@/components/dashboard/ProductTable'
 import { CreateProductModal } from '@/components/dashboard/CreateProductModal'
+import {
+  Alert,
+  Button,
+  Input,
+  PageHeader,
+  Select,
+  TogglePills,
+  Toolbar,
+} from './ui'
+
+type ProductView = 'table' | 'cards'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tutti gli stati' },
@@ -28,6 +40,13 @@ const IMAGE_OPTIONS = [
 ]
 
 const PAGE_SIZE = 25
+const VIEW_STORAGE_KEY = 'dash:products:view'
+
+function initialView(): ProductView {
+  if (typeof window === 'undefined') return 'table'
+  const stored = window.localStorage.getItem(VIEW_STORAGE_KEY)
+  return stored === 'cards' || stored === 'table' ? stored : 'table'
+}
 
 export function ProductsSection() {
   const [products, setProducts] = useState<ProductDTO[]>([])
@@ -44,6 +63,11 @@ export function ProductsSection() {
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
   const [showCreate, setShowCreate] = useState(false)
+  const [view, setView] = useState<ProductView>(initialView)
+
+  useEffect(() => {
+    window.localStorage.setItem(VIEW_STORAGE_KEY, view)
+  }, [view])
 
   const load = useCallback(
     async (opts: { page?: number; search?: string } = {}) => {
@@ -106,104 +130,111 @@ export function ProductsSection() {
     setPage(1)
   }
 
+  const renderExtraFilters = false
+
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-black text-zinc-50">Prodotti</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          {total} prodotti · raggruppati per titolo ({groups.length} gruppi)
-        </p>
-      </div>
+      <PageHeader
+        title="Prodotti"
+        description={`${total} prodotti · raggruppati per titolo (${groups.length} gruppi)`}
+      >
+        <TogglePills<ProductView>
+          value={view}
+          onChange={setView}
+          options={[
+            { value: 'table', label: <><LayoutList className="h-3.5 w-3.5" /> Tabella</>, title: 'Vista tabella compatta' },
+            { value: 'cards', label: <><LayoutGrid className="h-3.5 w-3.5" /> Card</>, title: 'Vista a card' },
+          ]}
+        />
+        <Button onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4" /> Nuovo Prodotto
+        </Button>
+      </PageHeader>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[240px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
-          <input
+      <Toolbar>
+        <div className="relative min-w-[240px] flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') runSearch()
             }}
             placeholder="Cerca per titolo, item_group_id o descrizione..."
-            className="w-full rounded-lg border-2 border-zinc-700 bg-zinc-950 py-2 pl-9 pr-3 text-sm text-zinc-50 outline-none focus:border-[var(--accent)]"
+            className="pl-9"
           />
         </div>
-        <select
+        <Select
           value={status}
           onChange={(e) => changeFilter(setStatus, e.target.value)}
-          className="rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-[var(--accent)]"
+          className="w-auto"
         >
           {STATUS_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
             </option>
           ))}
-        </select>
-        <select
-          value={category}
-          onChange={(e) => changeFilter(setCategory, e.target.value)}
-          className="rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-[var(--accent)]"
-        >
-          <option value="">Tutte le categorie</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={collection}
-          onChange={(e) => changeFilter(setCollection, e.target.value)}
-          className="rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-[var(--accent)]"
-        >
-          <option value="">Tutte le collezioni</option>
-          {collections.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={withImage}
-          onChange={(e) => changeFilter(setWithImage, e.target.value)}
-          className="rounded-lg border-2 border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-[var(--accent)]"
-        >
-          {IMAGE_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={runSearch}
-          className="rounded-lg bg-zinc-800 px-4 py-2 text-sm font-semibold text-zinc-100 hover:bg-zinc-700"
-        >
+        </Select>
+        {renderExtraFilters ? (
+          <>
+            <Select
+              value={category}
+              onChange={(e) => changeFilter(setCategory, e.target.value)}
+              className="w-auto"
+            >
+              <option value="">Tutte le categorie</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={collection}
+              onChange={(e) => changeFilter(setCollection, e.target.value)}
+              className="w-auto"
+            >
+              <option value="">Tutte le collezioni</option>
+              {collections.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={withImage}
+              onChange={(e) => changeFilter(setWithImage, e.target.value)}
+              className="w-auto"
+            >
+              {IMAGE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </Select>
+          </>
+        ) : null}
+        <Button variant="secondary" onClick={runSearch}>
           Cerca
-        </button>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-bold text-black transition hover:opacity-90"
-        >
-          <Plus className="h-4 w-4" /> Nuovo Prodotto
-        </button>
-      </div>
+        </Button>
+      </Toolbar>
 
-      {message ? (
-        <p
-          className={`rounded-lg border px-3 py-2 text-sm ${
-            message.type === 'error'
-              ? 'border-red-500/40 bg-red-500/10 text-red-400'
-              : 'border-green-500/40 bg-green-500/10 text-green-400'
-          }`}
-        >
-          {message.text}
-        </p>
-      ) : null}
+      {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Caricamento...</p>
+        <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
       ) : groups.length === 0 ? (
-        <p className="text-sm text-zinc-500">Nessun prodotto trovato</p>
+        <p className="text-sm text-[var(--ui-text-muted)]">Nessun prodotto trovato</p>
+      ) : view === 'table' ? (
+        <ProductTable
+          groups={groups}
+          categories={categories}
+          collections={collections}
+          onPatch={patchProduct}
+          onRemove={removeProducts}
+          onChanged={() => load()}
+          onNotify={notify}
+        />
       ) : (
         <div className="space-y-3">
           {groups.map((g) => (
@@ -222,25 +253,27 @@ export function ProductsSection() {
       )}
 
       {totalPages > 1 ? (
-        <div className="flex items-center justify-between border-t-2 border-zinc-800 pt-4">
-          <p className="text-xs text-zinc-500">
+        <div className="flex items-center justify-between border-t border-[var(--ui-border)] pt-4">
+          <p className="text-xs text-[var(--ui-text-muted)]">
             Pagina {page} di {totalPages} · {total} prodotti
           </p>
           <div className="flex items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="flex items-center gap-1 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-sm font-semibold text-zinc-200 disabled:opacity-40"
             >
               <ChevronLeft className="h-4 w-4" /> Precedente
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="flex items-center gap-1 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-sm font-semibold text-zinc-200 disabled:opacity-40"
             >
               Successiva <ChevronRight className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}

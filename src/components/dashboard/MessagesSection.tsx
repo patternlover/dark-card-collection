@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { CheckCheck, ChevronLeft, ChevronRight, Loader2, Mail, MailOpen, Reply, Trash2 } from 'lucide-react'
+import { CheckCheck, ChevronLeft, ChevronRight, Mail, MailOpen, Reply, Trash2 } from 'lucide-react'
 import {
   deleteMessage,
   getMessageBody,
@@ -10,6 +10,7 @@ import {
   toggleMessageReplied,
   type MessageDTO,
 } from '@/app/dashboard/actions'
+import { Alert, Badge, Button, Card, PageHeader, Spinner } from './ui'
 
 const PAGE_SIZE = 20
 
@@ -92,23 +93,17 @@ export function MessagesSection() {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-3xl font-black text-zinc-50">Messaggi</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          {total} messaggi dal form contatti · {unread} non letti
-        </p>
-      </div>
+      <PageHeader
+        title="Messaggi"
+        description={`${total} messaggi dal form contatti · ${unread} non letti`}
+      />
 
-      {error ? (
-        <p className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-400">
-          {error}
-        </p>
-      ) : null}
+      {error ? <Alert tone="danger">{error}</Alert> : null}
 
       {loading ? (
-        <p className="text-sm text-zinc-500">Caricamento...</p>
+        <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
       ) : messages.length === 0 ? (
-        <p className="text-sm text-zinc-500">Nessun messaggio</p>
+        <p className="text-sm text-[var(--ui-text-muted)]">Nessun messaggio</p>
       ) : (
         <div className="space-y-2">
           {messages.map((m) => {
@@ -116,100 +111,95 @@ export function MessagesSection() {
             const body = bodies[m.id]
             const loadingBody = loadingBodyId === m.id
             return (
-              <div
+              <Card
                 key={m.id}
-                className={`rounded-xl border-2 ${m.read ? 'border-zinc-800 bg-zinc-950/40' : 'border-[var(--accent)]/60 bg-zinc-900/80'}`}
+                className={m.read ? '' : 'border-[var(--ui-accent)]/50'}
               >
                 <button
                   onClick={() => toggleExpanded(m)}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left"
                 >
                   {m.read ? (
-                    <MailOpen className="h-4 w-4 shrink-0 text-zinc-500" />
+                    <MailOpen className="h-4 w-4 shrink-0 text-[var(--ui-text-faint)]" />
                   ) : (
-                    <Mail className="h-4 w-4 shrink-0 text-[var(--accent)]" />
+                    <Mail className="h-4 w-4 shrink-0 text-[var(--ui-accent-hover)]" />
                   )}
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
-                      <span className={`truncate text-sm font-semibold ${m.read ? 'text-zinc-300' : 'text-zinc-50'}`}>
+                      <span className={`truncate text-sm font-semibold ${m.read ? 'text-[var(--ui-text-muted)]' : 'text-[var(--ui-text)]'}`}>
                         {m.name}
                       </span>
-                      {!m.read ? (
-                        <span className="rounded bg-[var(--accent)] px-1.5 py-0.5 text-[10px] font-black uppercase text-black">
-                          Nuovo
-                        </span>
-                      ) : null}
-                      {m.replied ? (
-                        <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[10px] font-bold uppercase text-green-400">
-                          Risposto
-                        </span>
-                      ) : null}
+                      {!m.read ? <Badge tone="accent">Nuovo</Badge> : null}
+                      {m.replied ? <Badge tone="success">Risposto</Badge> : null}
                     </span>
-                    <span className="block truncate text-xs text-zinc-500">
+                    <span className="block truncate text-xs text-[var(--ui-text-faint)]">
                       {m.subject || '(nessun oggetto)'} · {m.email}
                     </span>
                   </span>
-                  <span className="shrink-0 text-xs text-zinc-500">
+                  <span className="shrink-0 text-xs text-[var(--ui-text-faint)]">
                     {new Date(m.createdAt).toLocaleDateString('it-IT')}
                   </span>
                 </button>
                 {expanded ? (
-                  <div className="border-t-2 border-zinc-800 px-4 py-3">
+                  <div className="border-t border-[var(--ui-border)] px-4 py-3">
                     {loadingBody ? (
-                      <p className="flex items-center gap-2 text-sm text-zinc-500">
-                        <Loader2 className="h-4 w-4 animate-spin" /> Caricamento...
+                      <p className="flex items-center gap-2 text-sm text-[var(--ui-text-muted)]">
+                        <Spinner /> Caricamento...
                       </p>
                     ) : (
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--ui-text-muted)]">
                         {body ?? m.message ?? '—'}
                       </p>
                     )}
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setRead(m, !m.read)}
-                        className="flex items-center gap-1.5 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                      >
+                      <Button variant="secondary" size="sm" onClick={() => setRead(m, !m.read)}>
                         <CheckCheck className="h-3.5 w-3.5" />
                         {m.read ? 'Segna come non letto' : 'Segna come letto'}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => setReplied(m, !m.replied)}
-                        className="flex items-center gap-1.5 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-green-500/50 hover:text-green-400"
+                        className="hover:border-[var(--ui-success)] hover:text-[var(--ui-success)]"
                       >
                         <Reply className="h-3.5 w-3.5" />
                         {m.replied ? 'Segna come non risposto' : 'Segna come risposto'}
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
                         onClick={() => remove(m)}
-                        className="flex items-center gap-1.5 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-red-500/50 hover:text-red-400"
+                        className="text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
                       >
                         <Trash2 className="h-3.5 w-3.5" /> Elimina
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 ) : null}
-              </div>
+              </Card>
             )
           })}
 
           <div className="flex items-center justify-between pt-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="flex items-center gap-1.5 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 disabled:opacity-40 hover:enabled:border-[var(--accent)]"
             >
               <ChevronLeft className="h-3.5 w-3.5" /> Precedente
-            </button>
-            <span className="text-xs text-zinc-500">
+            </Button>
+            <span className="text-xs text-[var(--ui-text-muted)]">
               Pagina {page} di {totalPages}
             </span>
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="flex items-center gap-1.5 rounded-lg border-2 border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 disabled:opacity-40 hover:enabled:border-[var(--accent)]"
             >
               Successiva <ChevronRight className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </div>
         </div>
       )}

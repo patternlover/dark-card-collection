@@ -42,19 +42,19 @@ export default function DashboardLogin() {
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-sm border-4 border-zinc-700 bg-zinc-900 p-6 shadow-[8px_8px_0_0_#000]">
-        <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500">Area Riservata</p>
-        <h1 className="mt-1 text-2xl font-black text-zinc-50">Dashboard</h1>
-        <p className="mt-1 text-sm text-zinc-400">Accedi con il tuo account Google autorizzato.</p>
+      <div className="w-full max-w-sm rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] p-6">
+        <p className="text-xs font-medium uppercase tracking-widest text-[var(--ui-text-faint)]">Area Riservata</p>
+        <h1 className="mt-1 text-2xl font-bold text-[var(--ui-text)]">Dashboard</h1>
+        <p className="mt-1 text-sm text-[var(--ui-text-muted)]">Accedi con il tuo account Google autorizzato.</p>
         <div className="mt-6 space-y-4">
           {message ? (
-            <p className="border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-400">
+            <p className="rounded-md border border-[var(--ui-danger)]/40 bg-[var(--ui-danger-soft)] px-3 py-2 text-sm text-[var(--ui-danger)]">
               {message}
             </p>
           ) : null}
           <a
             href="/api/auth/google"
-            className="flex w-full items-center justify-center gap-3 border-2 border-zinc-600 bg-zinc-950 px-4 py-2.5 font-bold text-zinc-50 shadow-[3px_3px_0px_0px_#000] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)] active:translate-0 active:shadow-[1px_1px_0px_0px_#000]"
+            className="flex w-full items-center justify-center gap-3 rounded-md border border-[var(--ui-border-strong)] bg-[var(--ui-surface-alt)] px-4 py-2.5 font-semibold text-[var(--ui-text)] transition-colors hover:border-[var(--ui-accent)] hover:bg-[var(--ui-accent-soft)]"
           >
             <GoogleIcon />
             Accedi con Google
