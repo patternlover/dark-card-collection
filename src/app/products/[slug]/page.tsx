@@ -35,6 +35,7 @@ export async function generateMetadata({
       collection: 'products',
       where: { slug: { equals: slug } },
       limit: 1,
+      depth: 1,
     })
     const product = result.docs[0]
     if (!product) return { title: 'Prodotto non trovato' }
@@ -126,6 +127,7 @@ export default async function ProductPage({
     collection: 'products',
     where: { slug: { equals: slug } },
     limit: 1,
+    depth: 1,
   })
 
   if (result.docs.length === 0) {
@@ -138,6 +140,7 @@ export default async function ProductPage({
     collection: 'products',
     where: { title: { equals: product.title } },
     limit: 100,
+    depth: 1,
   })
 
   const groups = groupProducts(allVariants.docs)
