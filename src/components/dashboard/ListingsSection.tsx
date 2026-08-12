@@ -100,7 +100,9 @@ export function ListingsSection() {
     setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, isVisible: target } : x)))
     setBusy(true)
     try {
-      await updateProduct(p.id, { isVisible: target })
+      const saved = await updateProduct(p.id, { isVisible: target })
+      setProducts((prev) => prev.map((x) => (x.id === saved.id ? saved : x)))
+      notify(target ? 'Prodotto visibile nello shop' : 'Prodotto nascosto dallo shop')
     } catch (err) {
       notify(err instanceof Error ? err.message : String(err), 'error')
       load()
@@ -114,7 +116,9 @@ export function ListingsSection() {
     setProducts((prev) => prev.map((x) => (x.id === p.id ? { ...x, featured: target } : x)))
     setBusy(true)
     try {
-      await updateProduct(p.id, { featured: target })
+      const saved = await updateProduct(p.id, { featured: target })
+      setProducts((prev) => prev.map((x) => (x.id === saved.id ? saved : x)))
+      notify(target ? 'Prodotto in vetrina' : 'Prodotto rimosso dalla vetrina')
     } catch (err) {
       notify(err instanceof Error ? err.message : String(err), 'error')
       load()

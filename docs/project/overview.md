@@ -358,6 +358,8 @@ Rows with genuine buyer-visible differences (language/grade), if any, stay separ
 8. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders - required by law and by Stripe before go-live
 9. Email conferma ordine: senza `RESEND_API_KEY` l'email non parte (l'ordine viene comunque creato)
 10. Dati legacy "variant per purchase batch" ancora nel DB — lo schema è stato migrato a Purchases `lines` (migration `20260812_purchases_lines_schema.ts`), ma il **data-cleanup** (merge dei fake variants, Purchases retroattive) resta in una sessione dedicata — vedi `docs/project/sessions/OPEN-TASKS.md`
+11. **Known issue (fixato 2026-08-12)**: `postgresAdapter` aveva `push: true` anche in produzione → su Vercel ogni cold-start eseguiva la sync schema (drizzle introspect+push) rendendo lente/timeout le server actions della dashboard (sintomo: i toggle/edits del Listino non aggiornavano). Fix: `push: process.env.NODE_ENV !== 'production'`. NON riattivare `push: true` in produzione.
+12. **Known issue (mitigato 2026-08-12)**: errore `Minified React error #441` (hydration: attributo SSR ≠ client) segnalato sulla dashboard live. Non riproducibile in locale (dev e prod bundle, dati seed e "live-like": console pulita). Mitigazioni: `ListingsSection` ora riconcilia lo stato dalla risposta della server action (niente più optimistic-revert) con feedback esplicito; regressione E2E `tests-e2e/console-clean.spec.ts` che fallisce su errori di hydration nelle pagine chiave. Se ricompare, verificare in incognito (le estensioni browser possono alterare il DOM → 441) e la console dev per lo stack del componente.
 
 ## Email
 

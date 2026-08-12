@@ -92,3 +92,17 @@
 5. **Risultato suite**: **24/24 E2E verdi** sul bundle di produzione. Nota: il `dev server` ha artefatti HMR (remount) assenti in prod; su `/shop` doppio render transitorio (test con `.first()`).
 
 **Verifica Fase 6**: `pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · Playwright 24/24 ✓ sul bundle prod.
+
+### Fase 7 — Fix Listino live: `push:false` in produzione + hardening toggle + regressione hydration (2026-08-12)
+
+Sintomo (live `https://darkcardcollection.com/dashboard/listings`): toggle featured/nascondi e modifica valori "non funzionano" (sembra non inviare dati al DB) + `Minified React error #441` in console.
+
+Diagnosi: non riproducibile localmente (dev e prod bundle, dati seed e "live-like": console pulita, toggle ok; scan Playwright della live su tutte le pagine pubbliche e PDP: nessun #441). Cause/correzioni:
+1. **`postgresAdapter.push: true` era attivo anche in produzione** → su Vercel ogni cold-start di una serverless faceva la sync schema (introspect+diff), rendendo lente/timeout le server actions della dashboard (sintomo esatto "non riesce a inviare dati al DB"). Fix: `push: process.env.NODE_ENV !== 'production'` (la schema in prod è applicata da `payload migrate` nel build).
+2. **Hardening `ListingsSection`**: i toggle ora riconciliano lo stato dalla **risposta della server action** (non solo optimistic update che può essere revertito da un reload/remount) e mostrano toast di esito esplicito.
+3. **Regressione**: nuovo `tests-e2e/console-clean.spec.ts` che fallisce se nelle pagine chiave (dashboard + storefront) compare un errore React di hydration (`Minified React error #4..`, `did not match the client`, `A tree hydrated`, ecc.).
+4. `hreflang` nel root layout: verificato che NON causa mismatch (escluso empiricamente); lasciata la versione originale minuscola (compatibilità crawler).
+
+Known issue documentati in `AGENTS.md` (Note operative) e `overview.md` (Known Issues 11-12).
+
+**Verifica Fase 7**: `pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · Playwright **25/25** ✓ (incl. console-clean) sul bundle prod.

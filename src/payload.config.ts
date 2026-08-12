@@ -43,7 +43,10 @@ export default buildConfig({
     pool: {
       connectionString: process.env.DATABASE_URI || '',
     },
-    push: true,
+    // push SOLO in dev: in produzione la schema è applicata dalle migration nel
+    // build (`payload migrate`); push:true su Vercel farebbe una sync schema a ogni
+    // cold-start (introspect + diff) rendendo lente/timeout le server actions.
+    push: process.env.NODE_ENV !== 'production',
   }),
   plugins: (() => {
     const blobToken = process.env.BLOB_READ_WRITE_TOKEN

@@ -79,6 +79,8 @@
 ## Note operative
 - WSL: `tsc --noEmit` e `pnpm build` possono andare in OOM — usare la build con heap aumentata. `pnpm generate:types` può andare in timeout.
 - Footer: dati business (BUSINESS in `Footer.tsx`) e `CONTACT_EMAIL` ancora placeholder.
+- **`postgresAdapter` usa `push: false` in produzione** (`src/payload.config.ts`): la schema si applica con `payload migrate` nel build. NON riattivare `push: true`: causerebbe una sync schema a ogni cold-start serverless su Vercel → server actions lente/timeout → sintomo noto: la dashboard (es. Listino) non aggiorna i dati / dà errori. In dev (`NODE_ENV !== production`) il push resta attivo.
+- **Idratazione (errore React #441)**: i componenti client NON devono leggere `window`/`localStorage`/`Date.now()` nel render (solo in `useEffect` + stato `mounted`). Qualsiasi attributo SSR che differisce dal client genera `Minified React error #441`. Regressione coperta da `tests-e2e/console-clean.spec.ts` (fallisce su errori di hydration nelle pagine chiave).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

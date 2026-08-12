@@ -4,7 +4,7 @@ Tracker persistente dei task aperti, a vita lunga (oltre la singola sessione). O
 
 Stati: `open` · `in-progress` · `blocked` (con motivo) · `done` (con verifica).
 
-Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 + E2E dashboard 24/24 sul bundle prod · bug critico deadlock lotti risolto · migration validata · commit `...` in corso).
+Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 + E2E 25/25 + fix Listino live: push:false in prod + hardening toggle + regressione hydration).
 
 ---
 
@@ -72,6 +72,7 @@ Suite end-to-end in `tests-e2e/` (24 test) eseguita sul **bundle di produzione**
 | E6 | **Nota**: su `/shop` si osserva un doppio render transitorio della card prodotto durante il caricamento (hydration/streaming) → i test usano `.first()`; da verificare se cosmetico anche su rete reale | open (info) |
 | E7 | **Gap funzionale**: in `/dashboard/purchases` non esiste la **modifica di un lotto** (solo crea/elimina/espandi). Se serve, aggiungere edit UI | open (feature request) |
 | E8 | **Non coperto da E2E**: console SQL (`/dashboard/sql`, dipende da `ENABLE_DASH_SQL`) e panorama `/dashboard` (solo heading) | open (copertura) |
+| E9 | **Listino live non aggiornava i dati** (`#441` + "non invia al DB") — causa principale: `push:true` anche in prod (sync schema a ogni cold-start Vercel → server actions lente/timeout). **Fix**: `push: NODE_ENV !== 'production'`; toggle con stato autoritativo dalla server action + toast; regressione `console-clean.spec.ts`. Non riproducibile localmente → se ricompare: incognito (estensioni browser alterano il DOM → 441) + console dev per lo stack | done (mitigato; `push:false` in prod) |
 
 ## Deferred / Blocked
 

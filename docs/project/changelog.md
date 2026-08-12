@@ -1,7 +1,26 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Bugtesting E2E dashboard (Playwright locale)**.
+Ultima sessione: **Fix Listino live (push:false in produzione + hardening toggle + regressione hydration)**.
+
+---
+
+## Sessione recente 11 — Fix Listino live: `push:false` in prod + hardening + regressione #441
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` §Fase 7). Segnalazione live: su `/dashboard/listings` i toggle (featured/nascondi) e le modifiche non aggiornavano ("non riesce a inviare dati al DB") con `Minified React error #441` in console.
+
+### Diagnosi
+- Non riproducibile localmente (dev e prod bundle, dati seed e "live-like": console pulita, toggle funzionanti; scan Playwright della live su pagine pubbliche e PDP: nessun #441).
+- Causa principale: **`postgresAdapter.push: true` anche in produzione** → su Vercel ogni cold-start serverless eseguiva la sync schema (drizzle introspect+push) rendendo lente/timeout le server actions della dashboard.
+
+### Fix
+1. **`src/payload.config.ts`**: `push: process.env.NODE_ENV !== 'production'` — in prod la schema è applicata da `payload migrate` nel build; niente più sync a ogni cold-start.
+2. **`ListingsSection`**: toggle (visibilità/featured) riconciliano lo stato dalla **risposta della server action** (stato autoritativo, niente optimistic-revert) + toast di esito esplicito.
+3. **Regressione**: `tests-e2e/console-clean.spec.ts` — fallisce se pagine chiave (dashboard + storefront) mostrano errori React di hydration.
+4. `hreflang` del root layout: escluso empiricamente come causa del #441 (lasciato invariato).
+
+### Verifica
+`pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · **Playwright 25/25** ✓ (incl. console-clean) sul bundle prod. Known issue documentati in `AGENTS.md` e `overview.md` (#11 push:false, #12 #441 mitigato).
 
 ---
 
