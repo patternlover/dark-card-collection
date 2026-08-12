@@ -37,6 +37,11 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
 - Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · E2E `tests-e2e/orders.spec.ts` 3/3 ✓ (nuovo select optgroup incluso)
 - Commit `24e0070` sul branch (niente push — attesa user)
 
+### Step 1bis — Test locale senza OAuth (test-infra)
+- `src/app/api/auth/dev-login/route.ts` (nuovo): firma il cookie `dcc-dash` (`signToken('google:dev@localhost')`) e redirige a `/dashboard`. 404 a meno che `NODE_ENV === 'development'` **e** `DASH_DEV_LOGIN === '1'` → irraggiungibile in produzione.
+- Uso: `DASH_DEV_LOGIN=1 DATABASE_URI=postgresql://edoardocavalcanti@localhost:5432/dcc_test pnpm dev` → apri `http://localhost:3000/api/auth/dev-login`. Tutte le scritture vanno sul DB locale `dcc_test` (Neon prod intatto). Verificato: 307 + cookie firmato, `/dashboard` → 200.
+- Commit `3a44681`.
+
 ### Step successivi
 - [ ] Magazzino → Nuovo/Duplica Prodotto (`CreateProductModal`)
 - [ ] Listino → Modifica Prodotto (`EditProductModal`)
