@@ -568,10 +568,85 @@ export async function getDbOverview(): Promise<DbTableInfo[]> {
     .filter((t) => t.table.length > 0)
 }
 
-export async function deleteProduct(id: string): Promise<void> {
+export interface DeleteProductResult {
+  ok: boolean
+  message?: string
+}
+
+export async function deleteProduct(id: string): Promise<DeleteProductResult> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.delete({ overrideAccess: true,  collection: 'products', id })
+  const pid = Number(id)
+
+  try {
+    const orderRef = await payload.find({
+      overrideAccess: true,
+      collection: 'orders',
+      where: { 'items.product': { equals: pid } },
+      limit: 1,
+    })
+    if (orderRef.totalDocs > 0) {
+      return {
+        ok: false,
+        message: 'Il prodotto risulta in ordini: elimina prima gli ordini collegati o nascondilo dal listino',
+      }
+    }
+
+    const purchases: any[] = []
+    let page = 1
+    const pageSize = 100
+    for (;;) {
+      const res = await payload.find({
+        overrideAccess: true,
+        collection: 'purchases',
+        where: { 'lines.product': { equals: pid } },
+        page,
+        limit: pageSize,
+        depth: 1,
+      })
+      purchases.push(...res.docs)
+      if (page >= res.totalPages) break
+      page += 1
+    }
+
+    const hasResidualStock = purchases.some((p) =>
+      (p.lines ?? []).some(
+        (l: any) =>
+          productIdFrom(l.product) === pid &&
+          Number(l.remaining_quantity ?? l.quantity ?? 0) > 0,
+      ),
+    )
+    if (hasResidualStock) {
+      return {
+        ok: false,
+        message: 'Il prodotto ha stock residuo nei lotti: modifica o elimina prima i lotti collegati (sezione Lotti)',
+      }
+    }
+
+    for (const purchase of purchases) {
+      const keptLines = (purchase.lines ?? [])
+        .filter((l: any) => productIdFrom(l.product) !== pid)
+        .map((l: any) => ({
+          id: l.id,
+          product: productIdFrom(l.product),
+          quantity: Number(l.quantity ?? 0),
+          unit_cost: Number(l.unit_cost ?? 0),
+          effective_unit_cost: Number(l.effective_unit_cost ?? 0),
+          remaining_quantity: Number(l.remaining_quantity ?? l.quantity ?? 0),
+        }))
+      await payload.update({
+        overrideAccess: true,
+        collection: 'purchases',
+        id: purchase.id,
+        data: { lines: keptLines } as any,
+      })
+    }
+
+    await payload.delete({ overrideAccess: true, collection: 'products', id })
+    return { ok: true }
+  } catch {
+    return { ok: false, message: 'Errore durante l\'eliminazione del prodotto' }
+  }
 }
 
 export interface CategoryDTO {

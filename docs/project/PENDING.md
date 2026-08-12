@@ -7,7 +7,7 @@
 > Stati: `open` · `in-progress` · `blocked (motivo)` · `waiting-user` (serve input utente) · `done (verifica)`.
 > Un task si chiude SOLO con verifica fatta (`pnpm lint`, `pnpm test`, build/E2E/CI dove applicabile).
 
-Ultimo aggiornamento: 2026-08-12 (sessione Fase 8-9 completata: root cause live risolta, schema live allineato).
+Ultimo aggiornamento: 2026-08-12 (sessione 14: fix delete prodotto live — guardie integrità + risultato strutturato; niente più #441 su eliminazione).
 
 ---
 
@@ -16,6 +16,7 @@ Ultimo aggiornamento: 2026-08-12 (sessione Fase 8-9 completata: root cause live 
 | # | Task | Stato |
 |---|------|-------|
 | B1 (#22) | **Data-cleanup legacy**: DECISIONE UTENTE 2026-08-12 — l'utente eliminerà tutti i prodotti e li reinserirà col flusso normale (niente merge script). ⚠️ Ordine sicuro di delete: prima `purchases` (lotti) e `orders` che referenziano i prodotti, poi i prodotti (vincolo FK `orders_items.product_id`/`purchases_lines.product_id` NOT NULL). Da verificare dopo l'operazione: grouping, PDP, sitemap, drift-check | waiting-user (operazione manuale utente) |
+| B2 | **Server actions: niente throw** — Next 16 in produzione sostituisce il messaggio degli errori lanciati dalle server action col testo minificato `Minified React error #441` (verificato). `deleteProduct` è migrato al pattern risultato-strutturato; restano da migrare le altre: validazioni `createProduct`/`updateProduct`/`createPurchase`/`updatePurchase`/`updateOrderStatus`/`createCategory`/`updateCategory`/`createCollection`/`updateCollection`/`recordExternalSale` e `requireAuth` (messaggio `Unauthorized`). Pattern: ritornare `{ ok, message }` e consumarlo nel componente | open |
 
 ## 2. In attesa di input utente (`waiting-user`)
 

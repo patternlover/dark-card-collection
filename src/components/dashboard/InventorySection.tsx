@@ -116,7 +116,11 @@ export function InventorySection() {
     if (!confirm(`Eliminare definitivamente "${product.title}"?`)) return
     setBusy(true)
     try {
-      await deleteProduct(product.id)
+      const res = await deleteProduct(product.id)
+      if (!res.ok) {
+        notify(res.message || 'Errore durante l\'eliminazione del prodotto', 'error')
+        return
+      }
       setProducts((prev) => prev.filter((p) => p.id !== product.id))
       setHistory((prev) => {
         const next = { ...prev }
@@ -124,8 +128,8 @@ export function InventorySection() {
         return next
       })
       notify('Prodotto eliminato')
-    } catch (err) {
-      notify(err instanceof Error ? err.message : String(err), 'error')
+    } catch {
+      notify('Errore durante l\'eliminazione del prodotto', 'error')
       load()
     } finally {
       setBusy(false)

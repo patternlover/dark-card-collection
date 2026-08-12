@@ -1,7 +1,33 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Smaltimento task pendenti (centralizzazione PENDING + feature + security REQ)**.
+Ultima sessione: **Fix delete prodotto live (#441) — guardie integrità + risultato strutturato**.
+
+---
+
+## Sessione recente 14 — Fix delete prodotto live (`Minified React error #441`)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-fix-delete-product-live.md`). Segnalazione live: su `/dashboard/inventory`, "Elimina prodotto" mostrava `Minified React error #441` (stesso sintomo già visto in sessione 12).
+
+### Root cause (riprodotta su bundle di produzione)
+- FK `purchases_lines.product_id` e `orders_items.product_id`: `NOT NULL` + `ON DELETE SET NULL` → il delete di un prodotto referenziato fallisce a DB (`null value in column "product_id"...`).
+- In produzione (Next 16), un errore lanciato da una server action arriva al client con messaggio sostituito dal testo minificato `#441` → l'Alert della dashboard mostrava quel testo.
+- I test E2E passavano perché eliminavano solo prodotti **senza** riferimenti; i prodotti live con righe lotti/ordini fallivano.
+
+### Fix
+- `deleteProduct` → risultato strutturato `{ ok, message }`, **mai throw** (niente 500 → niente #441):
+  - prodotto referenziato da ordini → blocco con messaggio chiaro (storico finanziario intoccato);
+  - stock residuo nei lotti (`remaining_quantity > 0`) → blocco con messaggio chiaro (guida a Lotti);
+  - righe consumate (remaining = 0) → rimosse dal lotto, poi delete;
+  - errori imprevisti → messaggio generico pulito.
+- `InventorySection.removeProduct` aggiornata per mostrare i messaggi.
+- **Regressione**: `tests-e2e/product-delete-guard.spec.ts` (3 scenari: no riferimenti / stock residuo / ordini) — assert "nessun #441".
+
+### Verifica
+`pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · **Playwright su bundle prod 31/31** ✓ (incl. console-clean senza errori hydration).
+
+### Nota sistemica
+Tutte le altre server action che lanciano errori di business (validazioni create/update, vendite esterne...) mostrano lo stesso #441 in produzione — da migrare al pattern risultato-strutturato (task in PENDING).
 
 ---
 
