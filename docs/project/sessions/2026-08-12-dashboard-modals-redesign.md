@@ -51,9 +51,17 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
   - `.../dark-card-collection-modals` → `feat/dashboard-modals-redesign` (branch modali)
 - Prep worktree: `pnpm install` + copia `.env`/`.env.test` (gitignored, da `.env.test`). Verifica dev-login nel worktree su `PORT=3001`: 307 + cookie, `/dashboard` → 200.
 
+### Step 2 — Magazzino (rimozione) + Lotti (Registra Lotto)
+**Magazzino (`InventorySection.tsx`)**: rimosso il bottone "Nuovo Prodotto", lo stato `showCreate`, il render di `<CreateProductModal>` e il fetch di categorie/collezioni (usati solo dal modale). I prodotti si popolano in automatico dai Lotti. `CreateProductModal.tsx` conservato nel repo per futuro riuso (nessun uso attivo).
+
+**Lotti (`PurchasesSection.tsx`)**:
+- **Luogo/Fornitore** → combobox nativo: `<Input list="pc-source-list">` + `<datalist>` con i `source_name` già usati (nuova server action `getPurchaseSourceNames()` in `actions.ts`). Ricerca digitando + dropdown dei luoghi, testo libero.
+- **Errori dentro il modale**: nuovo stato `modalError` → banner `Alert tone="danger"` in cima al contenuto; validazioni ed errori server (prima `notify` → alert sulla pagina) ora appaiono nel modale. Success resta sulla pagina. Azzerato a ogni apertura/chiusura.
+- **Sezioni chiare e coerenti**: nuovo componente riusabile `ui/ModalSection.tsx` (titolo uppercase a contrasto migliore + contenitore con bordo, slot azione). Il modale diventa: **"Dati lotto"** (Data · Tipo di fonte · Luogo/Fornitore con ricerca · Costi extra) → **"Righe del lotto"** (azione "Aggiungi riga"; creazione prodotto inline invariata) → **"Note"**. Titolo unificato **"Registra Lotto"**/"Modifica Lotto".
+- Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · E2E `purchases.spec.ts` 6/6 ✓ · E2E `console-clean.spec.ts` 1/1 ✓ (nessuna regressione hydration; warning key preesistenti su TBody).
+
 ### Step successivi
-- [ ] Magazzino → Nuovo/Duplica Prodotto (`CreateProductModal`)
 - [ ] Listino → Modifica Prodotto (`EditProductModal`)
-- [ ] Lotti → Registra/Modifica Lotto (`PurchasesSection`)
 - [ ] Categorie / Collezioni (modali inline)
+- [ ] Adottare `ModalSection` negli altri modali per coerenza
 

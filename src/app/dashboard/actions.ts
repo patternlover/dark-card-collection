@@ -1308,6 +1308,24 @@ export async function getPurchases(opts: { search?: string; page?: number; limit
   }
 }
 
+export async function getPurchaseSourceNames(): Promise<string[]> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    overrideAccess: true,
+    collection: 'purchases',
+    limit: 1000,
+    depth: 0,
+    where: { source_name: { exists: true } } as any,
+  })
+  const names = new Set<string>()
+  for (const doc of res.docs) {
+    const name = String((doc as { source_name?: unknown }).source_name || '').trim()
+    if (name) names.add(name)
+  }
+  return [...names].sort((a, b) => a.localeCompare(b))
+}
+
 export interface CreatePurchaseLineInput {
   productId?: string | number | null
   newProductTitle?: string | null

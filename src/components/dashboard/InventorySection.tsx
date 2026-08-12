@@ -1,21 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Search, Trash2 } from 'lucide-react'
 import {
   deleteProduct,
-  getCategories,
-  getCollections,
   getPurchaseHistory,
   searchProducts,
-  type CategoryOption,
-  type CollectionOption,
   type ProductDTO,
   type PurchaseHistoryEntry,
 } from '@/app/dashboard/actions'
-import { CreateProductModal } from '@/components/dashboard/CreateProductModal'
 import { StatusBadge } from './productShared'
-import { Trash2 } from 'lucide-react'
 import {
   Alert,
   Button,
@@ -53,15 +47,7 @@ export function InventorySection() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [history, setHistory] = useState<Record<string, PurchaseHistoryEntry[]>>({})
-  const [categories, setCategories] = useState<CategoryOption[]>([])
-  const [collections, setCollections] = useState<CollectionOption[]>([])
-  const [showCreate, setShowCreate] = useState(false)
   const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    getCategories().then(setCategories).catch(() => {})
-    getCollections().then(setCollections).catch(() => {})
-  }, [])
 
   const load = useCallback(
     async (opts: { page?: number; search?: string } = {}) => {
@@ -141,11 +127,7 @@ export function InventorySection() {
       <PageHeader
         title="Magazzino"
         description={`${total} prodotti · stock, costo medio e storico acquisti`}
-      >
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" /> Nuovo Prodotto
-        </Button>
-      </PageHeader>
+      />
 
       <Toolbar>
         <div className="relative min-w-[240px] flex-1">
@@ -300,20 +282,6 @@ export function InventorySection() {
             </Button>
           </div>
         </div>
-      ) : null}
-
-      {showCreate ? (
-        <CreateProductModal
-          categories={categories}
-          collections={collections}
-          onClose={() => setShowCreate(false)}
-          onCreated={() => {
-            setShowCreate(false)
-            notify('Prodotto creato')
-            load()
-          }}
-          onError={(msg) => notify(msg, 'error')}
-        />
       ) : null}
     </div>
   )
