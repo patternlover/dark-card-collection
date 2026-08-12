@@ -57,7 +57,7 @@ Registro cronologico delle attività di sicurezza (analisi, modifiche, test). Fo
 
 ### Note operative
 - Nessuna cancellazione dati; migration reversibile.
-- Non ancora applicate (fuori scope dell'approvazione): REQ-05 (sessione revocabile/SQL runner), REQ-07 (rate limiting), REQ-08..REQ-15.
+- Stato requisiti REQ non applicati → unico punto: [`docs/project/PENDING.md`](../project/PENDING.md) (sezioni D1-D8 e Non-goal).
 
 ---
 

@@ -21,7 +21,7 @@ export default async function BestsellersPage() {
   try {
     const payload = await getPayloadClient()
 
-    const result = await payload.find({
+    const result = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
         and: [
@@ -36,7 +36,7 @@ export default async function BestsellersPage() {
     products = result.docs
 
     if (products.length === 0) {
-      const fallback = await payload.find({
+      const fallback = await payload.find({ overrideAccess: true, 
         collection: 'products',
         where: {
           and: [
@@ -50,14 +50,14 @@ export default async function BestsellersPage() {
       products = fallback.docs
     }
 
-    const catResult = await payload.find({
+    const catResult = await payload.find({ overrideAccess: true, 
       collection: 'categories',
       limit: 50,
       sort: 'name',
     })
     categories = catResult.docs
 
-    const colResult = await payload.find({
+    const colResult = await payload.find({ overrideAccess: true, 
       collection: 'collections',
       limit: 50,
       sort: 'name',

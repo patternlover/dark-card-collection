@@ -1,4 +1,5 @@
 import type { CollectionConfig, CollectionBeforeChangeHook } from 'payload'
+import { allowRead, denyAll } from '@/payload/access'
 
 const beforeChange: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
   if (data.quantity === undefined) return data
@@ -29,6 +30,12 @@ export const Products: CollectionConfig = {
   },
   hooks: {
     beforeChange: [beforeChange],
+  },
+  access: {
+    read: allowRead,
+    create: denyAll,
+    update: denyAll,
+    delete: denyAll,
   },
   fields: [
     {

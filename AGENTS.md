@@ -70,11 +70,11 @@
 ## Workflow AI
 - Modello di default: **DeepSeek V4 Lite** su OpenCode. Modello "lite": dare istruzioni esplicite, task piccoli e ben delimitati, uno alla volta. Niente refactor multi-file speculativi.
 - Flusso standard per ogni sessione: **Plan mode** → il piano prodotto diventa il file di sessione in `docs/project/sessions/` → conferma umana → **Build mode** per implementare il piano step per step, senza deviare.
-- **All'inizio di ogni sessione/fase**: leggere `docs/project/sessions/OPEN-TASKS.md` (tracker dei task in sospeso) e verificare i task `open`/`blocked` che impattano l'ambito — gestirli o dichiararli esplicitamente prima di buildare. Aggiornare il tracker a fine fase/sessione (un task si chiude solo con verifica fatta).
+- **All'inizio di ogni sessione/fase**: leggere `docs/project/PENDING.md` (tracker dei task in sospeso) e verificare i task `open`/`blocked` che impattano l'ambito — gestirli o dichiararli esplicitamente prima di buildare. Aggiornare il tracker a fine fase/sessione (un task si chiude solo con verifica fatta).
 - In Build mode: leggere i file per intero prima di modificarli; dopo ogni blocco di modifiche lanciare `pnpm lint` (+ test toccati), non solo a fine sessione.
 - OpenCode free tier = ~200 richieste modello / 5h (condivise tra i modelli free): meglio poche richieste con spec dense che tanti botta-e-risposta.
 - **Post-commit (obbligatorio dopo OGNI commit)**: `git push origin main` → verificare CI (`gh run watch <run-id> --exit-status`, attende l'esito) → verificare l'auto-deploy Vercel sulla live `https://darkcardcollection.com` (es. una rotta nuova risponde 200) → aggiornare changelog/tracker SOLO se push + CI + deploy sono andati a buon fine. Se qualcosa fallisce: correggere, ricommit, re-push, ri-verificare.
-- Checklist di chiusura sessione: `pnpm lint` ✓ · `pnpm test` ✓ · se collections toccate → `payload generate:types` + migration ✓ · `docs/project/sessions/OPEN-TASKS.md` aggiornato ✓ · plan/changelog di sessione + `docs/project/changelog.md` aggiornati ✓ · push + CI + deploy verificati ✓.
+- Checklist di chiusura sessione: `pnpm lint` ✓ · `pnpm test` ✓ · se collections toccate → `payload generate:types` + migration ✓ · `docs/project/PENDING.md` aggiornato ✓ · plan/changelog di sessione + `docs/project/changelog.md` aggiornati ✓ · push + CI + deploy verificati ✓.
 
 ## Note operative
 - WSL: `tsc --noEmit` e `pnpm build` possono andare in OOM — usare la build con heap aumentata. `pnpm generate:types` può andare in timeout.
@@ -82,6 +82,7 @@
 - **`postgresAdapter` usa `push: false` in produzione** (`src/payload.config.ts`): la schema si applica con `payload migrate` nel build. NON riattivare `push: true`: causerebbe una sync schema a ogni cold-start serverless su Vercel → server actions lente/timeout → sintomo noto: la dashboard (es. Listino) non aggiorna i dati / dà errori. In dev (`NODE_ENV !== production`) il push resta attivo.
 - **Idratazione (errore React #441)**: i componenti client NON devono leggere `window`/`localStorage`/`Date.now()` nel render (solo in `useEffect` + stato `mounted`). Qualsiasi attributo SSR che differisce dal client genera `Minified React error #441`. Regressione coperta da `tests-e2e/console-clean.spec.ts` (fallisce su errori di hydration nelle pagine chiave).
 - **Migration obbligatorie anche per le tabelle di sistema Payload**: aggiungere/rimuovere una collection richiede di aggiornare anche le tabelle join gestite da Payload (`payload_locked_documents_rels`, `payload_preferences_rels`, ecc.) — ogni collection vi aggiunge una colonna `<collection>_id`. La mancanza (es. `purchases_id`) fa fallire con 500 OGNI write della dashboard ("column ... does not exist", vedi `20260812_fix_locked_documents_rels.ts`). Verifica drift: `SCHEMA_DRIFT_URI=<db> SCHEMA_DRIFT_REF_URI=<riferimento> pnpm exec tsx scripts/check-schema-drift.ts`.
+- **Dev server vs prod**: `next dev` può mostrare remount dei componenti client durante l'interazione (artefatto HMR) e un doppio render transitorio su `/shop` durante il caricamento (hydration/streaming) — **assenti sul bundle di produzione** (verificato). Per test stabili usare `next build && next start`; i test E2E tollerano il transitorio (`.first()`).
 
 <!-- BEGIN:nextjs-agent-rules -->
 

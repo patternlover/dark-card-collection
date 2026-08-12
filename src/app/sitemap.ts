@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const payload = await getPayloadClient()
 
-    const collections = await payload.find({
+    const collections = await payload.find({ overrideAccess: true, 
       collection: 'collections',
       limit: 500,
       sort: 'name',
@@ -50,7 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
     }
 
-    const categories = await payload.find({
+    const categories = await payload.find({ overrideAccess: true, 
       collection: 'categories',
       limit: 500,
       sort: 'name',
@@ -67,7 +67,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     let page = 1
     while (page <= 20) {
-      const products = await payload.find({
+      const products = await payload.find({ overrideAccess: true, 
         collection: 'products',
         where: {
           and: [

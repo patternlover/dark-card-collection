@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { google } from 'googleapis'
 import { COOKIE_NAME, SESSION_COOKIE_OPTIONS, signToken } from '@/lib/dash-auth'
+import { logAudit } from '@/lib/audit'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000').replace(/\/+$/, '')
 
@@ -58,6 +59,7 @@ export async function GET(request: Request) {
 
     if (!isAllowedEmail(payload.email)) return fail('google-not-allowed')
 
+    logAudit('dashboard.login', { email: payload.email })
     const res = NextResponse.redirect(`${SITE_URL}/dashboard`)
     res.cookies.set(COOKIE_NAME, signToken(`google:${payload.email}`), SESSION_COOKIE_OPTIONS)
     res.cookies.set(STATE_COOKIE, '', { ...STATE_COOKIE_OPTIONS, maxAge: 0 })

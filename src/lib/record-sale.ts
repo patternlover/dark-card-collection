@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { roundMoney } from './purchase-math'
 import { productIdFrom } from './inventory'
+import { logAudit } from './audit'
 
 export type SalesChannel = 'website' | 'vinted' | 'ebay' | 'cardmarket' | 'other'
 
@@ -88,7 +89,7 @@ async function loadLinesForProduct(payload: Payload, productId: number): Promise
   let page = 1
   const pageSize = 100
   for (;;) {
-    const result = await payload.find({ collection: 'purchases', page, limit: pageSize, depth: 0 })
+    const result = await payload.find({ overrideAccess: true,  collection: 'purchases', page, limit: pageSize, depth: 0 })
     for (const doc of result.docs) {
       for (const line of doc.lines ?? []) {
         if (productIdFrom(line.product) !== productId) continue
@@ -126,7 +127,7 @@ export async function recordSale(payload: Payload, args: RecordSaleArgs): Promis
   const fifoLines = new Map<number, SaleLine[]>()
 
   for (const item of merged.values()) {
-    const product = await payload.findByID({ collection: 'products', id: item.productId, depth: 0 })
+    const product = await payload.findByID({ overrideAccess: true,  collection: 'products', id: item.productId, depth: 0 })
     products.set(item.productId, {
       title: (product as { title?: string }).title || 'Prodotto',
       cost_of_goods_sold: Number((product as { cost_of_goods_sold?: number }).cost_of_goods_sold ?? 0),
@@ -154,7 +155,7 @@ export async function recordSale(payload: Payload, args: RecordSaleArgs): Promis
     }
   })
 
-  const order = await payload.create({
+  const order = await payload.create({ overrideAccess: true, 
     collection: 'orders',
     data: {
       transaction_id: args.transactionId,
@@ -172,7 +173,7 @@ export async function recordSale(payload: Payload, args: RecordSaleArgs): Promis
 
   for (const item of merged.values()) {
     const currentQty = products.get(item.productId)?.quantity ?? 0
-    await payload.update({
+    await payload.update({ overrideAccess: true, 
       collection: 'products',
       id: item.productId,
       data: { quantity: Math.max(0, currentQty - item.quantity) },
@@ -190,7 +191,7 @@ export async function recordSale(payload: Payload, args: RecordSaleArgs): Promis
   }
 
   for (const [purchaseId, lineQuantities] of byPurchase) {
-    const doc = await payload.findByID({ collection: 'purchases', id: purchaseId, depth: 0 })
+    const doc = await payload.findByID({ overrideAccess: true,  collection: 'purchases', id: purchaseId, depth: 0 })
     const lines = ((doc as { lines?: Array<{ id?: string | null; remaining_quantity?: number }> }).lines ?? []) as Array<{
       id?: string | null
       remaining_quantity?: number
@@ -200,7 +201,7 @@ export async function recordSale(payload: Payload, args: RecordSaleArgs): Promis
       if (consumed === undefined) return line
       return { ...line, remaining_quantity: Math.max(0, Number(line.remaining_quantity ?? 0) - consumed) }
     })
-    await payload.update({
+    await payload.update({ overrideAccess: true, 
       collection: 'purchases',
       id: purchaseId,
       data: { lines: updatedLines as any },
@@ -221,4 +222,8 @@ export async function recordSale(payload: Payload, args: RecordSaleArgs): Promis
       productTitle: products.get(item.productId)?.title ?? 'Prodotto',
     })),
   }
+}
+
+export function auditSaleResult(result: RecordSaleResult, channel: SalesChannel): void {
+  logAudit('sale.recorded', { orderId: result.orderId, channel, items: result.items.length })
 }

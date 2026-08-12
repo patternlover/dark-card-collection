@@ -41,7 +41,7 @@ export async function generateMetadata({
   const url = `${SITE_URL}/products/${slug}`
   try {
     const payload = await getPayloadClient()
-    const result = await payload.find({
+    const result = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
         and: [
@@ -139,7 +139,7 @@ export default async function ProductPage({
 
   const payload = await getPayloadClient()
 
-  const result = await payload.find({
+  const result = await payload.find({ overrideAccess: true, 
     collection: 'products',
     where: {
       and: [
@@ -158,7 +158,7 @@ export default async function ProductPage({
 
   product = result.docs[0]
 
-  const allVariants = await payload.find({
+  const allVariants = await payload.find({ overrideAccess: true, 
     collection: 'products',
     where: {
       and: [
@@ -176,7 +176,7 @@ export default async function ProductPage({
 
   if (product?.collection) {
     const colId = typeof product.collection === 'object' ? product.collection.id : product.collection
-    const related = await payload.find({
+    const related = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
         and: [

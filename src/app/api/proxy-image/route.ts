@@ -6,6 +6,8 @@ const ALLOWED_HOSTS = [
   'cdn.cardmarket.com',
 ]
 
+const MAX_BYTES = 5 * 1024 * 1024 // 5MB
+
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url')
 
@@ -26,10 +28,11 @@ export async function GET(request: NextRequest) {
 
   try {
     const response = await fetch(url, {
+      redirect: 'follow',
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
         'Referer': 'https://www.cardmarket.com/',
-        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
       },
     })
 
@@ -37,8 +40,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: `Upstream returned ${response.status}` }, { status: response.status })
     }
 
-    const contentType = response.headers.get('content-type') || 'image/jpeg'
+    // redirect validation: il fetch segue i redirect; l'URL finale deve restare in allowlist
+    let finalHost: string | null = null
+    try {
+      finalHost = new URL(response.url).hostname
+    } catch {
+      return NextResponse.json({ error: 'Invalid upstream URL' }, { status: 502 })
+    }
+    if (!ALLOWED_HOSTS.includes(finalHost)) {
+      return NextResponse.json({ error: 'Redirect outside allowlist' }, { status: 403 })
+    }
+
+    // content-type deve essere un'immagine (mai text/html/svg non richiesto)
+    const contentType = response.headers.get('content-type') || ''
+    if (!contentType.toLowerCase().startsWith('image/') || contentType.toLowerCase().includes('svg')) {
+      return NextResponse.json({ error: 'Content-Type not allowed' }, { status: 400 })
+    }
+
+    // limite dimensione: preferisci content-length, poi fallback sul body letto
+    const contentLength = Number(response.headers.get('content-length')) || 0
+    if (contentLength > MAX_BYTES) {
+      return NextResponse.json({ error: 'Image too large' }, { status: 413 })
+    }
+
     const body = await response.arrayBuffer()
+    if (body.byteLength > MAX_BYTES) {
+      return NextResponse.json({ error: 'Image too large' }, { status: 413 })
+    }
 
     return new NextResponse(body, {
       status: 200,
@@ -48,7 +76,7 @@ export async function GET(request: NextRequest) {
         'Access-Control-Allow-Origin': '*',
       },
     })
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Proxy fetch failed' }, { status: 502 })
   }
 }

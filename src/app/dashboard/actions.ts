@@ -6,7 +6,8 @@ import { getPayloadClient } from '@/lib/payload'
 import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
 import { recordSale, type SalesChannel } from '@/lib/record-sale'
-import { applyPurchaseDeletion, applyStockDelta, purchaseStockDelta } from '@/lib/inventory'
+import { applyPurchaseDeletion, applyStockDelta, productIdFrom, purchaseStockDelta } from '@/lib/inventory'
+import { logAudit } from '@/lib/audit'
 
 async function requireAuth(): Promise<void> {
   if (!(await isAuthed())) {
@@ -15,6 +16,7 @@ async function requireAuth(): Promise<void> {
 }
 
 export async function logout(): Promise<void> {
+  logAudit('dashboard.logout', {})
   await clearDashSession()
   redirect('/')
 }
@@ -260,15 +262,15 @@ export async function getOverview(): Promise<OverviewData> {
     runReadOnlyQuery(OVERVIEW_PRODUCTS_SQL),
     runReadOnlyQuery(OVERVIEW_ORDERS_SQL),
     getPayloadClient().then((payload) =>
-      payload.find({ collection: 'orders', limit: 8, sort: '-createdAt', depth: 1, draft: false }),
+      payload.find({ overrideAccess: true,  collection: 'orders', limit: 8, sort: '-createdAt', depth: 1, draft: false }),
     ),
   ])
 
   if (pRes.error || oRes.error) {
     const payload = await getPayloadClient()
     const [productsRes, allOrdersRes] = await Promise.all([
-      payload.find({ collection: 'products', limit: 1000, draft: false }),
-      payload.find({ collection: 'orders', limit: 1000, sort: '-createdAt', depth: 1, draft: false }),
+      payload.find({ overrideAccess: true,  collection: 'products', limit: 1000, draft: false }),
+      payload.find({ overrideAccess: true,  collection: 'orders', limit: 1000, sort: '-createdAt', depth: 1, draft: false }),
     ])
     return computeOverviewFromDocs(productsRes.docs, allOrdersRes.docs)
   }
@@ -332,7 +334,7 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
   if (filters.withImage === 'yes') where.push({ image_link: { exists: true } })
   if (filters.withImage === 'no') where.push({ image_link: { exists: false } })
 
-  const res = await payload.find({
+  const res = await payload.find({ overrideAccess: true, 
     collection: 'products',
     where: where.length > 0 ? ({ and: where } as any) : undefined,
     limit: filters.limit || 50,
@@ -351,14 +353,14 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
 export async function getCategories(): Promise<CategoryOption[]> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'categories', limit: 500, sort: 'name' })
+  const res = await payload.find({ overrideAccess: true,  collection: 'categories', limit: 500, sort: 'name' })
   return res.docs.map((d: any) => ({ id: String(d.id), name: d.name }))
 }
 
 export async function getCollections(): Promise<CollectionOption[]> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'collections', limit: 500, sort: 'name' })
+  const res = await payload.find({ overrideAccess: true,  collection: 'collections', limit: 500, sort: 'name' })
   return res.docs.map((d: any) => ({ id: String(d.id), name: d.name }))
 }
 
@@ -404,6 +406,7 @@ const PATCH_FIELD_MAP: Record<string, string> = {
 
 export async function updateProduct(id: string, patch: UpdateProductPatch): Promise<ProductDTO> {
   await requireAuth()
+  logAudit('product.update', { id, keys: Object.keys(patch) })
   const payload = await getPayloadClient()
 
   const data: Record<string, any> = {}
@@ -436,7 +439,7 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     if (key in patch) data[PATCH_FIELD_MAP[key] ?? key] = patch[key] ?? undefined
   }
 
-  const res = await payload.update({
+  const res = await payload.update({ overrideAccess: true, 
     collection: 'products',
     id,
     data: data as any,
@@ -457,7 +460,7 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
   let candidate = slug
   let i = 2
   while (true) {
-    const existing = await payload.find({
+    const existing = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: { slug: { equals: candidate } },
       limit: 1,
@@ -466,7 +469,7 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
     candidate = `${slug}-${i++}`
   }
 
-  const res = await payload.create({
+  const res = await payload.create({ overrideAccess: true, 
     collection: 'products',
     data: {
       title,
@@ -502,7 +505,7 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
 export async function getOrders(): Promise<OrderDTO[]> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({
+  const res = await payload.find({ overrideAccess: true, 
     collection: 'orders',
     limit: 200,
     sort: '-createdAt',
@@ -514,8 +517,9 @@ export async function getOrders(): Promise<OrderDTO[]> {
 
 export async function updateOrderStatus(id: string, status: string): Promise<OrderDTO> {
   await requireAuth()
+  logAudit('order.status', { id, status })
   const payload = await getPayloadClient()
-  const res = await payload.update({
+  const res = await payload.update({ overrideAccess: true, 
     collection: 'orders',
     id,
     data: { status } as any,
@@ -567,7 +571,7 @@ export async function getDbOverview(): Promise<DbTableInfo[]> {
 export async function deleteProduct(id: string): Promise<void> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.delete({ collection: 'products', id })
+  await payload.delete({ overrideAccess: true,  collection: 'products', id })
 }
 
 export interface CategoryDTO {
@@ -580,7 +584,7 @@ export interface CategoryDTO {
 export async function getCategoriesFull(): Promise<CategoryDTO[]> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'categories', limit: 500, sort: 'name', draft: false })
+  const res = await payload.find({ overrideAccess: true,  collection: 'categories', limit: 500, sort: 'name', draft: false })
   return res.docs.map((d: any) => ({
     id: String(d.id),
     name: d.name || '',
@@ -600,12 +604,12 @@ export async function createCategory(data: { name: string; slug?: string; descri
   let candidate = slug
   let i = 2
   while (true) {
-    const existing = await payload.find({ collection: 'categories', where: { slug: { equals: candidate } }, limit: 1 })
+    const existing = await payload.find({ overrideAccess: true,  collection: 'categories', where: { slug: { equals: candidate } }, limit: 1 })
     if (existing.docs.length === 0) break
     candidate = `${slug}-${i++}`
   }
 
-  const res = await payload.create({
+  const res = await payload.create({ overrideAccess: true, 
     collection: 'categories',
     data: { name, slug: candidate, description: data.description || undefined } as any,
   })
@@ -627,7 +631,7 @@ export async function updateCategory(
   if (data.name !== undefined) patch.name = data.name
   if (data.slug !== undefined) patch.slug = data.slug
   if (data.description !== undefined) patch.description = data.description ?? undefined
-  const res = await payload.update({ collection: 'categories', id, data: patch as any })
+  const res = await payload.update({ overrideAccess: true,  collection: 'categories', id, data: patch as any })
   return {
     id: String(res.id),
     name: res.name as string,
@@ -639,7 +643,7 @@ export async function updateCategory(
 export async function deleteCategory(id: string): Promise<void> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.delete({ collection: 'categories', id })
+  await payload.delete({ overrideAccess: true,  collection: 'categories', id })
 }
 
 export interface CollectionDTO {
@@ -653,7 +657,7 @@ export interface CollectionDTO {
 export async function getCollectionsFull(): Promise<CollectionDTO[]> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({ collection: 'collections', limit: 500, sort: 'name', draft: false })
+  const res = await payload.find({ overrideAccess: true,  collection: 'collections', limit: 500, sort: 'name', draft: false })
   return res.docs.map((d: any) => ({
     id: String(d.id),
     name: d.name || '',
@@ -679,12 +683,12 @@ export async function createCollection(data: {
   let candidate = slug
   let i = 2
   while (true) {
-    const existing = await payload.find({ collection: 'collections', where: { slug: { equals: candidate } }, limit: 1 })
+    const existing = await payload.find({ overrideAccess: true,  collection: 'collections', where: { slug: { equals: candidate } }, limit: 1 })
     if (existing.docs.length === 0) break
     candidate = `${slug}-${i++}`
   }
 
-  const res = await payload.create({
+  const res = await payload.create({ overrideAccess: true, 
     collection: 'collections',
     data: {
       name,
@@ -713,7 +717,7 @@ export async function updateCollection(
   if (data.slug !== undefined) patch.slug = data.slug
   if (data.description !== undefined) patch.description = data.description ?? undefined
   if (data.releaseDate !== undefined) patch.releaseDate = data.releaseDate || undefined
-  const res = await payload.update({ collection: 'collections', id, data: patch as any })
+  const res = await payload.update({ overrideAccess: true,  collection: 'collections', id, data: patch as any })
   return {
     id: String(res.id),
     name: res.name as string,
@@ -726,7 +730,7 @@ export async function updateCollection(
 export async function deleteCollection(id: string): Promise<void> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.delete({ collection: 'collections', id })
+  await payload.delete({ overrideAccess: true,  collection: 'collections', id })
 }
 
 export interface MessageDTO {
@@ -748,7 +752,7 @@ export interface MessagesPage {
 export async function getMessagesPage(page = 1, pageSize = 20): Promise<MessagesPage> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({
+  const res = await payload.find({ overrideAccess: true, 
     collection: 'messages',
     limit: pageSize,
     page,
@@ -773,28 +777,28 @@ export async function getMessagesPage(page = 1, pageSize = 20): Promise<Messages
 export async function getMessageBody(id: string): Promise<string | null> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.findByID({ collection: 'messages', id, draft: false })
+  const res = await payload.findByID({ overrideAccess: true,  collection: 'messages', id, draft: false })
   return (res as any).message ?? null
 }
 
 export async function toggleMessageRead(id: string, read: boolean): Promise<{ id: string; read: boolean }> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.update({ collection: 'messages', id, data: { read } as any })
+  await payload.update({ overrideAccess: true,  collection: 'messages', id, data: { read } as any })
   return { id: String(id), read }
 }
 
 export async function toggleMessageReplied(id: string, replied: boolean): Promise<{ id: string; replied: boolean }> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.update({ collection: 'messages', id, data: { replied } as any })
+  await payload.update({ overrideAccess: true,  collection: 'messages', id, data: { replied } as any })
   return { id: String(id), replied }
 }
 
 export async function deleteMessage(id: string): Promise<void> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.delete({ collection: 'messages', id })
+  await payload.delete({ overrideAccess: true,  collection: 'messages', id })
 }
 
 export interface SiteSettingsDTO {
@@ -805,7 +809,7 @@ export interface SiteSettingsDTO {
 export async function getSiteSettings(): Promise<SiteSettingsDTO> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const g = await payload.findGlobal({ slug: 'site-settings', draft: false })
+  const g = await payload.findGlobal({ overrideAccess: true,  slug: 'site-settings', draft: false })
   return {
     siteName: (g as any).siteName ?? null,
     description: (g as any).description ?? null,
@@ -818,7 +822,7 @@ export async function updateSiteSettings(data: SiteSettingsDTO): Promise<SiteSet
   const patch: Record<string, any> = {}
   if (data.siteName !== undefined) patch.siteName = data.siteName
   if (data.description !== undefined) patch.description = data.description
-  const g = await payload.updateGlobal({ slug: 'site-settings', data: patch as any })
+  const g = await payload.updateGlobal({ overrideAccess: true,  slug: 'site-settings', data: patch as any })
   return {
     siteName: (g as any).siteName ?? null,
     description: (g as any).description ?? null,
@@ -839,7 +843,7 @@ export interface HeaderDTO {
 export async function getHeader(): Promise<HeaderDTO> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const g = await payload.findGlobal({ slug: 'header', depth: 1, draft: false })
+  const g = await payload.findGlobal({ overrideAccess: true,  slug: 'header', depth: 1, draft: false })
   const logo = (g as any).logo
   const navItems = Array.isArray((g as any).navItems)
     ? (g as any).navItems.map((n: any) => ({ id: n.id, label: n.label || '', url: n.url || '' }))
@@ -855,7 +859,7 @@ export async function updateHeader(data: HeaderDTO): Promise<HeaderDTO> {
     .filter((n) => n.label || n.url)
   const patch: Record<string, any> = { navItems }
   if (data.logoId !== undefined) patch.logo = data.logoId ? Number(data.logoId) : null
-  const g = await payload.updateGlobal({ slug: 'header', data: patch as any })
+  const g = await payload.updateGlobal({ overrideAccess: true,  slug: 'header', data: patch as any })
   const logo = (g as any).logo
   return {
     logoId: logo ? String(logo.id ?? logo) : null,
@@ -921,7 +925,7 @@ export async function getPurchases(opts: { search?: string; page?: number; limit
       { notes: { contains: opts.search } },
     ]
   }
-  const res = await payload.find({
+  const res = await payload.find({ overrideAccess: true, 
     collection: 'purchases',
     where,
     page,
@@ -990,7 +994,7 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
 
   if (lines.length === 0) throw new Error('Aggiungi almeno una riga con quantità maggiore di 0')
 
-  const res = await payload.create({
+  const res = await payload.create({ overrideAccess: true, 
     collection: 'purchases',
     data: {
       purchase_date: purchaseDate,
@@ -1009,8 +1013,94 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
 export async function deletePurchase(id: string): Promise<void> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const deleted = await payload.delete({ collection: 'purchases', id })
+  const deleted = await payload.delete({ overrideAccess: true,  collection: 'purchases', id })
   await applyPurchaseDeletion(payload, deleted as { lines?: { product?: unknown; quantity?: number; remaining_quantity?: number }[] })
+}
+
+export async function updatePurchase(id: string, data: CreatePurchaseInput): Promise<PurchaseDTO> {
+  await requireAuth()
+  logAudit('purchase.update', { id, lines: (data.lines ?? []).length })
+  const payload = await getPayloadClient()
+
+  const purchaseDate = (data.purchaseDate || '').trim()
+  if (!purchaseDate) throw new Error('La data di acquisto è obbligatoria')
+
+  const existing = await payload.findByID({ overrideAccess: true,  collection: 'purchases', id, depth: 1 })
+  if (!existing) throw new Error('Lotto non trovato')
+
+  const oldLines = Array.isArray(existing.lines) ? existing.lines : []
+  const oldByProduct = new Map<number, { id?: string | null; quantity: number; remaining: number }>()
+  for (const line of oldLines) {
+    const pid = productIdFrom(line.product)
+    if (!pid) continue
+    const qty = Number(line.quantity) || 0
+    oldByProduct.set(pid, {
+      id: (line as { id?: string | null }).id ?? null,
+      quantity: qty,
+      remaining: Number((line as { remaining_quantity?: number }).remaining_quantity ?? qty) || 0,
+    })
+  }
+
+  const newLines: Array<{ id?: string; product: number; quantity: number; unit_cost: number; remaining_quantity: number }> = []
+  const newDelta = new Map<number, number>()
+  for (const line of data.lines ?? []) {
+    const quantity = Number(line.quantity) || 0
+    const unitCost = Number(line.unitCost) || 0
+    if (quantity <= 0) continue
+
+    let productId = line.productId ? Number(line.productId) : undefined
+    if (!productId) {
+      const title = (line.newProductTitle || '').trim()
+      if (!title) throw new Error('Ogni riga deve avere un prodotto esistente o un nuovo titolo')
+      const created = await createProduct({
+        title,
+        price: line.newProductPrice ?? undefined,
+        category: line.newProductCategory || undefined,
+        collection: line.newProductCollection || undefined,
+        imageLink: line.newProductImageLink || undefined,
+        quantity: 0,
+        status: 'listed',
+      })
+      productId = Number(created.id)
+    }
+
+    const old = oldByProduct.get(productId)
+    const newRemaining = old
+      ? Math.min(quantity, Math.max(0, old.remaining + (quantity - old.quantity)))
+      : quantity
+
+    newLines.push({
+      ...(old?.id ? { id: old.id } : {}),
+      product: productId,
+      quantity,
+      unit_cost: unitCost,
+      remaining_quantity: newRemaining,
+    })
+    newDelta.set(productId, (newDelta.get(productId) ?? 0) + quantity)
+  }
+
+  if (newLines.length === 0) throw new Error('Aggiungi almeno una riga con quantità maggiore di 0')
+
+  const delta = new Map<number, number>()
+  for (const [pid, qty] of oldByProduct) delta.set(pid, -qty)
+  for (const [pid, qty] of newDelta) delta.set(pid, (delta.get(pid) ?? 0) + qty)
+
+  const res = await payload.update({ overrideAccess: true, 
+    collection: 'purchases',
+    id,
+    data: {
+      purchase_date: purchaseDate,
+      source_type: data.sourceType || undefined,
+      source_name: (data.sourceName || '').trim() || undefined,
+      extra_costs: data.extraCosts ?? 0,
+      notes: (data.notes || '').trim() || undefined,
+      lines: newLines,
+    } as any,
+    depth: 1,
+  })
+
+  await applyStockDelta(payload, delta)
+  return toPurchaseDTO(res)
 }
 
 export interface PurchaseHistoryEntry {
@@ -1032,7 +1122,7 @@ export async function getPurchaseHistory(productId: string): Promise<PurchaseHis
   let page = 1
   const pageSize = 100
   for (;;) {
-    const res = await payload.find({
+    const res = await payload.find({ overrideAccess: true, 
       collection: 'purchases',
       page,
       limit: pageSize,
@@ -1084,12 +1174,13 @@ export async function recordExternalSale(data: {
   await requireAuth()
   const payload = await getPayloadClient()
 
-  const prodRes = await payload.findByID({ collection: 'products', id: data.productId })
+  const prodRes = await payload.findByID({ overrideAccess: true,  collection: 'products', id: data.productId })
   if (!prodRes) throw new Error('Prodotto non trovato in inventario')
 
   const soldQty = Math.max(1, data.quantity)
   const channel = normalizeChannel(data.platform)
   const transactionId = `EXT-${channel.toUpperCase()}-${Date.now()}`
+  logAudit('sale.external', { productId: data.productId, quantity: soldQty, channel, value: data.salePrice * soldQty })
 
   await recordSale(payload, {
     transactionId,

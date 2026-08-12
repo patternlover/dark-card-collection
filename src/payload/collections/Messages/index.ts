@@ -1,9 +1,16 @@
 import type { CollectionConfig } from 'payload'
+import { allowRead, denyAll } from '@/payload/access'
 
 export const Messages: CollectionConfig = {
   slug: 'messages',
   admin: {
     useAsTitle: 'subject',
+  },
+  access: {
+    read: denyAll,
+    create: denyAll,
+    update: denyAll,
+    delete: denyAll,
   },
   fields: [
     {

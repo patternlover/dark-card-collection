@@ -2,6 +2,7 @@ import type {
   CollectionConfig,
   CollectionBeforeChangeHook,
 } from 'payload'
+import { allowRead, denyAll } from '@/payload/access'
 import { computeEffectiveUnitCosts, roundMoney } from '@/lib/purchase-math'
 
 interface PurchaseLineInput {
@@ -49,6 +50,12 @@ export const Purchases: CollectionConfig = {
   slug: 'purchases',
   admin: {
     useAsTitle: 'source_name',
+  },
+  access: {
+    read: denyAll,
+    create: denyAll,
+    update: denyAll,
+    delete: denyAll,
   },
   fields: [
     {

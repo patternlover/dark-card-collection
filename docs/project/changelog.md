@@ -1,7 +1,34 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Root cause Listino live risolta: schema drift `payload_locked_documents_rels` (500 su ogni write)**.
+Ultima sessione: **Smaltimento task pendenti (centralizzazione PENDING + feature + security REQ)**.
+
+---
+
+## Sessione recente 13 — Smaltimento task pendenti + centralizzazione
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` §Fase 10). Chiusi tutti i task aperti fuori scope principale.
+
+### Centralizzazione task
+- **`docs/project/PENDING.md`**: unico punto per TUTTE le task in sospeso (aperte, waiting-user, non-goal, chiuso storico). Rimossi gli elenchi sparsi da `overview.md` (Known Issues → puntatore), `changelog.md` (Stato attuale → puntatore), `docs/security/changelog.md`; riferimenti aggiornati in `AGENTS.md`, `sessions/README.md`, `schema-and-flows.md`.
+
+### Feature e copertura
+- **"Modifica lotto"** (`updatePurchase` in `actions.ts` + UI in `PurchasesSection`): riconciliazione stock via `applyStockDelta`, `remaining_quantity` preservate (FIFO intatto). E2E: edit lotto → stock aggiornato.
+- **E2E** per `/dashboard` (overview stats) e `/dashboard/sql` (query read-only) → `tests-e2e/overview-sql.spec.ts`.
+
+### Security REQ
+- **REQ-13 access control deny-by-default**: `src/payload/access.ts` (`denyAll`/`allowRead`), `access` esplicito su tutte le collection (write negate; read pubblico solo products/categories/collections), collection `Users` esplicita (register bloccato), `overrideAccess: true` su 99 chiamate interne. Verificato: POST /api/products 403, GET /api/orders 403, register 404, nessun dato creato.
+- **REQ-08**: aggiunto `Strict-Transport-Security` (HSTS) in `next.config.ts`.
+- **REQ-07**: `src/lib/rate-limit.ts` applicato a `/api/stripe/checkout` (30/min/IP); contact form già limitato.
+- **REQ-09**: proxy immagini indurito (redirect in allowlist, content-type `image/*` no svg, limite 5MB).
+- **REQ-12**: `src/lib/audit.ts` + eventi (webhook, sale, product.update, order.status, purchase create/update/delete, login/logout dashboard) senza dati sensibili.
+- REQ-05/10/14 → coperti/documentati; REQ-15 → `waiting-user` in PENDING.
+
+### Chiusi per design
+- Known Issues #1/#2/#3/#4/#5/#6/#7/#9 → non-goal documentati in PENDING; E5/E6 documentati (artefatti dev, assenti in prod).
+
+### Verifica
+`pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · **Playwright 28/28** ✓ · REST anonima chiusa (403) · HSTS attivo.
 
 ---
 
@@ -52,7 +79,7 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` �
 
 ## Sessione recente 10 — Bugtesting E2E dashboard + fix bug + validazione migration
 
-Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` §Fase 6, tracker `docs/project/sessions/OPEN-TASKS.md`). Suite end-to-end Playwright della dashboard in locale, con fix di bug trovati.
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` §Fase 6, tracker `docs/project/PENDING.md`). Suite end-to-end Playwright della dashboard in locale, con fix di bug trovati.
 
 ### Ambiente
 - Postgres locale (`dcc_test`), `.env.test` (gitignored), seed `scripts/test-db-setup.ts`, `@playwright/test`, `playwright.config.ts` con auth bypass (cookie `dcc-dash` firmato). Suite `tests-e2e/` **24 test**.
@@ -73,7 +100,7 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` �
 
 ## Sessione recente 9 — Allineamento al modello inventario (Fasi 1-5)
 
-Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` + tracker `docs/project/sessions/OPEN-TASKS.md`). Implementato il modello target di AGENTS.md/overview.md: Purchases a righe con FIFO e costi effettivi, pipeline vendita condivisa, dashboard Lotti/Magazzino/Listino/Ordini/Messaggi, storefront "Esaurito".
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` + tracker `docs/project/PENDING.md`). Implementato il modello target di AGENTS.md/overview.md: Purchases a righe con FIFO e costi effettivi, pipeline vendita condivisa, dashboard Lotti/Magazzino/Listino/Ordini/Messaggi, storefront "Esaurito".
 
 ### Modello dati (Fase 1)
 - `Purchases` riscritta: `purchase_date`/`source_type`/`source_name`/`extra_costs`/`notes`/`lines[]` (`product`, `quantity`, `unit_cost`, `effective_unit_cost`, `remaining_quantity`)/`total_cost`. Hook `beforeChange` (costi, init residui), `afterChange` (stock + costo medio), `afterDelete` (decremento residuo).
@@ -94,7 +121,7 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` +
 - **Fix test-infra**: polyfill `localStorage`/`sessionStorage` (`tests/setup.ts`) — risolti i 9 test rossi pre-esistenti (root cause: getter sperimentale Node 26 che torna `undefined`).
 - Nuovi test `purchase-math` (7) + `record-sale` (9) + sold/stock-0 (2). **`pnpm test` 44/44 ✅**.
 - Rimosso codice morto: `ProductsSection`, `ProductTable`, `ProductGroupRow`, `ExternalSaleModal`.
-- Docs aggiornati: `overview.md`, `schema-and-flows.md`, sessioni, tracker OPEN-TASKS.
+- Docs aggiornati: `overview.md`, `schema-and-flows.md`, sessioni, tracker PENDING.
 
 **Verifica**: `pnpm lint` ✅ · `pnpm test` 44/44 ✅ · **push + CI + deploy** (commit `c8a5981`): CI verde su Postgres (migration applicata), auto-deploy Vercel verificato sulla live (nuove rotte `/dashboard/purchases` e `/dashboard/listings` rispondono 200).
 
@@ -323,20 +350,16 @@ Tutti e 7 i punti implementati, test 24/24, build ok, deployato e verificato in 
 
 ## Stato attuale (su cui riprendere)
 
-| Area | Stato |
+> ⚠️ La tabella sotto è **storica** (sessione 2-8). L'unico punto aggiornato per le task in sospeso è **[`docs/project/PENDING.md`](./PENDING.md)**.
+
+| Area | Stato (storico) |
 |------|-------|
-| Stripe | CSP fixata e live. **DA FARE**: test di pagamento reale (carta) end-to-end, verifica webhook live `whsec_live_...` |
-| Google dashboard | Cookie su response verificati. **DA FARE**: test end-to-end dal browser desktop (account autorizzato → dashboard) |
-| Dashboard prodotti | Tab Prodotti con gruppi per varianti, edit/create modale, toggle visibilità, delete — attivo; `/admin/products` rimosso |
-| Google Sheets | Import/sync/cron/`/admin/products` rimossi — solo database (cron Vercel da togliere se ancora configurato) |
-| PLP | Layout filtri 2x2/mobile, breadcrumb, skeleton, masonry, distanza navbar — attivi; card canonica `ProductCard` (group) |
-| Hero | Movimento scroll fluido (translateY + rotazione oggetti) — attivo |
-| Checkout | Embedded con branding dark/yellow, confetti — attivo |
-| Filtri PLP | Altezza stabile, distanza da navbar aumentata |
-| ATC | Pop cyberpunk accent, cursore mano |
-| Info | Larghezza uniforme `max-w-2xl` |
-| SEO | `/llms-full.txt` attivo; audit in `docs/seo/audit.md` |
-| Security | Hardening checkout/order/webhook/applied; REQ-08..15 non ancora applicati (vedi `docs/security/changelog.md`) |
+| Stripe | CSP fixata e live; API/webhook verificati (Fase E); pagamento reale → `PENDING.md` W3 |
+| Google dashboard | Verificato (cookie live + test E2E) — chiuso |
+| Dashboard | Lotti/Magazzino/Listino/Ordini/Messaggi attivi; edit lotto → `PENDING.md` A3 |
+| Google Sheets | Rimosso (import/cron/admin) — chiuso |
+| PLP / Hero / Checkout / Filtri / ATC / Info / SEO | Attivi (verificati in E2E) |
+| Security | Hardening base applicato; REQ rimanenti → `PENDING.md` D1-D8 |
 
 ---
 

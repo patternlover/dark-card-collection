@@ -23,7 +23,7 @@ export default async function CollectionsPage() {
 
   try {
     const payload = await getPayloadClient()
-    const result = await payload.find({
+    const result = await payload.find({ overrideAccess: true, 
       collection: 'collections',
       limit: 50,
       sort: 'name',

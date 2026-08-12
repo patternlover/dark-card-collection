@@ -3,6 +3,7 @@ import { getStripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { getProductImageInfo } from '@/lib/product-image'
+import { clientIp, isRateLimited } from '@/lib/rate-limit'
 
 const FREE_SHIPPING_THRESHOLD = 80
 const SHIPPING_COST = 9.99
@@ -11,6 +12,12 @@ const MAX_ITEMS = 100
 
 export async function POST(req: Request) {
   try {
+    if (isRateLimited(`checkout:${clientIp(req)}`, 30, 60_000)) {
+      return NextResponse.json(
+        { error: 'Troppe richieste. Riprova tra poco.' },
+        { status: 429 }
+      )
+    }
     const stripe = getStripe()
     const payload = await getPayloadClient()
 
@@ -53,7 +60,7 @@ export async function POST(req: Request) {
 
     const ids = [...new Set(requested.map((r) => r.id))]
 
-    const result = await payload.find({
+    const result = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: { id: { in: ids } },
       limit: ids.length,

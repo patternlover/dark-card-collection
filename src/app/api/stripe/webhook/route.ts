@@ -3,6 +3,7 @@ import { getStripe } from '@/lib/stripe'
 import { getPayloadClient } from '@/lib/payload'
 import { sendOrderConfirmationEmail } from '@/lib/order-email'
 import { recordSale } from '@/lib/record-sale'
+import { logAudit } from '@/lib/audit'
 
 function isDuplicateKeyError(err: unknown): boolean {
   const msg = err instanceof Error ? err.message : String(err)
@@ -71,7 +72,7 @@ export async function POST(req: Request) {
               const pid = stripeProduct.metadata?.payloadProductId
 
               if (pid) {
-                const products = await payload.find({
+                const products = await payload.find({ overrideAccess: true, 
                   collection: 'products',
                   where: { id: { equals: pid } },
                   limit: 1,
@@ -115,6 +116,7 @@ export async function POST(req: Request) {
       }
 
       console.log('Order created for session:', session.id)
+      logAudit('webhook.checkout.completed', { sessionId: session.id, value: (session.amount_total || 0) / 100 })
 
       const customerEmail = session.customer_details?.email
       if (customerEmail && result) {

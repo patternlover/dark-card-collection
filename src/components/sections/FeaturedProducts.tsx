@@ -8,7 +8,7 @@ export async function FeaturedProducts() {
 
   try {
     const payload = await getPayloadClient()
-    const result = await payload.find({
+    const result = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
         AND: [{ status: { in: ['listed', 'hold', 'sold'] } }, { is_visible: { equals: true } }],

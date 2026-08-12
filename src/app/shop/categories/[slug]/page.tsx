@@ -49,7 +49,7 @@ export async function generateMetadata({
   const url = `${SITE_URL}/shop/categories/${slug}`
   try {
     const payload = await getPayloadClient()
-    const result = await payload.find({
+    const result = await payload.find({ overrideAccess: true, 
       collection: 'categories',
       where: { slug: { equals: slug } },
       limit: 1,
@@ -81,7 +81,7 @@ export default async function CategoryPage({
 
   try {
     const payload = await getPayloadClient()
-    const catResult = await payload.find({
+    const catResult = await payload.find({ overrideAccess: true, 
       collection: 'categories',
       where: { slug: { equals: slug } },
       limit: 1,
@@ -91,7 +91,7 @@ export default async function CategoryPage({
     if (!category) notFound()
 
     const catId = typeof category === 'object' ? category.id : category
-    const prodResult = await payload.find({
+    const prodResult = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
         AND: [
@@ -105,7 +105,7 @@ export default async function CategoryPage({
     })
     products = prodResult.docs
 
-    const otherResult = await payload.find({
+    const otherResult = await payload.find({ overrideAccess: true, 
       collection: 'categories',
       where: { id: { not_equals: catId } },
       limit: 8,

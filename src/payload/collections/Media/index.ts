@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { allowRead, denyAll } from '@/payload/access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -20,6 +21,12 @@ export const Media: CollectionConfig = {
         position: 'centre',
       },
     ],
+  },
+  access: {
+    read: denyAll,
+    create: denyAll,
+    update: denyAll,
+    delete: denyAll,
   },
   fields: [
     {

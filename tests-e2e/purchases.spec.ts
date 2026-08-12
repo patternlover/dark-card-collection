@@ -51,6 +51,20 @@ test.describe('Lotti (purchases)', () => {
     await expect(row).toContainText('3')
   })
 
+  test('edits a lot: quantity change updates stock (Test ETB 5 → 6)', async ({ page }) => {
+    await page.goto('/dashboard/purchases')
+    const row = page.locator('tr', { hasText: SHOP })
+    await row.locator('button[title="Modifica lotto"]').click()
+    const line1 = page.getByTestId('purchase-line').nth(0)
+    await line1.getByTestId('line-quantity').fill('3')
+    await page.getByRole('button', { name: 'Salva Modifiche' }).click()
+    await expect(page.getByText('Lotto aggiornato e inventario riconciliato')).toBeVisible()
+
+    await page.goto('/dashboard/inventory')
+    const etb = page.locator('tr', { hasText: 'Test ETB' })
+    await expect(etb).toContainText('6')
+  })
+
   test('expands a lot and shows its lines', async ({ page }) => {
     await page.goto('/dashboard/purchases')
     const row = page.locator('tr', { hasText: SHOP })

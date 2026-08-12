@@ -69,7 +69,7 @@ export async function POST(req: Request) {
 
     const payload = await getPayloadClient()
 
-    await payload.create({
+    await payload.create({ overrideAccess: true, 
       collection: 'messages',
       data: {
         name,

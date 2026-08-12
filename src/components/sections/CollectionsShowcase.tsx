@@ -8,7 +8,7 @@ export async function CollectionsShowcase() {
 
   try {
     const payload = await getPayloadClient()
-    const result = await payload.find({
+    const result = await payload.find({ overrideAccess: true, 
       collection: 'collections',
       limit: 4,
       sort: 'name',

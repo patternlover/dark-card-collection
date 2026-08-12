@@ -51,7 +51,7 @@
 4. **`src/components/dashboard/ExternalSaleModal.tsx`**: piattaforme `vinted|ebay|cardmarket|other` (rimossi wallapop/subito, mappati su `other`).
 5. **Test**: `tests/record-sale.test.ts` (9 test: FIFO oldest-first/parziale/null-date, weighted avg, recordSale end-to-end con mock — snapshot 26.25, stock 8→2, righe consumate, fallback costo legacy, dedup items).
 
-**Verifica Fase 2**: `pnpm lint` ✅ · `pnpm test` — 33/42 passano (+9 nuovi); restano i **9 failure pre-esistenti** di cart/sticky-add-to-cart (localStorage, task OPEN-TASKS #20).
+**Verifica Fase 2**: `pnpm lint` ✅ · `pnpm test` — 33/42 passano (+9 nuovi); restano i **9 failure pre-esistenti** di cart/sticky-add-to-cart (localStorage, task PENDING #20).
 
 ### Fase 3 — Dashboard: rotte + sezioni (completata 2026-08-12)
 
@@ -79,7 +79,7 @@
 2. **Test aggiornati (task 17)**: nuovi casi sold/stock-0 in `sticky-add-to-cart.test.tsx` (status sold + maxQuantity 0 → "Non disponibile" + bottone disabilitato) e `cart.test.tsx` (QuickAddButton nascosto a stock 0). `pnpm test` → **44/44 ✅**.
 3. **Cleanup (task 13b)**: rimossi `ProductsSection.tsx`, `ProductTable.tsx`, `ProductGroupRow.tsx`, `ExternalSaleModal.tsx` (codice morto).
 4. **Docs (task 18)**: `overview.md` (STATUS implemented, Purchases non più "(to create)", File Structure dashboard/lib/migrations, Known Issues #10), `docs/database/schema-and-flows.md` (stato 2026-08-12, purchases 2.8, orders sales_channel/unit_cost_snapshot, regole stock/status, flussi recordSale, dashboard, roadmap), `docs/project/changelog.md` (sessione 9), sessions README indice.
-5. **Tracker (task 19 + 20)**: OPEN-TASKS aggiornato.
+5. **Tracker (task 19 + 20)**: PENDING aggiornato.
 
 **Verifica Fase 5**: `pnpm lint` ✅ · `pnpm test` **44/44 ✅**.
 
@@ -122,3 +122,13 @@ Dal **log Vercel** (digest fornito dall'utente): `error: column 70cc9076_...purc
 Eseguito `scripts/check-schema-drift.ts` contro la **live** (sola lettura): unico drift residuo = indice `orders.stripe_session_id` (legacy parziale vs Payload pieno). Fix: migration `20260812_align_orders_stripe_session_index.ts` (crea l'indice Payload, droppa il legacy). `check-schema-drift.ts` potenziato per confrontare anche le definizioni degli indici.
 
 **Verifica finale live**: `SCHEMA DRIFT: NESSUNO (allineato al riferimento)` · `tests-e2e-live/prod.spec.ts` + `writes.spec.ts` → tutte le scritture ok (prodotti toggle/create/delete, categorie/collezioni CRUD, messaggi) · **zero 500** · **zero errori console** · CI verde · deploy live OK.
+
+### Fase 10 — Smaltimento task pendenti + centralizzazione (2026-08-12)
+
+1. **Centralizzazione**: `docs/project/PENDING.md` = unico punto per TUTTE le task in sospeso; rimosse le liste sparse (overview Known Issues → puntatore, changelog Stato attuale → puntatore, security changelog → puntatore); refs aggiornati (AGENTS, sessions README, schema-and-flows).
+2. **Feature**: "Modifica lotto" (`updatePurchase` + UI PurchasesSection, riconciliazione stock, FIFO preservata).
+3. **Copertura E2E**: overview + SQL console (`overview-sql.spec.ts`).
+4. **Security**: REQ-13 access deny-by-default su tutte le collection + Users esplicita + `overrideAccess` su 99 chiamate interne (verificato 403 su write anonime/read private, register 404); REQ-08 HSTS; REQ-07 rate limit checkout; REQ-09 proxy hardening; REQ-12 audit logging. REQ-05/10/14 coperti/documentati; REQ-15 waiting-user.
+5. **Known Issues #1-#9** → non-goal documentati; E5/E6 documentati.
+
+**Verifica Fase 10**: `pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · **E2E 28/28** ✓ · REST anonima chiusa ✓ · HSTS ✓.

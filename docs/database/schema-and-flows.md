@@ -346,7 +346,7 @@ Tutte le server action di lettura/scrittura chiamano `requireAuth()` e rispondon
    `availability`, `condition`, `item_group_id`, `product_type`, `google_product_category`)
    pronti per l'export (schema già allineato, 2026-08-09).
 3. **Data-cleanup legacy** - merge dei "fake variants" (stesso title, differenze solo costo/qty)
-   e creazione Purchases retroattive: sessione dedicata (tracker `docs/project/sessions/OPEN-TASKS.md`).
+   e creazione Purchases retroattive: sessione dedicata (tracker `docs/project/PENDING.md`).
 4. ✅ **Rimozione Google Sheets** - fatto (cron import/prices, `/admin/products`,
    `google-sheets.ts`, `parse-csv.ts`, `image-import.ts`, `api-auth.ts`, script
    `import-products.ts` rimossi; gestione prodotti nel dashboard).

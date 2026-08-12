@@ -1,9 +1,16 @@
 import type { CollectionConfig } from 'payload'
+import { allowRead, denyAll } from '@/payload/access'
 
 export const Orders: CollectionConfig = {
   slug: 'orders',
   admin: {
     useAsTitle: 'transaction_id',
+  },
+  access: {
+    read: denyAll,
+    create: denyAll,
+    update: denyAll,
+    delete: denyAll,
   },
   fields: [
     {

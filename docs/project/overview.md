@@ -348,19 +348,10 @@ Rows with genuine buyer-visible differences (language/grade), if any, stay separ
 
 ## Known Issues / TODO
 
-1. No user accounts / order history
-2. No cart drawer/mini-cart
-3. No middleware for route protection
-4. No tests for pages/components (only lib unit tests)
-5. `pnpm build` and `pnpm exec tsc --noEmit` time out on WSL - workaround for build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build` (the Next type-check phase OOMs with the default heap)
-6. `pnpm generate:types` times out on WSL - `payload-types.ts` never generated
-7. Stripe Products not synced with Payload products
-8. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders - required by law and by Stripe before go-live
-9. Email conferma ordine: senza `RESEND_API_KEY` l'email non parte (l'ordine viene comunque creato)
-10. Dati legacy "variant per purchase batch" ancora nel DB — lo schema è stato migrato a Purchases `lines` (migration `20260812_purchases_lines_schema.ts`), ma il **data-cleanup** (merge dei fake variants, Purchases retroattive) resta in una sessione dedicata — vedi `docs/project/sessions/OPEN-TASKS.md`
-11. **Known issue (fixato 2026-08-12)**: `postgresAdapter` aveva `push: true` anche in produzione → su Vercel ogni cold-start eseguiva la sync schema (drizzle introspect+push) rendendo lente/timeout le server actions della dashboard (sintomo: i toggle/edits del Listino non aggiornavano). Fix: `push: process.env.NODE_ENV !== 'production'`. NON riattivare `push: true` in produzione.
-12. **Known issue (mitigato 2026-08-12)**: errore `Minified React error #441` (hydration: attributo SSR ≠ client) segnalato sulla dashboard live. Non riproducibile in locale (dev e prod bundle, dati seed e "live-like": console pulita). Mitigazioni: `ListingsSection` ora riconcilia lo stato dalla risposta della server action (niente più optimistic-revert) con feedback esplicito; regressione E2E `tests-e2e/console-clean.spec.ts` che fallisce su errori di hydration nelle pagine chiave. Se ricompare, verificare in incognito (le estensioni browser possono alterare il DOM → 441) e la console dev per lo stack del componente.
-13. **Known issue (RISOLTO 2026-08-12 — causa reale del #441 e del Listino che non scriveva)**: la tabella di sistema Payload `payload_locked_documents_rels` sul DB live era priva della colonna `purchases_id` (collection `Purchases`). Ogni write (create/update/delete) fa il check document-locking con una SELECT che riferisce tutte le colonne `*_id` → `column ...purchases_id does not exist` (42703) → **HTTP 500** su tutte le scritture della dashboard (il toggle appariva "non funzionante", con errore React in console). Fix: migration `20260812_fix_locked_documents_rels.ts` (colonna + FK + indice, idempotente) applicata alla live via `payload migrate` nel build. Verificato live: toggle/featured/edit/create/delete **funzionano** e console pulita. Lezione: ogni nuova collection richiede migration anche delle tabelle join di sistema Payload (vedi `AGENTS.md` Note operative); verifica con `scripts/check-schema-drift.ts`.
+> **UNICO PUNTO per tutte le task in sospeso**: [`docs/project/PENDING.md`](./PENDING.md).
+> Qui non si elencano più task: le voci un tempo presenti in questa sezione (account/ordini, cart drawer, middleware, Stripe Products, WSL note, footer placeholder, email RESEND, data-cleanup legacy, security REQ, #441) sono ora centralizzate lì, con stato e owner.
+
+Storico delle correzioni già applicate (2026-08-12): schema drift `payload_locked_documents_rels.purchases_id` (Known issue #13, migration `20260812_fix_locked_documents_rels.ts`), allineamento indice `orders_stripe_session_id` (`20260812_align_orders_stripe_session_index.ts`, drift live NESSUNO), `push:false` in produzione, hardening toggle Listino, regressione hydration `console-clean.spec.ts`.
 
 ## Email
 

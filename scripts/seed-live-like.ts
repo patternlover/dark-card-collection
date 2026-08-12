@@ -7,8 +7,8 @@ import { recordSale } from '../src/lib/record-sale'
 async function main() {
   const payload = await getPayload({ config })
 
-  const cat = await payload.create({ collection: 'categories', data: { name: 'Booster Box', slug: 'booster-box' } as any })
-  const col = await payload.create({ collection: 'collections', data: { name: 'Scarlet & Violet', slug: 'sv' } as any })
+  const cat = await payload.create({ overrideAccess: true,  collection: 'categories', data: { name: 'Booster Box', slug: 'booster-box' } as any })
+  const col = await payload.create({ overrideAccess: true,  collection: 'collections', data: { name: 'Scarlet & Violet', slug: 'sv' } as any })
 
   const base = [
     { title: 'Live Full Box', slug: 'live-full-box', price: 150, sale_price: 180, cost_of_goods_sold: 95, quantity: 5, featured: true, is_visible: true, category: cat.id, collection: col.id, product_type: 'booster-box', google_product_category: 'Toys & Games > Trading Card Game Cards', average_sale_price: 155, last_price_update: new Date().toISOString(), item_group_id: 'live-full-box', grade: 'mint', condition: 'new', availability: 'in_stock' },
@@ -20,11 +20,11 @@ async function main() {
   ]
   const ids: number[] = []
   for (const p of base) {
-    const doc = await payload.create({ collection: 'products', data: p as any })
+    const doc = await payload.create({ overrideAccess: true,  collection: 'products', data: p as any })
     ids.push(Number(doc.id))
   }
 
-  const p = await payload.create({
+  const p = await payload.create({ overrideAccess: true, 
     collection: 'purchases',
     data: { purchase_date: new Date().toISOString().split('T')[0], source_type: 'online', source_name: 'Live Shop', lines: [{ product: ids[0], quantity: 5, unit_cost: 95 }] } as any,
   })
@@ -38,7 +38,7 @@ async function main() {
     value: 150,
   })
 
-  const prods = await payload.find({ collection: 'products', limit: 20, depth: 0 })
+  const prods = await payload.find({ overrideAccess: true,  collection: 'products', limit: 20, depth: 0 })
   console.log('Seeded live-like, products:', prods.totalDocs)
   process.exit(0)
 }

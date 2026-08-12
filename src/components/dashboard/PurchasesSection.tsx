@@ -1,13 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import {
   getCategories,
   getCollections,
   getPurchases,
   createPurchase,
   deletePurchase,
+  updatePurchase,
   searchProducts,
   type CategoryOption,
   type CollectionOption,
@@ -82,6 +83,7 @@ export function PurchasesSection() {
   const [productOptions, setProductOptions] = useState<{ id: string; title: string }[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
+  const [editing, setEditing] = useState<PurchaseDTO | null>(null)
   const [busy, setBusy] = useState(false)
 
   const [form, setForm] = useState({
@@ -137,7 +139,61 @@ export function PurchasesSection() {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
   }
 
-  const handleCreate = async () => {
+  const openCreate = () => {
+    setEditing(null)
+    setForm({
+      purchaseDate: new Date().toISOString().split('T')[0],
+      sourceType: '',
+      sourceName: '',
+      extraCosts: '',
+      notes: '',
+    })
+    setLines([emptyLine()])
+    setShowCreate(true)
+  }
+
+  const openEdit = (p: PurchaseDTO) => {
+    setShowCreate(false)
+    setExpandedId(null)
+    setEditing(p)
+    setForm({
+      purchaseDate: p.purchaseDate ? p.purchaseDate.slice(0, 10) : new Date().toISOString().split('T')[0],
+      sourceType: p.sourceType || '',
+      sourceName: p.sourceName || '',
+      extraCosts: p.extraCosts != null ? String(p.extraCosts) : '',
+      notes: p.notes || '',
+    })
+    setLines(
+      p.lines.length > 0
+        ? p.lines.map((l) => ({
+            productId: l.productId,
+            newProduct: false,
+            newProductTitle: '',
+            newProductPrice: '',
+            newProductCategory: '',
+            newProductCollection: '',
+            newProductImageLink: '',
+            quantity: String(l.quantity),
+            unitCost: String(l.unitCost),
+          }))
+        : [emptyLine()],
+    )
+  }
+
+  const resetForm = () => {
+    setEditing(null)
+    setShowCreate(false)
+    setForm({
+      purchaseDate: new Date().toISOString().split('T')[0],
+      sourceType: '',
+      sourceName: '',
+      extraCosts: '',
+      notes: '',
+    })
+    setLines([emptyLine()])
+  }
+
+  const handleSubmit = async () => {
     if (!form.purchaseDate) {
       notify('La data di acquisto è obbligatoria', 'error')
       return
@@ -162,24 +218,22 @@ export function PurchasesSection() {
     }
     setBusy(true)
     try {
-      await createPurchase({
+      const data = {
         purchaseDate: form.purchaseDate,
         sourceType: form.sourceType || undefined,
         sourceName: form.sourceName.trim() || undefined,
         extraCosts: form.extraCosts ? Number(form.extraCosts) : undefined,
         notes: form.notes.trim() || undefined,
         lines: lineInputs,
-      })
-      setShowCreate(false)
-      setForm({
-        purchaseDate: new Date().toISOString().split('T')[0],
-        sourceType: '',
-        sourceName: '',
-        extraCosts: '',
-        notes: '',
-      })
-      setLines([emptyLine()])
-      notify('Lotto registrato e inventario aggiornato con successo')
+      }
+      if (editing) {
+        await updatePurchase(editing.id, data)
+        notify('Lotto aggiornato e inventario riconciliato')
+      } else {
+        await createPurchase(data)
+        notify('Lotto registrato e inventario aggiornato con successo')
+      }
+      resetForm()
       load()
     } catch (err) {
       notify(err instanceof Error ? err.message : String(err), 'error')
@@ -208,7 +262,7 @@ export function PurchasesSection() {
         title="Lotti"
         description={`${total} lotti · storico fornitori, edicole e supermercati`}
       >
-        <Button onClick={() => setShowCreate(true)}>
+        <Button onClick={openCreate}>
           <Plus className="h-4 w-4" /> Registra Lotto
         </Button>
       </PageHeader>
@@ -281,6 +335,16 @@ export function PurchasesSection() {
                         <Button
                           variant="secondary"
                           size="sm"
+                          onClick={() => openEdit(p)}
+                          disabled={busy}
+                          title="Modifica lotto"
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => handleDelete(p.id)}
                           disabled={busy}
                           title="Elimina lotto"
@@ -347,18 +411,18 @@ export function PurchasesSection() {
         </div>
       ) : null}
 
-      {showCreate ? (
+      {editing || showCreate ? (
         <Modal
-          title="Registra Nuovo Lotto"
-          onClose={() => setShowCreate(false)}
+          title={editing ? 'Modifica Lotto' : 'Registra Nuovo Lotto'}
+          onClose={resetForm}
           maxWidth="max-w-3xl"
           footer={
             <>
-              <Button variant="secondary" onClick={() => setShowCreate(false)}>
+              <Button variant="secondary" onClick={resetForm}>
                 Annulla
               </Button>
-              <Button onClick={handleCreate} disabled={busy}>
-                {busy ? 'Salvataggio...' : 'Registra e Carica in Inventario'}
+              <Button onClick={handleSubmit} disabled={busy}>
+                {busy ? 'Salvataggio...' : editing ? 'Salva Modifiche' : 'Registra e Carica in Inventario'}
               </Button>
             </>
           }

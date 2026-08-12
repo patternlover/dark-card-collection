@@ -8,6 +8,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 
 import { Products } from './payload/collections/Products'
+import { Users } from './payload/collections/Users'
 import { Categories } from './payload/collections/Categories'
 import { Collections } from './payload/collections/Collections'
 import { Orders } from './payload/collections/Orders'
@@ -24,7 +25,7 @@ export default buildConfig({
   admin: {
     disable: true,
   },
-  collections: [Products, Categories, Collections, Orders, Media, Messages, Purchases],
+  collections: [Users, Products, Categories, Collections, Orders, Media, Messages, Purchases],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
   sharp,

@@ -5,9 +5,9 @@ import { getPayload } from 'payload'
 import config from '../src/payload.config'
 
 async function clearCollection(payload: Awaited<ReturnType<typeof getPayload>>, slug: string) {
-  const { docs } = await payload.find({ collection: slug as any, limit: 1000, depth: 0 })
+  const { docs } = await payload.find({ overrideAccess: true,  collection: slug as any, limit: 1000, depth: 0 })
   for (const doc of docs) {
-    await payload.delete({ collection: slug as any, id: doc.id })
+    await payload.delete({ overrideAccess: true,  collection: slug as any, id: doc.id })
   }
   console.log(`  cleared ${slug}: ${docs.length}`)
 }
@@ -23,16 +23,16 @@ async function main() {
   }
 
   console.log('Seeding baseline...')
-  const category = await payload.create({
+  const category = await payload.create({ overrideAccess: true, 
     collection: 'categories',
     data: { name: 'Sealed', slug: 'sealed', description: 'Categoria di test' } as any,
   })
-  const collection = await payload.create({
+  const collection = await payload.create({ overrideAccess: true, 
     collection: 'collections',
     data: { name: 'Test Set', slug: 'test-set', description: 'Collezione di test' } as any,
   })
 
-  const product1 = await payload.create({
+  const product1 = await payload.create({ overrideAccess: true, 
     collection: 'products',
     data: {
       title: 'Test Booster Box',
@@ -48,7 +48,7 @@ async function main() {
       collection: collection.id,
     } as any,
   })
-  await payload.create({
+  await payload.create({ overrideAccess: true, 
     collection: 'products',
     data: {
       title: 'Test ETB',
@@ -61,7 +61,7 @@ async function main() {
     } as any,
   })
 
-  await payload.create({
+  await payload.create({ overrideAccess: true, 
     collection: 'purchases',
     data: {
       purchase_date: new Date().toISOString().split('T')[0],
@@ -71,7 +71,7 @@ async function main() {
     } as any,
   })
 
-  await payload.create({
+  await payload.create({ overrideAccess: true, 
     collection: 'orders',
     data: {
       transaction_id: 'test-order-1',
@@ -84,12 +84,12 @@ async function main() {
     } as any,
   })
 
-  await payload.create({
+  await payload.create({ overrideAccess: true, 
     collection: 'messages',
     data: { name: 'Test User', email: 'test@example.com', subject: 'Messaggio di test', message: 'Ciao!' } as any,
   })
 
-  const prods = await payload.find({ collection: 'products', limit: 10, depth: 0 })
+  const prods = await payload.find({ overrideAccess: true,  collection: 'products', limit: 10, depth: 0 })
   console.log(`Seeded. Products: ${prods.totalDocs}`)
   process.exit(0)
 }

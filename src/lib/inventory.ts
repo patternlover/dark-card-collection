@@ -34,7 +34,7 @@ export async function recomputeAverageCost(payload: Payload, productId: number):
   let page = 1
   const pageSize = 100
   for (;;) {
-    const result = await payload.find({ collection: 'purchases', page, limit: pageSize, depth: 0 })
+    const result = await payload.find({ overrideAccess: true,  collection: 'purchases', page, limit: pageSize, depth: 0 })
     for (const doc of result.docs) {
       for (const line of doc.lines ?? []) {
         if (productIdFrom(line.product) === productId) {
@@ -48,7 +48,7 @@ export async function recomputeAverageCost(payload: Payload, productId: number):
     if (page >= result.totalPages) break
     page += 1
   }
-  await payload.update({
+  await payload.update({ overrideAccess: true, 
     collection: 'products',
     id: productId,
     data: { cost_of_goods_sold: roundMoney(computeAverageCost(lines)) },
@@ -58,9 +58,9 @@ export async function recomputeAverageCost(payload: Payload, productId: number):
 export async function applyStockDelta(payload: Payload, delta: Map<number, number>): Promise<void> {
   for (const [productId, amount] of delta) {
     if (amount === 0) continue
-    const product = await payload.findByID({ collection: 'products', id: productId, depth: 0 })
+    const product = await payload.findByID({ overrideAccess: true,  collection: 'products', id: productId, depth: 0 })
     const currentQty = Number((product as { quantity?: number }).quantity ?? 0)
-    await payload.update({
+    await payload.update({ overrideAccess: true, 
       collection: 'products',
       id: productId,
       data: { quantity: Math.max(0, currentQty + amount) },

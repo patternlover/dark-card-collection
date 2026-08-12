@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
   const payload = await getPayloadClient()
 
-  const orders = await payload.find({
+  const orders = await payload.find({ overrideAccess: true, 
     collection: 'orders',
     where: { stripe_session_id: { equals: sessionId } },
     limit: 1,

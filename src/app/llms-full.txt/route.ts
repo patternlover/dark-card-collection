@@ -168,7 +168,7 @@ async function getCatalogSection(): Promise<string> {
     let docs: any[] = []
     let page = 1
     while (page <= 10) {
-      const result = await payload.find({
+      const result = await payload.find({ overrideAccess: true, 
         collection: 'products',
         where: {
           and: [
