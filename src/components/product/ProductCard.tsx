@@ -16,6 +16,7 @@ export function ProductCard({ group }: ProductCardProps) {
     (p: any) => (p.status === 'listed' || p.status === 'hold') && p.price && p.price > 0,
   )
 
+  const isSoldOut = group.totalQuantity <= 0
   const isPreorderOrHold = group.products.some(
     (p: any) => p.is_preorder || p.status === 'hold',
   )
@@ -51,6 +52,7 @@ export function ProductCard({ group }: ProductCardProps) {
             {isPreorderOrHold && <Badge variant="preorder">In Attesa</Badge>}
             {isMint && <Badge variant="new">Sigillato</Badge>}
             {isGraded && <Badge variant="bestseller">Graded</Badge>}
+            {isSoldOut && <Badge variant="sold-out">Esaurito</Badge>}
           </div>
 
           <h3 className="text-sm font-semibold text-white line-clamp-2 leading-tight">

@@ -1,10 +1,20 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown } from 'lucide-react'
-import { getOrders, updateOrderStatus, type OrderDTO } from '@/app/dashboard/actions'
+import { ChevronDown, Plus } from 'lucide-react'
+import {
+  getOrders,
+  recordExternalSale,
+  searchProducts,
+  updateOrderStatus,
+  type OrderDTO,
+} from '@/app/dashboard/actions'
 import {
   Alert,
+  Button,
+  Field,
+  Input,
+  Modal,
   PageHeader,
   Select,
   Table,
@@ -25,6 +35,21 @@ const STATUS_OPTIONS = [
   { value: 'cancelled', label: 'Annullato' },
 ]
 
+const SALES_CHANNEL_LABELS: Record<string, string> = {
+  website: 'Sito web',
+  vinted: 'Vinted',
+  ebay: 'eBay',
+  cardmarket: 'Cardmarket',
+  other: 'Altro',
+}
+
+const PLATFORM_OPTIONS = [
+  { value: 'vinted', label: 'Vinted' },
+  { value: 'ebay', label: 'eBay' },
+  { value: 'cardmarket', label: 'Cardmarket' },
+  { value: 'other', label: 'Altro' },
+]
+
 function OrderDetail({ order }: { order: OrderDTO }) {
   return (
     <div className="border-t border-[var(--ui-border)] bg-[var(--ui-bg)]/40 px-4 py-4">
@@ -38,11 +63,14 @@ function OrderDetail({ order }: { order: OrderDTO }) {
             Totale: <span className="font-semibold text-[var(--ui-text)]">{euro.format(order.value || 0)}</span>
           </p>
           <p className="text-[var(--ui-text-muted)]">
-            Articoli: <span className="font-semibold text-[var(--ui-text)]">{order.itemCount}</span>
+            Margine: <span className="font-semibold text-[var(--ui-text)]">{order.margin != null ? euro.format(order.margin) : 'N/D'}</span>
           </p>
         </div>
         <div className="space-y-1 text-sm">
           <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">Pagamento</p>
+          <p className="text-[var(--ui-text-muted)]">
+            Canale: <span className="font-semibold text-[var(--ui-text)]">{SALES_CHANNEL_LABELS[order.salesChannel || ''] || order.salesChannel || '—'}</span>
+          </p>
           <p className="break-all text-[var(--ui-text-muted)]">
             Session: <span className="font-mono text-xs text-[var(--ui-text-faint)]">{order.stripeSessionId || '—'}</span>
           </p>
@@ -58,6 +86,9 @@ function OrderDetail({ order }: { order: OrderDTO }) {
                   <span className="min-w-0 truncate text-[var(--ui-text-muted)]">
                     <span className="font-semibold text-[var(--ui-text)]">{item.title}</span>
                     <span className="text-[var(--ui-text-faint)]"> × {item.quantity}</span>
+                    {item.unitCostSnapshot != null ? (
+                      <span className="text-[var(--ui-text-faint)]"> · costo {euro.format(item.unitCostSnapshot)}</span>
+                    ) : null}
                   </span>
                   <span className="shrink-0 font-semibold text-[var(--ui-text)]">
                     {euro.format((item.price || 0) * item.quantity)}
@@ -77,6 +108,10 @@ export function OrdersSection() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showExternal, setShowExternal] = useState(false)
+  const [productOptions, setProductOptions] = useState<{ id: string; title: string; quantity: number; price: number | null }[]>([])
+  const [ext, setExt] = useState({ productId: '', platform: 'vinted', quantity: '1', salePrice: '' })
+  const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -102,9 +137,54 @@ export function OrdersSection() {
     }
   }
 
+  const openExternal = async () => {
+    setShowExternal(true)
+    try {
+      const res = await searchProducts({ limit: 200, status: 'listed' })
+      setProductOptions(res.docs.map((p) => ({ id: p.id, title: p.title, quantity: p.quantity ?? 0, price: p.price ?? null })))
+    } catch {
+      setProductOptions([])
+    }
+  }
+
+  const selectedProduct = productOptions.find((p) => p.id === ext.productId) || null
+
+  const handleExternal = async () => {
+    const qty = Number(ext.quantity) || 0
+    const price = Number(ext.salePrice)
+    if (!ext.productId) {
+      setError('Seleziona un prodotto')
+      return
+    }
+    if (qty <= 0) {
+      setError('La quantità deve essere maggiore di 0')
+      return
+    }
+    if (isNaN(price) || price < 0) {
+      setError('Inserisci un prezzo di vendita valido')
+      return
+    }
+    setBusy(true)
+    setError(null)
+    try {
+      await recordExternalSale({ productId: ext.productId, quantity: qty, platform: ext.platform, salePrice: price })
+      setShowExternal(false)
+      setExt({ productId: '', platform: 'vinted', quantity: '1', salePrice: '' })
+      load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <PageHeader title="Ordini" description="Gestione stati ordini e dettagli di vendita." />
+      <PageHeader title="Ordini" description="Vendite sito web ed esterne, stati e margine.">
+        <Button onClick={openExternal}>
+          <Plus className="h-4 w-4" /> Registra Vendita Esterna
+        </Button>
+      </PageHeader>
 
       {error ? <Alert tone="danger">{error}</Alert> : null}
 
@@ -113,22 +193,23 @@ export function OrdersSection() {
           <tr>
             <Th>Ordine</Th>
             <Th>Data</Th>
-            <Th>Email</Th>
+            <Th>Canale</Th>
             <Th>Articoli</Th>
             <Th>Totale</Th>
+            <Th>Margine</Th>
             <Th>Stato</Th>
           </tr>
         </THead>
         <TBody>
           {loading ? (
             <Tr>
-              <Td colSpan={6} className="py-10 text-center text-[var(--ui-text-muted)]">
+              <Td colSpan={7} className="py-10 text-center text-[var(--ui-text-muted)]">
                 Caricamento...
               </Td>
             </Tr>
           ) : orders.length === 0 ? (
             <Tr>
-              <Td colSpan={6} className="py-10 text-center text-[var(--ui-text-muted)]">
+              <Td colSpan={7} className="py-10 text-center text-[var(--ui-text-muted)]">
                 Nessun ordine
               </Td>
             </Tr>
@@ -148,6 +229,83 @@ export function OrdersSection() {
           )}
         </TBody>
       </Table>
+
+      {showExternal ? (
+        <Modal
+          title="Registra Vendita Esterna"
+          onClose={() => setShowExternal(false)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setShowExternal(false)}>
+                Annulla
+              </Button>
+              <Button onClick={handleExternal} disabled={busy}>
+                {busy ? 'Registrazione...' : 'Registra Vendita'}
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <Field label="Prodotto *" htmlFor="ext-product">
+              <Select
+                id="ext-product"
+                value={ext.productId}
+                onChange={(e) => {
+                  const p = productOptions.find((x) => x.id === e.target.value)
+                  setExt({
+                    productId: e.target.value,
+                    platform: ext.platform,
+                    quantity: '1',
+                    salePrice: p?.price != null ? String(p.price) : '',
+                  })
+                }}
+              >
+                <option value="">— Seleziona prodotto —</option>
+                {productOptions.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title} (stock {p.quantity})
+                  </option>
+                ))}
+              </Select>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Piattaforma *" htmlFor="ext-platform">
+                <Select
+                  id="ext-platform"
+                  value={ext.platform}
+                  onChange={(e) => setExt({ ...ext, platform: e.target.value })}
+                >
+                  {PLATFORM_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Quantità venduta *" htmlFor="ext-qty">
+                <Input
+                  id="ext-qty"
+                  type="number"
+                  min="1"
+                  max={selectedProduct?.quantity ?? undefined}
+                  value={ext.quantity}
+                  onChange={(e) => setExt({ ...ext, quantity: e.target.value })}
+                />
+              </Field>
+            </div>
+
+            <Field label="Prezzo effettivo incassato (€) *" htmlFor="ext-price">
+              <Input
+                id="ext-price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={ext.salePrice}
+                onChange={(e) => setExt({ ...ext, salePrice: e.target.value })}
+              />
+            </Field>
+          </div>
+        </Modal>
+      ) : null}
     </div>
   )
 }
@@ -186,9 +344,12 @@ function OrderRow({
             minute: '2-digit',
           })}
         </Td>
-        <Td className="text-[var(--ui-text-muted)]">{order.email || '—'}</Td>
+        <Td className="text-[var(--ui-text-muted)]">{SALES_CHANNEL_LABELS[order.salesChannel || ''] || order.salesChannel || '—'}</Td>
         <Td className="text-[var(--ui-text-muted)]">{order.itemCount}</Td>
         <Td className="font-medium text-[var(--ui-text)]">{euro.format(order.value || 0)}</Td>
+        <Td className={order.margin != null && order.margin < 0 ? 'font-medium text-[var(--ui-danger)]' : 'font-medium text-[var(--ui-text)]'}>
+          {order.margin != null ? euro.format(order.margin) : '—'}
+        </Td>
         <Td>
           <Select
             value={order.status}
@@ -205,7 +366,7 @@ function OrderRow({
       </Tr>
       {expanded ? (
         <Tr>
-          <Td colSpan={6} className="p-0">
+          <Td colSpan={7} className="p-0">
             <OrderDetail order={order} />
           </Td>
         </Tr>

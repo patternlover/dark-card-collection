@@ -47,7 +47,7 @@ export async function generateMetadata({
         and: [
           { slug: { equals: slug } },
           { is_visible: { equals: true } },
-          { status: { in: ['listed', 'hold'] } },
+          { status: { in: ['listed', 'hold', 'sold'] } },
         ],
       },
       limit: 1,
@@ -145,7 +145,7 @@ export default async function ProductPage({
       and: [
         { slug: { equals: slug } },
         { is_visible: { equals: true } },
-        { status: { in: ['listed', 'hold'] } },
+        { status: { in: ['listed', 'hold', 'sold'] } },
       ],
     },
     limit: 1,
@@ -164,7 +164,7 @@ export default async function ProductPage({
       and: [
         { title: { equals: product.title } },
         { is_visible: { equals: true } },
-        { status: { in: ['listed', 'hold'] } },
+        { status: { in: ['listed', 'hold', 'sold'] } },
       ],
     },
     limit: 100,
@@ -182,7 +182,8 @@ export default async function ProductPage({
         and: [
           { collection: { equals: colId } },
           { id: { not_equals: product.id } },
-          { status: { equals: 'listed' } },
+          { status: { in: ['listed', 'hold', 'sold'] } },
+          { is_visible: { equals: true } },
         ],
       },
       limit: 50,
@@ -197,7 +198,7 @@ export default async function ProductPage({
   const statusLabels: Record<string, string> = {
     listed: 'Disponibile',
     hold: 'In Attesa',
-    sold: 'Venduto',
+    sold: 'Esaurito',
   }
 
   const collectionName = product.collection
@@ -476,7 +477,7 @@ export default async function ProductPage({
 
         <StickyAddToCart
           product={buyableProduct}
-          maxQuantity={group.totalQuantity > 0 ? group.totalQuantity : 1}
+          maxQuantity={group.totalQuantity}
         />
 
         {relatedGroups.length > 0 && (

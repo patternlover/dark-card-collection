@@ -3,7 +3,7 @@
 Guida leggibile di tutta la struttura dati (Payload CMS su PostgreSQL/Neon) e di come
 funzionano i flussi principali del sito (acquisto, import inventario, preordini, immagini).
 
-> Stato al 2026-08-09. I file "sorgente di verità" sono le collection in
+> Stato al 2026-08-12. I file "sorgente di verità" sono le collection in
 > `src/payload/collections/*` e i global in `src/payload/globals/*`. Il DB è generato
 > da Payload con `pnpm build` (`payload generate:db-schema && payload migrate`).
 
@@ -67,15 +67,18 @@ Nota: nel DB c'è una colonna legacy `image_id` non più usata dalla collection
 (resto di uno schema precedente): ignorarla.
 
 **Regole di business attuali:**
-- Lo shop `/shop` mostra i prodotti con `status` in (`listed`, `hold`) **e** `is_visible = true`
-  (in pratica: tutti i prodotti con un prezzo > 0 e visibili, anche se "in attesa").
+- Lo shop `/shop` mostra i prodotti con `status` in (`listed`, `hold`, `sold`) **e** `is_visible = true`;
+  i `sold` si mostrano come **"Esaurito"** (non acquistabili, ATC disabilitato).
 - `/shop/preorders` mostra i prodotti con `is_preorder = true` **e** `is_visible = true`.
 - Il badge "In Attesa" compare quando `is_preorder = true` **oppure** `status = hold`.
-- **Durevolezza**: un prodotto messo in shop resta `listed` finché non viene nascosto
-  via `is_visible` o cambiato manualmente dal dashboard.
-- Lo status `sold` attualmente **non** viene ancora impostato dal webhook Stripe
-  (è un bug noto / Fase 1 del piano): un item venduto resta `listed` e ricomprerabile.
-- `availability` è derivabile da `is_preorder` / `status` / `quantity` (script `pnpm backfill:google-schema`).
+- **Ciclo di vita stock/status**: qualsiasi vendita (webhook Stripe O vendita esterna via
+  `recordSale`) decrementa `quantity`; a stock 0 un hook `beforeChange` su `products` imposta
+  automaticamente `status='sold'` + `availability='out_of_stock'`; un lotto che riporta
+  stock > 0 ripristina `status='listed'` + `availability='in_stock'`. Nascondere un prodotto
+  = solo `is_visible=false`.
+- `cost_of_goods_sold` è **derivato** (media pesata delle righe d'acquisto `effective_unit_cost`,
+  ricalcolata dagli hook di `purchases`) e non è più editabile a mano.
+- `availability` è auto-calcolata dall'hook di `products` (da `quantity`/`status`/`is_preorder`).
 
 ### 2.2 `categories`
 
@@ -107,16 +110,18 @@ File caricati (immagini) - in produzione su Vercel Blob.
 
 ### 2.5 `orders`
 
-Ordine creato dal webhook Stripe dopo un pagamento riuscito.
+Ordine creato dalla pipeline di vendita condivisa `recordSale` (`src/lib/record-sale.ts`):
+webhook Stripe (`sales_channel='website'`) oppure vendite esterne registrate dal dashboard.
 
 | Campo | Tipo | Obblig. | Descrizione |
 |---|---|---|---|
-| `transaction_id` | text | ✅ | = `session.id` di Stripe (usato come titolo in admin e come `transaction_id` GA4) |
+| `transaction_id` | text | ✅ | = `session.id` di Stripe (sito) o `EXT-{CANALE}-{timestamp}` (esterno); usato come `transaction_id` GA4 |
+| `sales_channel` | select | - | `website` (default), `vinted`, `ebay`, `cardmarket`, `other` |
 | `status` | select | - | `pending` (default), `paid`, `shipped`, `delivered`, `cancelled` |
-| `items` | array | - | Riga d'ordine: `product` (relationship → `products`, obblig.), `quantity` (number, min 1, obblig.), `price` (number, obblig.) |
+| `items` | array | - | Riga d'ordine: `product` (relationship → `products`, obblig.), `quantity` (min 1, obblig.), `price` (obblig.), `unit_cost_snapshot` (costo effettivo FIFO al momento della vendita) |
 | `value` | number | ✅ | Totale pagato in euro (GA4 `value`) |
 | `currency` | text | - | `EUR` (default) |
-| `shipping` | number | - | Costo spedizione (default 0) |
+| `shipping` | number | - | Costo spedizione (default 0; mai come item, evita violazioni FK) |
 | `tax` | number | - | Imposta (default 0) |
 | `stripe_session_id` | text | - | Id sessione Stripe (usato per deduplicare i webhook) |
 | `email` | email | ✅ | Email del cliente |
@@ -143,6 +148,25 @@ Messaggi dal form contatti.
 | `read` | checkbox | - | Marca come letto |
 | `replied` | checkbox | - | Marca come risposto |
 
+### 2.8 `purchases` (lotti di acquisto)
+
+Un lotto = un evento di acquisto con una o più righe. Gestito da `/dashboard/purchases` (Lotti).
+Le righe vivono nella tabella array `purchases_lines` (queryabile da SQL).
+
+| Campo | Tipo | Obblig. | Descrizione |
+|---|---|---|---|
+| `purchase_date` | date | ✅ | Data di acquisto del lotto |
+| `source_type` | select | - | `newsstand`, `supermarket`, `shop`, `online`, `private`, `other` |
+| `source_name` | text | - | Luogo/fornitore (es. "Esselunga Viale X") |
+| `extra_costs` | number | - | Spese extra del lotto (default 0), ripartite pro-quota sulle righe |
+| `notes` | textarea | - | Note |
+| `lines` | array | - | Righe del lotto (tabella `purchases_lines`): `product` (rel → `products`, obblig.), `quantity` (obblig.), `unit_cost` (obblig.), `effective_unit_cost` (derivato: `unit_cost × (1 + extra_costs/subtotal)`), `remaining_quantity` (iniziale = quantity, consumata FIFO dalle vendite) |
+| `total_cost` | number | - | Derivato: Σ (qty × unit_cost) + extra_costs |
+
+**Hook**: `beforeChange` calcola `effective_unit_cost`/`remaining_quantity`/`total_cost`;
+`afterChange` incrementa lo stock dei prodotti (e ricalcola `cost_of_goods_sold` medio, ripristina
+`listed`/`in_stock`); `afterDelete` decrementa lo stock residuo delle righe.
+
 ---
 
 ## 3. Global (contenuti singoli)
@@ -166,6 +190,7 @@ products.category ──────────────► categories.id   
 products.collection ────────────► collections.id     (molti-a-uno)
 products.images[].image ────────► media.id           (via join products_images)
 orders.items[].product ─────────► products.id        (via join orders_items)
+purchases.lines[].product ──────► products.id        (via join purchases_lines)
 header.logo ────────────────────► media.id
 ```
 
@@ -208,20 +233,32 @@ Due "canali" convivono:
    - verifica firma (`STRIPE_WEBHOOK_SECRET`);
    - **dedup**: se esiste già un order con lo stesso `stripe_session_id` → esce;
    - recupera i line items, mappa ogni riga al prodotto via `metadata.payloadProductId`;
-   - crea un **Order** con `status='paid'`, `items[]`, `value`, `currency`, `shipping`, `email`;
+   - chiama **`recordSale`** (`src/lib/record-sale.ts`) che: crea l'**Order** (`status='paid'`,
+     `sales_channel='website'`, items con `unit_cost_snapshot` FIFO, `value`, `currency`,
+     `shipping`, `email`), decrementa lo stock dei prodotti (hook → `sold`/`out_of_stock` a 0)
+     e consuma `remaining_quantity` delle righe d'acquisto (FIFO oldest-first);
    - invia l'email di conferma via Resend (`sendOrderConfirmationEmail`) se configurata;
      se fallisce, logga ma l'ordine resta salvato.
 5. Reindirizzamento a `/checkout/success?session_id=...`.
 
-⚠️ **Bug noto**: il webhook **non** aggiorna i prodotti venduti
-(niente `status='sold'`, `quantity=0`, `isVisible=false`). È la prima fase del piano
-("sold flow") da implementare.
+Le vendite esterne (Vinted/eBay/Cardmarket/Altro) usano la **stessa** `recordSale` dal
+dashboard Ordini (pulsante "Registra Vendita Esterna"), con `sales_channel` ≠ `website`:
+ordine + stock + FIFO + snapshot costo, identici al webhook.
 
-### 6.2 Gestione prodotti (dashboard → Payload)
+### 6.2 Gestione prodotti e inventario (dashboard → Payload)
 
 L'import da Google Sheets è stato **rimosso**: i prodotti si creano/modificano
-direttamente nel dashboard (`/dashboard`, tab "Prodotti") via server action
-(`createProduct` / `updateProduct` / `deleteProduct` in `src/app/dashboard/actions.ts`).
+direttamente nel dashboard via server action in `src/app/dashboard/actions.ts`
+(`createProduct` / `updateProduct` / `deleteProduct`). Flusso merce:
+
+1. **Lotti** (`/dashboard/purchases`): registri un lotto (data, fonte, extra_costs) con righe
+   (prodotto esistente o quick-create + quantità + costo unitario). Gli hook di `purchases`
+   caricano lo stock in **Magazzino**, ricalcolano il costo medio (`cost_of_goods_sold`) e
+   ripristinano `listed`/`in_stock` se il prodotto era venduto.
+2. **Magazzino** (`/dashboard/inventory`): stock, costo medio, valore inventario,
+   drill-down "storico acquisti" (`getPurchaseHistory`).
+3. **Listino** (`/dashboard/listings`): prezzo, barrato, status, disponibilità,
+   toggle visibilità (`is_visible`) e vetrina (`featured`).
 
 ### 6.3 Prezzi medi di vendita
 
@@ -259,14 +296,16 @@ Pannello di gestione interno in `src/app/dashboard/` con auth **reale**:
   stock basso ≤1), valore inventario (somma `price × quantity` dei `listed`
   visibili), ordini per stato e fatturato (somma `value` di `paid`+`shipped`+
   `delivered`), ultimi 8 ordini.
-- **Prodotti**: ricerca (titolo/item_group_id/descrizione), prodotti **raggruppati per
-  `title`** in gruppi espandibili (variants): ogni riga mostra lingua, grado,
-  prezzo, quantità e stato. Azioni: toggle visibilità shop (tutto il gruppo),
-  modifica (modale con tutti i campi via `updateProduct`), creazione ("Nuovo
-  Prodotto" via `createProduct`), eliminazione di singole varianti o dell'intero
-  gruppo (`deleteProduct`).
-- **Ordini**: lista con cambio status (`pending`/`paid`/`shipped`/`delivered`/
-  `cancelled`) via `updateOrderStatus`.
+- **Lotti** (`/dashboard/purchases`): registrazione lotti con righe (prodotto esistente
+  o nuovo, qty, costo unitario) e storico lotti espandibile (costi, residui).
+- **Magazzino** (`/dashboard/inventory`): stock, costo medio, valore inventario,
+  drill-down storico acquisti per prodotto.
+- **Listino** (`/dashboard/listings`): prezzo, barrato, status, disponibilità,
+  toggle `is_visible`/`featured`, modifica (modale via `updateProduct`).
+- **Ordini** (`/dashboard/orders`): lista con canale (`sales_channel`), margine
+  (`value − Σ unit_cost_snapshot×qty`), cambio status via `updateOrderStatus`,
+  e pulsante **"Registra Vendita Esterna"** (`recordExternalSale` → `recordSale`).
+- **Messaggi** (`/dashboard/messages`): inbox paginata (read/replied/delete).
 - **SQL (sola lettura)**: tab che esegue query **read-only** sul DB via
   `runReadOnlyQuery` (`src/lib/db-query.ts`, pool `pg` lazy su `DATABASE_URI`).
   Protezioni: whitelist di soli comandi `SELECT/SHOW/EXPLAIN/WITH`, blocco di
@@ -300,14 +339,14 @@ Tutte le server action di lettura/scrittura chiamano `requireAuth()` e rispondon
 
 ## 8. Prossimi passi (roadmap concordata)
 
-1. **Sold flow** - webhook marca `status='sold'`, `quantity=0`, `is_visible=false`;
-   `groupProducts` calcola prezzi/stock solo dai varianti `listed`; shop filtra per `is_visible`.
+1. ✅ **Sold flow** - fatto (2026-08-12): pipeline `recordSale` condivisa (webhook + vendite
+   esterne), auto `status='sold'`/`out_of_stock` a stock 0 (hook), restock → `listed`/`in_stock`,
+   FIFO `remaining_quantity`, snapshot costo sugli ordini, storefront con "Esaurito".
 2. **Feed Google Merchant** - feed prodotti (`price`, `sale_price`, `cost_of_goods_sold`,
    `availability`, `condition`, `item_group_id`, `product_type`, `google_product_category`)
    pronti per l'export (schema già allineato, 2026-08-09).
-3. **Schema esteso** - nuovi campi Products (purchaseDate, holdEndDate, targetPrice,
-   expectedRoi, marketPrice, notes, soldDate…) + collection `Sales`
-   (piattaforma, commissioni, shipping, profitto, ROI reale, stripe_session_id).
+3. **Data-cleanup legacy** - merge dei "fake variants" (stesso title, differenze solo costo/qty)
+   e creazione Purchases retroattive: sessione dedicata (tracker `docs/project/sessions/OPEN-TASKS.md`).
 4. ✅ **Rimozione Google Sheets** - fatto (cron import/prices, `/admin/products`,
    `google-sheets.ts`, `parse-csv.ts`, `image-import.ts`, `api-auth.ts`, script
    `import-products.ts` rimossi; gestione prodotti nel dashboard).

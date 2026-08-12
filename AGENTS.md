@@ -70,9 +70,10 @@
 ## Workflow AI
 - Modello di default: **DeepSeek V4 Lite** su OpenCode. Modello "lite": dare istruzioni esplicite, task piccoli e ben delimitati, uno alla volta. Niente refactor multi-file speculativi.
 - Flusso standard per ogni sessione: **Plan mode** → il piano prodotto diventa il file di sessione in `docs/project/sessions/` → conferma umana → **Build mode** per implementare il piano step per step, senza deviare.
+- **All'inizio di ogni sessione/fase**: leggere `docs/project/sessions/OPEN-TASKS.md` (tracker dei task in sospeso) e verificare i task `open`/`blocked` che impattano l'ambito — gestirli o dichiararli esplicitamente prima di buildare. Aggiornare il tracker a fine fase/sessione (un task si chiude solo con verifica fatta).
 - In Build mode: leggere i file per intero prima di modificarli; dopo ogni blocco di modifiche lanciare `pnpm lint` (+ test toccati), non solo a fine sessione.
 - OpenCode free tier = ~200 richieste modello / 5h (condivise tra i modelli free): meglio poche richieste con spec dense che tanti botta-e-risposta.
-- Checklist di chiusura sessione: `pnpm lint` ✓ · `pnpm test` ✓ · se collections toccate → `payload generate:types` + migration ✓ · plan/changelog di sessione + `docs/project/changelog.md` aggiornati ✓.
+- Checklist di chiusura sessione: `pnpm lint` ✓ · `pnpm test` ✓ · se collections toccate → `payload generate:types` + migration ✓ · `docs/project/sessions/OPEN-TASKS.md` aggiornato ✓ · plan/changelog di sessione + `docs/project/changelog.md` aggiornati ✓.
 
 ## Note operative
 - WSL: `tsc --noEmit` e `pnpm build` possono andare in OOM — usare la build con heap aumentata. `pnpm generate:types` può andare in timeout.

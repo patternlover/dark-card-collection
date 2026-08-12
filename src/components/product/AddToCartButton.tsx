@@ -29,8 +29,9 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
   const { addItem } = useCart()
 
   const displayPrice = product.price || 0
-  const isAvailable = (product.status === 'listed' || product.status === 'hold') && displayPrice > 0
-  const maxQty = Math.max(1, Math.floor(maxQuantity))
+  const rawMax = Math.floor(maxQuantity)
+  const maxQty = Math.max(1, rawMax)
+  const isAvailable = (product.status === 'listed' || product.status === 'hold') && displayPrice > 0 && rawMax > 0
 
   const handleAdd = (e: React.MouseEvent) => {
     if (!isAvailable || added) return

@@ -1,13 +1,14 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, Search, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, Search, Trash2, X } from 'lucide-react'
 import {
   getCategories,
   getCollections,
   getPurchases,
   createPurchase,
   deletePurchase,
+  searchProducts,
   type CategoryOption,
   type CollectionOption,
   type PurchaseDTO,
@@ -32,6 +33,42 @@ import {
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
 
+const SOURCE_TYPE_OPTIONS = [
+  { value: '', label: '— Seleziona fonte —' },
+  { value: 'newsstand', label: 'Edicola' },
+  { value: 'supermarket', label: 'Supermercato' },
+  { value: 'shop', label: 'Negozio' },
+  { value: 'online', label: 'Online' },
+  { value: 'private', label: 'Privato' },
+  { value: 'other', label: 'Altro' },
+]
+
+interface LineForm {
+  productId: string
+  newProduct: boolean
+  newProductTitle: string
+  newProductPrice: string
+  newProductCategory: string
+  newProductCollection: string
+  newProductImageLink: string
+  quantity: string
+  unitCost: string
+}
+
+function emptyLine(): LineForm {
+  return {
+    productId: '',
+    newProduct: false,
+    newProductTitle: '',
+    newProductPrice: '',
+    newProductCategory: '',
+    newProductCollection: '',
+    newProductImageLink: '',
+    quantity: '1',
+    unitCost: '',
+  }
+}
+
 export function PurchasesSection() {
   const [purchases, setPurchases] = useState<PurchaseDTO[]>([])
   const [query, setQuery] = useState('')
@@ -42,23 +79,19 @@ export function PurchasesSection() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
+  const [productOptions, setProductOptions] = useState<{ id: string; title: string }[]>([])
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  // Form stato per nuovo acquisto
   const [form, setForm] = useState({
-    title: '',
-    costOfGoodsSold: '',
-    quantity: '1',
-    store: '',
     purchaseDate: new Date().toISOString().split('T')[0],
+    sourceType: '',
+    sourceName: '',
+    extraCosts: '',
     notes: '',
-    autoCreateProduct: true,
-    productPrice: '',
-    category: '',
-    collection: '',
-    imageLink: '',
   })
+  const [lines, setLines] = useState<LineForm[]>([emptyLine()])
 
   const load = useCallback(
     async (opts: { page?: number; search?: string } = {}) => {
@@ -84,6 +117,9 @@ export function PurchasesSection() {
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
     getCollections().then(setCollections).catch(() => {})
+    searchProducts({ limit: 200 })
+      .then((res) => setProductOptions(res.docs.map((p) => ({ id: p.id, title: p.title }))))
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -97,46 +133,53 @@ export function PurchasesSection() {
     load({ page: 1, search: query })
   }
 
+  const updateLine = (index: number, patch: Partial<LineForm>) => {
+    setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
+  }
+
   const handleCreate = async () => {
-    if (!form.title.trim()) {
-      notify('Il titolo è obbligatorio', 'error')
+    if (!form.purchaseDate) {
+      notify('La data di acquisto è obbligatoria', 'error')
       return
     }
-    const cogs = Number(form.costOfGoodsSold)
-    if (isNaN(cogs) || cogs < 0) {
-      notify('Inserisci un prezzo di acquisto valido', 'error')
+    const lineInputs = lines.map((l) => ({
+      productId: l.newProduct ? null : l.productId || null,
+      newProductTitle: l.newProduct ? l.newProductTitle.trim() || null : null,
+      newProductPrice: l.newProduct && l.newProductPrice ? Number(l.newProductPrice) : null,
+      newProductCategory: l.newProduct ? l.newProductCategory || null : null,
+      newProductCollection: l.newProduct ? l.newProductCollection || null : null,
+      newProductImageLink: l.newProduct ? l.newProductImageLink.trim() || null : null,
+      quantity: Number(l.quantity) || 0,
+      unitCost: Number(l.unitCost) || 0,
+    }))
+    if (lineInputs.every((l) => !l.productId && !l.newProductTitle)) {
+      notify('Ogni riga deve avere un prodotto esistente o un nuovo titolo', 'error')
+      return
+    }
+    if (lineInputs.every((l) => l.quantity <= 0)) {
+      notify('Aggiungi almeno una riga con quantità maggiore di 0', 'error')
       return
     }
     setBusy(true)
     try {
       await createPurchase({
-        title: form.title.trim(),
-        costOfGoodsSold: cogs,
-        quantity: Number(form.quantity) || 1,
-        store: form.store.trim() || null,
-        purchaseDate: form.purchaseDate || null,
-        notes: form.notes.trim() || null,
-        autoCreateProduct: form.autoCreateProduct,
-        productPrice: form.productPrice ? Number(form.productPrice) : null,
-        category: form.category ? Number(form.category) : null,
-        collection: form.collection ? Number(form.collection) : null,
-        imageLink: form.imageLink.trim() || null,
+        purchaseDate: form.purchaseDate,
+        sourceType: form.sourceType || undefined,
+        sourceName: form.sourceName.trim() || undefined,
+        extraCosts: form.extraCosts ? Number(form.extraCosts) : undefined,
+        notes: form.notes.trim() || undefined,
+        lines: lineInputs,
       })
       setShowCreate(false)
       setForm({
-        title: '',
-        costOfGoodsSold: '',
-        quantity: '1',
-        store: '',
         purchaseDate: new Date().toISOString().split('T')[0],
+        sourceType: '',
+        sourceName: '',
+        extraCosts: '',
         notes: '',
-        autoCreateProduct: true,
-        productPrice: '',
-        category: '',
-        collection: '',
-        imageLink: '',
       })
-      notify('Acquisto registrato e inventario aggiornato con successo')
+      setLines([emptyLine()])
+      notify('Lotto registrato e inventario aggiornato con successo')
       load()
     } catch (err) {
       notify(err instanceof Error ? err.message : String(err), 'error')
@@ -145,12 +188,12 @@ export function PurchasesSection() {
     }
   }
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Eliminare la registrazione di acquisto per "${title}"?`)) return
+  const handleDelete = async (id: string) => {
+    if (!confirm('Eliminare il lotto? Lo stock ancora in giacenza verrà rimosso.')) return
     setBusy(true)
     try {
       await deletePurchase(id)
-      notify('Acquisto eliminato')
+      notify('Lotto eliminato')
       load()
     } catch (err) {
       notify(err instanceof Error ? err.message : String(err), 'error')
@@ -162,11 +205,11 @@ export function PurchasesSection() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Acquisti"
-        description={`${total} registrazioni d'acquisto · storico fornitori, edicole e supermercati`}
+        title="Lotti"
+        description={`${total} lotti · storico fornitori, edicole e supermercati`}
       >
         <Button onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4" /> Registra Acquisto
+          <Plus className="h-4 w-4" /> Registra Lotto
         </Button>
       </PageHeader>
 
@@ -179,7 +222,7 @@ export function PurchasesSection() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') runSearch()
             }}
-            placeholder="Cerca per titolo o negozio/fornitore..."
+            placeholder="Cerca per fonte o note..."
             className="pl-9"
           />
         </div>
@@ -193,48 +236,85 @@ export function PurchasesSection() {
       {loading ? (
         <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
       ) : purchases.length === 0 ? (
-        <p className="text-sm text-[var(--ui-text-muted)]">Nessun acquisto registrato</p>
+        <p className="text-sm text-[var(--ui-text-muted)]">Nessun lotto registrato</p>
       ) : (
         <Table>
           <THead>
             <Tr>
               <Th>Data</Th>
-              <Th>Prodotto</Th>
-              <Th>Negozio / Fornitore</Th>
-              <Th>Costo unitario</Th>
-              <Th>Qty</Th>
-              <Th>Totale Costo</Th>
+              <Th>Fonte</Th>
+              <Th>Righe</Th>
+              <Th>Costo extra</Th>
+              <Th>Costo totale</Th>
               <Th className="text-right">Azioni</Th>
             </Tr>
           </THead>
           <TBody>
             {purchases.map((p) => {
-              const totalCost = (p.costOfGoodsSold || 0) * (p.quantity || 1)
+              const expanded = expandedId === p.id
+              const rowCount = p.lines.reduce((acc, l) => acc + l.quantity, 0)
               return (
-                <Tr key={p.id}>
-                  <Td className="text-xs text-[var(--ui-text-muted)]">
-                    {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString('it-IT') : '—'}
-                  </Td>
-                  <Td className="font-medium text-[var(--ui-text)]">{p.title}</Td>
-                  <Td className="text-[var(--ui-text-muted)]">{p.store || '—'}</Td>
-                  <Td>{euro.format(p.costOfGoodsSold || 0)}</Td>
-                  <Td className="text-[var(--ui-text-muted)]">{p.quantity}</Td>
-                  <Td className="font-semibold text-[var(--ui-text)]">{euro.format(totalCost)}</Td>
-                  <Td>
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => handleDelete(p.id, p.title)}
-                        disabled={busy}
-                        title="Elimina acquisto"
-                        className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </Td>
-                </Tr>
+                <>
+                  <Tr key={p.id}>
+                    <Td className="text-xs text-[var(--ui-text-muted)]">
+                      {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString('it-IT') : '—'}
+                    </Td>
+                    <Td>
+                      <p className="font-medium text-[var(--ui-text)]">{p.sourceName || '—'}</p>
+                      <p className="text-xs text-[var(--ui-text-faint)]">{p.sourceType || ''}</p>
+                    </Td>
+                    <Td className="text-[var(--ui-text-muted)]">
+                      {p.lines.length} riga{p.lines.length !== 1 ? 'e' : ''} · {rowCount} pezzi
+                    </Td>
+                    <Td className="text-[var(--ui-text-muted)]">{p.extraCosts ? euro.format(p.extraCosts) : '—'}</Td>
+                    <Td className="font-semibold text-[var(--ui-text)]">{p.totalCost != null ? euro.format(p.totalCost) : '—'}</Td>
+                    <Td>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setExpandedId(expanded ? null : p.id)}
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
+                        >
+                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleDelete(p.id)}
+                          disabled={busy}
+                          title="Elimina lotto"
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </Td>
+                  </Tr>
+                  {expanded ? (
+                    <Tr key={`${p.id}-detail`}>
+                      <Td colSpan={6} className="p-0">
+                        <div className="border-t border-[var(--ui-border)] bg-[var(--ui-bg)]/40 px-4 py-3">
+                          {p.lines.length === 0 ? (
+                            <p className="text-sm text-[var(--ui-text-muted)]">Nessuna riga</p>
+                          ) : (
+                            <div className="divide-y divide-[var(--ui-border)]/80">
+                              {p.lines.map((l, i) => (
+                                <div key={i} className="flex flex-wrap items-center gap-3 py-2 text-sm">
+                                  <span className="min-w-0 flex-1 truncate font-medium text-[var(--ui-text)]">{l.title}</span>
+                                  <span className="text-xs text-[var(--ui-text-muted)]">qty {l.quantity}</span>
+                                  <span className="text-xs text-[var(--ui-text-muted)]">costo {euro.format(l.unitCost)}</span>
+                                  <span className="text-xs text-[var(--ui-text-faint)]">eff. {euro.format(l.effectiveUnitCost)}</span>
+                                  <span className="text-xs text-[var(--ui-text-muted)]">residuo {l.remainingQuantity}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </Td>
+                    </Tr>
+                  ) : null}
+                </>
               )
             })}
           </TBody>
@@ -244,7 +324,7 @@ export function PurchasesSection() {
       {totalPages > 1 ? (
         <div className="flex items-center justify-between border-t border-[var(--ui-border)] pt-4">
           <p className="text-xs text-[var(--ui-text-muted)]">
-            Pagina {page} di {totalPages} · {total} acquisti
+            Pagina {page} di {totalPages} · {total} lotti
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -269,129 +349,177 @@ export function PurchasesSection() {
 
       {showCreate ? (
         <Modal
-          title="Registra Nuovo Acquisto"
+          title="Registra Nuovo Lotto"
           onClose={() => setShowCreate(false)}
+          maxWidth="max-w-3xl"
           footer={
             <>
               <Button variant="secondary" onClick={() => setShowCreate(false)}>
                 Annulla
               </Button>
-              <Button onClick={handleCreate} disabled={busy || !form.title.trim()}>
+              <Button onClick={handleCreate} disabled={busy}>
                 {busy ? 'Salvataggio...' : 'Registra e Carica in Inventario'}
               </Button>
             </>
           }
         >
           <div className="space-y-4">
-            <Field label="Titolo Prodotto *" htmlFor="ac-title">
-              <Input
-                id="ac-title"
-                type="text"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                placeholder="es. Booster Box Pokémon"
-              />
-            </Field>
-
-            <div className="grid grid-cols-3 gap-4">
-              <Field label="Prezzo Acquisto Unitario (€) *" htmlFor="ac-cogs">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Data Acquisto *" htmlFor="pc-date">
                 <Input
-                  id="ac-cogs"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.costOfGoodsSold}
-                  onChange={(e) => setForm({ ...form, costOfGoodsSold: e.target.value })}
-                  placeholder="0.00"
-                />
-              </Field>
-              <Field label="Quantità *" htmlFor="ac-qty">
-                <Input
-                  id="ac-qty"
-                  type="number"
-                  min="1"
-                  value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-                />
-              </Field>
-              <Field label="Data Acquisto" htmlFor="ac-date">
-                <Input
-                  id="ac-date"
+                  id="pc-date"
                   type="date"
                   value={form.purchaseDate}
                   onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
                 />
               </Field>
+              <Field label="Tipo di fonte" htmlFor="pc-source-type">
+                <Select
+                  id="pc-source-type"
+                  value={form.sourceType}
+                  onChange={(e) => setForm({ ...form, sourceType: e.target.value })}
+                >
+                  {SOURCE_TYPE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
             </div>
 
-            <Field label="Negozio / Fornitore" htmlFor="ac-store">
-              <Input
-                id="ac-store"
-                type="text"
-                value={form.store}
-                onChange={(e) => setForm({ ...form, store: e.target.value })}
-                placeholder="es. Edicola Stazione / Supermercato Esselunga"
-              />
-            </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Luogo / Fornitore" htmlFor="pc-source-name">
+                <Input
+                  id="pc-source-name"
+                  type="text"
+                  value={form.sourceName}
+                  onChange={(e) => setForm({ ...form, sourceName: e.target.value })}
+                  placeholder="es. Esselunga Viale X"
+                />
+              </Field>
+              <Field label="Costi extra del lotto (€)" htmlFor="pc-extra">
+                <Input
+                  id="pc-extra"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.extraCosts}
+                  onChange={(e) => setForm({ ...form, extraCosts: e.target.value })}
+                  placeholder="spedizione / commissioni"
+                />
+              </Field>
+            </div>
 
             <div className="border-t border-[var(--ui-border)] pt-4">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--ui-text-faint)]">
-                Carico Automatico in Catalogo / Inventario
-              </p>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Prezzo Vendita Al Pubblico (€)" htmlFor="ac-price">
-                  <Input
-                    id="ac-price"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={form.productPrice}
-                    onChange={(e) => setForm({ ...form, productPrice: e.target.value })}
-                    placeholder="Se vuoto calcolato automatico"
-                  />
-                </Field>
-                <Field label="Image Link (URL)" htmlFor="ac-img">
-                  <Input
-                    id="ac-img"
-                    type="url"
-                    value={form.imageLink}
-                    onChange={(e) => setForm({ ...form, imageLink: e.target.value })}
-                    placeholder="https://..."
-                  />
-                </Field>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--ui-text-faint)]">
+                  Righe del lotto
+                </p>
+                <Button variant="secondary" size="sm" onClick={() => setLines((prev) => [...prev, emptyLine()])}>
+                  <Plus className="h-3.5 w-3.5" /> Aggiungi riga
+                </Button>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
-                <Field label="Categoria" htmlFor="ac-cat">
-                  <Select
-                    id="ac-cat"
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  >
-                    <option value="">— Seleziona Categoria —</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Collezione" htmlFor="ac-col">
-                  <Select
-                    id="ac-col"
-                    value={form.collection}
-                    onChange={(e) => setForm({ ...form, collection: e.target.value })}
-                  >
-                    <option value="">— Seleziona Collezione —</option>
-                    {collections.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </Select>
-                </Field>
+              <div className="space-y-3">
+                {lines.map((line, index) => (
+                  <div key={index} className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 space-y-2">
+                        <Select
+                          value={line.newProduct ? '__new__' : line.productId}
+                          onChange={(e) => {
+                            const isNew = e.target.value === '__new__'
+                            updateLine(index, { newProduct: isNew, productId: isNew ? '' : e.target.value })
+                          }}
+                        >
+                          <option value="">— Seleziona prodotto esistente —</option>
+                          {productOptions.map((p) => (
+                            <option key={p.id} value={p.id}>{p.title}</option>
+                          ))}
+                          <option value="__new__">➕ Nuovo prodotto (crea dal lotto)</option>
+                        </Select>
+
+                        {line.newProduct ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input
+                              type="text"
+                              value={line.newProductTitle}
+                              onChange={(e) => updateLine(index, { newProductTitle: e.target.value })}
+                              placeholder="Titolo nuovo prodotto *"
+                            />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={line.newProductPrice}
+                              onChange={(e) => updateLine(index, { newProductPrice: e.target.value })}
+                              placeholder="Prezzo vendita (€)"
+                            />
+                            <Select
+                              value={line.newProductCategory}
+                              onChange={(e) => updateLine(index, { newProductCategory: e.target.value })}
+                            >
+                              <option value="">— Categoria —</option>
+                              {categories.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </Select>
+                            <Select
+                              value={line.newProductCollection}
+                              onChange={(e) => updateLine(index, { newProductCollection: e.target.value })}
+                            >
+                              <option value="">— Collezione —</option>
+                              {collections.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </Select>
+                            <Input
+                              type="url"
+                              value={line.newProductImageLink}
+                              onChange={(e) => updateLine(index, { newProductImageLink: e.target.value })}
+                              placeholder="Image link (URL)"
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setLines((prev) => prev.filter((_, i) => i !== index))}
+                        disabled={lines.length === 1}
+                        className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      <Field label="Quantità *">
+                        <Input
+                          type="number"
+                          min="1"
+                          value={line.quantity}
+                          onChange={(e) => updateLine(index, { quantity: e.target.value })}
+                        />
+                      </Field>
+                      <Field label="Costo unitario (€) *">
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={line.unitCost}
+                          onChange={(e) => updateLine(index, { unitCost: e.target.value })}
+                          placeholder="0.00"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
-            <Field label="Note" htmlFor="ac-notes">
+            <Field label="Note" htmlFor="pc-notes">
               <Textarea
-                id="ac-notes"
+                id="pc-notes"
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Note opzionali..."

@@ -157,7 +157,7 @@ export interface Product {
    */
   sale_price?: number | null;
   /**
-   * Costo di acquisto (Merchant cost_of_goods_sold)
+   * Costo medio ponderato dalle righe d'acquisto (auto-calcolato da Purchases, non editabile)
    */
   cost_of_goods_sold?: number | null;
   /**
@@ -290,12 +290,20 @@ export interface Media {
 export interface Order {
   id: number;
   transaction_id: string;
+  /**
+   * Canale di vendita: website (webhook Stripe) o piattaforma esterna
+   */
+  sales_channel?: ('website' | 'vinted' | 'ebay' | 'cardmarket' | 'other') | null;
   status?: ('pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled') | null;
   items?:
     | {
         product: number | Product;
         quantity: number;
         price: number;
+        /**
+         * Costo unitario effettivo al momento della vendita (snapshot FIFO)
+         */
+        unit_cost_snapshot?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -330,34 +338,51 @@ export interface Message {
 export interface Purchase {
   id: number;
   /**
-   * Titolo del prodotto acquistato
+   * Data di acquisto del lotto
    */
-  title: string;
+  purchase_date: string;
   /**
-   * Prezzo di acquisto unitario (€)
+   * Tipologia di fonte di acquisto
    */
-  cost_of_goods_sold: number;
+  source_type?: ('newsstand' | 'supermarket' | 'shop' | 'online' | 'private' | 'other') | null;
   /**
-   * Quantità acquistata
+   * Luogo o fornitore (es. Esselunga Viale X, edicola Piazza Y)
    */
-  quantity: number;
+  source_name?: string | null;
   /**
-   * Luogo o fornitore (es. Edicola Via Roma, Supermercato X)
+   * Spese extra sull'intero lotto (spedizione, commissioni) — ripartite pro-quota sul valore delle righe
    */
-  store?: string | null;
+  extra_costs?: number | null;
   /**
-   * Data di acquisto
-   */
-  purchase_date?: string | null;
-  /**
-   * Note aggiuntive sull acquisto
+   * Note aggiuntive sul lotto
    */
   notes?: string | null;
   /**
-   * Prodotto in inventario collegato
+   * Righe del lotto: prodotto, quantità e costo unitario
    */
-  linked_product?: (number | null) | Product;
-  status?: ('received' | 'pending' | 'archived') | null;
+  lines?:
+    | {
+        product: number | Product;
+        quantity: number;
+        /**
+         * Costo di acquisto unitario (€)
+         */
+        unit_cost: number;
+        /**
+         * Costo unitario effettivo con extra_costs ripartiti (auto-calcolato)
+         */
+        effective_unit_cost?: number | null;
+        /**
+         * Quantità ancora in magazzino da questo lotto (consumata FIFO dalle vendite)
+         */
+        remaining_quantity?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Costo totale del lotto: Σ (qty × unit_cost) + extra_costs (auto-calcolato)
+   */
+  total_cost?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -552,6 +577,7 @@ export interface CollectionsSelect<T extends boolean = true> {
  */
 export interface OrdersSelect<T extends boolean = true> {
   transaction_id?: T;
+  sales_channel?: T;
   status?: T;
   items?:
     | T
@@ -559,6 +585,7 @@ export interface OrdersSelect<T extends boolean = true> {
         product?: T;
         quantity?: T;
         price?: T;
+        unit_cost_snapshot?: T;
         id?: T;
       };
   value?: T;
@@ -631,14 +658,22 @@ export interface MessagesSelect<T extends boolean = true> {
  * via the `definition` "purchases_select".
  */
 export interface PurchasesSelect<T extends boolean = true> {
-  title?: T;
-  cost_of_goods_sold?: T;
-  quantity?: T;
-  store?: T;
   purchase_date?: T;
+  source_type?: T;
+  source_name?: T;
+  extra_costs?: T;
   notes?: T;
-  linked_product?: T;
-  status?: T;
+  lines?:
+    | T
+    | {
+        product?: T;
+        quantity?: T;
+        unit_cost?: T;
+        effective_unit_cost?: T;
+        remaining_quantity?: T;
+        id?: T;
+      };
+  total_cost?: T;
   updatedAt?: T;
   createdAt?: T;
 }

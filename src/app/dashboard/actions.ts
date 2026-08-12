@@ -5,6 +5,7 @@ import { runReadOnlyQuery, isDashSqlEnabled, type QueryOutcome } from '@/lib/db-
 import { getPayloadClient } from '@/lib/payload'
 import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
+import { recordSale, type SalesChannel } from '@/lib/record-sale'
 
 async function requireAuth(): Promise<void> {
   if (!(await isAuthed())) {
@@ -64,6 +65,7 @@ export interface OrderItemDTO {
   title: string
   quantity: number
   price: number
+  unitCostSnapshot?: number | null
 }
 
 export interface OrderDTO {
@@ -72,6 +74,8 @@ export interface OrderDTO {
   email?: string | null
   status: string
   value?: number | null
+  salesChannel?: string | null
+  margin?: number | null
   createdAt: string
   itemCount: number
   stripeSessionId?: string | null
@@ -156,13 +160,21 @@ function toOrderDTO(doc: any): OrderDTO {
         : 'Prodotto',
     quantity: Number(item.quantity) || 0,
     price: Number(item.price) || 0,
+    unitCostSnapshot: item.unit_cost_snapshot != null ? Number(item.unit_cost_snapshot) : null,
   }))
+  const totalCost = orderItems.reduce(
+    (acc, item) => acc + (item.unitCostSnapshot ?? 0) * item.quantity,
+    0,
+  )
+  const hasSnapshot = orderItems.some((item) => item.unitCostSnapshot != null)
   return {
     id: doc.id,
     transactionId: doc.transaction_id ?? null,
     email: doc.email ?? null,
     status: doc.status || 'pending',
     value: doc.value ?? null,
+    salesChannel: doc.sales_channel ?? null,
+    margin: hasSnapshot ? (Number(doc.value) || 0) - totalCost : null,
     createdAt: doc.createdAt ?? new Date().toISOString(),
     itemCount: orderItems.reduce((acc: number, item) => acc + item.quantity, 0),
     stripeSessionId: doc.stripe_session_id ?? null,
@@ -852,16 +864,47 @@ export async function updateHeader(data: HeaderDTO): Promise<HeaderDTO> {
   }
 }
 
+export interface PurchaseLineDTO {
+  productId: string
+  title: string
+  quantity: number
+  unitCost: number
+  effectiveUnitCost: number
+  remainingQuantity: number
+}
+
 export interface PurchaseDTO {
   id: string
-  title: string
-  costOfGoodsSold: number
-  quantity: number
-  store?: string | null
-  purchaseDate?: string | null
+  purchaseDate: string
+  sourceType?: string | null
+  sourceName?: string | null
+  extraCosts?: number | null
   notes?: string | null
-  status?: string | null
-  linkedProductId?: string | null
+  totalCost?: number | null
+  lines: PurchaseLineDTO[]
+  createdAt: string
+}
+
+function toPurchaseDTO(doc: any): PurchaseDTO {
+  const lines = Array.isArray(doc.lines) ? doc.lines : []
+  return {
+    id: String(doc.id),
+    purchaseDate: doc.purchase_date ?? '',
+    sourceType: doc.source_type ?? null,
+    sourceName: doc.source_name ?? null,
+    extraCosts: doc.extra_costs != null ? Number(doc.extra_costs) : null,
+    notes: doc.notes ?? null,
+    totalCost: doc.total_cost != null ? Number(doc.total_cost) : null,
+    lines: lines.map((l: any) => ({
+      productId: l.product ? String(l.product.id ?? l.product) : '',
+      title: typeof l.product === 'object' ? l.product.title || 'Prodotto' : 'Prodotto',
+      quantity: Number(l.quantity) || 0,
+      unitCost: Number(l.unit_cost) || 0,
+      effectiveUnitCost: Number(l.effective_unit_cost) || 0,
+      remainingQuantity: Number(l.remaining_quantity ?? l.quantity) || 0,
+    })),
+    createdAt: doc.createdAt ?? new Date().toISOString(),
+  }
 }
 
 export async function getPurchases(opts: { search?: string; page?: number; limit?: number } = {}): Promise<{ docs: PurchaseDTO[]; total: number; totalPages: number }> {
@@ -872,8 +915,9 @@ export async function getPurchases(opts: { search?: string; page?: number; limit
   const where: any = {}
   if (opts.search) {
     where.or = [
-      { title: { contains: opts.search } },
-      { store: { contains: opts.search } },
+      { source_name: { contains: opts.search } },
+      { source_type: { contains: opts.search } },
+      { notes: { contains: opts.search } },
     ]
   }
   const res = await payload.find({
@@ -885,83 +929,78 @@ export async function getPurchases(opts: { search?: string; page?: number; limit
     depth: 1,
   })
   return {
-    docs: res.docs.map((d: any) => ({
-      id: String(d.id),
-      title: d.title || '',
-      costOfGoodsSold: d.cost_of_goods_sold ?? 0,
-      quantity: d.quantity ?? 1,
-      store: d.store ?? null,
-      purchaseDate: d.purchase_date ?? null,
-      notes: d.notes ?? null,
-      status: d.status ?? 'received',
-      linkedProductId: d.linked_product ? String(d.linked_product.id ?? d.linked_product) : null,
-    })),
+    docs: res.docs.map(toPurchaseDTO),
     total: res.totalDocs,
     totalPages: res.totalPages,
   }
 }
 
-export async function createPurchase(data: {
-  title: string
-  costOfGoodsSold: number
+export interface CreatePurchaseLineInput {
+  productId?: string | number | null
+  newProductTitle?: string | null
+  newProductPrice?: number | null
+  newProductCategory?: string | number | null
+  newProductCollection?: string | number | null
+  newProductImageLink?: string | null
   quantity: number
-  store?: string | null
-  purchaseDate?: string | null
+  unitCost: number
+}
+
+export interface CreatePurchaseInput {
+  purchaseDate: string
+  sourceType?: string | null
+  sourceName?: string | null
+  extraCosts?: number | null
   notes?: string | null
-  status?: string | null
-  autoCreateProduct?: boolean
-  productPrice?: number | null
-  category?: string | number | null
-  collection?: string | number | null
-  imageLink?: string | null
-}): Promise<PurchaseDTO> {
+  lines: CreatePurchaseLineInput[]
+}
+
+export async function createPurchase(data: CreatePurchaseInput): Promise<PurchaseDTO> {
   await requireAuth()
   const payload = await getPayloadClient()
 
-  const title = (data.title || '').trim()
-  if (!title) throw new Error('Il titolo è obbligatorio')
+  const purchaseDate = (data.purchaseDate || '').trim()
+  if (!purchaseDate) throw new Error('La data di acquisto è obbligatoria')
 
-  let productId: string | undefined = undefined
+  const lines: { product: number; quantity: number; unit_cost: number }[] = []
+  for (const line of data.lines ?? []) {
+    const quantity = Number(line.quantity) || 0
+    const unitCost = Number(line.unitCost) || 0
+    if (quantity <= 0) continue
 
-  if (data.autoCreateProduct !== false) {
-    const prodRes = await createProduct({
-      title,
-      costOfGoodsSold: data.costOfGoodsSold,
-      quantity: data.quantity,
-      price: data.productPrice ?? (data.costOfGoodsSold ? Number((data.costOfGoodsSold * 1.3).toFixed(2)) : 0),
-      status: 'listed',
-      category: data.category || undefined,
-      collection: data.collection || undefined,
-      imageLink: data.imageLink || undefined,
-    })
-    productId = prodRes.id
+    let productId = line.productId ? Number(line.productId) : undefined
+    if (!productId) {
+      const title = (line.newProductTitle || '').trim()
+      if (!title) throw new Error('Ogni riga deve avere un prodotto esistente o un nuovo titolo')
+      const created = await createProduct({
+        title,
+        price: line.newProductPrice ?? undefined,
+        category: line.newProductCategory || undefined,
+        collection: line.newProductCollection || undefined,
+        imageLink: line.newProductImageLink || undefined,
+        quantity: 0,
+        status: 'listed',
+      })
+      productId = Number(created.id)
+    }
+
+    lines.push({ product: productId, quantity, unit_cost: unitCost })
   }
+
+  if (lines.length === 0) throw new Error('Aggiungi almeno una riga con quantità maggiore di 0')
 
   const res = await payload.create({
     collection: 'purchases',
     data: {
-      title,
-      cost_of_goods_sold: data.costOfGoodsSold,
-      quantity: data.quantity,
-      store: data.store || undefined,
-      purchase_date: data.purchaseDate || undefined,
-      notes: data.notes || undefined,
-      status: data.status || 'received',
-      linked_product: productId ? Number(productId) : undefined,
+      purchase_date: purchaseDate,
+      source_type: data.sourceType || undefined,
+      source_name: (data.sourceName || '').trim() || undefined,
+      extra_costs: data.extraCosts ?? 0,
+      notes: (data.notes || '').trim() || undefined,
+      lines,
     } as any,
   })
-
-  return {
-    id: String(res.id),
-    title: (res as any).title || '',
-    costOfGoodsSold: (res as any).cost_of_goods_sold ?? 0,
-    quantity: (res as any).quantity ?? 1,
-    store: (res as any).store ?? null,
-    purchaseDate: (res as any).purchase_date ?? null,
-    notes: (res as any).notes ?? null,
-    status: (res as any).status ?? 'received',
-    linkedProductId: productId || null,
-  }
+  return toPurchaseDTO(res)
 }
 
 export async function deletePurchase(id: string): Promise<void> {
@@ -970,10 +1009,72 @@ export async function deletePurchase(id: string): Promise<void> {
   await payload.delete({ collection: 'purchases', id })
 }
 
+export interface PurchaseHistoryEntry {
+  purchaseId: string
+  purchaseDate: string
+  sourceName?: string | null
+  sourceType?: string | null
+  quantity: number
+  unitCost: number
+  effectiveUnitCost: number
+  remainingQuantity: number
+}
+
+export async function getPurchaseHistory(productId: string): Promise<PurchaseHistoryEntry[]> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const pid = Number(productId)
+  const entries: PurchaseHistoryEntry[] = []
+  let page = 1
+  const pageSize = 100
+  for (;;) {
+    const res = await payload.find({
+      collection: 'purchases',
+      page,
+      limit: pageSize,
+      sort: 'purchase_date',
+      depth: 1,
+    })
+    for (const doc of res.docs) {
+      for (const line of doc.lines ?? []) {
+        const lineProduct = typeof line.product === 'object' ? Number(line.product.id) : Number(line.product)
+        if (lineProduct !== pid) continue
+        entries.push({
+          purchaseId: String(doc.id),
+          purchaseDate: doc.purchase_date ?? '',
+          sourceName: doc.source_name ?? null,
+          sourceType: doc.source_type ?? null,
+          quantity: Number(line.quantity) || 0,
+          unitCost: Number(line.unit_cost) || 0,
+          effectiveUnitCost: Number(line.effective_unit_cost) || 0,
+          remainingQuantity: Number(line.remaining_quantity ?? line.quantity) || 0,
+        })
+      }
+    }
+    if (page >= res.totalPages) break
+    page += 1
+  }
+  return entries
+}
+
+const SALES_CHANNEL_MAP: Record<string, SalesChannel> = {
+  vinted: 'vinted',
+  ebay: 'ebay',
+  cardmarket: 'cardmarket',
+  wallapop: 'other',
+  subito: 'other',
+  altro: 'other',
+  other: 'other',
+}
+
+function normalizeChannel(platform: string): SalesChannel {
+  return SALES_CHANNEL_MAP[platform.toLowerCase()] ?? 'other'
+}
+
 export async function recordExternalSale(data: {
   productId: string
   quantity: number
-  platform: string // vinted, wallapop, ebay, subito, altro
+  platform: string // vinted, ebay, cardmarket, other (wallapop/subito/altro → other)
   salePrice: number
 }): Promise<void> {
   await requireAuth()
@@ -982,42 +1083,16 @@ export async function recordExternalSale(data: {
   const prodRes = await payload.findByID({ collection: 'products', id: data.productId })
   if (!prodRes) throw new Error('Prodotto non trovato in inventario')
 
-  const currentQty = (prodRes as any).quantity ?? 0
   const soldQty = Math.max(1, data.quantity)
-  const newQty = Math.max(0, currentQty - soldQty)
-  const newStatus = newQty === 0 ? 'sold' : (prodRes as any).status
+  const channel = normalizeChannel(data.platform)
+  const transactionId = `EXT-${channel.toUpperCase()}-${Date.now()}`
 
-  await payload.update({
-    collection: 'products',
-    id: data.productId,
-    data: {
-      quantity: newQty,
-      status: newStatus,
-    },
-  })
-
-  const transactionId = `EXT-${data.platform.toUpperCase()}-${Date.now()}`
-  const totalValue = data.salePrice * soldQty
-
-  await payload.create({
-    collection: 'orders',
-    data: {
-      transaction_id: transactionId,
-      customer_name: `Vendita Esterna (${data.platform})`,
-      customer_email: `ext-${data.platform.toLowerCase()}@darkcardcollection.com`,
-      items: [
-        {
-          product: Number(data.productId),
-          title: (prodRes as any).title || 'Prodotto',
-          quantity: soldQty,
-          price: data.salePrice,
-        },
-      ],
-      value: totalValue,
-      currency: 'EUR',
-      shipping: 0,
-      tax: 0,
-      status: 'completed',
-    } as any,
+  await recordSale(payload, {
+    transactionId,
+    channel,
+    email: `ext-${channel}@darkcardcollection.com`,
+    items: [{ productId: Number(data.productId), quantity: soldQty, price: data.salePrice }],
+    value: data.salePrice * soldQty,
+    currency: 'EUR',
   })
 }

@@ -27,10 +27,13 @@ export function QuickAddButton({ product, maxQuantity }: QuickAddButtonProps) {
   const { addItem } = useCart()
 
   const price = product.price || 0
-  const isAvailable = (product.status === 'listed' || product.status === 'hold') && price > 0
-  const maxQty = Math.max(1, Math.floor(maxQuantity ?? product.quantity ?? 1))
+  const availableQty = maxQuantity ?? product.quantity ?? 0
+  const isAvailable =
+    (product.status === 'listed' || product.status === 'hold') && price > 0 && availableQty > 0
 
   if (!isAvailable) return null
+
+  const maxQty = Math.floor(availableQty)
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault()

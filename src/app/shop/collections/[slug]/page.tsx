@@ -68,7 +68,7 @@ export default async function CollectionPage({
       where: {
         AND: [
           { collection: { equals: colId } },
-          { status: { in: ['listed', 'hold'] } },
+          { status: { in: ['listed', 'hold', 'sold'] } },
           { is_visible: { equals: true } },
         ],
       },

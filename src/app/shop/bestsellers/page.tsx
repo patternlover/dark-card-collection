@@ -23,7 +23,13 @@ export default async function BestsellersPage() {
 
     const result = await payload.find({
       collection: 'products',
-      where: { status: { equals: 'listed' }, featured: { equals: true } },
+      where: {
+        and: [
+          { status: { in: ['listed', 'hold', 'sold'] } },
+          { is_visible: { equals: true } },
+          { featured: { equals: true } },
+        ],
+      },
       limit: 50,
       sort: '-createdAt',
     })
@@ -32,7 +38,12 @@ export default async function BestsellersPage() {
     if (products.length === 0) {
       const fallback = await payload.find({
         collection: 'products',
-        where: { status: { equals: 'listed' } },
+        where: {
+          and: [
+            { status: { in: ['listed', 'hold', 'sold'] } },
+            { is_visible: { equals: true } },
+          ],
+        },
         limit: 50,
         sort: '-createdAt',
       })

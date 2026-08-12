@@ -1,7 +1,36 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Modulo Acquisti e Vendite Esterne**.
+Ultima sessione: **Allineamento progetto a AGENTS.md / overview.md — modello inventario (Fasi 1-5)**.
+
+---
+
+## Sessione recente 9 — Allineamento al modello inventario (Fasi 1-5)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` + tracker `docs/project/sessions/OPEN-TASKS.md`). Implementato il modello target di AGENTS.md/overview.md: Purchases a righe con FIFO e costi effettivi, pipeline vendita condivisa, dashboard Lotti/Magazzino/Listino/Ordini/Messaggi, storefront "Esaurito".
+
+### Modello dati (Fase 1)
+- `Purchases` riscritta: `purchase_date`/`source_type`/`source_name`/`extra_costs`/`notes`/`lines[]` (`product`, `quantity`, `unit_cost`, `effective_unit_cost`, `remaining_quantity`)/`total_cost`. Hook `beforeChange` (costi, init residui), `afterChange` (stock + costo medio), `afterDelete` (decremento residuo).
+- `Orders`: +`sales_channel` (website/vinted/ebay/cardmarket/other), +`unit_cost_snapshot` in items.
+- `Products`: `cost_of_goods_sold` readOnly (derivato); hook `beforeChange` auto `sold`/`out_of_stock` a stock 0 e `listed`/`in_stock` al restock.
+- Nuovi `src/lib/purchase-math.ts`, `src/lib/inventory.ts`; migration `20260812_purchases_lines_schema.ts` (schema + backfill flat→lines); `payload generate:types`.
+
+### Pipeline vendita (Fase 2)
+- `src/lib/record-sale.ts`: `allocateFifo` + snapshot costo + stock + consumo `remaining_quantity`. Webhook Stripe → `recordSale`; **fix FK** riga spedizione (`product: 0`) ora nel campo `shipping`; `recordExternalSale` → `recordSale` (**fix out-of-schema**: email, status `paid`, items puliti); piattaforme esterne `vinted|ebay|cardmarket|other`.
+
+### Dashboard (Fase 3)
+- Rotte: `purchases`/`inventory`/`listings`/`orders`/`messages` (rename da acquisti/prodotti/ordini/messaggi). `PurchasesSection` (lotto header + righe), `InventorySection` (stock/costo medio/storico), `ListingsSection` (price/status/is_visible/featured), `OrdersSection` (canale, margine, vendita esterna). `actions.ts` riscritto su nuovo modello.
+
+### Storefront (Fase 4)
+- Filtri → `status in [listed, hold, sold] AND is_visible` ovunque (shop, PDP, related, bestsellers, sitemap, llms-full, FeaturedProducts). "Esaurito": badge ProductCard, PDP non più `notFound`, ATC/QuickAdd/Sticky disabilitati a stock 0.
+
+### Test / infra / cleanup (Fase 5)
+- **Fix test-infra**: polyfill `localStorage`/`sessionStorage` (`tests/setup.ts`) — risolti i 9 test rossi pre-esistenti (root cause: getter sperimentale Node 26 che torna `undefined`).
+- Nuovi test `purchase-math` (7) + `record-sale` (9) + sold/stock-0 (2). **`pnpm test` 44/44 ✅**.
+- Rimosso codice morto: `ProductsSection`, `ProductTable`, `ProductGroupRow`, `ExternalSaleModal`.
+- Docs aggiornati: `overview.md`, `schema-and-flows.md`, sessioni, tracker OPEN-TASKS.
+
+**Verifica**: `pnpm lint` ✅ · `pnpm test` 44/44 ✅ · migration validata da CI/build (niente DB locale).
 
 ---
 

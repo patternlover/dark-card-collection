@@ -1,9 +1,34 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, CollectionBeforeChangeHook } from 'payload'
+
+const beforeChange: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+  if (data.quantity === undefined) return data
+
+  const previous = (originalDoc as
+    | { status?: string; availability?: string; is_preorder?: boolean }
+    | undefined)
+  const quantity = Number(data.quantity)
+
+  if (quantity <= 0) {
+    data.status = 'sold'
+    data.availability = 'out_of_stock'
+    return data
+  }
+
+  const isPreorder = data.is_preorder === undefined ? Boolean(previous?.is_preorder) : Boolean(data.is_preorder)
+  data.availability = isPreorder ? 'preorder' : 'in_stock'
+  if (data.status === undefined && previous?.status === 'sold') {
+    data.status = 'listed'
+  }
+  return data
+}
 
 export const Products: CollectionConfig = {
   slug: 'products',
   admin: {
     useAsTitle: 'title',
+  },
+  hooks: {
+    beforeChange: [beforeChange],
   },
   fields: [
     {
@@ -50,7 +75,8 @@ export const Products: CollectionConfig = {
       defaultValue: 0,
       min: 0,
       admin: {
-        description: 'Costo di acquisto (Merchant cost_of_goods_sold)',
+        description: 'Costo medio ponderato dalle righe d\'acquisto (auto-calcolato da Purchases, non editabile)',
+        readOnly: true,
       },
     },
     {

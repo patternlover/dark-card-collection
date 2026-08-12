@@ -1,0 +1,84 @@
+# Sessione 2026-08-12 — Allineamento progetto a AGENTS.md / overview.md
+
+## Plan (pre-lavoro)
+
+**Obiettivo**: allineare TUTTO il progetto (collections, pipeline vendite, dashboard, storefront, test, docs) al modello target di AGENTS.md + overview.md § "Domain Model & Inventory Flow". Sessioni in sequenza: questa copre Fase 1 (modello dati Payload).
+
+**Decisioni prese (interazione con l'utente)**:
+- Merge dati legacy (fake variants, Purchases retroattive) → **sessione dedicata**, fuori scope.
+- Purchases `status` (received/pending/archived) → **eliminato** (schema allineato ai doc).
+- `sales_channel` enum = `website|vinted|ebay|cardmarket|other`; wallapop/subito/altro mappano su `other`.
+- Dashboard: split `/dashboard/prodotti` → `/dashboard/inventory` + `/dashboard/listings`; rename `acquisti→purchases`, `ordini→orders`, `messaggi→messages`.
+
+**Ambito Fase 1 — Modello dati Payload**:
+1. Riscrittura `src/payload/collections/Purchases/index.ts`:
+   - drop `title`, `cost_of_goods_sold`, `quantity`, `store`, `linked_product`, `status`
+   - add `purchase_date` (required), `source_type` (select newsstand/supermarket/shop/online/private/other), `source_name`, `extra_costs` (default 0), `notes`, `lines` array (`product` rel, `quantity`, `unit_cost`, `effective_unit_cost`, `remaining_quantity`), `total_cost` (derived)
+   - hook `beforeChange`: `effective_unit_cost = unit_cost × (1 + extra_costs/subtotal)`, edge subtotal 0 → `extra_costs/Σqty`; `remaining_quantity` init = quantity; `total_cost`.
+   - hook `afterChange`: incrementa stock dei product, ricalcola `cost_of_goods_sold` (media pesata), ripristina `listed`+`in_stock` se stock > 0.
+2. `src/payload/collections/Orders/index.ts`: add `sales_channel` (select), `unit_cost_snapshot` in `items[]`.
+3. `src/payload/collections/Products/index.ts`: `cost_of_goods_sold` → `admin.readOnly`; hook `beforeChange` auto `status`/`availability` da quantity.
+4. `payload generate:types` + migration manuale (`payload migrate:create`): alter `purchases`, `orders.sales_channel`, `orders_items.unit_cost_snapshot`, backfill flat→lines.
+
+**File coinvolti**: i 3 file collection sopra, `src/migrations/index.ts` + nuova migration, `src/payload-types.ts` (generato), docs.
+
+**Verifica prevista**: `pnpm lint`, `pnpm test`, `payload generate:db-schema && payload migrate`, build.
+
+## Changelog (post-lavoro)
+
+### Fase 1 — Modello dati Payload (completata 2026-08-12)
+
+1. **`src/payload/collections/Purchases/index.ts`** riscritta allo schema target: drop di `title`, `cost_of_goods_sold`, `quantity`, `store`, `linked_product`, `status`; add di `purchase_date` (required), `source_type` (select), `source_name`, `extra_costs`, `notes`, `lines[]` (`product` rel, `quantity`, `unit_cost`, `effective_unit_cost`, `remaining_quantity`) e `total_cost`. Hook `beforeChange` (calcola `effective_unit_cost` e `total_cost`, init `remaining_quantity`), `afterChange` (stock delta + `cost_of_goods_sold` medio pesato + auto ripristino `listed`/`in_stock` via hook Products), `afterDelete` (decremento dello stock residuo).
+2. **`src/payload/collections/Orders/index.ts`**: add `sales_channel` (select `website|vinted|ebay|cardmarket|other`, default `website`) e `unit_cost_snapshot` in `items[]`.
+3. **`src/payload/collections/Products/index.ts`**: `cost_of_goods_sold` → `admin.readOnly`; hook `beforeChange` auto status/availability da quantity (0 → `sold`+`out_of_stock`; >0 da `sold` → `listed`, availability `in_stock`/`preorder` da `is_preorder`).
+4. **Nuovi lib**: `src/lib/purchase-math.ts` (funzioni pure: `computeEffectiveUnitCosts`, `computeAverageCost`, `roundMoney`), `src/lib/inventory.ts` (helper DB: `productIdFrom`, `purchaseStockDelta`, `recomputeAverageCost`, `applyStockDelta`).
+5. **Tipi**: `payload generate:types` rigenerato (Purchase con `lines`, Order con `sales_channel`/`unit_cost_snapshot`).
+6. **Migration**: `src/migrations/20260812_purchases_lines_schema.ts` (schema identico a `payload-generated-schema.ts` + backfill flat→lines per i purchases esistenti + `sales_channel`/`unit_cost_snapshot` + drop colonne legacy), registrata in `src/migrations/index.ts`.
+7. **Test**: nuovo `tests/purchase-math.test.ts` (7 test: allocation pro-rata, edge subtotal 0, average cost, roundMoney).
+
+**Verifica Fase 1**: `pnpm lint` ✅ · `pnpm test` — 24/26 passano (7 nuovi + 17 esistenti); **9 failure pre-esistenti** su `cart.test.tsx` e `sticky-add-to-cart.test.tsx` (`localStorage is not defined`) confermati anche a HEAD pulito (`git stash`): incompatibilità ambiente vitest 4.1.10 + happy-dom 20.11.1 su questa macchina (happy-dom espone `localStorage`, ma l'ambiente vitest non lo copia sul global). **Non correlati a Fase 1** — da risolvere come task di test-infra separato.
+
+**Note per le fasi successive**:
+- Dashboard Acquisti (`actions.ts` getPurchases/createPurchase + PurchasesSection) è ora **incompatibile a runtime** col nuovo schema (usa `as any` quindi compila, ma scriverebbe campi inesistenti) — il refactor è in **Fase 3**.
+- La migration verrà validata da CI/build (Postgres) — non applicabile in locale (niente DB).
+- Build: `payload generate:db-schema && payload migrate` — `payload-generated-schema.ts` gitignored.
+
+### Fase 2 — Pipeline vendite condivisa `recordSale` (completata 2026-08-12)
+
+1. **`src/lib/record-sale.ts`** (nuovo): `allocateFifo` (pura, oldest-first su `remaining_quantity`, sort per `purchase_date` poi line id), `weightedAverageSnapshot`, e `recordSale(payload, args)` che: crea l'Order con schema corretto (`sales_channel`, `status: 'paid'`, items con `unit_cost_snapshot` = media pesata FIFO o fallback `cost_of_goods_sold`), decrementa `Products.quantity` (l'hook Products auto-setta `sold`/`out_of_stock` a 0), e consuma le righe `remaining_quantity` per acquisto.
+2. **`src/app/api/stripe/webhook/route.ts`**: refactor → usa `recordSale` (channel `website`); **fix FK**: la riga spedizione non entra più in `items` (prima `product: 0` violava `orders_items_product_id_products_id_fk`), va nel campo `shipping`; email conferma ordine usa i titoli dal risultato di `recordSale`; idempotenza su `stripe_session_id` invariata.
+3. **`src/app/dashboard/actions.ts`**: `recordExternalSale` riscritta su `recordSale` con `normalizeChannel` (vinted→vinted, ebay→ebay, cardmarket→cardmarket, wallapop/subito/altro→other); **fix out-of-schema**: `email` obbligatoria (`ext-{channel}@darkcardcollection.com`), `status: 'paid'` (niente più `'completed'`), items senza `title`, niente `customer_name`/`customer_email`.
+4. **`src/components/dashboard/ExternalSaleModal.tsx`**: piattaforme `vinted|ebay|cardmarket|other` (rimossi wallapop/subito, mappati su `other`).
+5. **Test**: `tests/record-sale.test.ts` (9 test: FIFO oldest-first/parziale/null-date, weighted avg, recordSale end-to-end con mock — snapshot 26.25, stock 8→2, righe consumate, fallback costo legacy, dedup items).
+
+**Verifica Fase 2**: `pnpm lint` ✅ · `pnpm test` — 33/42 passano (+9 nuovi); restano i **9 failure pre-esistenti** di cart/sticky-add-to-cart (localStorage, task OPEN-TASKS #20).
+
+### Fase 3 — Dashboard: rotte + sezioni (completata 2026-08-12)
+
+1. **Rotte**: `acquisti→purchases`, `ordini→orders`, `messaggi→messages` (git mv); nuovi `inventory` (Magazzino) e `listings` (Listino) al posto di `/dashboard/prodotti`.
+2. **`DashboardShell`**: nav Lotti / Magazzino / Listino / Ordini / Messaggi (+ Categorie, Collezioni, Impostazioni, SQL).
+3. **`actions.ts`**: riscritte `getPurchases`/`createPurchase`/`deletePurchase` per il nuovo modello (PurchaseDTO con `lines[]`, `purchase_date`/`source_type`/`source_name`/`extra_costs`/`total_cost`; createPurchase con righe {product esistente o quick-create, qty, unit_cost}); nuovo `getPurchaseHistory(productId)`; `toOrderDTO` + `sales_channel` + `margin` (`value − Σ unit_cost_snapshot×qty`); `OrderItemDTO.unitCostSnapshot`. **Risolto il break runtime di Fase 1**.
+4. **`PurchasesSection`** riscritta: tabella lotti espandibile (righe, costi, residui) + modale "Registra Nuovo Lotto" con header (data, source_type, source_name, extra_costs, notes) e righe (select prodotto esistente o "nuovo prodotto" con titolo/prezzo/categoria/collezione/immagine + qty + costo unitario).
+5. **`InventorySection`** (Magazzino): stock, costo medio, prezzo, valore inventario + drill-down "Storico acquisti" (getPurchaseHistory) + Nuovo Prodotto (CreateProductModal).
+6. **`ListingsSection`** (Listino): prezzo, barrato, stato, disponibilità, toggle visibilità (`is_visible`), toggle vetrina (`featured`), edit (EditProductModal).
+7. **`OrdersSection`**: colonna Canale + Margine (rosso se negativo), dettaglio con `unit_cost_snapshot`, bottone "Registra Vendita Esterna" (pick prodotto → recordExternalSale).
+
+**Verifica Fase 3**: `pnpm lint` ✅ · `pnpm test` — 33/42 (invariato, 9 pre-esistenti rossi). Nota: `ProductsSection.tsx`/`ProductTable.tsx`/`ProductGroupRow.tsx` sono ora **codice morto** (cleanup in Fase 5, task 13b).
+
+### Fase 4 — Storefront: filtro `sold` + "Esaurito" (completata 2026-08-12)
+
+1. **Filtri storefront** → `status in [listed, hold, sold] AND is_visible` in: `shop/page.tsx`, `new-arrivals`, `categories/[slug]`, `collections/[slug]`, PDP (metadata + query + variants + related con `is_visible` aggiunto), `FeaturedProducts`, `llms-full.txt`; `bestsellers` allineato (aggiunto `is_visible`, status in [listed,hold,sold]); `sitemap.ts` allineato (stesso filtro).
+2. **"Esaurito"**: `ProductCard` badge `sold-out` quando `group.totalQuantity <= 0` (QuickAdd non renderizzato per sold); PDP non fa più `notFound()` per i `sold` (rende la pagina con badge "Esaurito", JsonLd OutOfStock, ATC disabilitato); `statusLabels` PDP sold → 'Esaurito'.
+3. **ATC a stock 0**: `QuickAddButton` disponibile solo con stock > 0 (`availableQty > 0`, rimosso clamp `Math.max(1,…)`); `AddToCartButton` disabilitato e "Non disponibile" quando `maxQuantity <= 0`; `StickyAddToCart` PDP riceve `maxQuantity={group.totalQuantity}` (niente più clamp a 1).
+
+**Verifica Fase 4**: `pnpm lint` ✅ · `pnpm test` — 33/42 (invariato, 9 pre-esistenti rossi).
+
+### Fase 5 — Test, infra, cleanup, docs (completata 2026-08-12)
+
+1. **Fix test-infra (task #20)**: root cause trovata — Node 26 espone `localStorage`/`sessionStorage` come getter sperimentale che torna `undefined` senza `--localstorage-file`; vitest 4 non eredita quelli di happy-dom. Fix: `tests/setup.ts` con polyfill in-memory registrato in `vitest.config.ts` (`setupFiles`). **Tutti i 9 test pre-esistenti rossi ora passano.**
+2. **Test aggiornati (task 17)**: nuovi casi sold/stock-0 in `sticky-add-to-cart.test.tsx` (status sold + maxQuantity 0 → "Non disponibile" + bottone disabilitato) e `cart.test.tsx` (QuickAddButton nascosto a stock 0). `pnpm test` → **44/44 ✅**.
+3. **Cleanup (task 13b)**: rimossi `ProductsSection.tsx`, `ProductTable.tsx`, `ProductGroupRow.tsx`, `ExternalSaleModal.tsx` (codice morto).
+4. **Docs (task 18)**: `overview.md` (STATUS implemented, Purchases non più "(to create)", File Structure dashboard/lib/migrations, Known Issues #10), `docs/database/schema-and-flows.md` (stato 2026-08-12, purchases 2.8, orders sales_channel/unit_cost_snapshot, regole stock/status, flussi recordSale, dashboard, roadmap), `docs/project/changelog.md` (sessione 9), sessions README indice.
+5. **Tracker (task 19 + 20)**: OPEN-TASKS aggiornato.
+
+**Verifica Fase 5**: `pnpm lint` ✅ · `pnpm test` **44/44 ✅**.

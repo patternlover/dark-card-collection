@@ -7,6 +7,7 @@ import * as migration_20260807_add_unique_stripe_session from './20260807_add_un
 import * as migration_20260809_google_schema from './20260809_google_schema';
 import * as migration_20260810_remove_users_name from './20260810_remove_users_name';
 import * as migration_20260810_add_purchases from './20260810_add_purchases';
+import * as migration_20260812_purchases_lines_schema from './20260812_purchases_lines_schema';
 
 export const migrations = [
   {
@@ -53,5 +54,10 @@ export const migrations = [
     up: migration_20260810_add_purchases.up,
     down: migration_20260810_add_purchases.down,
     name: '20260810_add_purchases'
+  },
+  {
+    up: migration_20260812_purchases_lines_schema.up,
+    down: migration_20260812_purchases_lines_schema.down,
+    name: '20260812_purchases_lines_schema'
   },
 ];

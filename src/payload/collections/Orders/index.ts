@@ -12,6 +12,21 @@ export const Orders: CollectionConfig = {
       required: true,
     },
     {
+      name: 'sales_channel',
+      type: 'select',
+      options: [
+        { label: 'Sito web', value: 'website' },
+        { label: 'Vinted', value: 'vinted' },
+        { label: 'eBay', value: 'ebay' },
+        { label: 'Cardmarket', value: 'cardmarket' },
+        { label: 'Altro', value: 'other' },
+      ],
+      defaultValue: 'website',
+      admin: {
+        description: 'Canale di vendita: website (webhook Stripe) o piattaforma esterna',
+      },
+    },
+    {
       name: 'status',
       type: 'select',
       options: [
@@ -43,6 +58,14 @@ export const Orders: CollectionConfig = {
           name: 'price',
           type: 'number',
           required: true,
+        },
+        {
+          name: 'unit_cost_snapshot',
+          type: 'number',
+          min: 0,
+          admin: {
+            description: 'Costo unitario effettivo al momento della vendita (snapshot FIFO)',
+          },
         },
       ],
     },

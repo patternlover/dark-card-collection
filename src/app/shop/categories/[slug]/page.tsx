@@ -96,7 +96,7 @@ export default async function CategoryPage({
       where: {
         AND: [
           { category: { equals: catId } },
-          { status: { in: ['listed', 'hold'] } },
+          { status: { in: ['listed', 'hold', 'sold'] } },
           { is_visible: { equals: true } },
         ],
       },

@@ -68,10 +68,17 @@ src/
 │   │   └── success/page.tsx        # Post-payment success
 │   ├── dashboard/
 │   │   ├── page.tsx                # /dashboard - admin hub (Google OAuth auth, whitelist)
-│   │   ├── actions.ts              # Server actions: products, orders, SQL
+│   │   ├── actions.ts              # Server actions: products, purchases, orders, messages, SQL
 │   │   ├── login.tsx               # Login screen: "Accedi con Google" (only)
-│   │   ├── main.tsx                # Dashboard UI: overview, products, orders, SQL tabs
-│   │   └── acquisti/               # /dashboard/acquisti - lot entry (post-dates this tree: verify structure; rename → purchases)
+│   │   ├── purchases/              # /dashboard/purchases - Lotti (lot header + righe)
+│   │   ├── inventory/              # /dashboard/inventory - Magazzino (stock, costo medio, history acquisti)
+│   │   ├── listings/               # /dashboard/listings - Listino (price, status, is_visible, featured)
+│   │   ├── orders/                 # /dashboard/orders - Ordini (sales_channel, margine, vendite esterne)
+│   │   ├── messages/               # /dashboard/messages - Messaggi
+│   │   ├── categorie/              # /dashboard/categorie
+│   │   ├── collezioni/             # /dashboard/collezioni
+│   │   ├── impostazioni/           # /dashboard/impostazioni
+│   │   └── sql/                    # /dashboard/sql (console read-only, se abilitata)
 │   ├── guide/
 │   │   ├── page.tsx                # /guide - guide index
 │   │   ├── loading.tsx
@@ -167,11 +174,14 @@ src/
 │   ├── dash-auth.ts                # Auth dashboard: cookie dcc-dash (HMAC), whitelist
 │   ├── db-query.ts                 # Read-only SQL runner (dashboard SQL tab)
 │   ├── group-products.ts           # Groups products by title (variants → parent)
+│   ├── inventory.ts                # Helper stock/costo medio (applyStockDelta, recomputeAverageCost)
 │   ├── order-email.ts              # Template + invio email conferma ordine (Resend)
 │   ├── payload.ts                  # getPayloadClient() - cached singleton
 │   ├── product-filters.ts          # Opzioni condizione/lingua per filtri
 │   ├── product-image.ts            # Helper immagine prodotto
 │   ├── proxy-image.ts              # Cardmarket image proxy URL builder
+│   ├── purchase-math.ts            # Calcoli puri costi (effective_unit_cost, average cost, round)
+│   ├── record-sale.ts              # Pipeline vendita condivisa (FIFO, snapshot costo, stock)
 │   ├── slug.ts                     # Slugify helper (dashboard + PDP)
 │   └── stripe.ts                   # Stripe client (lazy getStripe)
 ├── payload/
@@ -179,7 +189,7 @@ src/
 │   │   ├── Products/index.ts       # 22 fields (see schema below)
 │   │   ├── Categories/index.ts     # name, slug, description
 │   │   ├── Collections/index.ts    # name, slug, description, releaseDate
-│   │   ├── Orders/index.ts         # transaction_id, items, status, value, stripe_session_id (+ target: sales_channel, items unit_cost_snapshot)
+│   │   ├── Orders/index.ts         # transaction_id, sales_channel, items (product, quantity, price, unit_cost_snapshot), status, value, currency, shipping, tax, stripe_session_id, email
 │   │   ├── Media/index.ts          # upload field
 │   │   └── Messages/index.ts       # name, email, subject, message, read, replied
 │   └── globals/
@@ -195,12 +205,14 @@ src/
     ├── 20260802_202035.ts
     ├── 20260802_202035.json
     ├── 20260807_add_unique_stripe_session.ts
-    └── 20260809_google_schema.ts
+    ├── 20260809_google_schema.ts
+    ├── 20260810_add_purchases.ts
+    └── 20260812_purchases_lines_schema.ts
 └── ... (nuove migration generate da `pnpm build`)
 ```
 
 ```
-tests/                            # Unit test Vitest (group-products, slug, cart, product-filters, sticky-add-to-cart)
+tests/                            # Unit test Vitest (group-products, slug, cart, product-filters, sticky-add-to-cart, purchase-math, record-sale)
 .github/workflows/ci.yml          # CI: tsc --noEmit + vitest + next build
 vitest.config.ts
 next.config.ts
@@ -262,7 +274,7 @@ scripts/                          # at repo root (not under src/)
 
 ## Domain Model & Inventory Flow
 
-> **STATUS**: target model (decided 2026-08-12). It REPLACES the deprecated "variant per purchase batch" logic — see Migration at the end. Read this section before touching Products, Purchases, or the dashboard.
+> **STATUS**: implemented (2026-08-12). It REPLACES the deprecated "variant per purchase batch" logic — see Migration at the end. Read this section before touching Products, Purchases, or the dashboard.
 
 **Golden rule**: a *variant* exists ONLY when the buyer sees or chooses a difference (grade, condition, language, edition). Purchase-side differences — cost, place, date, batch — NEVER create a variant or a duplicate Product: they belong to Purchases.
 
@@ -279,7 +291,7 @@ We buy 10x "Bundle Paldea Evolved": 6 @ €25.00 at a supermarket + 4 @ €22.00
 → ONE Product, stock 10, ONE Purchase with two lines (or two Purchases with one line each).
 → NOT two Products, NOT two variants. The customer sees a single listing.
 
-### Purchases collection (to create)
+### Purchases collection
 | Field | Type | Notes |
 |-------|------|-------|
 | purchase_date | date | required |
@@ -309,7 +321,7 @@ Edge case: if subtotal is 0 (e.g. gifted lot with shipping only), split equally 
 ### Dashboard sections & naming
 UI labels are Italian, code names English (see language policy). Sections may be tabs or routes; today they live as tabs in `main.tsx` plus the `/dashboard/acquisti` route — routes below are the target.
 
-| UI label (it) | Code name | Route (target) | Operates on |
+| UI label (it) | Code name | Route | Operates on |
 |---------------|-----------|----------------|-------------|
 | Lotti | purchases | /dashboard/purchases | purchases (+ lines) |
 | Magazzino | inventory | /dashboard/inventory | products — create, stock, avg cost, purchase history |
@@ -345,7 +357,7 @@ Rows with genuine buyer-visible differences (language/grade), if any, stay separ
 7. Stripe Products not synced with Payload products
 8. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders - required by law and by Stripe before go-live
 9. Email conferma ordine: senza `RESEND_API_KEY` l'email non parte (l'ordine viene comunque creato)
-10. Deprecated "variant per purchase batch" data still in DB — needs the migration described in "Domain Model & Inventory Flow"
+10. Dati legacy "variant per purchase batch" ancora nel DB — lo schema è stato migrato a Purchases `lines` (migration `20260812_purchases_lines_schema.ts`), ma il **data-cleanup** (merge dei fake variants, Purchases retroattive) resta in una sessione dedicata — vedi `docs/project/sessions/OPEN-TASKS.md`
 
 ## Email
 

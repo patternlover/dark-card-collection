@@ -75,4 +75,17 @@ describe('StickyAddToCart', () => {
     )
     expect(screen.getByTestId('sticky-atc').textContent).toContain('1 disponibile')
   })
+
+  it('shows Non disponibile and disables the button for a sold-out product (stock 0)', () => {
+    render(
+      <ConsentProvider>
+        <CartProvider>
+          <StickyAddToCart product={{ ...product, status: 'sold' }} maxQuantity={0} />
+        </CartProvider>
+      </ConsentProvider>,
+    )
+    expect(screen.getByTestId('sticky-atc').textContent).toContain('Non disponibile')
+    const button = screen.getByRole('button', { name: /non disponibile/i })
+    expect((button as HTMLButtonElement).disabled).toBe(true)
+  })
 })

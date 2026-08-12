@@ -89,6 +89,18 @@ describe('useCart clamp', () => {
     expect(screen.getByTestId('qty').textContent).toBe('1')
     expect(screen.getByTestId('max').textContent).toBe('7')
   })
+
+  it('QuickAddButton is hidden when the product is sold out (stock 0)', () => {
+    render(
+      <CartProvider>
+        <QuickAddButton
+          product={{ id: 3, title: 'Sold', slug: 'sold', price: 10, status: 'listed', quantity: 0 }}
+          maxQuantity={0}
+        />
+      </CartProvider>,
+    )
+    expect(screen.queryByTitle('Aggiungi al carrello')).toBeNull()
+  })
 })
 
 describe('CartPage', () => {
