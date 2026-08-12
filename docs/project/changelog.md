@@ -1,7 +1,28 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Allineamento progetto a AGENTS.md / overview.md — modello inventario (Fasi 1-5)**.
+Ultima sessione: **Bugtesting E2E dashboard (Playwright locale)**.
+
+---
+
+## Sessione recente 10 — Bugtesting E2E dashboard + fix bug + validazione migration
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` §Fase 6, tracker `docs/project/sessions/OPEN-TASKS.md`). Suite end-to-end Playwright della dashboard in locale, con fix di bug trovati.
+
+### Ambiente
+- Postgres locale (`dcc_test`), `.env.test` (gitignored), seed `scripts/test-db-setup.ts`, `@playwright/test`, `playwright.config.ts` con auth bypass (cookie `dcc-dash` firmato). Suite `tests-e2e/` **24 test**.
+
+### Bug trovati e risolti
+- **Critico — deadlock creazione lotto**: l'hook `afterChange` di `Purchases` faceva `payload.update` su `products` in transazione → si bloccava. Spostata l'applicazione stock/costo/decremento dagli hook alle server actions (`applyStockDelta`/`applyPurchaseDeletion` in `src/lib/inventory.ts`, usate da `createPurchase`/`deletePurchase`).
+- **"Elimina prodotto" assente** dopo il refactor Fase 3 → riaggiunto in `InventorySection` (Magazzino).
+
+### Migration `20260812` validata (mai eseguita prima: CI usa `next build`, non `pnpm build`)
+- Ora **idempotente** (vincoli FK in `DO` + backfill condizionato a `linked_product_id`).
+- Validata su entrambi i percorsi con `scripts/validate-migration-*.ts`: schema push e schema flat legacy (backfill flat→lines verificato).
+
+### Risultato
+- `pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · **Playwright 24/24 verdi** sul bundle prod · push + CI verde + deploy live OK (commit `c5da77f`).
+- Note: artefatti HMR solo nel dev server (assenti in prod); doppio render transitorio su `/shop` in caricamento (test con `.first()`); **gap**: manca la modifica di un lotto in `/dashboard/purchases` (feature request).
 
 ---
 
