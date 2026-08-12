@@ -4,7 +4,7 @@ Tracker persistente dei task aperti, a vita lunga (oltre la singola sessione). O
 
 Stati: `open` · `in-progress` · `blocked` (con motivo) · `done` (con verifica).
 
-Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 + E2E 25/25 + fix Listino live: push:false in prod + hardening toggle + regressione hydration).
+Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 + E2E 25/25 + **root cause Listino live RISOLTA**: schema drift `payload_locked_documents_rels.purchases_id` → 500 su ogni write; migration `20260812_fix_locked_documents_rels`; verifica live ok).
 
 ---
 
@@ -72,7 +72,7 @@ Suite end-to-end in `tests-e2e/` (24 test) eseguita sul **bundle di produzione**
 | E6 | **Nota**: su `/shop` si osserva un doppio render transitorio della card prodotto durante il caricamento (hydration/streaming) → i test usano `.first()`; da verificare se cosmetico anche su rete reale | open (info) |
 | E7 | **Gap funzionale**: in `/dashboard/purchases` non esiste la **modifica di un lotto** (solo crea/elimina/espandi). Se serve, aggiungere edit UI | open (feature request) |
 | E8 | **Non coperto da E2E**: console SQL (`/dashboard/sql`, dipende da `ENABLE_DASH_SQL`) e panorama `/dashboard` (solo heading) | open (copertura) |
-| E9 | **Listino live non aggiornava i dati** (`#441` + "non invia al DB") — causa principale: `push:true` anche in prod (sync schema a ogni cold-start Vercel → server actions lente/timeout). **Fix**: `push: NODE_ENV !== 'production'`; toggle con stato autoritativo dalla server action + toast; regressione `console-clean.spec.ts`. Non riproducibile localmente → se ricompare: incognito (estensioni browser alterano il DOM → 441) + console dev per lo stack | done (mitigato; `push:false` in prod) |
+| E9 | **Listino live non aggiornava i dati** — **ROOT CAUSE RISOLTA (2026-08-12)**: `payload_locked_documents_rels` sul DB live mancava di `purchases_id` → ogni write Payload (lock check) falliva con `column ...purchases_id does not exist` → HTTP 500 (e il #441 era la coda dello stato rotto). Fix: migration `20260812_fix_locked_documents_rels.ts` (colonna+FK+indice). Verificato live con `tests-e2e-live/prod.spec.ts`: toggle/featured/edit/create/delete ok, FAILING_WRITES [], CONSOLE_ERRORS [] | done (verificato in prod) |
 
 ## Deferred / Blocked
 

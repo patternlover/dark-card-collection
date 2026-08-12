@@ -1,7 +1,28 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix Listino live (push:false in produzione + hardening toggle + regressione hydration)**.
+Ultima sessione: **Root cause Listino live risolta: schema drift `payload_locked_documents_rels` (500 su ogni write)**.
+
+---
+
+## Sessione recente 12 — Fix schema drift live: `payload_locked_documents_rels.purchases_id` mancante
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` §Fase 8). Con accesso autenticato alla live (cookie fornito) ho riprodotto il problema reale: **ogni write della dashboard (updateProduct, createProduct, updateCategory, deleteCategory) rispondeva HTTP 500** mentre le letture funzionavano.
+
+### Root cause (dal log Vercel)
+`column ...purchases_id does not exist` in `payload_locked_documents_rels` (tabella di sistema Payload per il document locking): la collection `Purchases` era nel config ma la colonna `<collection>_id` nel join table non è mai stata aggiunta al DB live (il push runtime non è mai andato a buon fine sui cold-start serverless). Ogni write Payload esegue una SELECT di lock su quella tabella → 500.
+
+### Fix
+- **Migration `20260812_fix_locked_documents_rels.ts`**: aggiunge `payload_locked_documents_rels.purchases_id` + FK `payload_locked_documents_rels_purchases_fk` (→ `purchases(id)` ON DELETE CASCADE) + indice. Idempotente, applicata alla live dal `payload migrate` nel build del deploy.
+- **`scripts/check-schema-drift.ts`**: confronta schema DB target vs riferimento (tabelle/colonne/FK/indici) per intercettare questa classe di drift.
+- **`scripts/validate-locked-docs.ts`**: validazione della migration su fixture (stato rotto → fix, idempotenza, down).
+- **`tests-e2e-live/prod.spec.ts`**: test live autenticato (cookie da env `DASH_COOKIE`) — toggle/featured/edit/create/delete con assert "nessun 500" e "nessun errore hydration".
+
+### Verifica
+- Localmente: lint ✓ · test 44/44 ✓ · build ✓ · E2E 25/25 ✓.
+- **Live**: dopo il deploy, ri-test autenticato → `TOGGLE_PERSISTED` · `CREATE_OK` · `DELETE_OK` · **FAILING_WRITES []** · **CONSOLE_ERRORS []** (il #441 è sparito insieme ai 500).
+- CI verde · deploy live OK.
+- Lezione documentata in `AGENTS.md` (Note operative: migration per le tabelle di sistema Payload, verifica drift) e `overview.md` (Known Issue #13).
 
 ---
 

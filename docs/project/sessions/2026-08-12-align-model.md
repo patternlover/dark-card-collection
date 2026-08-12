@@ -106,3 +106,13 @@ Diagnosi: non riproducibile localmente (dev e prod bundle, dati seed e "live-lik
 Known issue documentati in `AGENTS.md` (Note operative) e `overview.md` (Known Issues 11-12).
 
 **Verifica Fase 7**: `pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · Playwright **25/25** ✓ (incl. console-clean) sul bundle prod.
+
+### Fase 8 — Root cause Listino live risolta: schema drift `payload_locked_documents_rels` (2026-08-12)
+
+Con l'accesso autenticato alla live (cookie `dcc-dash` fornito dall'utente) ho riprodotto il problema reale con Playwright (`tests-e2e-live/`): **ogni write della dashboard risponde HTTP 500** (updateProduct toggle, createProduct, updateCategory, deleteCategory); le letture funzionano; su live il toggle non persiste e compare un errore in console.
+
+Dal **log Vercel** (digest fornito dall'utente): `error: column 70cc9076_...purchases_id does not exist` nella query su `payload_locked_documents_rels` (document locking di Payload). La collection `Purchases` è nel config ma la colonna `purchases_id` della tabella join di sistema non era mai stata creata sul DB live (il `push: true` runtime non è mai andato a buon fine sui cold-start serverless) → ogni write fallisce.
+
+**Fix**: migration `20260812_fix_locked_documents_rels.ts` (colonna `purchases_id` + FK `payload_locked_documents_rels_purchases_fk` + indice; idempotente, guardata) applicata alla live via `payload migrate` nel build. Strumenti: `scripts/check-schema-drift.ts` (diff schema vs riferimento) e `scripts/validate-locked-docs.ts` (validazione su fixture). Test live `tests-e2e-live/prod.spec.ts` (cookie da env, mai nel repo).
+
+**Verifica**: locale lint/test/build/E2E 25/25 ✓ · **live**: ri-test autenticato → toggle persiste, create/delete ok, **FAILING_WRITES []**, **CONSOLE_ERRORS []** (sparito anche il #441) ✓ · CI verde · deploy live OK. Lezione documentata in `AGENTS.md` (migration per tabelle di sistema Payload) e `overview.md` (Known Issue #13).

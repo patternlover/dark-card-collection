@@ -81,6 +81,7 @@
 - Footer: dati business (BUSINESS in `Footer.tsx`) e `CONTACT_EMAIL` ancora placeholder.
 - **`postgresAdapter` usa `push: false` in produzione** (`src/payload.config.ts`): la schema si applica con `payload migrate` nel build. NON riattivare `push: true`: causerebbe una sync schema a ogni cold-start serverless su Vercel → server actions lente/timeout → sintomo noto: la dashboard (es. Listino) non aggiorna i dati / dà errori. In dev (`NODE_ENV !== production`) il push resta attivo.
 - **Idratazione (errore React #441)**: i componenti client NON devono leggere `window`/`localStorage`/`Date.now()` nel render (solo in `useEffect` + stato `mounted`). Qualsiasi attributo SSR che differisce dal client genera `Minified React error #441`. Regressione coperta da `tests-e2e/console-clean.spec.ts` (fallisce su errori di hydration nelle pagine chiave).
+- **Migration obbligatorie anche per le tabelle di sistema Payload**: aggiungere/rimuovere una collection richiede di aggiornare anche le tabelle join gestite da Payload (`payload_locked_documents_rels`, `payload_preferences_rels`, ecc.) — ogni collection vi aggiunge una colonna `<collection>_id`. La mancanza (es. `purchases_id`) fa fallire con 500 OGNI write della dashboard ("column ... does not exist", vedi `20260812_fix_locked_documents_rels.ts`). Verifica drift: `SCHEMA_DRIFT_URI=<db> SCHEMA_DRIFT_REF_URI=<riferimento> pnpm exec tsx scripts/check-schema-drift.ts`.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
