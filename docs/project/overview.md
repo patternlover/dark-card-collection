@@ -70,7 +70,8 @@ src/
 │   │   ├── page.tsx                # /dashboard - admin hub (Google OAuth auth, whitelist)
 │   │   ├── actions.ts              # Server actions: products, orders, SQL
 │   │   ├── login.tsx               # Login screen: "Accedi con Google" (only)
-│   │   └── main.tsx                # Dashboard UI: overview, products, orders, SQL tabs
+│   │   ├── main.tsx                # Dashboard UI: overview, products, orders, SQL tabs
+│   │   └── acquisti/               # /dashboard/acquisti - lot entry (post-dates this tree: verify structure; rename → purchases)
 │   ├── guide/
 │   │   ├── page.tsx                # /guide - guide index
 │   │   ├── loading.tsx
@@ -178,7 +179,7 @@ src/
 │   │   ├── Products/index.ts       # 22 fields (see schema below)
 │   │   ├── Categories/index.ts     # name, slug, description
 │   │   ├── Collections/index.ts    # name, slug, description, releaseDate
-│   │   ├── Orders/index.ts         # transaction_id, items, status, value, stripe_session_id
+│   │   ├── Orders/index.ts         # transaction_id, items, status, value, stripe_session_id (+ target: sales_channel, items unit_cost_snapshot)
 │   │   ├── Media/index.ts          # upload field
 │   │   └── Messages/index.ts       # name, email, subject, message, read, replied
 │   └── globals/
@@ -251,20 +252,87 @@ scripts/                          # at repo root (not under src/)
 3. **Checkout**: Creates ad-hoc Stripe price_data (no Stripe Products), passes Payload product IDs in metadata
 4. **Webhook**: Reads `product.metadata.payloadProductId` from Stripe to create order with correct Payload relationship
 5. **Products collection**: Both LISTED and HOLD products can be shown on shop, controlled by `is_visible` field
-6. **Storefront visibility filter**: `AND: [{ status: { in: ['listed', 'hold'] } }, { is_visible: { equals: true } }]` on shop page (hold products with a price stay visible)
+6. **Storefront visibility filter**: `AND: [{ status: { in: ['listed', 'hold', 'sold'] } }, { is_visible: { equals: true } }]` on shop page — `hold` = preorder, `sold` renders as "Esaurito" (not purchasable); `is_visible: false` is the only hide switch
+7. **Language policy**: ALL code in English (identifiers, DB fields, routes, comments, commits). AI chat output, session plans and changelogs in Italian. Customer-facing storefront copy in Italian.
+8. **Inventory model**: we buy in lots and sell single units — the Purchases collection tracks lots and costs; variants exist only for buyer-visible differences (see "Domain Model & Inventory Flow")
+9. **Dashboard nomenclature**: sections are Lotti / Magazzino / Listino / Ordini / Messaggi (Italian UI labels) mapped to purchases / inventory / listings / orders / messages in code — see "Dashboard sections & naming"
+10. **Sold-out policy**: any sale (Stripe or external) decrements stock; stock 0 → the system auto-sets `status: sold` + `availability: out_of_stock`; product stays visible as "Esaurito" with add-to-cart disabled; checkout validates quantity ≤ stock server-side; restock auto-restores `listed` + `in_stock`; hiding is only `is_visible: false`
+11. **Extra costs**: lot `extra_costs` allocated pro-rata by line value → `effective_unit_cost = unit_cost × (1 + extra_costs/subtotal)`; all cost math uses `effective_unit_cost` (see "Extra costs allocation")
+12. **Sales channels**: Orders carry `sales_channel` (`website` default via Stripe webhook | `vinted` | `ebay` | `cardmarket` | `other`); external sales are recorded manually from Ordini through the same `recordSale` pipeline (order + stock + FIFO + cost snapshot); external orders are never pushed to GA4
 
-## Variant Products Logic
+## Domain Model & Inventory Flow
 
-Products are grouped by `title` as variants (same title, different `item_group_id`, `language`, `grade`, `price`). Variants represent the same product purchased from suppliers on different dates/orders. Products are created/edited directly in the dashboard (`/dashboard`, tab "Prodotti"); there is no external import source.
+> **STATUS**: target model (decided 2026-08-12). It REPLACES the deprecated "variant per purchase batch" logic — see Migration at the end. Read this section before touching Products, Purchases, or the dashboard.
 
-- **Variants are NOT exposed to customers** - shop and PDP show only the "parent product" (grouped by `title`)
-- **Stock** = sum of `quantity` across all variants with the same title
-- **Selling price** = minimum `price` across variants
-- **Grouping** is done by `groupProducts()` in `src/lib/group-products.ts`
-- **PDP** fetches all variants by title, groups them, and shows aggregate info (total stock, available languages/grades as text)
-- **Admin** (`/dashboard`, tab "Prodotti") shows variants in expandable groups - this is the ONLY place variants are visible
-- **Delete variant/group**: removes from Payload only
-- **Visibility toggle**: `is_visible` field controls whether a product group appears in the shop. Admin toggles via eye icon in the dashboard.
+**Golden rule**: a *variant* exists ONLY when the buyer sees or chooses a difference (grade, condition, language, edition). Purchase-side differences — cost, place, date, batch — NEVER create a variant or a duplicate Product: they belong to Purchases.
+
+### Glossary
+- **Product** = one sellable catalog item (one row). Physically identical sealed items = ONE Product with stock in `quantity`, no matter how many batches they were bought in.
+- **Variant** = a Product sharing `title` with others but differing by a buyer-visible attribute (grade / condition / language). Grouped by `groupProducts()` in `src/lib/group-products.ts`; shop and PDP show only the parent, the dashboard shows expandable groups. Not used today (sealed only); WILL be used for graded singles/slabs (each slab = its own Product, `quantity: 1`).
+- **Purchase (lotto)** = one buying event: date, source, costs. We buy in lots and sell single units.
+- **Purchase line** = product + quantity + unit cost inside a lot. This is where "price and place of purchase" live.
+- **Stock** = `Products.quantity`: incremented by purchase lines, decremented by orders.
+- **Listing** = making a Product sellable on the storefront: `price` + `status` (`listed`/`hold`) + `is_visible`.
+
+### Canonical example
+We buy 10x "Bundle Paldea Evolved": 6 @ €25.00 at a supermarket + 4 @ €22.00 at a newsstand.
+→ ONE Product, stock 10, ONE Purchase with two lines (or two Purchases with one line each).
+→ NOT two Products, NOT two variants. The customer sees a single listing.
+
+### Purchases collection (to create)
+| Field | Type | Notes |
+|-------|------|-------|
+| purchase_date | date | required |
+| source_type | select | newsstand / supermarket / shop / online / private / other |
+| source_name | text | e.g. "Esselunga Viale X", "edicola Piazza Y" |
+| extra_costs | number | shipping/fees on the whole lot, optional — allocated pro-rata by line value (see below) |
+| notes | textarea | |
+| lines | array | `product` (rel → products), `quantity`, `unit_cost`, `effective_unit_cost` (derived — see below), `remaining_quantity` (init = quantity, consumed FIFO by sales) |
+| total_cost | number | derived: Σ qty × unit_cost + extra_costs |
+
+Payload stores the `lines` array in its own Postgres table (`purchases_lines`) → directly queryable from the dashboard SQL tab.
+
+### Extra costs allocation
+`extra_costs` (shipping, fees) are spread across lines proportionally to line value, which reduces to a uniform multiplier:
+
+`effective_unit_cost = unit_cost × (1 + extra_costs / subtotal)`, where `subtotal = Σ (quantity × unit_cost)`.
+
+Edge case: if subtotal is 0 (e.g. gifted lot with shipping only), split equally per unit: `effective_unit_cost = extra_costs / Σ quantity`. Computed server-side on purchase create/update and stored on the line. ALL cost math — product average cost, FIFO consumption, order snapshots, margins — uses `effective_unit_cost`, never raw `unit_cost`.
+
+### Products: semantic changes
+- `quantity` = real stock of the sellable item (no longer "batch size").
+- `cost_of_goods_sold` = DERIVED weighted average of its purchase lines' `effective_unit_cost` (kept in sync for Google Merchant); never hand-edited once Purchases exists.
+- `item_group_id` unchanged (= title slug); becomes meaningful again when real variants arrive.
+- Creating a second Product with an existing `title` is allowed ONLY if a buyer-visible attribute differs — the dashboard should warn otherwise.
+- `status` lifecycle: `listed`/`hold` while on sale ↔ `sold` (set AUTOMATICALLY when stock reaches 0 by any sale channel; automatically back to `listed` when a purchase restores stock). Hiding a product is ONLY `is_visible: false`.
+
+### Dashboard sections & naming
+UI labels are Italian, code names English (see language policy). Sections may be tabs or routes; today they live as tabs in `main.tsx` plus the `/dashboard/acquisti` route — routes below are the target.
+
+| UI label (it) | Code name | Route (target) | Operates on |
+|---------------|-----------|----------------|-------------|
+| Lotti | purchases | /dashboard/purchases | purchases (+ lines) |
+| Magazzino | inventory | /dashboard/inventory | products — create, stock, avg cost, purchase history |
+| Listino | listings | /dashboard/listings | products — price, sale_price, status, is_visible, featured |
+| Ordini | orders | /dashboard/orders | orders (+ margin from cost snapshots) |
+| Messaggi | messages | /dashboard/messages | messages (contact form) |
+
+Magazzino and Listino are two views over the SAME `products` collection (procurement-facing vs storefront-facing) — never duplicate product data to separate them.
+
+### Flow
+1. **Purchase ("Lotti")** — `/dashboard/purchases` (rename of current `/dashboard/acquisti`): lot header + lines (pick an existing Product or quick-create a draft one). Saving increments each product's stock and recomputes its average cost.
+2. **Warehouse ("Magazzino")** — per Product: stock, average cost, inventory value, drill-down into purchase history. New products are created here (full anagrafica) or via quick-create from Lotti.
+3. **Listing ("Listino")** — set `price`, `status: listed` (or `hold` for preorders), `is_visible: true`; storefront filter becomes `status in [listed, hold, sold] AND is_visible` (`sold` renders as sold out; `is_visible: false` is the ONLY way to hide a product). Stock 0 → the system automatically sets `status: sold` + `availability: out_of_stock`; the product STAYS visible with an "Esaurito" badge and add-to-cart disabled (ProductCard, PDP, QuickAdd, sticky ATC). The checkout API must validate requested quantity ≤ stock server-side. A new purchase line that brings stock back above 0 automatically restores `status: listed` + `availability: in_stock`.
+4. **Sale ("Ordini")** — two channels, ONE shared pipeline (`recordSale`): (a) the Stripe webhook (`sales_channel: website`); (b) a manual "Registra vendita esterna" action in Ordini for sales made on other platforms (`sales_channel: vinted | ebay | cardmarket | other`; `value` = amount actually received; `stripe_session_id` empty). Both create the Order, decrement stock, consume `remaining_quantity` FIFO (oldest lines first), snapshot the consumed `effective_unit_cost` on the order item, and auto-set `status: sold` when stock hits 0 → exact landed margin per sale on every channel, sell-through per lot. External-channel orders are business data only — NEVER pushed to GA4 (site analytics tracks the website channel).
+5. **Cost analytics** — by source / lot / product from `purchases_lines` + order cost snapshots (best sources, lots still in stock, margins).
+
+### Migration from the deprecated model
+Same-title Product rows that differ only by cost/qty (fake variants):
+1. keep one row per truly distinct sellable item and sum quantities;
+2. for each merged row create a retroactive Purchase (`purchase_date` = row `createdAt`, `source_name: "legacy"`) with one line (qty, `unit_cost` = old `cost_of_goods_sold`);
+3. delete the merged duplicates; verify grouping, PDP, sitemap and Merchant feed are unaffected;
+4. legacy rows already marked `sold`: fold them into the merge where they duplicate a surviving item, otherwise set `is_visible: false` — the new storefront filter includes `sold`, so unguarded legacy rows would resurface as "Esaurito".
+Rows with genuine buyer-visible differences (language/grade), if any, stay separate: those are legitimate variants.
 
 ## Known Issues / TODO
 
@@ -277,6 +345,7 @@ Products are grouped by `title` as variants (same title, different `item_group_i
 7. Stripe Products not synced with Payload products
 8. Footer: business data (BUSINESS in `Footer.tsx`) and `CONTACT_EMAIL` still placeholders - required by law and by Stripe before go-live
 9. Email conferma ordine: senza `RESEND_API_KEY` l'email non parte (l'ordine viene comunque creato)
+10. Deprecated "variant per purchase batch" data still in DB — needs the migration described in "Domain Model & Inventory Flow"
 
 ## Email
 
