@@ -83,9 +83,6 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-dashboard-modals-
 
 ### Prossimi step (branch)
 Magazzino → Nuovo/Duplica Prodotto · Listino → Modifica Prodotto · Lotti → Registra/Modifica Lotto · Categorie/Collezioni.
-
----
-
 ---
 
 ## Sessione recente 15 — Listino a gruppi per titolo + nomi completi
