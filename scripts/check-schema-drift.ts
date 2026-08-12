@@ -27,12 +27,17 @@ async function load(client: pg.Client) {
       `SELECT conname FROM pg_constraint WHERE contype='f' AND connamespace='public'::regnamespace ORDER BY conname`,
     )).rows.map((r) => r.conname),
   )
-  const idx = new Set(
-    (await client.query(
-      `SELECT indexname FROM pg_indexes WHERE schemaname='public' ORDER BY indexname`,
-    )).rows.map((r) => r.indexname),
+  const idx = new Map<string, string>()
+  const idxRows = await client.query(
+    `SELECT indexname, indexdef FROM pg_indexes WHERE schemaname='public' ORDER BY indexname`,
   )
+  for (const r of idxRows.rows) idx.set(r.indexname, String(r.indexdef).replace(/\s+/g, ' ').replace(/public\./g, ''))
   return { tables, columns, fks, idx }
+}
+
+function sameDef(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b) return false
+  return a.replace(/using btree/g, '').trim() === b.replace(/using btree/g, '').trim()
 }
 
 async function main() {
@@ -52,7 +57,13 @@ async function main() {
     }
   }
   for (const f of ref.fks) if (!tgt.fks.has(f)) problems.push(`FK mancante nel target: ${f}`)
-  for (const i of ref.idx) if (!tgt.idx.has(i)) problems.push(`INDEX mancante nel target: ${i}`)
+  for (const [i, def] of ref.idx) {
+    if (!tgt.idx.has(i)) {
+      problems.push(`INDEX mancante nel target: ${i}`)
+    } else if (!sameDef(def, tgt.idx.get(i))) {
+      problems.push(`INDEX definizione diversa nel target: ${i}`)
+    }
+  }
 
   if (problems.length === 0) {
     console.log('SCHEMA DRIFT: NESSUNO (allineato al riferimento)')
