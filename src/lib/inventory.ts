@@ -15,8 +15,8 @@ export function productIdFrom(value: unknown): number | undefined {
 
 export interface PurchaseLineLike {
   product?: unknown
-  quantity?: number
-  remaining_quantity?: number
+  quantity?: number | null
+  remaining_quantity?: number | null
 }
 
 export function purchaseStockDelta(lines: PurchaseLineLike[] | undefined): Map<number, number> {
@@ -67,4 +67,16 @@ export async function applyStockDelta(payload: Payload, delta: Map<number, numbe
     })
     await recomputeAverageCost(payload, productId)
   }
+}
+
+export async function applyPurchaseDeletion(payload: Payload, purchaseDoc: { lines?: PurchaseLineLike[] }): Promise<void> {
+  const delta = new Map<number, number>()
+  for (const line of purchaseDoc?.lines ?? []) {
+    const pid = productIdFrom(line.product)
+    if (!pid) continue
+    const remaining = Number(line.remaining_quantity ?? line.quantity ?? 0)
+    if (remaining <= 0) continue
+    delta.set(pid, (delta.get(pid) ?? 0) - remaining)
+  }
+  await applyStockDelta(payload, delta)
 }

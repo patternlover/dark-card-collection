@@ -10,6 +10,8 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "db:setup": "tsx scripts/test-db-setup.ts",
     "payload": "payload",
     "generate:types": "payload generate:types",
     "generate:importmap": "payload generate:importmap",
@@ -40,12 +42,14 @@
     "typescript": "5.8.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@testing-library/react": "^16.3.2",
     "@types/pg": "^8.20.3",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "^6.0.5",
     "happy-dom": "^20.11.1",
+    "tsx": "^4.23.12",
     "vitest": "^4.1.10"
   },
   "pnpm": {

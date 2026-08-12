@@ -6,6 +6,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
 import { recordSale, type SalesChannel } from '@/lib/record-sale'
+import { applyPurchaseDeletion, applyStockDelta, purchaseStockDelta } from '@/lib/inventory'
 
 async function requireAuth(): Promise<void> {
   if (!(await isAuthed())) {
@@ -1000,13 +1001,16 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
       lines,
     } as any,
   })
+
+  await applyStockDelta(payload, purchaseStockDelta(res.lines ?? []))
   return toPurchaseDTO(res)
 }
 
 export async function deletePurchase(id: string): Promise<void> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.delete({ collection: 'purchases', id })
+  const deleted = await payload.delete({ collection: 'purchases', id })
+  await applyPurchaseDeletion(payload, deleted as { lines?: { product?: unknown; quantity?: number; remaining_quantity?: number }[] })
 }
 
 export interface PurchaseHistoryEntry {

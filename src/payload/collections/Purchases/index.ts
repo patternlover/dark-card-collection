@@ -1,16 +1,8 @@
 import type {
   CollectionConfig,
-  CollectionAfterChangeHook,
-  CollectionAfterDeleteHook,
   CollectionBeforeChangeHook,
 } from 'payload'
 import { computeEffectiveUnitCosts, roundMoney } from '@/lib/purchase-math'
-import {
-  applyStockDelta,
-  productIdFrom,
-  purchaseStockDelta,
-  recomputeAverageCost,
-} from '@/lib/inventory'
 
 interface PurchaseLineInput {
   id?: string
@@ -51,35 +43,6 @@ const beforeChange: CollectionBeforeChangeHook = ({ data, operation, originalDoc
   })
   data.total_cost = roundMoney(totalCost)
   return data
-}
-
-const afterChange: CollectionAfterChangeHook = async ({ doc, previousDoc, operation, req }) => {
-  const delta = purchaseStockDelta(doc.lines)
-  if (operation === 'update') {
-    for (const [productId, amount] of purchaseStockDelta(previousDoc.lines)) {
-      delta.set(productId, (delta.get(productId) ?? 0) - amount)
-    }
-  }
-  await applyStockDelta(req.payload, delta)
-  return doc
-}
-
-const afterDelete: CollectionAfterDeleteHook = async ({ doc, req }) => {
-  for (const line of (doc.lines ?? []) as PurchaseLineInput[]) {
-    const productId = productIdFrom(line.product)
-    if (!productId) continue
-    const remaining = Number(line.remaining_quantity ?? line.quantity ?? 0)
-    if (remaining <= 0) continue
-    const product = await req.payload.findByID({ collection: 'products', id: productId, depth: 0 })
-    const currentQty = Number((product as { quantity?: number }).quantity ?? 0)
-    await req.payload.update({
-      collection: 'products',
-      id: productId,
-      data: { quantity: Math.max(0, currentQty - remaining) },
-    })
-    await recomputeAverageCost(req.payload, productId)
-  }
-  return doc
 }
 
 export const Purchases: CollectionConfig = {
@@ -195,7 +158,5 @@ export const Purchases: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [beforeChange],
-    afterChange: [afterChange],
-    afterDelete: [afterDelete],
   },
 }

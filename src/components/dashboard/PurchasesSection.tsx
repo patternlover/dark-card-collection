@@ -421,10 +421,11 @@ export function PurchasesSection() {
 
               <div className="space-y-3">
                 {lines.map((line, index) => (
-                  <div key={index} className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
+                  <div key={index} data-testid="purchase-line" className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
                     <div className="flex items-start gap-3">
                       <div className="flex-1 space-y-2">
                         <Select
+                          data-testid="line-product"
                           value={line.newProduct ? '__new__' : line.productId}
                           onChange={(e) => {
                             const isNew = e.target.value === '__new__'
@@ -495,6 +496,7 @@ export function PurchasesSection() {
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <Field label="Quantità *">
                         <Input
+                          data-testid="line-quantity"
                           type="number"
                           min="1"
                           value={line.quantity}
@@ -503,6 +505,7 @@ export function PurchasesSection() {
                       </Field>
                       <Field label="Costo unitario (€) *">
                         <Input
+                          data-testid="line-cost"
                           type="number"
                           step="0.01"
                           min="0"

@@ -4,7 +4,7 @@ Tracker persistente dei task aperti, a vita lunga (oltre la singola sessione). O
 
 Stati: `open` · `in-progress` · `blocked` (con motivo) · `done` (con verifica).
 
-Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 completate · test 44/44 · commit `c8a5981` pushato, CI verde, deploy live verificato · resta solo il data-cleanup legacy).
+Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 + E2E dashboard 24/24 sul bundle prod · bug critico deadlock lotti risolto · migration validata · commit `...` in corso).
 
 ---
 
@@ -58,10 +58,25 @@ Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 completate · test 44/44 · commit `c
 | 18 | Docs: `overview.md` (Purchases implementato, schema Orders, Known Issues, File Structure), `docs/database/schema-and-flows.md`, `docs/project/changelog.md`, session plan/changelog | done |
 | 19 | Housekeeping: indice `sessions/README.md` con la sessione mancante `2026-08-10-purchases-and-external-sales.md` + riferimento a OPEN-TASKS | done |
 
+## E2E Dashboard (Playwright, locale) — 2026-08-12
+
+Suite end-to-end in `tests-e2e/` (24 test) eseguita sul **bundle di produzione** (`next build` + `next start`) contro Postgres locale + auth bypass (cookie `dcc-dash` firmato). **24/24 verdi.**
+
+| # | Task | Stato |
+|---|------|-------|
+| E1 | Ambiente E2E: Postgres locale (`dcc_test`), `.env.test`, seed (`scripts/test-db-setup.ts`), Playwright config, auth bypass | done |
+| E2 | **Bug critico**: deadlock nella creazione di un lotto (hook `afterChange` Purchases → `payload.update` su products in transazione si blocca) → fix: applicazione stock/costo spostata dagli hook alle server actions (`createPurchase`/`deletePurchase` via `applyStockDelta`/`applyPurchaseDeletion`) | done (test lotti passano) |
+| E3 | **Bug**: pulsante "Elimina prodotto" assente dopo il refactor Fase 3 → riaggiunto in Magazzino (`InventorySection`) | done |
+| E4 | Test: auth gate, prodotti (crea/nascondi/mostra/modifica/featured/elimina), lotti (crea con righe+quick-create, stock, expand, elimina), categorie/collezioni CRUD, ordini (dettaglio canale+margine, status, vendita esterna), messaggi (read/replied/elimina), impostazioni (site+header) | done (24/24) |
+| E5 | **Nota**: il dev server (`next dev`) mostra remount del componente durante l'interazione (artefatto HMR): sul bundle prod assente. Per suite stabile usare `next build && next start` | open (info) |
+| E6 | **Nota**: su `/shop` si osserva un doppio render transitorio della card prodotto durante il caricamento (hydration/streaming) → i test usano `.first()`; da verificare se cosmetico anche su rete reale | open (info) |
+| E7 | **Gap funzionale**: in `/dashboard/purchases` non esiste la **modifica di un lotto** (solo crea/elimina/espandi). Se serve, aggiungere edit UI | open (feature request) |
+| E8 | **Non coperto da E2E**: console SQL (`/dashboard/sql`, dipende da `ENABLE_DASH_SQL`) e panorama `/dashboard` (solo heading) | open (copertura) |
+
 ## Deferred / Blocked
 
 | # | Task | Stato |
 |---|------|-------|
 | 20 | **Test-infra**: fix `localStorage is not defined` — risolto con polyfill in `tests/setup.ts` (root cause: getter sperimentale Node 26 che torna `undefined` senza `--localstorage-file`) | done (`pnpm test` 44/44) |
-| 21 | **Validazione migration** `20260812_purchases_lines_schema.ts` su DB reale (CI/build con Postgres) — **VERIFICATA** nella CI del commit `c8a5981` (build con `payload migrate` verde su Postgres 16) | done |
+| 21 | **Validazione migration** `20260812_purchases_lines_schema.ts` — **VALIDATA** localmente su entrambi i percorsi: schema push (idempotente, 2 esecuzioni OK) e schema flat legacy (backfill flat→lines OK, script `scripts/validate-migration-*.ts`). Fix aggiunti: vincoli FK in blocco `DO` (Postgres non ha `ADD CONSTRAINT IF NOT EXISTS`) e backfill condizionato alla presenza di `linked_product_id` | done |
 | 22 | **Data-cleanup legacy** (sessione dedicata, come deciso 2026-08-12): merge fake variants (stesso title, differenze solo costo/qty), Purchases retroattive (`source_name: "legacy"`), dedup, verifica PDP/sitemap/Merchant | open (sessione dedicata) |

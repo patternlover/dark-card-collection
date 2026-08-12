@@ -184,6 +184,7 @@ export function ListingsSection() {
                 <Td>
                   <div className="flex items-center gap-2">
                     <span className="max-w-[260px] truncate font-medium text-[var(--ui-text)]">{p.title}</span>
+
                     {p.featured ? (
                       <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
                     ) : null}

@@ -82,3 +82,13 @@
 5. **Tracker (task 19 + 20)**: OPEN-TASKS aggiornato.
 
 **Verifica Fase 5**: `pnpm lint` ✅ · `pnpm test` **44/44 ✅**.
+
+### Fase 6 — E2E Dashboard (Playwright, locale) — bugtesting completo (2026-08-12)
+
+1. **Ambiente E2E**: Postgres locale via brew (`dcc_test`), `.env.test` (gitignored, solo valori locali), `scripts/test-db-setup.ts` (init Payload con schema push + reset + seed), `@playwright/test` + chromium, `playwright.config.ts` (webServer con env test, auth bypass via cookie `dcc-dash` firmato con `signToken`), `tests-e2e/` con 24 test.
+2. **Bug critico trovato e risolto**: creare un lotto si bloccava (deadlock) — l'hook `afterChange` di `Purchases` chiamava `payload.update` su `products` dentro la transazione. **Fix**: spostata l'applicazione stock/costo (e decremento su delete) dagli hook alle server actions (`createPurchase`/`deletePurchase` → `applyStockDelta`/`applyPurchaseDeletion` in `src/lib/inventory.ts`). Hook `beforeChange` (calcoli, puro) invariato.
+3. **Bug trovato e risolto**: dopo il refactor Fase 3 il pulsante "Elimina prodotto" non esisteva più → riaggiunto in `InventorySection` (Magazzino).
+4. **Migration `20260812` validata** su entrambi i percorsi (mai eseguita prima — CI usa `next build`, non `pnpm build`): schema push (ora **idempotente**: vincoli FK in `DO` + backfill condizionato a `linked_product_id`) e schema flat legacy (backfill flat→lines verificato con `scripts/validate-migration-legacy.ts`).
+5. **Risultato suite**: **24/24 E2E verdi** sul bundle di produzione. Nota: il `dev server` ha artefatti HMR (remount) assenti in prod; su `/shop` doppio render transitorio (test con `.first()`).
+
+**Verifica Fase 6**: `pnpm lint` ✓ · `pnpm test` 44/44 ✓ · `next build` ✓ · Playwright 24/24 ✓ sul bundle prod.

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
 import {
+  deleteProduct,
   getCategories,
   getCollections,
   getPurchaseHistory,
@@ -14,6 +15,7 @@ import {
 } from '@/app/dashboard/actions'
 import { CreateProductModal } from '@/components/dashboard/CreateProductModal'
 import { StatusBadge } from './productShared'
+import { Trash2 } from 'lucide-react'
 import {
   Alert,
   Button,
@@ -54,6 +56,7 @@ export function InventorySection() {
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
   const [showCreate, setShowCreate] = useState(false)
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
@@ -106,6 +109,26 @@ export function InventorySection() {
       } catch {
         setHistory((prev) => ({ ...prev, [product.id]: [] }))
       }
+    }
+  }
+
+  const removeProduct = async (product: ProductDTO) => {
+    if (!confirm(`Eliminare definitivamente "${product.title}"?`)) return
+    setBusy(true)
+    try {
+      await deleteProduct(product.id)
+      setProducts((prev) => prev.filter((p) => p.id !== product.id))
+      setHistory((prev) => {
+        const next = { ...prev }
+        delete next[product.id]
+        return next
+      })
+      notify('Prodotto eliminato')
+    } catch (err) {
+      notify(err instanceof Error ? err.message : String(err), 'error')
+      load()
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -165,7 +188,7 @@ export function InventorySection() {
               <Th>Costo medio</Th>
               <Th>Prezzo</Th>
               <Th>Valore inventario</Th>
-              <Th className="text-right">Acquisti</Th>
+              <Th className="text-right">Azioni</Th>
             </Tr>
           </THead>
           <TBody>
@@ -186,7 +209,7 @@ export function InventorySection() {
                     <Td className="text-[var(--ui-text-muted)]">{p.price != null ? euro.format(p.price) : '—'}</Td>
                     <Td className="font-medium text-[var(--ui-text)]">{euro.format(inventoryValue)}</Td>
                     <Td>
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="secondary"
                           size="sm"
@@ -195,6 +218,15 @@ export function InventorySection() {
                           title="Storico acquisti"
                         >
                           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => removeProduct(p)}
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                          title="Elimina prodotto"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
                     </Td>

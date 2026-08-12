@@ -22,36 +22,50 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
       "remaining_quantity" numeric
     );
 
-    ALTER TABLE "purchases_lines" ADD CONSTRAINT "purchases_lines_product_id_products_id_fk"
-      FOREIGN KEY ("product_id") REFERENCES "public"."products"("id")
-      ON DELETE set null ON UPDATE no action;
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'purchases_lines_product_id_products_id_fk') THEN
+        ALTER TABLE "purchases_lines" ADD CONSTRAINT "purchases_lines_product_id_products_id_fk"
+          FOREIGN KEY ("product_id") REFERENCES "public"."products"("id")
+          ON DELETE set null ON UPDATE no action;
+      END IF;
+    END $$;
 
-    ALTER TABLE "purchases_lines" ADD CONSTRAINT "purchases_lines_parent_id_fk"
-      FOREIGN KEY ("_parent_id") REFERENCES "public"."purchases"("id")
-      ON DELETE cascade ON UPDATE no action;
+    DO $$ BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'purchases_lines_parent_id_fk') THEN
+        ALTER TABLE "purchases_lines" ADD CONSTRAINT "purchases_lines_parent_id_fk"
+          FOREIGN KEY ("_parent_id") REFERENCES "public"."purchases"("id")
+          ON DELETE cascade ON UPDATE no action;
+      END IF;
+    END $$;
 
     CREATE INDEX IF NOT EXISTS "purchases_lines_order_idx" ON "purchases_lines" USING btree ("_order");
     CREATE INDEX IF NOT EXISTS "purchases_lines_parent_id_idx" ON "purchases_lines" USING btree ("_parent_id");
     CREATE INDEX IF NOT EXISTS "purchases_lines_product_idx" ON "purchases_lines" USING btree ("product_id");
 
-    -- backfill: converte le righe flat esistenti in lines (prima del drop delle colonne legacy)
-    INSERT INTO "purchases_lines" ("_order", "_parent_id", "id", "product_id", "quantity", "unit_cost", "effective_unit_cost", "remaining_quantity")
-    SELECT 0, "id", gen_random_uuid()::varchar, "linked_product_id", "quantity", "cost_of_goods_sold", "cost_of_goods_sold", "quantity"
-    FROM "purchases"
-    WHERE "linked_product_id" IS NOT NULL AND "quantity" > 0;
-
-    -- nuove colonne purchases
+    -- nuove colonne purchases (prima del backfill che le usa)
     ALTER TABLE "purchases"
       ADD COLUMN IF NOT EXISTS "source_type" "enum_purchases_source_type",
       ADD COLUMN IF NOT EXISTS "source_name" varchar,
       ADD COLUMN IF NOT EXISTS "extra_costs" numeric DEFAULT 0,
       ADD COLUMN IF NOT EXISTS "total_cost" numeric;
 
-    UPDATE "purchases" SET "source_name" = "store" WHERE "source_name" IS NULL AND "store" IS NOT NULL;
+    -- backfill: converte le righe flat esistenti in lines SOLO se esiste il modello flat legacy
+    -- (su uno schema già creato da push le colonne legacy non ci sono)
+    DO $$ BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'purchases' AND column_name = 'linked_product_id') THEN
+        INSERT INTO "purchases_lines" ("_order", "_parent_id", "id", "product_id", "quantity", "unit_cost", "effective_unit_cost", "remaining_quantity")
+        SELECT 0, "id", gen_random_uuid()::varchar, "linked_product_id", "quantity", "cost_of_goods_sold", "cost_of_goods_sold", "quantity"
+        FROM "purchases"
+        WHERE "linked_product_id" IS NOT NULL AND "quantity" > 0;
+
+        UPDATE "purchases" SET "source_name" = "store" WHERE "source_name" IS NULL AND "store" IS NOT NULL;
+        UPDATE "purchases" SET "total_cost" = "cost_of_goods_sold" * "quantity" WHERE "total_cost" IS NULL;
+      END IF;
+    END $$;
+
     UPDATE "purchases" SET "source_type" = 'other' WHERE "source_type" IS NULL;
     UPDATE "purchases" SET "purchase_date" = "created_at" WHERE "purchase_date" IS NULL;
     UPDATE "purchases" SET "extra_costs" = 0 WHERE "extra_costs" IS NULL;
-    UPDATE "purchases" SET "total_cost" = "cost_of_goods_sold" * "quantity" WHERE "total_cost" IS NULL;
 
     CREATE INDEX IF NOT EXISTS "purchases_updated_at_idx" ON "purchases" USING btree ("updated_at");
     CREATE INDEX IF NOT EXISTS "purchases_created_at_idx" ON "purchases" USING btree ("created_at");
