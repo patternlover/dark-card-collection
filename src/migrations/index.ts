@@ -8,6 +8,7 @@ import * as migration_20260809_google_schema from './20260809_google_schema';
 import * as migration_20260810_remove_users_name from './20260810_remove_users_name';
 import * as migration_20260810_add_purchases from './20260810_add_purchases';
 import * as migration_20260812_purchases_lines_schema from './20260812_purchases_lines_schema';
+import * as migration_20260812_fix_locked_documents_rels from './20260812_fix_locked_documents_rels';
 
 export const migrations = [
   {
@@ -59,5 +60,10 @@ export const migrations = [
     up: migration_20260812_purchases_lines_schema.up,
     down: migration_20260812_purchases_lines_schema.down,
     name: '20260812_purchases_lines_schema'
+  },
+  {
+    up: migration_20260812_fix_locked_documents_rels.up,
+    down: migration_20260812_fix_locked_documents_rels.down,
+    name: '20260812_fix_locked_documents_rels'
   },
 ];
