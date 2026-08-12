@@ -4,7 +4,7 @@ Tracker persistente dei task aperti, a vita lunga (oltre la singola sessione). O
 
 Stati: `open` · `in-progress` · `blocked` (con motivo) · `done` (con verifica).
 
-Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 completate · test 44/44 · resto: migration in CI + data-cleanup legacy).
+Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 completate · test 44/44 · commit `c8a5981` pushato, CI verde, deploy live verificato · resta solo il data-cleanup legacy).
 
 ---
 
@@ -63,5 +63,5 @@ Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 completate · test 44/44 · resto: mi
 | # | Task | Stato |
 |---|------|-------|
 | 20 | **Test-infra**: fix `localStorage is not defined` — risolto con polyfill in `tests/setup.ts` (root cause: getter sperimentale Node 26 che torna `undefined` senza `--localstorage-file`) | done (`pnpm test` 44/44) |
-| 21 | **Validazione migration** `20260812_purchases_lines_schema.ts` su DB reale (CI/build con Postgres). Non applicabile in locale (niente DB). Se la build CI segnala difformità schema, correggere | blocked (no DB locale) |
+| 21 | **Validazione migration** `20260812_purchases_lines_schema.ts` su DB reale (CI/build con Postgres) — **VERIFICATA** nella CI del commit `c8a5981` (build con `payload migrate` verde su Postgres 16) | done |
 | 22 | **Data-cleanup legacy** (sessione dedicata, come deciso 2026-08-12): merge fake variants (stesso title, differenze solo costo/qty), Purchases retroattive (`source_name: "legacy"`), dedup, verifica PDP/sitemap/Merchant | open (sessione dedicata) |

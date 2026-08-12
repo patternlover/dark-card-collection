@@ -30,7 +30,7 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` +
 - Rimosso codice morto: `ProductsSection`, `ProductTable`, `ProductGroupRow`, `ExternalSaleModal`.
 - Docs aggiornati: `overview.md`, `schema-and-flows.md`, sessioni, tracker OPEN-TASKS.
 
-**Verifica**: `pnpm lint` ✅ · `pnpm test` 44/44 ✅ · migration validata da CI/build (niente DB locale).
+**Verifica**: `pnpm lint` ✅ · `pnpm test` 44/44 ✅ · **push + CI + deploy** (commit `c8a5981`): CI verde su Postgres (migration applicata), auto-deploy Vercel verificato sulla live (nuove rotte `/dashboard/purchases` e `/dashboard/listings` rispondono 200).
 
 ---
 

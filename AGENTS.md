@@ -73,7 +73,8 @@
 - **All'inizio di ogni sessione/fase**: leggere `docs/project/sessions/OPEN-TASKS.md` (tracker dei task in sospeso) e verificare i task `open`/`blocked` che impattano l'ambito — gestirli o dichiararli esplicitamente prima di buildare. Aggiornare il tracker a fine fase/sessione (un task si chiude solo con verifica fatta).
 - In Build mode: leggere i file per intero prima di modificarli; dopo ogni blocco di modifiche lanciare `pnpm lint` (+ test toccati), non solo a fine sessione.
 - OpenCode free tier = ~200 richieste modello / 5h (condivise tra i modelli free): meglio poche richieste con spec dense che tanti botta-e-risposta.
-- Checklist di chiusura sessione: `pnpm lint` ✓ · `pnpm test` ✓ · se collections toccate → `payload generate:types` + migration ✓ · `docs/project/sessions/OPEN-TASKS.md` aggiornato ✓ · plan/changelog di sessione + `docs/project/changelog.md` aggiornati ✓.
+- **Post-commit (obbligatorio dopo OGNI commit)**: `git push origin main` → verificare CI (`gh run watch <run-id> --exit-status`, attende l'esito) → verificare l'auto-deploy Vercel sulla live `https://darkcardcollection.com` (es. una rotta nuova risponde 200) → aggiornare changelog/tracker SOLO se push + CI + deploy sono andati a buon fine. Se qualcosa fallisce: correggere, ricommit, re-push, ri-verificare.
+- Checklist di chiusura sessione: `pnpm lint` ✓ · `pnpm test` ✓ · se collections toccate → `payload generate:types` + migration ✓ · `docs/project/sessions/OPEN-TASKS.md` aggiornato ✓ · plan/changelog di sessione + `docs/project/changelog.md` aggiornati ✓ · push + CI + deploy verificati ✓.
 
 ## Note operative
 - WSL: `tsc --noEmit` e `pnpm build` possono andare in OOM — usare la build con heap aumentata. `pnpm generate:types` può andare in timeout.
