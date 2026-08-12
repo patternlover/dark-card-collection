@@ -786,6 +786,31 @@ export async function updateGroup(
   }
 }
 
+export interface ToggleVariantResult {
+  ok: boolean
+  message?: string
+  id?: string
+  isVisible?: boolean
+}
+
+export async function toggleVariantVisibility(id: string, isVisible: boolean): Promise<ToggleVariantResult> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  try {
+    await payload.update({
+      overrideAccess: true,
+      collection: 'products',
+      id,
+      data: { is_visible: isVisible } as any,
+      draft: false,
+    })
+    return { ok: true, id, isVisible }
+  } catch {
+    return { ok: false, message: 'Errore durante l\'aggiornamento della variante' }
+  }
+}
+
 export interface CategoryDTO {
   id: string
   name: string

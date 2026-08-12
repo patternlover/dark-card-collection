@@ -53,7 +53,7 @@ test.describe('Listino: gruppi per nome, nomi completi, disponibilità e filtri'
     await expect(page.getByText(out, { exact: true })).toHaveCount(0)
   })
 
-  test('variants with the same title are grouped as flat rows (no sub-table)', async ({ page }) => {
+  test('multi-variant groups are collapsed by default and expandable', async ({ page }) => {
     const groupName = title('Doppio Variante')
     await createProduct(page, groupName, '2', '50')
     await createProduct(page, groupName, '1', '45')
@@ -62,8 +62,35 @@ test.describe('Listino: gruppi per nome, nomi completi, disponibilità e filtri'
     const groupRow = page.locator('tr', { hasText: groupName }).first()
     await expect(groupRow).toContainText('3')
     await expect(groupRow).toContainText('45,00 €')
+    await expect(page.locator('tr', { hasText: groupName }).locator('button[title="Modifica variante"]')).toHaveCount(0)
+
+    await groupRow.locator('button[title="Mostra varianti"]').click()
     await expect(page.locator('tr', { hasText: groupName }).locator('button[title="Modifica variante"]')).toHaveCount(2)
     await expect(page.locator('tr', { hasText: groupName }).locator('button[title="Modifica variante"]').first()).toBeVisible()
+  })
+
+  test('single-variant groups show their row without expanding', async ({ page }) => {
+    const single = title('Singola Variante')
+    await createProduct(page, single, '2', '40')
+    await page.goto('/dashboard/listings')
+    await expect(page.locator('button[title="Mostra varianti"]')).toHaveCount(0)
+    await expect(page.locator('tr', { hasText: single }).locator('button[title="Modifica variante"]')).toHaveCount(1)
+  })
+
+  test('hides a single variant from the expanded group', async ({ page }) => {
+    const groupName = title('Toggle Variante')
+    await createProduct(page, groupName, '2', '50')
+    await createProduct(page, groupName, '1', '45')
+
+    await page.goto('/dashboard/listings')
+    await page.locator('tr', { hasText: groupName }).first().locator('button[title="Mostra varianti"]').click()
+    await page.locator('tr', { hasText: groupName }).locator('button[title="Nascondi singola variante"]').first().click()
+    await expect(page.getByText('Variante nascosta dallo shop')).toBeVisible()
+    await expect(page.locator('tr', { hasText: groupName }).locator('button[title="Mostra singola variante"]').first()).toBeVisible()
+
+    await page.reload()
+    await page.locator('tr', { hasText: groupName }).first().locator('button[title="Mostra varianti"]').click()
+    await expect(page.locator('tr', { hasText: groupName }).locator('button[title="Mostra singola variante"]').first()).toBeVisible()
   })
 
   test('shows the sold counter on the group row', async ({ page }) => {

@@ -1,12 +1,13 @@
 'use client'
 
 import { Fragment, useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Pencil, Search, Star } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, Pencil, Search, Star } from 'lucide-react'
 import {
   getCategories,
   getCollections,
   getProductById,
   searchListings,
+  toggleVariantVisibility as toggleVariantVisibilityAction,
   updateGroup,
   type CategoryOption,
   type CollectionOption,
@@ -28,7 +29,6 @@ import {
   Td,
   Th,
   THead,
-  Toolbar,
   Tr,
 } from './ui'
 
@@ -101,6 +101,7 @@ export function ListingsSection() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
+  const [expandedTitle, setExpandedTitle] = useState<string | null>(null)
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
   const [editing, setEditing] = useState<ProductDTO | null>(null)
@@ -209,6 +210,37 @@ export function ListingsSection() {
     }
   }
 
+  const handleVariantVisibility = async (v: ListingVariant) => {
+    const target = !v.isVisible
+    setGroups((prev) =>
+      prev.map((g) => {
+        if (!g.variants.some((x) => x.id === v.id)) return g
+        const variants = g.variants.map((x) => (x.id === v.id ? { ...x, isVisible: target } : x))
+        return {
+          ...g,
+          variants,
+          visible: variants.some((x) => x.isVisible),
+          hidden: variants.every((x) => !x.isVisible),
+        }
+      }),
+    )
+    setBusy(true)
+    try {
+      const res = await toggleVariantVisibilityAction(v.id, target)
+      if (!res.ok) {
+        notify(res.message || 'Errore durante l\'aggiornamento', 'error')
+        load()
+        return
+      }
+      notify(target ? 'Variante visibile nello shop' : 'Variante nascosta dallo shop')
+    } catch {
+      notify('Errore durante l\'aggiornamento della variante', 'error')
+      load()
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const openEdit = async (variantId: string) => {
     setBusy(true)
     try {
@@ -234,47 +266,51 @@ export function ListingsSection() {
         description={`${total} gruppi (per nome prodotto) · prezzo, costo medio, quantità, disponibilità e vendite`}
       />
 
-      <Toolbar className="flex-nowrap">
-        <div className="relative min-w-[240px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') runSearch()
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Select
+            value={availability}
+            onChange={(e) => {
+              setAvailability(e.target.value)
+              setPage(1)
             }}
-            placeholder="Cerca per nome prodotto..."
-            className="pl-9"
-          />
+            className="w-auto"
+          >
+            {AVAILABILITY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </Select>
+          <Select
+            value={visibility}
+            onChange={(e) => {
+              setVisibility(e.target.value)
+              setPage(1)
+            }}
+            className="w-auto"
+          >
+            {VISIBILITY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </Select>
         </div>
-        <Select
-          value={availability}
-          onChange={(e) => {
-            setAvailability(e.target.value)
-            setPage(1)
-          }}
-          className="w-auto"
-        >
-          {AVAILABILITY_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </Select>
-        <Select
-          value={visibility}
-          onChange={(e) => {
-            setVisibility(e.target.value)
-            setPage(1)
-          }}
-          className="w-auto"
-        >
-          {VISIBILITY_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </Select>
-        <Button variant="secondary" onClick={runSearch}>
-          Cerca
-        </Button>
-      </Toolbar>
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-[240px] flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') runSearch()
+              }}
+              placeholder="Cerca per nome prodotto..."
+              className="pl-9"
+            />
+          </div>
+          <Button variant="secondary" onClick={runSearch}>
+            Cerca
+          </Button>
+        </div>
+      </div>
 
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
 
@@ -297,17 +333,30 @@ export function ListingsSection() {
             </Tr>
           </THead>
           <TBody>
-            {groups.map((g) => (
-              <Fragment key={g.title}>
-                <Tr className="bg-[var(--ui-surface-alt)]">
-                  <Td>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="break-words font-semibold text-[var(--ui-text)]">{g.title}</span>
-                      {g.featured ? (
-                        <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
-                      ) : null}
-                    </div>
-                  </Td>
+            {groups.map((g) => {
+              const multiVariant = g.variantCount > 1
+              const expanded = expandedTitle === g.title
+              return (
+                <Fragment key={g.title}>
+                  <Tr className="bg-[var(--ui-surface-alt)]">
+                    <Td>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {multiVariant ? (
+                          <button
+                            type="button"
+                            onClick={() => setExpandedTitle(expanded ? null : g.title)}
+                            className={iconButtonClass()}
+                            title={expanded ? 'Comprimi varianti' : 'Mostra varianti'}
+                          >
+                            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                          </button>
+                        ) : null}
+                        <span className="break-words font-semibold text-[var(--ui-text)]">{g.title}</span>
+                        {g.featured ? (
+                          <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
+                        ) : null}
+                      </div>
+                    </Td>
                   <Td className="font-semibold text-[var(--ui-text)]">{g.totalQuantity}</Td>
                   <Td className="text-[var(--ui-text-muted)]">
                     {g.totalSold > 0 ? <span className="font-medium text-[var(--ui-text)]">×{g.totalSold}</span> : '—'}
@@ -351,7 +400,7 @@ export function ListingsSection() {
                     </div>
                   </Td>
                 </Tr>
-                {g.variants.map((v) => (
+                {(!multiVariant || expanded) ? g.variants.map((v) => (
                   <Tr key={v.id}>
                     <Td>
                       <div className="min-w-0 pl-6">
@@ -372,6 +421,16 @@ export function ListingsSection() {
                         <Button
                           variant="secondary"
                           size="sm"
+                          onClick={() => handleVariantVisibility(v)}
+                          disabled={busy}
+                          title={v.isVisible ? 'Nascondi singola variante' : 'Mostra singola variante'}
+                          className={iconButtonClass()}
+                        >
+                          {v.isVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
                           onClick={() => openEdit(v.id)}
                           disabled={busy}
                           title="Modifica variante"
@@ -382,9 +441,10 @@ export function ListingsSection() {
                       </div>
                     </Td>
                   </Tr>
-                ))}
+                )) : null}
               </Fragment>
-            ))}
+              )
+            })}
           </TBody>
         </Table>
       )}

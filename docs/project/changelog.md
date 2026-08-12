@@ -1,7 +1,20 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino: filtri ridotti + tabella piatta (via sotto-tabella varianti)**.
+Ultima sessione: **Listino: vista iniziale compatta + layout filtri (su main)**.
+
+---
+
+## Sessione recente 18 — Listino: vista iniziale compatta + filtri su 2 righe
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-listings-compact-view.md`). Tutte le modifiche su `main`.
+
+- **Vista iniziale compatta**: le varianti non sono più visibili subito.
+  - Gruppo con 1 variante → riga gruppo + riga variante sempre visibili.
+  - Gruppo con più varianti → solo la riga gruppo compatta; chevron per espandere/collassare le varianti (stessa tabella, niente sotto-tabella).
+  - **Toggle nascondi rapido per singola variante** (occhio) → nuova action strutturata `toggleVariantVisibility` (risultato `{ok,message}`, niente throw → niente #441).
+- **Filtri a 2 righe**: riga 1 = Disponibilità + Visibilità affiancati; riga 2 = ricerca + tasto Cerca a destra.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 60/60 ✓ · `next build` ✓ · **Playwright su bundle prod 37/37** ✓.
 
 ---
 
