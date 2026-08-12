@@ -42,6 +42,15 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
 - Uso: `DASH_DEV_LOGIN=1 DATABASE_URI=postgresql://edoardocavalcanti@localhost:5432/dcc_test pnpm dev` → apri `http://localhost:3000/api/auth/dev-login`. Tutte le scritture vanno sul DB locale `dcc_test` (Neon prod intatto). Verificato: 307 + cookie firmato, `/dashboard` → 200.
 - Commit `3a44681`.
 
+### Step 1ter — Branch riallineato a GitHub + worktree dedicato
+- `git rebase origin/main` (il branch era basato su `ff50a77`, mancava `7458dee` "listings simplified"). Conflitti risolti a mano solo su `PENDING.md` e `changelog.md` (sezioni di entrambe le sessioni, 17 e 16, conservate). Nessun conflitto sul codice.
+- Verifica post-rebase: `pnpm lint` ✓ · `pnpm test` 66/66 ✓.
+- Push: `git push -u origin feat/dashboard-modals-redesign`.
+- Worktree: `git worktree add ../dark-card-collection-modals feat/dashboard-modals-redesign`. Ora:
+  - `.../dark-card-collection` → `main` (7458dee)
+  - `.../dark-card-collection-modals` → `feat/dashboard-modals-redesign` (branch modali)
+- Prep worktree: `pnpm install` + copia `.env`/`.env.test` (gitignored, da `.env.test`). Verifica dev-login nel worktree su `PORT=3001`: 307 + cookie, `/dashboard` → 200.
+
 ### Step successivi
 - [ ] Magazzino → Nuovo/Duplica Prodotto (`CreateProductModal`)
 - [ ] Listino → Modifica Prodotto (`EditProductModal`)
