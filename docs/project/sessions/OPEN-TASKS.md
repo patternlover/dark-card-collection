@@ -4,7 +4,7 @@ Tracker persistente dei task aperti, a vita lunga (oltre la singola sessione). O
 
 Stati: `open` · `in-progress` · `blocked` (con motivo) · `done` (con verifica).
 
-Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 + E2E 25/25 + **root cause Listino live RISOLTA**: schema drift `payload_locked_documents_rels.purchases_id` → 500 su ogni write; migration `20260812_fix_locked_documents_rels`; verifica live ok).
+Ultimo aggiornamento: 2026-08-12 (Fasi 1-5 + E2E 25/25 + **root cause Listino live RISOLTA**: schema drift `payload_locked_documents_rels.purchases_id` → 500 su ogni write; migration `20260812_fix_locked_documents_rels`; **drift-check live → NESSUNO** dopo `20260812_align_orders_stripe_session_index`; test live ok).
 
 ---
 

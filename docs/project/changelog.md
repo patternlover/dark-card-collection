@@ -24,6 +24,11 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-align-model.md` �
 - CI verde · deploy live OK.
 - Lezione documentata in `AGENTS.md` (Note operative: migration per le tabelle di sistema Payload, verifica drift) e `overview.md` (Known Issue #13).
 
+### Allineamento indice `orders.stripe_session_id` (follow-up, 2026-08-12)
+Il drift-check contro la **live** (URI fornita dall'utente, sola lettura) ha rilevato un'unica differenza residua: la live aveva l'indice legacy della migration (`orders_stripe_session_id_unique`, UNIQUE parziale) invece di quello generato da Payload (`orders_stripe_session_id_idx`, UNIQUE pieno). Funzionalmente equivalenti (dedup webhook), ma per l'allineamento esatto al teorico: migration `20260812_align_orders_stripe_session_index.ts` (crea l'indice Payload, poi droppa il legacy — nessuna finestra senza vincolo). `check-schema-drift.ts` ora confronta anche le definizioni degli indici.
+
+**Verifica finale live**: `SCHEMA DRIFT: NESSUNO (allineato al riferimento)` · test live `prod.spec` + `writes.spec` → **tutte le scritture ok, zero 500, zero errori console** · CI verde · deploy OK.
+
 ---
 
 ## Sessione recente 11 — Fix Listino live: `push:false` in prod + hardening + regressione #441

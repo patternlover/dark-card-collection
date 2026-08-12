@@ -116,3 +116,9 @@ Dal **log Vercel** (digest fornito dall'utente): `error: column 70cc9076_...purc
 **Fix**: migration `20260812_fix_locked_documents_rels.ts` (colonna `purchases_id` + FK `payload_locked_documents_rels_purchases_fk` + indice; idempotente, guardata) applicata alla live via `payload migrate` nel build. Strumenti: `scripts/check-schema-drift.ts` (diff schema vs riferimento) e `scripts/validate-locked-docs.ts` (validazione su fixture). Test live `tests-e2e-live/prod.spec.ts` (cookie da env, mai nel repo).
 
 **Verifica**: locale lint/test/build/E2E 25/25 ✓ · **live**: ri-test autenticato → toggle persiste, create/delete ok, **FAILING_WRITES []**, **CONSOLE_ERRORS []** (sparito anche il #441) ✓ · CI verde · deploy live OK. Lezione documentata in `AGENTS.md` (migration per tabelle di sistema Payload) e `overview.md` (Known Issue #13).
+
+### Fase 9 — Allineamento finale schema live (drift-check con URI fornita, 2026-08-12)
+
+Eseguito `scripts/check-schema-drift.ts` contro la **live** (sola lettura): unico drift residuo = indice `orders.stripe_session_id` (legacy parziale vs Payload pieno). Fix: migration `20260812_align_orders_stripe_session_index.ts` (crea l'indice Payload, droppa il legacy). `check-schema-drift.ts` potenziato per confrontare anche le definizioni degli indici.
+
+**Verifica finale live**: `SCHEMA DRIFT: NESSUNO (allineato al riferimento)` · `tests-e2e-live/prod.spec.ts` + `writes.spec.ts` → tutte le scritture ok (prodotti toggle/create/delete, categorie/collezioni CRUD, messaggi) · **zero 500** · **zero errori console** · CI verde · deploy live OK.
