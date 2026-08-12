@@ -35,7 +35,7 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
 - `OrdersSection.tsx`: mapping `openExternal` esteso con `grade`, `condition`, `language`; render del `<Select>` Prodotto con `<optgroup>`; comportamento invariato (auto-fill prezzo dal prodotto scelto, `max` qty = stock del selezionato, `recordExternalSale` identico).
 - `tests/sale-options.test.ts` (nuovo, 6 test): opzione singola con stock, optgroup con grade, fallback condition/language, ordinamento varianti (lingua+prezzo) e gruppi (alfabetico).
 - Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · E2E `tests-e2e/orders.spec.ts` 3/3 ✓ (nuovo select optgroup incluso)
-- Commit: vedi `git log` (niente push — attesa user)
+- Commit `24e0070` sul branch (niente push — attesa user)
 
 ### Step successivi
 - [ ] Magazzino → Nuovo/Duplica Prodotto (`CreateProductModal`)
