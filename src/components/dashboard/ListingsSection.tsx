@@ -1,11 +1,13 @@
 'use client'
 
-import { Fragment, useCallback, useEffect, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, Pencil, Search, Star } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Pencil, Search, ShoppingCart, Star } from 'lucide-react'
 import {
   getCategories,
   getCollections,
   getProductById,
+  recordManualWebsiteSale,
+  searchListingProducts,
   searchListings,
   toggleVariantVisibility as toggleVariantVisibilityAction,
   updateGroup,
@@ -21,7 +23,9 @@ import { Badge } from './ui'
 import {
   Alert,
   Button,
+  Field,
   Input,
+  Modal,
   PageHeader,
   Select,
   Table,
@@ -29,6 +33,7 @@ import {
   Td,
   Th,
   THead,
+  TogglePills,
   Tr,
 } from './ui'
 
@@ -41,6 +46,13 @@ const SALES_CHANNEL_LABELS: Record<string, string> = {
   cardmarket: 'Cardmarket',
   other: 'Altro',
 }
+
+const STATUS_OPTIONS = [
+  { value: '', label: 'Tutti gli stati' },
+  { value: 'listed', label: 'Disponibile' },
+  { value: 'hold', label: 'In Attesa' },
+  { value: 'sold', label: 'Venduto' },
+]
 
 const AVAILABILITY_OPTIONS = [
   { value: '', label: 'Tutte le disponibilità' },
@@ -55,6 +67,8 @@ const VISIBILITY_OPTIONS = [
 ]
 
 const PAGE_SIZE = 25
+
+type View = 'groups' | 'products'
 
 function iconButtonClass() {
   return 'rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]'
@@ -92,8 +106,12 @@ function variantAttrLabel(v: ListingVariant): string {
 }
 
 export function ListingsSection() {
+  const [view, setView] = useState<View>('groups')
   const [groups, setGroups] = useState<ListingGroup[]>([])
+  const [items, setItems] = useState<ListingVariant[]>([])
   const [query, setQuery] = useState('')
+  const [appliedQuery, setAppliedQuery] = useState('')
+  const [status, setStatus] = useState('')
   const [availability, setAvailability] = useState('')
   const [visibility, setVisibility] = useState('')
   const [page, setPage] = useState(1)
@@ -101,27 +119,61 @@ export function ListingsSection() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
-  const [expandedTitle, setExpandedTitle] = useState<string | null>(null)
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
   const [editing, setEditing] = useState<ProductDTO | null>(null)
+  const [selling, setSelling] = useState<ListingVariant | null>(null)
+  const [saleQty, setSaleQty] = useState('1')
+  const [salePrice, setSalePrice] = useState('')
   const [busy, setBusy] = useState(false)
 
+  useEffect(() => {
+    getCategories().then(setCategories).catch(() => {})
+    getCollections().then(setCollections).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setAppliedQuery(query)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [query])
+
   const load = useCallback(
-    async (opts: { page?: number; search?: string } = {}) => {
+    async (opts: { page?: number } = {}) => {
       setLoading(true)
+      const pageNum = opts.page ?? page
       try {
-        const res = await searchListings({
-          search: opts.search ?? query,
-          availability: availability || undefined,
-          visibility: visibility || undefined,
-          limit: PAGE_SIZE,
-          page: opts.page ?? page,
-        })
-        if (res.error) {
-          setMessage({ text: res.error, type: 'error' })
-        } else {
+        if (view === 'groups') {
+          const res = await searchListings({
+            search: appliedQuery || undefined,
+            availability: availability || undefined,
+            visibility: visibility || undefined,
+            limit: PAGE_SIZE,
+            page: pageNum,
+          })
+          if (res.error) {
+            setMessage({ text: res.error, type: 'error' })
+            return
+          }
           setGroups(res.groups)
+          setTotal(res.total)
+          setTotalPages(Math.max(1, res.totalPages))
+        } else {
+          const res = await searchListingProducts({
+            search: appliedQuery || undefined,
+            status: status || undefined,
+            availability: availability || undefined,
+            visibility: visibility || undefined,
+            limit: PAGE_SIZE,
+            page: pageNum,
+          })
+          if (res.error) {
+            setMessage({ text: res.error, type: 'error' })
+            return
+          }
+          setItems(res.items)
           setTotal(res.total)
           setTotalPages(Math.max(1, res.totalPages))
         }
@@ -131,13 +183,8 @@ export function ListingsSection() {
         setLoading(false)
       }
     },
-    [query, availability, visibility, page],
+    [view, appliedQuery, status, availability, visibility, page],
   )
-
-  useEffect(() => {
-    getCategories().then(setCategories).catch(() => {})
-    getCollections().then(setCollections).catch(() => {})
-  }, [])
 
   useEffect(() => {
     load()
@@ -145,9 +192,11 @@ export function ListingsSection() {
 
   const notify = (text: string, type: 'success' | 'error' = 'success') => setMessage({ text, type })
 
-  const runSearch = () => {
+  const switchView = (v: View) => {
+    setView(v)
     setPage(1)
-    load({ page: 1, search: query })
+    setEditing(null)
+    setSelling(null)
   }
 
   const applyGroupPatch = (title: string, patch: { isVisible?: boolean; featured?: boolean }) => {
@@ -212,18 +261,7 @@ export function ListingsSection() {
 
   const handleVariantVisibility = async (v: ListingVariant) => {
     const target = !v.isVisible
-    setGroups((prev) =>
-      prev.map((g) => {
-        if (!g.variants.some((x) => x.id === v.id)) return g
-        const variants = g.variants.map((x) => (x.id === v.id ? { ...x, isVisible: target } : x))
-        return {
-          ...g,
-          variants,
-          visible: variants.some((x) => x.isVisible),
-          hidden: variants.every((x) => !x.isVisible),
-        }
-      }),
-    )
+    setItems((prev) => prev.map((x) => (x.id === v.id ? { ...x, isVisible: target } : x)))
     setBusy(true)
     try {
       const res = await toggleVariantVisibilityAction(v.id, target)
@@ -232,9 +270,9 @@ export function ListingsSection() {
         load()
         return
       }
-      notify(target ? 'Variante visibile nello shop' : 'Variante nascosta dallo shop')
+      notify(target ? 'Prodotto visibile nello shop' : 'Prodotto nascosto dallo shop')
     } catch {
-      notify('Errore durante l\'aggiornamento della variante', 'error')
+      notify('Errore durante l\'aggiornamento del prodotto', 'error')
       load()
     } finally {
       setBusy(false)
@@ -259,15 +297,78 @@ export function ListingsSection() {
     load()
   }
 
+  const openSale = (v: ListingVariant) => {
+    setSelling(v)
+    setSaleQty('1')
+    setSalePrice(v.price != null ? String(v.price) : '')
+  }
+
+  const handleSale = async () => {
+    if (!selling) return
+    const qty = Number(saleQty) || 0
+    const price = Number(salePrice)
+    if (qty <= 0) {
+      notify('La quantità deve essere maggiore di 0', 'error')
+      return
+    }
+    if (!Number.isFinite(price) || price <= 0) {
+      notify('Inserisci un prezzo di vendita valido', 'error')
+      return
+    }
+    setBusy(true)
+    try {
+      const res = await recordManualWebsiteSale({ productId: selling.id, quantity: qty, price })
+      if (!res.ok) {
+        notify(res.message || 'Errore durante la vendita', 'error')
+        return
+      }
+      setSelling(null)
+      notify('Vendita registrata (canale: Sito web)')
+      load()
+    } catch {
+      notify('Errore durante la vendita', 'error')
+      load()
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <PageHeader
         title="Listino"
-        description={`${total} gruppi (per nome prodotto) · prezzo, costo medio, quantità, disponibilità e vendite`}
-      />
+        description={
+          view === 'groups'
+            ? `${total} gruppi (per nome prodotto) · prezzo, costo medio, quantità, disponibilità e vendite`
+            : `${total} prodotti singoli · dettaglio per item, stato e vendite`
+        }
+      >
+        <TogglePills<View>
+          value={view}
+          onChange={switchView}
+          options={[
+            { value: 'groups', label: 'Gruppi prodotto' },
+            { value: 'products', label: 'Prodotti' },
+          ]}
+        />
+      </PageHeader>
 
-      <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
+          {view === 'products' ? (
+            <Select
+              value={status}
+              onChange={(e) => {
+                setStatus(e.target.value)
+                setPage(1)
+              }}
+              className="w-auto"
+            >
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          ) : null}
           <Select
             value={availability}
             onChange={(e) => {
@@ -293,22 +394,14 @@ export function ListingsSection() {
             ))}
           </Select>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative min-w-[240px] flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') runSearch()
-              }}
-              placeholder="Cerca per nome prodotto..."
-              className="pl-9"
-            />
-          </div>
-          <Button variant="secondary" onClick={runSearch}>
-            Cerca
-          </Button>
+        <div className="relative w-72 shrink-0">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Cerca per nome prodotto..."
+            className="pl-9"
+          />
         </div>
       </div>
 
@@ -316,47 +409,33 @@ export function ListingsSection() {
 
       {loading ? (
         <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
-      ) : groups.length === 0 ? (
-        <p className="text-sm text-[var(--ui-text-muted)]">Nessun gruppo in listino</p>
-      ) : (
-        <Table>
-          <THead>
-            <Tr>
-              <Th>Prodotto</Th>
-              <Th>Qty</Th>
-              <Th>Venduti</Th>
-              <Th>Disponibilità</Th>
-              <Th>Prezzo</Th>
-              <Th>Costo medio</Th>
-              <Th>Stato</Th>
-              <Th className="text-right">Azioni</Th>
-            </Tr>
-          </THead>
-          <TBody>
-            {groups.map((g) => {
-              const multiVariant = g.variantCount > 1
-              const expanded = expandedTitle === g.title
-              return (
-                <Fragment key={g.title}>
-                  <Tr className="bg-[var(--ui-surface-alt)]">
-                    <Td>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {multiVariant ? (
-                          <button
-                            type="button"
-                            onClick={() => setExpandedTitle(expanded ? null : g.title)}
-                            className={iconButtonClass()}
-                            title={expanded ? 'Comprimi varianti' : 'Mostra varianti'}
-                          >
-                            <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                          </button>
-                        ) : null}
-                        <span className="break-words font-semibold text-[var(--ui-text)]">{g.title}</span>
-                        {g.featured ? (
-                          <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
-                        ) : null}
-                      </div>
-                    </Td>
+      ) : view === 'groups' ? (
+        groups.length === 0 ? (
+          <p className="text-sm text-[var(--ui-text-muted)]">Nessun gruppo in listino</p>
+        ) : (
+          <Table>
+            <THead>
+              <Tr>
+                <Th>Prodotto</Th>
+                <Th>Qty</Th>
+                <Th>Venduti</Th>
+                <Th>Disponibilità</Th>
+                <Th>Prezzo</Th>
+                <Th>Costo medio</Th>
+                <Th className="text-right">Azioni</Th>
+              </Tr>
+            </THead>
+            <TBody>
+              {groups.map((g) => (
+                <Tr key={g.title} className="bg-[var(--ui-surface-alt)]">
+                  <Td>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="break-words font-semibold text-[var(--ui-text)]">{g.title}</span>
+                      {g.featured ? (
+                        <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
+                      ) : null}
+                    </div>
+                  </Td>
                   <Td className="font-semibold text-[var(--ui-text)]">{g.totalQuantity}</Td>
                   <Td className="text-[var(--ui-text-muted)]">
                     {g.totalSold > 0 ? <span className="font-medium text-[var(--ui-text)]">×{g.totalSold}</span> : '—'}
@@ -364,7 +443,6 @@ export function ListingsSection() {
                   <Td><AvailabilityBadge availability={g.availability} /></Td>
                   <Td className="font-semibold text-[var(--ui-text)]">{g.price != null ? euro.format(g.price) : '—'}</Td>
                   <Td className="text-[var(--ui-text-muted)]">{g.cost != null ? euro.format(g.cost) : '—'}</Td>
-                  <Td><span className="text-[var(--ui-text-faint)]">—</span></Td>
                   <Td>
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
@@ -400,51 +478,79 @@ export function ListingsSection() {
                     </div>
                   </Td>
                 </Tr>
-                {(!multiVariant || expanded) ? g.variants.map((v) => (
-                  <Tr key={v.id}>
-                    <Td>
-                      <div className="min-w-0 pl-6">
-                        <p className="break-words font-medium text-[var(--ui-text)]">{v.title}</p>
-                        {variantAttrLabel(v) ? (
-                          <p className="text-xs text-[var(--ui-text-faint)]">{variantAttrLabel(v)}</p>
-                        ) : null}
-                      </div>
-                    </Td>
-                    <Td>{v.quantity}</Td>
-                    <Td><SaleSummary variant={v} /></Td>
-                    <Td><AvailabilityBadge availability={v.availability} /></Td>
-                    <Td>{v.price != null ? euro.format(v.price) : '—'}</Td>
-                    <Td className="text-[var(--ui-text-muted)]">{v.cost != null ? euro.format(v.cost) : '—'}</Td>
-                    <Td><StatusBadge status={v.status || 'listed'} /></Td>
-                    <Td>
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleVariantVisibility(v)}
-                          disabled={busy}
-                          title={v.isVisible ? 'Nascondi singola variante' : 'Mostra singola variante'}
-                          className={iconButtonClass()}
-                        >
-                          {v.isVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => openEdit(v.id)}
-                          disabled={busy}
-                          title="Modifica variante"
-                          className={iconButtonClass()}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </Td>
-                  </Tr>
-                )) : null}
-              </Fragment>
-              )
-            })}
+              ))}
+            </TBody>
+          </Table>
+        )
+      ) : items.length === 0 ? (
+        <p className="text-sm text-[var(--ui-text-muted)]">Nessun prodotto in listino</p>
+      ) : (
+        <Table>
+          <THead>
+            <Tr>
+              <Th>Prodotto</Th>
+              <Th>Stock</Th>
+              <Th>Venduti</Th>
+              <Th>Disponibilità</Th>
+              <Th>Prezzo</Th>
+              <Th>Costo medio</Th>
+              <Th>Stato</Th>
+              <Th className="text-right">Azioni</Th>
+            </Tr>
+          </THead>
+          <TBody>
+            {items.map((v) => (
+              <Tr key={v.id}>
+                <Td>
+                  <div className="min-w-0">
+                    <p className="break-words font-medium text-[var(--ui-text)]">{v.title}</p>
+                    {variantAttrLabel(v) ? (
+                      <p className="text-xs text-[var(--ui-text-faint)]">{variantAttrLabel(v)}</p>
+                    ) : null}
+                  </div>
+                </Td>
+                <Td className="font-semibold text-[var(--ui-text)]">{v.quantity}</Td>
+                <Td><SaleSummary variant={v} /></Td>
+                <Td><AvailabilityBadge availability={v.availability} /></Td>
+                <Td className="font-semibold text-[var(--ui-text)]">{v.price != null ? euro.format(v.price) : '—'}</Td>
+                <Td className="text-[var(--ui-text-muted)]">{v.cost != null ? euro.format(v.cost) : '—'}</Td>
+                <Td><StatusBadge status={v.status || 'listed'} /></Td>
+                <Td>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleVariantVisibility(v)}
+                      disabled={busy}
+                      title={v.isVisible ? 'Nascondi singolo prodotto' : 'Mostra singolo prodotto'}
+                      className={iconButtonClass()}
+                    >
+                      {v.isVisible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openSale(v)}
+                      disabled={busy}
+                      title="Vendi"
+                      className={iconButtonClass()}
+                    >
+                      <ShoppingCart className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openEdit(v.id)}
+                      disabled={busy}
+                      title="Modifica"
+                      className={iconButtonClass()}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </Td>
+              </Tr>
+            ))}
           </TBody>
         </Table>
       )}
@@ -452,7 +558,7 @@ export function ListingsSection() {
       {totalPages > 1 ? (
         <div className="flex items-center justify-between border-t border-[var(--ui-border)] pt-4">
           <p className="text-xs text-[var(--ui-text-muted)]">
-            Pagina {page} di {totalPages} · {total} gruppi
+            Pagina {page} di {totalPages} · {total} {view === 'groups' ? 'gruppi' : 'prodotti'}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -484,6 +590,55 @@ export function ListingsSection() {
           onSaved={onSaved}
           onError={(msg) => notify(msg, 'error')}
         />
+      ) : null}
+
+      {selling ? (
+        <Modal
+          title="Vendi prodotto"
+          onClose={() => setSelling(null)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setSelling(null)}>
+                Annulla
+              </Button>
+              <Button onClick={handleSale} disabled={busy}>
+                {busy ? 'Registrazione...' : 'Registra Vendita'}
+              </Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <p className="break-words font-medium text-[var(--ui-text)]">{selling.title}</p>
+              {variantAttrLabel(selling) ? (
+                <p className="text-xs text-[var(--ui-text-faint)]">{variantAttrLabel(selling)}</p>
+              ) : null}
+            </div>
+            <Field label="Quantità *" htmlFor="sale-qty">
+              <Input
+                id="sale-qty"
+                type="number"
+                min="1"
+                max={selling.quantity}
+                value={saleQty}
+                onChange={(e) => setSaleQty(e.target.value)}
+              />
+            </Field>
+            <Field label="Prezzo effettivo incassato (€) *" htmlFor="sale-price">
+              <Input
+                id="sale-price"
+                type="number"
+                step="0.01"
+                min="0"
+                value={salePrice}
+                onChange={(e) => setSalePrice(e.target.value)}
+              />
+            </Field>
+            <p className="text-xs text-[var(--ui-text-faint)]">
+              Vendita manuale registrata sul sito (canale: Sito web). Stock, FIFO e costo medio aggiornati automaticamente.
+            </p>
+          </div>
+        </Modal>
       ) : null}
     </div>
   )

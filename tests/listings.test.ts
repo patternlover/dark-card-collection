@@ -4,6 +4,7 @@ import {
   buildListingGroups,
   filterListingGroups,
   deriveAvailability,
+  flattenListingItems,
   type ListingSale,
 } from '@/lib/listings'
 
@@ -151,6 +152,40 @@ describe('buildListingGroups', () => {
       [],
     )
     expect(groups[0]!.featured).toBe(true)
+  })
+})
+
+describe('flattenListingItems', () => {
+  it('flattens all variants across groups', () => {
+    const groups = buildListingGroups(
+      [
+        product({ id: '1', title: 'Box A', quantity: 2 }),
+        product({ id: '2', title: 'Box B', quantity: 1 }),
+        product({ id: '3', title: 'Box A', quantity: 1 }),
+      ],
+      [],
+    )
+    const items = flattenListingItems(groups)
+    expect(items).toHaveLength(3)
+    expect(items.map((i) => i.id)).toEqual(['1', '3', '2'])
+  })
+
+  it('keeps per-item detail (status, availability, sold)', () => {
+    const groups = buildListingGroups(
+      [
+        product({ id: '1', title: 'Box', quantity: 0, status: 'sold' }),
+        product({ id: '2', title: 'Box', quantity: 3, status: 'listed' }),
+      ],
+      [{ productId: 1, channel: 'vinted', quantity: 1, value: 40, createdAt: '2026-01-15T10:00:00Z' }],
+    )
+    const items = flattenListingItems(groups)
+    const sold = items.find((i) => i.id === '1')!
+    expect(sold.status).toBe('sold')
+    expect(sold.availability).toBe('out_of_stock')
+    expect(sold.soldQuantity).toBe(1)
+    const listed = items.find((i) => i.id === '2')!
+    expect(listed.status).toBe('listed')
+    expect(listed.availability).toBe('in_stock')
   })
 })
 

@@ -7,8 +7,9 @@ import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
 import { recordSale, type SalesChannel } from '@/lib/record-sale'
 import { applyPurchaseDeletion, applyStockDelta, productIdFrom, purchaseStockDelta } from '@/lib/inventory'
-import { buildListingGroups, filterListingGroups, type ListingSale } from '@/lib/listings'
+import { buildListingGroups, filterListingGroups, flattenListingItems, type ListingSale } from '@/lib/listings'
 import { logAudit } from '@/lib/audit'
+import type { Payload } from 'payload'
 
 async function requireAuth(): Promise<void> {
   if (!(await isAuthed())) {
@@ -671,6 +672,64 @@ export interface ListingSearchResult {
   error?: string
 }
 
+async function fetchListingDataset(
+  payload: Payload,
+  search?: string,
+): Promise<{ products: ProductDTO[]; sales: ListingSale[] }> {
+  const products: ProductDTO[] = []
+  let page = 1
+  const where = search?.trim() ? ({ title: { contains: search.trim() } } as any) : undefined
+  for (;;) {
+    const res = await payload.find({
+      overrideAccess: true,
+      collection: 'products',
+      where,
+      limit: 1000,
+      page,
+      sort: 'title',
+      depth: 1,
+      draft: false,
+    })
+    products.push(...res.docs.map(toProductDTO))
+    if (page >= res.totalPages) break
+    page += 1
+  }
+
+  const sales: ListingSale[] = []
+  let oPage = 1
+  for (;;) {
+    const res = await payload.find({
+      overrideAccess: true,
+      collection: 'orders',
+      limit: 500,
+      page: oPage,
+      sort: '-createdAt',
+      depth: 1,
+      draft: false,
+    })
+    for (const doc of res.docs) {
+      if (!PAID_STATUSES.includes(doc.status || 'pending')) continue
+      const channel = doc.sales_channel || 'website'
+      const createdAt = doc.createdAt ?? ''
+      for (const item of doc.items ?? []) {
+        const pid = typeof item.product === 'object' ? Number(item.product?.id) : Number(item.product)
+        if (!pid) continue
+        sales.push({
+          productId: pid,
+          channel,
+          quantity: Number(item.quantity) || 0,
+          value: (Number(item.price) || 0) * (Number(item.quantity) || 0),
+          createdAt,
+        })
+      }
+    }
+    if (oPage >= res.totalPages) break
+    oPage += 1
+  }
+
+  return { products, sales }
+}
+
 export async function searchListings(filters: ListingSearchFilters = {}): Promise<ListingSearchResult> {
   await requireAuth()
   const payload = await getPayloadClient()
@@ -678,55 +737,7 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
   const empty = { groups: [], total: 0, totalPages: 1 }
 
   try {
-    const products: ProductDTO[] = []
-    let page = 1
-    for (;;) {
-      const res = await payload.find({
-        overrideAccess: true,
-        collection: 'products',
-        limit: 1000,
-        page,
-        sort: 'title',
-        depth: 1,
-        draft: false,
-      })
-      products.push(...res.docs.map(toProductDTO))
-      if (page >= res.totalPages) break
-      page += 1
-    }
-
-    const sales: ListingSale[] = []
-    let oPage = 1
-    for (;;) {
-      const res = await payload.find({
-        overrideAccess: true,
-        collection: 'orders',
-        limit: 500,
-        page: oPage,
-        sort: '-createdAt',
-        depth: 1,
-        draft: false,
-      })
-      for (const doc of res.docs) {
-        if (!PAID_STATUSES.includes(doc.status || 'pending')) continue
-        const channel = doc.sales_channel || 'website'
-        const createdAt = doc.createdAt ?? ''
-        for (const item of doc.items ?? []) {
-          const pid = typeof item.product === 'object' ? Number(item.product?.id) : Number(item.product)
-          if (!pid) continue
-          sales.push({
-            productId: pid,
-            channel,
-            quantity: Number(item.quantity) || 0,
-            value: (Number(item.price) || 0) * (Number(item.quantity) || 0),
-            createdAt,
-          })
-        }
-      }
-      if (oPage >= res.totalPages) break
-      oPage += 1
-    }
-
+    const { products, sales } = await fetchListingDataset(payload, filters.search)
     const groups = buildListingGroups(products, sales)
     const filtered = filterListingGroups(groups, filters)
     const limit = filters.limit || 25
@@ -741,6 +752,54 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
     }
   } catch {
     return { ...empty, error: 'Errore nel caricamento del listino' }
+  }
+}
+
+export interface ListingProductFilters {
+  search?: string
+  status?: string
+  availability?: string
+  visibility?: string
+  limit?: number
+  page?: number
+}
+
+export interface ListingProductSearchResult {
+  items: ReturnType<typeof flattenListingItems>
+  total: number
+  totalPages: number
+  error?: string
+}
+
+export async function searchListingProducts(filters: ListingProductFilters = {}): Promise<ListingProductSearchResult> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  const empty = { items: [], total: 0, totalPages: 1 }
+
+  try {
+    const { products, sales } = await fetchListingDataset(payload, filters.search)
+    const groups = buildListingGroups(products, sales)
+    let items = flattenListingItems(groups)
+    if (filters.status) items = items.filter((v) => v.status === filters.status)
+    if (filters.availability === 'in_stock') items = items.filter((v) => v.availability === 'in_stock')
+    if (filters.availability === 'out_of_stock') items = items.filter((v) => v.availability === 'out_of_stock')
+    if (filters.visibility === 'visible') items = items.filter((v) => v.isVisible)
+    if (filters.visibility === 'hidden') items = items.filter((v) => !v.isVisible)
+    items.sort((a, b) => a.title.localeCompare(b.title))
+
+    const limit = filters.limit || 25
+    const pageNum = filters.page || 1
+    const totalPages = Math.max(1, Math.ceil(items.length / limit))
+    const slice = items.slice((pageNum - 1) * limit, pageNum * limit)
+
+    return {
+      items: slice,
+      total: items.length,
+      totalPages,
+    }
+  } catch {
+    return { ...empty, error: 'Errore nel caricamento dei prodotti' }
   }
 }
 
@@ -808,6 +867,48 @@ export async function toggleVariantVisibility(id: string, isVisible: boolean): P
     return { ok: true, id, isVisible }
   } catch {
     return { ok: false, message: 'Errore durante l\'aggiornamento della variante' }
+  }
+}
+
+export interface ManualSaleResult {
+  ok: boolean
+  message?: string
+}
+
+export async function recordManualWebsiteSale(data: {
+  productId: string
+  quantity: number
+  price: number
+}): Promise<ManualSaleResult> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  try {
+    const qty = Math.max(1, Number(data.quantity) || 0)
+    const price = Number(data.price)
+    if (!Number.isFinite(price) || price <= 0) {
+      return { ok: false, message: 'Inserisci un prezzo di vendita valido' }
+    }
+    const prodRes = await payload.findByID({ overrideAccess: true,  collection: 'products', id: data.productId, draft: false })
+    if (!prodRes) return { ok: false, message: 'Prodotto non trovato in inventario' }
+    const stock = Number((prodRes as { quantity?: number }).quantity ?? 0)
+    if (qty > stock) {
+      return { ok: false, message: 'Quantità superiore allo stock disponibile' }
+    }
+
+    const transactionId = `WEB-MANUAL-${Date.now()}`
+    logAudit('sale.manual', { productId: data.productId, quantity: qty, channel: 'website', value: price * qty })
+    await recordSale(payload, {
+      transactionId,
+      channel: 'website',
+      email: 'manual@darkcardcollection.com',
+      items: [{ productId: Number(data.productId), quantity: qty, price }],
+      value: price * qty,
+      currency: 'EUR',
+    })
+    return { ok: true }
+  } catch {
+    return { ok: false, message: 'Errore durante la registrazione della vendita' }
   }
 }
 

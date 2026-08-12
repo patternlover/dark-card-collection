@@ -1,7 +1,21 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino: vista iniziale compatta + layout filtri (su main)**.
+Ultima sessione: **Listino a 2 viste: Gruppi prodotto / Prodotti singoli**.
+
+---
+
+## Sessione recente 19 — Listino a 2 viste (Gruppi / Prodotti) + vendita manuale sul sito
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-listings-two-views.md`). Su `main`.
+
+- **2 viste sulla stessa pagina** con TogglePills (default Gruppi):
+  - **Gruppi**: una riga per gruppo, `Prodotto | Qty | Venduti | Disponibilità | Prezzo (sul sito) | Costo medio | Azioni` — senza colonna Stato.
+  - **Prodotti** (grafica /inventory): riga per item con Stato, venduti per item, azioni (nascondi singolo, **Vendi**, modifica).
+- **Vendita manuale sul sito (non Stripe)**: pulsante "Vendi" per item → modale qty+prezzo → `recordManualWebsiteSale` (canale `website`, pipeline `recordSale` → ordine + stock + FIFO).
+- **Search live sul DB senza pulsante "Cerca"** (debounce 300ms, in alto a destra della tabella); filtri compatti per vista.
+- **Data layer**: dataset condiviso `fetchListingDataset`; nuova `searchListingProducts` + `flattenListingItems` (in `src/lib/listings.ts`).
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 62/62 ✓ · `next build` ✓ · **Playwright su bundle prod 38/38** ✓.
 
 ---
 

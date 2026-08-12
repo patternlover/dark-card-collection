@@ -160,6 +160,10 @@ export function buildListingGroups(products: ProductDTO[], sales: ListingSale[])
   return groups
 }
 
+export function flattenListingItems(groups: ListingGroup[]): ListingVariant[] {
+  return groups.flatMap((g) => g.variants)
+}
+
 export function filterListingGroups(groups: ListingGroup[], filters: ListingFilters = {}): ListingGroup[] {
   const q = (filters.search || '').trim().toLowerCase()
   let out = groups
