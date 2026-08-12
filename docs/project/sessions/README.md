@@ -21,3 +21,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-10 — Modulo Acquisti e Vendite Esterne](2026-08-10-purchases-and-external-sales.md)
 - [2026-08-12 — Allineamento progetto a AGENTS.md / overview.md](2026-08-12-align-model.md)
 - [2026-08-12 — Fix delete prodotto live (#441)](2026-08-12-fix-delete-product-live.md)
+- [2026-08-12 — Listino a gruppi per nome + nomi completi](2026-08-12-listings-groups-full-names.md)

@@ -7,6 +7,7 @@ import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
 import { recordSale, type SalesChannel } from '@/lib/record-sale'
 import { applyPurchaseDeletion, applyStockDelta, productIdFrom, purchaseStockDelta } from '@/lib/inventory'
+import { buildListingGroups, filterListingGroups, type ListingSale } from '@/lib/listings'
 import { logAudit } from '@/lib/audit'
 
 async function requireAuth(): Promise<void> {
@@ -408,7 +409,6 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
   await requireAuth()
   logAudit('product.update', { id, keys: Object.keys(patch) })
   const payload = await getPayloadClient()
-
   const data: Record<string, any> = {}
   const keys: (keyof UpdateProductPatch)[] = [
     'title',
@@ -446,6 +446,13 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     depth: 1,
     draft: false,
   })
+  return toProductDTO(res)
+}
+
+export async function getProductById(id: string): Promise<ProductDTO> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const res = await payload.findByID({ overrideAccess: true,  collection: 'products', id, depth: 1, draft: false })
   return toProductDTO(res)
 }
 
@@ -646,6 +653,142 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
     return { ok: true }
   } catch {
     return { ok: false, message: 'Errore durante l\'eliminazione del prodotto' }
+  }
+}
+
+export interface ListingSearchFilters {
+  search?: string
+  availability?: string
+  channel?: string
+  visibility?: string
+  featured?: string
+  limit?: number
+  page?: number
+}
+
+export interface ListingSearchResult {
+  groups: ReturnType<typeof buildListingGroups>
+  channels: string[]
+  total: number
+  totalPages: number
+  error?: string
+}
+
+export async function searchListings(filters: ListingSearchFilters = {}): Promise<ListingSearchResult> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  const empty = { groups: [], channels: [], total: 0, totalPages: 1 }
+
+  try {
+    const products: ProductDTO[] = []
+    let page = 1
+    for (;;) {
+      const res = await payload.find({
+        overrideAccess: true,
+        collection: 'products',
+        limit: 1000,
+        page,
+        sort: 'title',
+        depth: 1,
+        draft: false,
+      })
+      products.push(...res.docs.map(toProductDTO))
+      if (page >= res.totalPages) break
+      page += 1
+    }
+
+    const sales: ListingSale[] = []
+    const channelSet = new Set<string>()
+    let oPage = 1
+    for (;;) {
+      const res = await payload.find({
+        overrideAccess: true,
+        collection: 'orders',
+        limit: 500,
+        page: oPage,
+        sort: '-createdAt',
+        depth: 1,
+        draft: false,
+      })
+      for (const doc of res.docs) {
+        const channel = doc.sales_channel || 'website'
+        channelSet.add(channel)
+        if (!PAID_STATUSES.includes(doc.status || 'pending')) continue
+        const createdAt = doc.createdAt ?? ''
+        for (const item of doc.items ?? []) {
+          const pid = typeof item.product === 'object' ? Number(item.product?.id) : Number(item.product)
+          if (!pid) continue
+          sales.push({
+            productId: pid,
+            channel,
+            quantity: Number(item.quantity) || 0,
+            value: (Number(item.price) || 0) * (Number(item.quantity) || 0),
+            createdAt,
+          })
+        }
+      }
+      if (oPage >= res.totalPages) break
+      oPage += 1
+    }
+
+    const groups = buildListingGroups(products, sales)
+    const filtered = filterListingGroups(groups, filters)
+    const limit = filters.limit || 25
+    const pageNum = filters.page || 1
+    const totalPages = Math.max(1, Math.ceil(filtered.length / limit))
+    const slice = filtered.slice((pageNum - 1) * limit, pageNum * limit)
+
+    return {
+      groups: slice,
+      channels: [...channelSet].sort((a, b) => a.localeCompare(b)),
+      total: filtered.length,
+      totalPages,
+    }
+  } catch {
+    return { ...empty, error: 'Errore nel caricamento del listino' }
+  }
+}
+
+export interface UpdateGroupResult {
+  ok: boolean
+  message?: string
+  title?: string
+  isVisible?: boolean
+  featured?: boolean
+}
+
+export async function updateGroup(
+  title: string,
+  patch: { isVisible?: boolean; featured?: boolean },
+): Promise<UpdateGroupResult> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  try {
+    const res = await payload.find({
+      overrideAccess: true,
+      collection: 'products',
+      where: { title: { equals: title } },
+      limit: 200,
+      depth: 1,
+      draft: false,
+    })
+    for (const doc of res.docs) {
+      const data: Record<string, any> = {}
+      if (patch.isVisible !== undefined) data.is_visible = patch.isVisible
+      if (patch.featured !== undefined) data.featured = patch.featured
+      await payload.update({
+        overrideAccess: true,
+        collection: 'products',
+        id: doc.id,
+        data,
+        draft: false,
+      })
+    }
+    return { ok: true, title, isVisible: patch.isVisible, featured: patch.featured }
+  } catch {
+    return { ok: false, message: 'Errore durante l\'aggiornamento del gruppo' }
   }
 }
 

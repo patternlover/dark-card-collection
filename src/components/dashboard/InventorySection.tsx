@@ -204,7 +204,7 @@ export function InventorySection() {
                   <Tr key={p.id}>
                     <Td>
                       <div className="flex items-center gap-3">
-                        <span className="max-w-[260px] truncate font-medium text-[var(--ui-text)]">{p.title}</span>
+                        <span className="min-w-0 break-words font-medium text-[var(--ui-text)]">{p.title}</span>
                         <StatusBadge status={p.status || 'listed'} />
                       </div>
                     </Td>

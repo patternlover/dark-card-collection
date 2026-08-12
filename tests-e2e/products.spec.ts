@@ -27,10 +27,10 @@ test.describe('Prodotti: Magazzino + Listino', () => {
     await page.goto('/dashboard/listings')
     const row = page.locator('tr', { hasText: TITLE })
     await expect(row).toBeVisible()
-    await row.locator('button[title="Nascondi dallo shop"]').click()
-    await expect(row.locator('button[title="Mostra nello shop"]')).toBeVisible()
+    await row.locator('button[title="Nascondi dallo shop (tutte le varianti)"]').click()
+    await expect(row.locator('button[title="Mostra nello shop (tutte le varianti)"]')).toBeVisible()
     await page.reload()
-    await expect(page.locator('tr', { hasText: TITLE }).locator('button[title="Mostra nello shop"]')).toBeVisible()
+    await expect(page.locator('tr', { hasText: TITLE }).locator('button[title="Mostra nello shop (tutte le varianti)"]')).toBeVisible()
 
     await page.goto('/shop')
     await expect(page.getByText(TITLE, { exact: true })).toHaveCount(0)
@@ -39,10 +39,10 @@ test.describe('Prodotti: Magazzino + Listino', () => {
   test('make a product visible again and show it on the storefront', async ({ page }) => {
     await page.goto('/dashboard/listings')
     const row = page.locator('tr', { hasText: TITLE })
-    await row.locator('button[title="Mostra nello shop"]').click()
-    await expect(row.locator('button[title="Nascondi dallo shop"]')).toBeVisible()
+    await row.locator('button[title="Mostra nello shop (tutte le varianti)"]').click()
+    await expect(row.locator('button[title="Nascondi dallo shop (tutte le varianti)"]')).toBeVisible()
     await page.reload()
-    await expect(page.locator('tr', { hasText: TITLE }).locator('button[title="Nascondi dallo shop"]')).toBeVisible()
+    await expect(page.locator('tr', { hasText: TITLE }).locator('button[title="Nascondi dallo shop (tutte le varianti)"]')).toBeVisible()
 
     await page.goto('/shop')
     await expect(page.getByText(TITLE, { exact: true }).first()).toBeVisible()

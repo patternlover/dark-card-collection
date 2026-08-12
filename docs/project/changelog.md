@@ -1,7 +1,29 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix delete prodotto live (#441) — guardie integrità + risultato strutturato**.
+Ultima sessione: **Listino a gruppi per nome + nomi completi (Magazzino/Listino)**.
+
+---
+
+## Sessione recente 15 — Listino a gruppi per titolo + nomi completi
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-listings-groups-full-names.md`).
+
+### Magazzino
+- Nomi completi visibili (rimosso il troncamento a 260px).
+
+### Listino — nuova vista a gruppi per `title`
+- Riga **gruppo**: nome completo + badge "n varianti" · **Qty disponibile** · contatore sobrio **×N venduti** · badge **Disponibilità** (In stock / Esaurito-OOS) · Prezzo (minimo) · **Costo medio** (media storica ponderata su tutti i lotti).
+- Espansione → righe **variante**: stato (solo per item), disponibilità, prezzo, costo, riepilogo **venduto** (canale + importo) e modifica.
+- **Nascondi/Mostra** e **Vetrina** applicati a tutte le varianti del gruppo ("o nascondo tutti o nessuno").
+- **Filtri** ridisegnati (Stato rimosso — dettaglio per item): Disponibilità · Canale vendita (dropdown **dinamico** dai valori `orders.sales_channel`) · Visibilità gruppo · Vetrina.
+- Data layer: `searchListings` (grouping + summary vendite da ordini pagati, paginazione su gruppi, risultato con `error` invece di throw → niente #441), `updateGroup`, `getProductById`; logica pura in `src/lib/listings.ts`.
+
+### Modello dati (confermato con l'utente)
+Products = riga per prodotto/variante visibile; costo/luogo nei Lotti; vendite/piattaforma in Orders. Nessuna migration.
+
+### Verifica
+`pnpm lint` ✓ · `pnpm test` 60/60 ✓ · `next build` ✓ · **Playwright su bundle prod 35/35** ✓ (4 nuovi in `listings-groups.spec.ts`, aggiornati i title dei bottoni in `products.spec.ts`).
 
 ---
 
