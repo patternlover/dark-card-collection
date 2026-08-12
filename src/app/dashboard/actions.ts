@@ -659,16 +659,13 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
 export interface ListingSearchFilters {
   search?: string
   availability?: string
-  channel?: string
   visibility?: string
-  featured?: string
   limit?: number
   page?: number
 }
 
 export interface ListingSearchResult {
   groups: ReturnType<typeof buildListingGroups>
-  channels: string[]
   total: number
   totalPages: number
   error?: string
@@ -678,7 +675,7 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
   await requireAuth()
   const payload = await getPayloadClient()
 
-  const empty = { groups: [], channels: [], total: 0, totalPages: 1 }
+  const empty = { groups: [], total: 0, totalPages: 1 }
 
   try {
     const products: ProductDTO[] = []
@@ -699,7 +696,6 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
     }
 
     const sales: ListingSale[] = []
-    const channelSet = new Set<string>()
     let oPage = 1
     for (;;) {
       const res = await payload.find({
@@ -712,9 +708,8 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
         draft: false,
       })
       for (const doc of res.docs) {
-        const channel = doc.sales_channel || 'website'
-        channelSet.add(channel)
         if (!PAID_STATUSES.includes(doc.status || 'pending')) continue
+        const channel = doc.sales_channel || 'website'
         const createdAt = doc.createdAt ?? ''
         for (const item of doc.items ?? []) {
           const pid = typeof item.product === 'object' ? Number(item.product?.id) : Number(item.product)
@@ -741,7 +736,6 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
 
     return {
       groups: slice,
-      channels: [...channelSet].sort((a, b) => a.localeCompare(b)),
       total: filtered.length,
       totalPages,
     }

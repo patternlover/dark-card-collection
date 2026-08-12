@@ -7,7 +7,7 @@
 > Stati: `open` · `in-progress` · `blocked (motivo)` · `waiting-user` (serve input utente) · `done (verifica)`.
 > Un task si chiude SOLO con verifica fatta (`pnpm lint`, `pnpm test`, build/E2E/CI dove applicabile).
 
-Ultimo aggiornamento: 2026-08-12 (sessione 15: Listino a gruppi per nome + nomi completi; sessione 14: fix delete prodotto live).
+Ultimo aggiornamento: 2026-08-12 (sessione 17: Listino semplificato — filtri ridotti + tabella piatta; sessione 16: modali dashboard step 1; sessione 15: Listino a gruppi; sessione 14: fix delete prodotto live).
 
 ---
 

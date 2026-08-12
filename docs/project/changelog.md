@@ -1,7 +1,40 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino a gruppi per nome + nomi completi (Magazzino/Listino)**.
+Ultima sessione: **Listino: filtri ridotti + tabella piatta (via sotto-tabella varianti)**.
+
+---
+
+## Sessione recente 17 — Listino semplificato: filtri ridotti e tabella piatta
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-listings-simplify.md`).
+
+- **Filtri**: rimossi "Canale di vendita" e "In evidenza"; restano ricerca, Disponibilità, Visibilità gruppo, Cerca (tutti su una riga, toolbar `flex-nowrap`).
+- **Backend**: `searchListings` non espone più `channels` né i filtri `channel`/`featured` (la lib `filterListingGroups` resta invariata e testata).
+- **Tabella piatta**: via il badge "n varianti", via l'espansione e la sotto-tabella annidata. Un solo header `Prodotto | Qty | Venduti | Disponibilità | Prezzo | Costo medio | Stato | Azioni`; riga gruppo (aggregati) seguita dalle righe variante (stato e venduto per item). Prezzo (di vendita) e Costo medio (media storica dal DB) invariati.
+- **Test**: E2E aggiornati (varianti piatte, contatore venduti, `.first()` sui locator).
+
+### Verifica
+`pnpm lint` ✓ · `pnpm test` 66/66 ✓ · `next build` ✓ · **Playwright su bundle prod 35/35** ✓.
+
+---
+
+## Sessione recente 16 — Rivisitazione modali dashboard (step 1: Vendita Esterna)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-dashboard-modals-redesign.md`). Branch: `feat/dashboard-modals-redesign`.
+
+### Ordini → "Registra Vendita Esterna"
+- Select **Prodotto raggruppato per nome** (`title`) con stock disponibile accanto a ogni voce.
+- Lo stesso nome in più varianti DB (grade/condition/language) → voci separate dentro un `<optgroup>`, etichettate con l'attributo discriminante (grade → condition → language).
+- Logica pura in `src/lib/sale-options.ts` (`buildSaleOptions`); comportamento invariato: auto-fill prezzo, `max` qty = stock del prodotto selezionato, `recordExternalSale` identico.
+
+### Verifica
+`pnpm lint` ✓ · `pnpm test` 66/66 ✓ (6 nuovi in `tests/sale-options.test.ts`) · E2E `orders.spec.ts` 3/3 ✓.
+
+### Prossimi step (branch)
+Magazzino → Nuovo/Duplica Prodotto · Listino → Modifica Prodotto · Lotti → Registra/Modifica Lotto · Categorie/Collezioni.
+
+---
 
 ---
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Eye, EyeOff, Pencil, Search, Star } from 'lucide-react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Eye, EyeOff, Pencil, Search, Star } from 'lucide-react'
 import {
   getCategories,
   getCollections,
@@ -15,8 +15,8 @@ import {
 import type { ListingGroup, ListingVariant } from '@/lib/listings'
 import { EditProductModal } from '@/components/dashboard/EditProductModal'
 import { StatusBadge } from './productShared'
-import { Badge } from './ui'
 import { GRADE_LABELS, LANGUAGE_LABELS } from './productShared'
+import { Badge } from './ui'
 import {
   Alert,
   Button,
@@ -52,11 +52,6 @@ const VISIBILITY_OPTIONS = [
   { value: '', label: 'Tutte le visibilità' },
   { value: 'visible', label: 'Visibili' },
   { value: 'hidden', label: 'Nascosti' },
-]
-
-const FEATURED_OPTIONS = [
-  { value: '', label: 'Tutti' },
-  { value: 'featured', label: 'In evidenza' },
 ]
 
 const PAGE_SIZE = 25
@@ -98,18 +93,14 @@ function variantAttrLabel(v: ListingVariant): string {
 
 export function ListingsSection() {
   const [groups, setGroups] = useState<ListingGroup[]>([])
-  const [channels, setChannels] = useState<string[]>([])
   const [query, setQuery] = useState('')
   const [availability, setAvailability] = useState('')
-  const [channel, setChannel] = useState('')
   const [visibility, setVisibility] = useState('')
-  const [featured, setFeatured] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
-  const [expandedTitle, setExpandedTitle] = useState<string | null>(null)
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
   const [editing, setEditing] = useState<ProductDTO | null>(null)
@@ -122,9 +113,7 @@ export function ListingsSection() {
         const res = await searchListings({
           search: opts.search ?? query,
           availability: availability || undefined,
-          channel: channel || undefined,
           visibility: visibility || undefined,
-          featured: featured || undefined,
           limit: PAGE_SIZE,
           page: opts.page ?? page,
         })
@@ -132,7 +121,6 @@ export function ListingsSection() {
           setMessage({ text: res.error, type: 'error' })
         } else {
           setGroups(res.groups)
-          setChannels(res.channels)
           setTotal(res.total)
           setTotalPages(Math.max(1, res.totalPages))
         }
@@ -142,7 +130,7 @@ export function ListingsSection() {
         setLoading(false)
       }
     },
-    [query, availability, channel, visibility, featured, page],
+    [query, availability, visibility, page],
   )
 
   useEffect(() => {
@@ -246,7 +234,7 @@ export function ListingsSection() {
         description={`${total} gruppi (per nome prodotto) · prezzo, costo medio, quantità, disponibilità e vendite`}
       />
 
-      <Toolbar>
+      <Toolbar className="flex-nowrap">
         <div className="relative min-w-[240px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
           <Input
@@ -272,19 +260,6 @@ export function ListingsSection() {
           ))}
         </Select>
         <Select
-          value={channel}
-          onChange={(e) => {
-            setChannel(e.target.value)
-            setPage(1)
-          }}
-          className="w-auto"
-        >
-          <option value="">Tutti i canali di vendita</option>
-          {channels.map((c) => (
-            <option key={c} value={c}>{SALES_CHANNEL_LABELS[c] || c}</option>
-          ))}
-        </Select>
-        <Select
           value={visibility}
           onChange={(e) => {
             setVisibility(e.target.value)
@@ -293,18 +268,6 @@ export function ListingsSection() {
           className="w-auto"
         >
           {VISIBILITY_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </Select>
-        <Select
-          value={featured}
-          onChange={(e) => {
-            setFeatured(e.target.value)
-            setPage(1)
-          }}
-          className="w-auto"
-        >
-          {FEATURED_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </Select>
@@ -329,73 +292,89 @@ export function ListingsSection() {
               <Th>Disponibilità</Th>
               <Th>Prezzo</Th>
               <Th>Costo medio</Th>
+              <Th>Stato</Th>
               <Th className="text-right">Azioni</Th>
             </Tr>
           </THead>
           <TBody>
-            {groups.map((g) => {
-              const expanded = expandedTitle === g.title
-              return (
-                <>
-                  <Tr key={g.title} className={expanded ? 'bg-[var(--ui-surface-alt)]/60' : ''}>
+            {groups.map((g) => (
+              <Fragment key={g.title}>
+                <Tr className="bg-[var(--ui-surface-alt)]">
+                  <Td>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="break-words font-semibold text-[var(--ui-text)]">{g.title}</span>
+                      {g.featured ? (
+                        <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
+                      ) : null}
+                    </div>
+                  </Td>
+                  <Td className="font-semibold text-[var(--ui-text)]">{g.totalQuantity}</Td>
+                  <Td className="text-[var(--ui-text-muted)]">
+                    {g.totalSold > 0 ? <span className="font-medium text-[var(--ui-text)]">×{g.totalSold}</span> : '—'}
+                  </Td>
+                  <Td><AvailabilityBadge availability={g.availability} /></Td>
+                  <Td className="font-semibold text-[var(--ui-text)]">{g.price != null ? euro.format(g.price) : '—'}</Td>
+                  <Td className="text-[var(--ui-text-muted)]">{g.cost != null ? euro.format(g.cost) : '—'}</Td>
+                  <Td><span className="text-[var(--ui-text-faint)]">—</span></Td>
+                  <Td>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => toggleFeatured(g)}
+                        disabled={busy}
+                        title={g.featured ? 'Togli dalla vetrina' : 'Metti in vetrina (bestseller)'}
+                        className={iconButtonClass()}
+                      >
+                        <Star className={`h-3.5 w-3.5 ${g.featured ? 'fill-[var(--ui-accent)] text-[var(--ui-accent)]' : ''}`} />
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => toggleVisibility(g)}
+                        disabled={busy}
+                        title={g.visible ? 'Nascondi dallo shop (tutte le varianti)' : 'Mostra nello shop (tutte le varianti)'}
+                        className={iconButtonClass()}
+                      >
+                        {g.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openEdit(g.variants[0].id)}
+                        disabled={busy}
+                        title="Modifica"
+                        className={iconButtonClass()}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </Td>
+                </Tr>
+                {g.variants.map((v) => (
+                  <Tr key={v.id}>
                     <Td>
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedTitle(expanded ? null : g.title)}
-                          className={iconButtonClass()}
-                          title={expanded ? 'Comprimi' : 'Mostra varianti'}
-                        >
-                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                        </button>
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="break-words font-medium text-[var(--ui-text)]">{g.title}</span>
-                            {g.featured ? (
-                              <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
-                            ) : null}
-                          </div>
-                          {g.variantCount > 1 ? (
-                            <span className="text-xs text-[var(--ui-text-faint)]">{g.variantCount} varianti</span>
-                          ) : null}
-                        </div>
+                      <div className="min-w-0 pl-6">
+                        <p className="break-words font-medium text-[var(--ui-text)]">{v.title}</p>
+                        {variantAttrLabel(v) ? (
+                          <p className="text-xs text-[var(--ui-text-faint)]">{variantAttrLabel(v)}</p>
+                        ) : null}
                       </div>
                     </Td>
-                    <Td className="font-semibold text-[var(--ui-text)]">{g.totalQuantity}</Td>
-                    <Td className="text-[var(--ui-text-muted)]">
-                      {g.totalSold > 0 ? <span className="font-medium text-[var(--ui-text)]">×{g.totalSold}</span> : '—'}
-                    </Td>
-                    <Td><AvailabilityBadge availability={g.availability} /></Td>
-                    <Td className="font-semibold text-[var(--ui-text)]">{g.price != null ? euro.format(g.price) : '—'}</Td>
-                    <Td className="text-[var(--ui-text-muted)]">{g.cost != null ? euro.format(g.cost) : '—'}</Td>
+                    <Td>{v.quantity}</Td>
+                    <Td><SaleSummary variant={v} /></Td>
+                    <Td><AvailabilityBadge availability={v.availability} /></Td>
+                    <Td>{v.price != null ? euro.format(v.price) : '—'}</Td>
+                    <Td className="text-[var(--ui-text-muted)]">{v.cost != null ? euro.format(v.cost) : '—'}</Td>
+                    <Td><StatusBadge status={v.status || 'listed'} /></Td>
                     <Td>
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => toggleFeatured(g)}
+                          onClick={() => openEdit(v.id)}
                           disabled={busy}
-                          title={g.featured ? 'Togli dalla vetrina' : 'Metti in vetrina (bestseller)'}
-                          className={iconButtonClass()}
-                        >
-                          <Star className={`h-3.5 w-3.5 ${g.featured ? 'fill-[var(--ui-accent)] text-[var(--ui-accent)]' : ''}`} />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => toggleVisibility(g)}
-                          disabled={busy}
-                          title={g.visible ? 'Nascondi dallo shop (tutte le varianti)' : 'Mostra nello shop (tutte le varianti)'}
-                          className={iconButtonClass()}
-                        >
-                          {g.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => openEdit(g.variants[0].id)}
-                          disabled={busy}
-                          title="Modifica"
+                          title="Modifica variante"
                           className={iconButtonClass()}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -403,67 +382,9 @@ export function ListingsSection() {
                       </div>
                     </Td>
                   </Tr>
-                  {expanded ? (
-                    <Tr key={`${g.title}-detail`}>
-                      <Td colSpan={7} className="p-0">
-                        <div className="border-t border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 px-4 py-3">
-                          <div className="overflow-x-auto rounded-md border border-[var(--ui-border)] bg-[var(--ui-surface)]">
-                            <table className="w-full min-w-[720px] text-left text-sm text-[var(--ui-text)]">
-                              <thead>
-                                <tr className="border-b border-[var(--ui-border)] bg-[var(--ui-surface-alt)] text-xs font-semibold uppercase tracking-wide text-[var(--ui-text-muted)]">
-                                  <th className="px-4 py-2 font-semibold">Variante</th>
-                                  <th className="px-4 py-2 font-semibold">Stato</th>
-                                  <th className="px-4 py-2 font-semibold">Qty</th>
-                                  <th className="px-4 py-2 font-semibold">Disponibilità</th>
-                                  <th className="px-4 py-2 font-semibold">Prezzo</th>
-                                  <th className="px-4 py-2 font-semibold">Costo</th>
-                                  <th className="px-4 py-2 font-semibold">Venduto</th>
-                                  <th className="px-4 py-2 text-right font-semibold">Azioni</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-[var(--ui-border)]">
-                                {g.variants.map((v) => (
-                                  <tr key={v.id}>
-                                    <td className="px-4 py-2 align-middle">
-                                      <div className="min-w-0">
-                                        <p className="break-words font-medium text-[var(--ui-text)]">{v.title}</p>
-                                        {variantAttrLabel(v) ? (
-                                          <p className="text-xs text-[var(--ui-text-faint)]">{variantAttrLabel(v)}</p>
-                                        ) : null}
-                                      </div>
-                                    </td>
-                                    <td className="px-4 py-2 align-middle"><StatusBadge status={v.status || 'listed'} /></td>
-                                    <td className="px-4 py-2 align-middle">{v.quantity}</td>
-                                    <td className="px-4 py-2 align-middle"><AvailabilityBadge availability={v.availability} /></td>
-                                    <td className="px-4 py-2 align-middle">{v.price != null ? euro.format(v.price) : '—'}</td>
-                                    <td className="px-4 py-2 align-middle text-[var(--ui-text-muted)]">{v.cost != null ? euro.format(v.cost) : '—'}</td>
-                                    <td className="px-4 py-2 align-middle"><SaleSummary variant={v} /></td>
-                                    <td className="px-4 py-2 align-middle">
-                                      <div className="flex items-center justify-end gap-1.5">
-                                        <Button
-                                          variant="secondary"
-                                          size="sm"
-                                          onClick={() => openEdit(v.id)}
-                                          disabled={busy}
-                                          title="Modifica variante"
-                                          className={iconButtonClass()}
-                                        >
-                                          <Pencil className="h-3.5 w-3.5" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </Td>
-                    </Tr>
-                  ) : null}
-                </>
-              )
-            })}
+                ))}
+              </Fragment>
+            ))}
           </TBody>
         </Table>
       )}
