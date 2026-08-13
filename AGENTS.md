@@ -21,6 +21,7 @@
 - Lint/typecheck: `pnpm lint` (= `tsc --noEmit`)
 - Test: `pnpm test` (unit test in `tests/`)
 - Build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build`
+- E2E (`tests-e2e/`, Playwright su porta 3100, DB `dcc_test`): il webServer usa `next start` sul bundle di produzione — PRIMA serve `pnpm exec next build` (con `DATABASE_URI=...dcc_test PAYLOAD_SECRET=local-test-secret-dashboard-e2e-0001`), POI `pnpm test:e2e`. NON usare `pnpm dev` come server E2E: il dev server sotto carico fa cadere richieste di scrittura (toggle/flaky "aborted"). Nota: `payload migrate` si blocca su DB pushato non migrato (dcc_test) → per la build E2E usare `next build` diretto, non `pnpm build`.
 
 ## Regole
 - Usa SEMPRE `pnpm`, mai npm.
