@@ -579,7 +579,6 @@ export function ListingsSection() {
           collections={collections}
           onClose={() => setEditing(null)}
           onSaved={onSaved}
-          onError={(msg) => notify(msg, 'error')}
         />
       ) : null}
 

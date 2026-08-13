@@ -147,6 +147,7 @@ export function PurchasesSection() {
   const openCreate = () => {
     setEditing(null)
     setModalError(null)
+    getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     setForm({
       purchaseDate: new Date().toISOString().split('T')[0],
       sourceType: '',

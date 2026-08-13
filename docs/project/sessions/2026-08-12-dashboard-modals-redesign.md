@@ -80,8 +80,14 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
 
 **Verifica**: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · **Full E2E 42/42 ✓** (modals-flows 7 nuovi; products/listings-groups/product-delete-guard/purchases adattati; auth su 3100).
 
+### Step 4 — Listino → Modifica Prodotto (`EditProductModal`)
+- Ristrutturato in **6 sezioni** via `ModalSection`: **Informazioni** (Titolo · Item Group ID · Slug · Descrizione) · **Prezzo e inventario** (Prezzo vendita · Prezzo barrato · Quantità · Stato · Pre-Ordine) · **Dettagli carta** (Grado · Condizione · Lingua · Card Number · Rarità) · **Catalogo** (Categoria · Collezione · Product Type · Google Product Category) · **Immagine** (Image Link) · **Opzioni** (In Evidenza · Visibile nello shop).
+- **Rimossi dal form** `costOfGoodsSold` (Costo medio) e `availability` (Disponibilità): campi auto-calcolati dal sistema (lotti/hook), oggi editabili ma sovrascritti a ogni salvataggio. Il patch `updateProduct` non li invia più.
+- **Errori nel modale**: stato `modalError` → banner `Alert` in cima (prima `onError` → alert sulla pagina). Rimossa la prop `onError` e aggiornato il chiamante `ListingsSection.tsx`.
+- **Fix flakiness E2E** (`modals-flows` combobox): `PurchasesSection.openCreate` ora **ricarica i `source_name`** a ogni apertura del modale (prima solo al mount → se il fetch falliva sotto carico, il datalist restava vuoto e il test falliva; il failure a cascata riavviava il worker e resetava il DB facendo fallire anche i test successivi per timestamp diversi).
+- Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · **Full E2E 42/42 ✓**.
+
 ### Step successivi
-- [ ] Listino → Modifica Prodotto (`EditProductModal`)
 - [ ] Categorie / Collezioni (modali inline)
 - [ ] Adottare `ModalSection` negli altri modali per coerenza
 
