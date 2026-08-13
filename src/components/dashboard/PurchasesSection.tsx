@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import {
   getCategories,
@@ -317,8 +317,8 @@ export function PurchasesSection() {
               const expanded = expandedId === p.id
               const rowCount = p.lines.reduce((acc, l) => acc + l.quantity, 0)
               return (
-                <>
-                  <Tr key={p.id}>
+                <Fragment key={p.id}>
+                  <Tr>
                     <Td className="text-xs text-[var(--ui-text-muted)]">
                       {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString('it-IT') : '—'}
                     </Td>
@@ -387,7 +387,7 @@ export function PurchasesSection() {
                       </Td>
                     </Tr>
                   ) : null}
-                </>
+                </Fragment>
               )
             })}
           </TBody>

@@ -53,6 +53,10 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-listings-compact-
 - **Filtri a 2 righe**: riga 1 = Disponibilità + Visibilità affiancati; riga 2 = ricerca + tasto Cerca a destra.
 - **Verifica**: `pnpm lint` ✓ · `pnpm test` 60/60 ✓ · `next build` ✓ · **Playwright su bundle prod 37/37** ✓.
 
+### Fix post-test (bug preesistenti emersi col primo uso reale)
+- **`The following fields are invalid: Category, Collection`**: il flusso lotto → creazione prodotto inline passava gli id categoria/collezione come stringa a `createProduct`, che li inoltrava a Payload senza cast → relationship rifiutata (id DB = integer). Cast a `Number` in `createProduct` e `updateProduct` (`actions.ts`).
+- **React key warning su `TBody`**: righe tabella in `<>` senza key → `<Fragment key={p.id}>` in `PurchasesSection` e `InventorySection` (sparisce il Console Error a ogni re-render).
+
 ---
 
 ## Sessione recente 17 — Listino semplificato: filtri ridotti e tabella piatta

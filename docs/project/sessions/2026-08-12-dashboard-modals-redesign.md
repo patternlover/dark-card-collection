@@ -60,6 +60,11 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
 - **Sezioni chiare e coerenti**: nuovo componente riusabile `ui/ModalSection.tsx` (titolo uppercase a contrasto migliore + contenitore con bordo, slot azione). Il modale diventa: **"Dati lotto"** (Data · Tipo di fonte · Luogo/Fornitore con ricerca · Costi extra) → **"Righe del lotto"** (azione "Aggiungi riga"; creazione prodotto inline invariata) → **"Note"**. Titolo unificato **"Registra Lotto"**/"Modifica Lotto".
 - Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · E2E `purchases.spec.ts` 6/6 ✓ · E2E `console-clean.spec.ts` 1/1 ✓ (nessuna regressione hydration; warning key preesistenti su TBody).
 
+### Step 2fix — Bugfix emersi dal test manuale utente
+- **`The following fields are invalid: Category, Collection`** (errore Payload, preesistente nel flusso lotto): la select del nuovo prodotto passava gli id categoria/collezione come **stringa** a `createProduct`, che li inoltrava a Payload senza cast → relationship rifiutata (id DB = integer, es. `260`). Fix in `actions.ts`: cast a `Number` in `createProduct` **e** `updateProduct` (coerenza col `CreateProductModal`, allineato alla regola "Payload id string|number → castare con `as number`"). Ora la creazione inline del prodotto dal lotto funziona anche con categoria/collezione selezionate.
+- **React key warning** (`Each child in a list should have a unique key` su `TBody`): righe tabella dentro `<>` senza key → sostituito con `<Fragment key={p.id}>` in `PurchasesSection` e `InventorySection`. Sparisce il Console Error a ogni re-render (anche durante l'uso del modale).
+- Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · E2E `purchases.spec.ts` 6/6 ✓.
+
 ### Step successivi
 - [ ] Listino → Modifica Prodotto (`EditProductModal`)
 - [ ] Categorie / Collezioni (modali inline)

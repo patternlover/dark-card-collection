@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Search, Trash2 } from 'lucide-react'
 import {
   deleteProduct,
@@ -182,8 +182,8 @@ export function InventorySection() {
               const expanded = expandedId === p.id
               const inventoryValue = (Number(p.price) || 0) * (Number(p.quantity) || 0)
               return (
-                <>
-                  <Tr key={p.id}>
+                <Fragment key={p.id}>
+                  <Tr>
                     <Td>
                       <div className="flex items-center gap-3">
                         <span className="min-w-0 break-words font-medium text-[var(--ui-text)]">{p.title}</span>
@@ -251,7 +251,7 @@ export function InventorySection() {
                       </Td>
                     </Tr>
                   ) : null}
-                </>
+                </Fragment>
               )
             })}
           </TBody>
