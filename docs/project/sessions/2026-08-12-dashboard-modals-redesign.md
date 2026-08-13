@@ -65,6 +65,21 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
 - **React key warning** (`Each child in a list should have a unique key` su `TBody`): righe tabella dentro `<>` senza key → sostituito con `<Fragment key={p.id}>` in `PurchasesSection` e `InventorySection`. Sparisce il Console Error a ogni re-render (anche durante l'uso del modale).
 - Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · E2E `purchases.spec.ts` 6/6 ✓.
 
+### Step 3 — Suite E2E automatica dei flussi modali tra pagine
+**Contesto**: la rimozione del bottone "Nuovo Prodotto" (step 2) rompeva 3 spec E2E esistenti (create prodotti da Magazzino). Il lavoro ha trasformato la verifica in una suite automatica completa.
+
+**Test E2E**:
+- `tests-e2e/helpers.ts`: nuovo helper condiviso `createProductViaLot` (i prodotti ora si creano SOLO dai Lotti).
+- Aggiornati a creare via lotto: `products.spec.ts`, `listings-groups.spec.ts` (scenario "Esaurito" via vendita), `product-delete-guard.spec.ts` (test "no references" ora elimina prima il lotto; "residual stock" senza più `addLot`, perché il lotto di creazione ha già giacenza).
+- Nuovo `tests-e2e/modals-flows.spec.ts` (7 test): Lotto→Magazzino auto-creazione (qty/prezzo/stato), regressione "nessun bottone Nuovo Prodotto", combobox Luogo/Fornitore con suggerimenti, errori dentro il modale, Vendita Esterna→stock, lifecycle sold→re-stock, modali Categoria/Collezione che alimentano il modale Lotto.
+- `playwright.config.ts` + `helpers.ts`/`auth.spec.ts`: server E2E isolato su **porta 3100** con `reuseExistingServer: false` (prima riusava la 3000, che può essere occupata dal dev server del working dir principale → test giravano su codice vecchio). In Playwright 1.62 `port` e `url` sono mutuamente esclusivi → usato `url`.
+
+**Bug reali trovati dai test e corretti**:
+- `src/payload/collections/Products/index.ts` (hook `beforeChange`): il ripristino automatico `sold → listed` non scattava mai — Payload fonde il doc esistente nel `data` dell'update, quindi `data.status === undefined` era sempre falso. Fix: usare `operation === 'update'` + transizione quantità `previousQuantity <= 0 && previous.status === 'sold'`. Riprodotto con script ad-hoc (`create qty0 → sold`; `update qty4 → listed`). Nessuna modifica schema → niente migration.
+- `src/components/dashboard/ListingsSection.tsx`: race — una `searchListings` in volo poteva sovrascrivere l'aggiornamento ottimistico dei toggle hide/featured (sintomo flaky: alert "Gruppo nascosto" ma bottone ancora "Nascondi"). Fix: guard di sequenza `loadSeq` (`useRef`), invalidato anche nei toggle.
+
+**Verifica**: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · **Full E2E 42/42 ✓** (modals-flows 7 nuovi; products/listings-groups/product-delete-guard/purchases adattati; auth su 3100).
+
 ### Step successivi
 - [ ] Listino → Modifica Prodotto (`EditProductModal`)
 - [ ] Categorie / Collezioni (modali inline)

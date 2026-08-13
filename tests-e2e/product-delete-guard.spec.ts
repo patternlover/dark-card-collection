@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs } from '../tests-e2e/helpers'
+import { createProductViaLot, loginAs } from '../tests-e2e/helpers'
 import { resetDb } from '../tests-e2e/reset-db'
 
 const stamp = Date.now()
@@ -22,13 +22,7 @@ test.describe('Delete prodotto: guardie integrità (nessun 500/#441)', () => {
   })
 
   async function createProduct(page: any, name: string, quantity: string) {
-    await page.goto('/dashboard/inventory')
-    await page.getByRole('button', { name: 'Nuovo Prodotto' }).click()
-    await page.locator('#cp-title').fill(name)
-    await page.locator('#cp-price').fill('50')
-    await page.locator('#cp-quantity').fill(quantity)
-    await page.getByRole('button', { name: 'Crea Prodotto' }).click()
-    await expect(page.getByText('Prodotto creato')).toBeVisible()
+    await createProductViaLot(page, { title: name, quantity, price: '50', sourceName: `Lot ${name}` })
   }
 
   async function addLot(page: any, name: string) {
@@ -56,6 +50,10 @@ test.describe('Delete prodotto: guardie integrità (nessun 500/#441)', () => {
   test('no references: plain delete works, no 441', async ({ page }) => {
     const t1 = title()
     await createProduct(page, t1, '1')
+    // products come from lots: delete the lot first so the product has no references
+    await page.goto('/dashboard/purchases')
+    await page.locator('tr', { hasText: `Lot ${t1}` }).first().locator('button[title="Elimina lotto"]').click()
+    await expect(page.getByText('Lotto eliminato')).toBeVisible()
     await page.goto('/dashboard/inventory')
     await page.locator('tr', { hasText: t1 }).locator('button[title="Elimina prodotto"]').click()
     await expect(page.getByText('Prodotto eliminato')).toBeVisible()
@@ -66,8 +64,8 @@ test.describe('Delete prodotto: guardie integrità (nessun 500/#441)', () => {
 
   test('residual lot stock: clear message, no 441, row stays', async ({ page }) => {
     const t2 = title()
-    await createProduct(page, t2, '0')
-    await addLot(page, t2)
+    // lot-only creation: the lot that creates the product already holds residual stock
+    await createProduct(page, t2, '2')
     await page.goto('/dashboard/inventory')
     await page.locator('tr', { hasText: t2 }).locator('button[title="Elimina prodotto"]').click()
     await expect(page.getByText(/Il prodotto ha stock residuo nei lotti/)).toBeVisible()

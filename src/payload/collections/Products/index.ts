@@ -1,13 +1,14 @@
 import type { CollectionConfig, CollectionBeforeChangeHook } from 'payload'
 import { allowRead, denyAll } from '@/payload/access'
 
-const beforeChange: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+const beforeChange: CollectionBeforeChangeHook = ({ data, originalDoc, operation }) => {
   if (data.quantity === undefined) return data
 
   const previous = (originalDoc as
-    | { status?: string; availability?: string; is_preorder?: boolean }
+    | { status?: string; availability?: string; quantity?: number; is_preorder?: boolean }
     | undefined)
   const quantity = Number(data.quantity)
+  const previousQuantity = Number(previous?.quantity ?? 0)
 
   if (quantity <= 0) {
     data.status = 'sold'
@@ -17,7 +18,7 @@ const beforeChange: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
 
   const isPreorder = data.is_preorder === undefined ? Boolean(previous?.is_preorder) : Boolean(data.is_preorder)
   data.availability = isPreorder ? 'preorder' : 'in_stock'
-  if (data.status === undefined && previous?.status === 'sold') {
+  if (operation === 'update' && previousQuantity <= 0 && previous?.status === 'sold') {
     data.status = 'listed'
   }
   return data

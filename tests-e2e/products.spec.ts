@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test'
-import { loginAs } from './helpers'
+import { createProductViaLot, loginAs } from './helpers'
 import { resetDb } from './reset-db'
 
 const stamp = Date.now()
 const TITLE = `E2E Box ${stamp}`
+const LOT_SRC = `Lot ${TITLE}`
 
 test.beforeAll(resetDb)
 
@@ -12,14 +13,9 @@ test.describe('Prodotti: Magazzino + Listino', () => {
     await loginAs(page)
   })
 
-  test('create a product from Magazzino', async ({ page }) => {
+  test('create a product via a lot', async ({ page }) => {
+    await createProductViaLot(page, { title: TITLE, quantity: '4', price: '99.90', sourceName: LOT_SRC })
     await page.goto('/dashboard/inventory')
-    await page.getByRole('button', { name: 'Nuovo Prodotto' }).click()
-    await page.locator('#cp-title').fill(TITLE)
-    await page.locator('#cp-price').fill('99.90')
-    await page.locator('#cp-quantity').fill('4')
-    await page.getByRole('button', { name: 'Crea Prodotto' }).click()
-    await expect(page.getByText('Prodotto creato')).toBeVisible()
     await expect(page.locator('tr', { hasText: TITLE }).first()).toBeVisible()
   })
 
@@ -70,6 +66,9 @@ test.describe('Prodotti: Magazzino + Listino', () => {
 
   test('delete a product from Magazzino', async ({ page }) => {
     page.on('dialog', (d) => d.accept())
+    await page.goto('/dashboard/purchases')
+    await page.locator('tr', { hasText: LOT_SRC }).first().locator('button[title="Elimina lotto"]').click()
+    await expect(page.getByText('Lotto eliminato')).toBeVisible()
     await page.goto('/dashboard/inventory')
     const row = page.locator('tr', { hasText: TITLE }).first()
     await row.locator('button[title="Elimina prodotto"]').click()
