@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs } from './helpers'
+import { createProductViaLot, loginAs } from './helpers'
 import { resetDb } from './reset-db'
 
 const stamp = Date.now()
@@ -14,13 +14,18 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
   })
 
   async function createProduct(page: any, name: string, quantity: string, price = '25') {
-    await page.goto('/dashboard/inventory')
-    await page.getByRole('button', { name: 'Nuovo Prodotto' }).click()
-    await page.locator('#cp-title').fill(name)
-    await page.locator('#cp-price').fill(price)
-    await page.locator('#cp-quantity').fill(quantity)
-    await page.getByRole('button', { name: 'Crea Prodotto' }).click()
-    await expect(page.getByText('Prodotto creato')).toBeVisible()
+    await createProductViaLot(page, { title: name, quantity, price })
+  }
+
+  async function sellAll(page: any, name: string) {
+    await page.goto('/dashboard/orders')
+    await page.getByRole('button', { name: 'Registra Vendita Esterna' }).click()
+    const opt = page.locator('#ext-product option', { hasText: name }).first()
+    await page.locator('#ext-product').selectOption(await opt.getAttribute('value'))
+    await page.locator('#ext-qty').fill('1')
+    await page.locator('#ext-price').fill('10')
+    await page.getByRole('button', { name: 'Registra Vendita', exact: true }).click()
+    await expect(page.locator('#ext-product')).not.toBeVisible()
   }
 
   test('groups view (default): product names shown on a single line', async ({ page }) => {
@@ -36,7 +41,9 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     const inStock = title('Scatola In Stock')
     const out = title('Scatola Esaurita')
     await createProduct(page, inStock, '3', '30')
-    await createProduct(page, out, '0', '10')
+    // products start from lots: create with stock and sell it to reach Esaurito (OOS)
+    await createProduct(page, out, '1', '10')
+    await sellAll(page, out)
 
     await page.goto('/dashboard/listings')
     const rowIn = page.locator('tr', { hasText: inStock }).first()

@@ -9,6 +9,7 @@ import {
   updateOrderStatus,
   type OrderDTO,
 } from '@/app/dashboard/actions'
+import { buildSaleOptions, type SaleProductOption } from '@/lib/sale-options'
 import {
   Alert,
   Button,
@@ -109,7 +110,7 @@ export function OrdersSection() {
   const [error, setError] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showExternal, setShowExternal] = useState(false)
-  const [productOptions, setProductOptions] = useState<{ id: string; title: string; quantity: number; price: number | null }[]>([])
+  const [productOptions, setProductOptions] = useState<SaleProductOption[]>([])
   const [ext, setExt] = useState({ productId: '', platform: 'vinted', quantity: '1', salePrice: '' })
   const [busy, setBusy] = useState(false)
 
@@ -141,13 +142,24 @@ export function OrdersSection() {
     setShowExternal(true)
     try {
       const res = await searchProducts({ limit: 200, status: 'listed' })
-      setProductOptions(res.docs.map((p) => ({ id: p.id, title: p.title, quantity: p.quantity ?? 0, price: p.price ?? null })))
+      setProductOptions(
+        res.docs.map((p) => ({
+          id: p.id,
+          title: p.title,
+          quantity: p.quantity ?? 0,
+          price: p.price ?? null,
+          grade: p.grade ?? null,
+          condition: p.condition ?? null,
+          language: p.language ?? null,
+        })),
+      )
     } catch {
       setProductOptions([])
     }
   }
 
   const selectedProduct = productOptions.find((p) => p.id === ext.productId) || null
+  const saleEntries = buildSaleOptions(productOptions)
 
   const handleExternal = async () => {
     const qty = Number(ext.quantity) || 0
@@ -261,11 +273,21 @@ export function OrdersSection() {
                 }}
               >
                 <option value="">— Seleziona prodotto —</option>
-                {productOptions.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title} (stock {p.quantity})
-                  </option>
-                ))}
+                {saleEntries.map((entry) =>
+                  entry.kind === 'option' ? (
+                    <option key={entry.value} value={entry.value}>
+                      {entry.label}
+                    </option>
+                  ) : (
+                    <optgroup key={entry.label} label={entry.label}>
+                      {entry.options.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ),
+                )}
               </Select>
             </Field>
 

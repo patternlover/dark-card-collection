@@ -445,7 +445,15 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     'isVisible',
   ]
   for (const key of keys) {
-    if (key in patch) data[PATCH_FIELD_MAP[key] ?? key] = patch[key] ?? undefined
+    if (!(key in patch)) continue
+    const value = patch[key]
+    const mapped =
+      key === 'category' || key === 'collection'
+        ? value != null
+          ? Number(value)
+          : undefined
+        : (value ?? undefined)
+    data[PATCH_FIELD_MAP[key] ?? key] = mapped
   }
 
   const res = await payload.update({ overrideAccess: true, 
@@ -502,8 +510,8 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
       condition: data.condition || 'used',
       product_type: data.productType || undefined,
       google_product_category: data.googleProductCategory || undefined,
-      category: data.category || undefined,
-      collection: data.collection || undefined,
+      category: data.category != null ? Number(data.category) : undefined,
+      collection: data.collection != null ? Number(data.collection) : undefined,
       language: data.language || 'italian',
       card_number: data.cardNumber || undefined,
       rarity: data.rarity || undefined,
@@ -1306,6 +1314,24 @@ export async function getPurchases(opts: { search?: string; page?: number; limit
     total: res.totalDocs,
     totalPages: res.totalPages,
   }
+}
+
+export async function getPurchaseSourceNames(): Promise<string[]> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    overrideAccess: true,
+    collection: 'purchases',
+    limit: 1000,
+    depth: 0,
+    where: { source_name: { exists: true } } as any,
+  })
+  const names = new Set<string>()
+  for (const doc of res.docs) {
+    const name = String((doc as { source_name?: unknown }).source_name || '').trim()
+    if (name) names.add(name)
+  }
+  return [...names].sort((a, b) => a.localeCompare(b))
 }
 
 export interface CreatePurchaseLineInput {

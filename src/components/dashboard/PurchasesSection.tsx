@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import {
   getCategories,
   getCollections,
   getPurchases,
+  getPurchaseSourceNames,
   createPurchase,
   deletePurchase,
   updatePurchase,
@@ -20,6 +21,7 @@ import {
   Field,
   Input,
   Modal,
+  ModalSection,
   PageHeader,
   Select,
   Table,
@@ -80,10 +82,12 @@ export function PurchasesSection() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
+  const [sourceOptions, setSourceOptions] = useState<string[]>([])
   const [productOptions, setProductOptions] = useState<{ id: string; title: string }[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<PurchaseDTO | null>(null)
+  const [modalError, setModalError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   const [form, setForm] = useState({
@@ -119,6 +123,7 @@ export function PurchasesSection() {
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
     getCollections().then(setCollections).catch(() => {})
+    getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     searchProducts({ limit: 200 })
       .then((res) => setProductOptions(res.docs.map((p) => ({ id: p.id, title: p.title }))))
       .catch(() => {})
@@ -141,6 +146,8 @@ export function PurchasesSection() {
 
   const openCreate = () => {
     setEditing(null)
+    setModalError(null)
+    getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     setForm({
       purchaseDate: new Date().toISOString().split('T')[0],
       sourceType: '',
@@ -155,6 +162,7 @@ export function PurchasesSection() {
   const openEdit = (p: PurchaseDTO) => {
     setShowCreate(false)
     setExpandedId(null)
+    setModalError(null)
     setEditing(p)
     setForm({
       purchaseDate: p.purchaseDate ? p.purchaseDate.slice(0, 10) : new Date().toISOString().split('T')[0],
@@ -183,6 +191,7 @@ export function PurchasesSection() {
   const resetForm = () => {
     setEditing(null)
     setShowCreate(false)
+    setModalError(null)
     setForm({
       purchaseDate: new Date().toISOString().split('T')[0],
       sourceType: '',
@@ -195,7 +204,7 @@ export function PurchasesSection() {
 
   const handleSubmit = async () => {
     if (!form.purchaseDate) {
-      notify('La data di acquisto è obbligatoria', 'error')
+      setModalError('La data di acquisto è obbligatoria')
       return
     }
     const lineInputs = lines.map((l) => ({
@@ -209,14 +218,15 @@ export function PurchasesSection() {
       unitCost: Number(l.unitCost) || 0,
     }))
     if (lineInputs.every((l) => !l.productId && !l.newProductTitle)) {
-      notify('Ogni riga deve avere un prodotto esistente o un nuovo titolo', 'error')
+      setModalError('Ogni riga deve avere un prodotto esistente o un nuovo titolo')
       return
     }
     if (lineInputs.every((l) => l.quantity <= 0)) {
-      notify('Aggiungi almeno una riga con quantità maggiore di 0', 'error')
+      setModalError('Aggiungi almeno una riga con quantità maggiore di 0')
       return
     }
     setBusy(true)
+    setModalError(null)
     try {
       const data = {
         purchaseDate: form.purchaseDate,
@@ -236,7 +246,7 @@ export function PurchasesSection() {
       resetForm()
       load()
     } catch (err) {
-      notify(err instanceof Error ? err.message : String(err), 'error')
+      setModalError(err instanceof Error ? err.message : String(err))
     } finally {
       setBusy(false)
     }
@@ -308,8 +318,8 @@ export function PurchasesSection() {
               const expanded = expandedId === p.id
               const rowCount = p.lines.reduce((acc, l) => acc + l.quantity, 0)
               return (
-                <>
-                  <Tr key={p.id}>
+                <Fragment key={p.id}>
+                  <Tr>
                     <Td className="text-xs text-[var(--ui-text-muted)]">
                       {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString('it-IT') : '—'}
                     </Td>
@@ -378,7 +388,7 @@ export function PurchasesSection() {
                       </Td>
                     </Tr>
                   ) : null}
-                </>
+                </Fragment>
               )
             })}
           </TBody>
@@ -413,7 +423,7 @@ export function PurchasesSection() {
 
       {editing || showCreate ? (
         <Modal
-          title={editing ? 'Modifica Lotto' : 'Registra Nuovo Lotto'}
+          title={editing ? 'Modifica Lotto' : 'Registra Lotto'}
           onClose={resetForm}
           maxWidth="max-w-3xl"
           footer={
@@ -428,61 +438,69 @@ export function PurchasesSection() {
           }
         >
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Data Acquisto *" htmlFor="pc-date">
-                <Input
-                  id="pc-date"
-                  type="date"
-                  value={form.purchaseDate}
-                  onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-                />
-              </Field>
-              <Field label="Tipo di fonte" htmlFor="pc-source-type">
-                <Select
-                  id="pc-source-type"
-                  value={form.sourceType}
-                  onChange={(e) => setForm({ ...form, sourceType: e.target.value })}
-                >
-                  {SOURCE_TYPE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
+            {modalError ? <Alert tone="danger">{modalError}</Alert> : null}
 
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Luogo / Fornitore" htmlFor="pc-source-name">
-                <Input
-                  id="pc-source-name"
-                  type="text"
-                  value={form.sourceName}
-                  onChange={(e) => setForm({ ...form, sourceName: e.target.value })}
-                  placeholder="es. Esselunga Viale X"
-                />
-              </Field>
-              <Field label="Costi extra del lotto (€)" htmlFor="pc-extra">
-                <Input
-                  id="pc-extra"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.extraCosts}
-                  onChange={(e) => setForm({ ...form, extraCosts: e.target.value })}
-                  placeholder="spedizione / commissioni"
-                />
-              </Field>
-            </div>
+            <ModalSection title="Dati lotto">
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Data Acquisto *" htmlFor="pc-date">
+                  <Input
+                    id="pc-date"
+                    type="date"
+                    value={form.purchaseDate}
+                    onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+                  />
+                </Field>
+                <Field label="Tipo di fonte" htmlFor="pc-source-type">
+                  <Select
+                    id="pc-source-type"
+                    value={form.sourceType}
+                    onChange={(e) => setForm({ ...form, sourceType: e.target.value })}
+                  >
+                    {SOURCE_TYPE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
 
-            <div className="border-t border-[var(--ui-border)] pt-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--ui-text-faint)]">
-                  Righe del lotto
-                </p>
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <Field label="Luogo / Fornitore" htmlFor="pc-source-name">
+                  <Input
+                    id="pc-source-name"
+                    type="text"
+                    list="pc-source-list"
+                    value={form.sourceName}
+                    onChange={(e) => setForm({ ...form, sourceName: e.target.value })}
+                    placeholder="es. Esselunga Viale X"
+                  />
+                  <datalist id="pc-source-list">
+                    {sourceOptions.map((name) => (
+                      <option key={name} value={name} />
+                    ))}
+                  </datalist>
+                </Field>
+                <Field label="Costi extra (€)" htmlFor="pc-extra">
+                  <Input
+                    id="pc-extra"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={form.extraCosts}
+                    onChange={(e) => setForm({ ...form, extraCosts: e.target.value })}
+                    placeholder="spedizione / commissioni"
+                  />
+                </Field>
+              </div>
+            </ModalSection>
+
+            <ModalSection
+              title="Righe del lotto"
+              action={
                 <Button variant="secondary" size="sm" onClick={() => setLines((prev) => [...prev, emptyLine()])}>
                   <Plus className="h-3.5 w-3.5" /> Aggiungi riga
                 </Button>
-              </div>
-
+              }
+            >
               <div className="space-y-3">
                 {lines.map((line, index) => (
                   <div key={index} data-testid="purchase-line" className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
@@ -582,16 +600,16 @@ export function PurchasesSection() {
                   </div>
                 ))}
               </div>
-            </div>
+            </ModalSection>
 
-            <Field label="Note" htmlFor="pc-notes">
+            <ModalSection title="Note">
               <Textarea
                 id="pc-notes"
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Note opzionali..."
               />
-            </Field>
+            </ModalSection>
           </div>
         </Modal>
       ) : null}

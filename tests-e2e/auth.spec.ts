@@ -10,7 +10,7 @@ test.describe('Auth gate', () => {
 
   test('does not grant access with an invalid session cookie', async ({ page }) => {
     await page.context().addCookies([
-      { name: 'dcc-dash', value: 'google:test@example.com.0.invalid', url: 'http://localhost:3000' },
+      { name: 'dcc-dash', value: 'google:test@example.com.0.invalid', url: 'http://localhost:3100' },
     ])
     await page.goto('/dashboard')
     await expect(page.getByText('Accedi con il tuo account Google autorizzato.')).toBeVisible()
