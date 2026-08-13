@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino: tabella stile /inventory, sorting per header, email cliente**.
+Ultima sessione: **Listino: nome su una riga + stella in fondo riga + header uniforme**.
+
+---
+
+## Sessione recente 22 — Listino: righe allineate (nome una riga, header uniforme)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-13-listings-row-height.md`). Su `main`.
+
+- Vista Gruppi: nome prodotto su **una riga** (truncate + ellissi, `title` col nome completo al hover); **stella inline rimossa** dal nome (l'indicatore resta nel pulsante in fondo riga).
+- Vista Gruppi: **Costo medio** `whitespace-nowrap` → altezze righe uniformi.
+- Header su una riga in entrambe le viste (`whitespace-nowrap` in `SortableTh`); righe Prodotti invariate.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 69/69 ✓ · `next build` ✓ · **Playwright su bundle prod 40/40** ✓.
 
 ---
 

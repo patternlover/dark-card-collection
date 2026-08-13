@@ -86,7 +86,7 @@ function SortableTh({
       <button
         type="button"
         onClick={() => onSort(field)}
-        className="inline-flex items-center gap-1 font-semibold uppercase tracking-wide text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
+        className="inline-flex items-center gap-1 whitespace-nowrap font-semibold uppercase tracking-wide text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
       >
         {label}
         {active ? (
@@ -414,12 +414,9 @@ export function ListingsSection() {
               {groups.map((g) => (
                 <Tr key={g.title}>
                   <Td>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="break-words font-medium text-[var(--ui-text)]">{g.title}</span>
-                      {g.featured ? (
-                        <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
-                      ) : null}
-                    </div>
+                    <span className="block truncate font-medium text-[var(--ui-text)]" title={g.title}>
+                      {g.title}
+                    </span>
                   </Td>
                   <Td className="font-semibold text-[var(--ui-text)]">{g.totalQuantity}</Td>
                   <Td className="text-[var(--ui-text-muted)]">
@@ -427,7 +424,7 @@ export function ListingsSection() {
                   </Td>
                   <Td><AvailabilityBadge availability={g.availability} /></Td>
                   <Td className="font-semibold text-[var(--ui-text)]">{g.price != null ? euro.format(g.price) : '—'}</Td>
-                  <Td className="text-[var(--ui-text-muted)]">{g.cost != null ? euro.format(g.cost) : '—'}</Td>
+                  <Td className="whitespace-nowrap text-[var(--ui-text-muted)]">{g.cost != null ? euro.format(g.cost) : '—'}</Td>
                   <Td>
                     <div className="flex items-center justify-end gap-1.5">
                       <Button

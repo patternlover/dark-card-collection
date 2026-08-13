@@ -23,11 +23,13 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     await expect(page.getByText('Prodotto creato')).toBeVisible()
   }
 
-  test('groups view (default): full product names shown, no truncation', async ({ page }) => {
+  test('groups view (default): product names shown on a single line', async ({ page }) => {
     const longName = title('Collezione Illustrazione Primi Compagni d\'Avventura con un titolo molto lungo per il test')
     await createProduct(page, longName, '2')
     await page.goto('/dashboard/listings')
-    await expect(page.getByText(longName, { exact: true }).first()).toBeVisible()
+    const nameSpan = page.getByText(longName, { exact: true }).first()
+    await expect(nameSpan).toBeVisible()
+    await expect(nameSpan).toHaveAttribute('title', longName)
   })
 
   test('groups view: quantity, availability badge and hide whole group', async ({ page }) => {

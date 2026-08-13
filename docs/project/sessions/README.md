@@ -27,3 +27,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-12 — Listino a 2 viste: Gruppi / Prodotti + vendita manuale](2026-08-12-listings-two-views.md)
 - [2026-08-12 — Fix Mostra + homepage In evidenza (featured 4 slot)](2026-08-12-listings-fix-show-featured.md)
 - [2026-08-13 — Listino: tabella /inventory + sorting per header + email cliente](2026-08-13-listings-sortable-clean.md)
+- [2026-08-13 — Listino: nome su una riga + stella in fondo riga + header uniforme](2026-08-13-listings-row-height.md)
