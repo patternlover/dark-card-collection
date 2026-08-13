@@ -7,7 +7,7 @@
 > Stati: `open` · `in-progress` · `blocked (motivo)` · `waiting-user` (serve input utente) · `done (verifica)`.
 > Un task si chiude SOLO con verifica fatta (`pnpm lint`, `pnpm test`, build/E2E/CI dove applicabile).
 
-Ultimo aggiornamento: 2026-08-13 (sessione 22: Listino righe allineate nome una riga; sessione 21: Listino tabella /inventory + sorting header + email cliente; sessione 20: fix Mostra + homepage featured; sessione 19: Listino 2 viste; sessione 18: vista compatta; sessione 17: filtri ridotti; sessione 16: modali dashboard; sessione 15: Listino a gruppi; sessione 14: fix delete prodotto live).
+Ultimo aggiornamento: 2026-08-13 (sessione 23: merge rivisitazione modali dashboard in main + E2E su bundle prod 47/47; sessione 22: Listino righe allineate nome una riga; sessione 21: Listino tabella /inventory + sorting header + email cliente; sessione 20: fix Mostra + homepage featured; sessione 19: Listino 2 viste; sessione 18: vista compatta; sessione 17: filtri ridotti; sessione 16: modali dashboard; sessione 15: Listino a gruppi; sessione 14: fix delete prodotto live).
 
 ---
 
@@ -42,6 +42,10 @@ Ultimo aggiornamento: 2026-08-13 (sessione 22: Listino righe allineate nome una 
 | N10 (REQ-14) | MFA amministratori | Delegato a Google OAuth (2FA sull'account Google dell'allowlist) — coperto |
 
 ## 4. Chiusi con verifica (2026-08-12, sessione di smaltimento)
+
+| # | Task | Verifica |
+|---|------|----------|
+| M1 | **Rivisitazione modali dashboard** — tutti i modali rivisitati (Ordini Vendita Esterna · Lotti Registra/Modifica · Magazzino senza Nuovo Prodotto · Listino Modifica Prodotto; Categorie/Collezioni invariati per decisione utente) + bug reali corretti (hook `Products.beforeChange` relist, cast id categoria/collezione, race toggle, Fragment key, refresh source names). **Mergiato in main** (`4104366`) — verifica: `pnpm lint` ✓ · `pnpm test` 75/75 ✓ · Full E2E su bundle prod 47/47 ✓ · CI ✓ · deploy Vercel Production ✓ | done (verifica completa) |
 
 | # | Task | Verifica |
 |---|------|----------|
