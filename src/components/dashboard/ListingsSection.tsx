@@ -1,7 +1,18 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Pencil, Search, ShoppingCart, Star } from 'lucide-react'
+import {
+  ArrowUpDown,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  Pencil,
+  ShoppingCart,
+  Star,
+} from 'lucide-react'
 import {
   getCategories,
   getCollections,
@@ -15,7 +26,7 @@ import {
   type CollectionOption,
   type ProductDTO,
 } from '@/app/dashboard/actions'
-import type { ListingGroup, ListingVariant } from '@/lib/listings'
+import type { ListingGroup, ListingVariant, SortDir } from '@/lib/listings'
 import { EditProductModal } from '@/components/dashboard/EditProductModal'
 import { StatusBadge } from './productShared'
 import { GRADE_LABELS, LANGUAGE_LABELS } from './productShared'
@@ -27,7 +38,6 @@ import {
   Input,
   Modal,
   PageHeader,
-  Select,
   Table,
   TBody,
   Td,
@@ -47,31 +57,50 @@ const SALES_CHANNEL_LABELS: Record<string, string> = {
   other: 'Altro',
 }
 
-const STATUS_OPTIONS = [
-  { value: '', label: 'Tutti gli stati' },
-  { value: 'listed', label: 'Disponibile' },
-  { value: 'hold', label: 'In Attesa' },
-  { value: 'sold', label: 'Venduto' },
-]
-
-const AVAILABILITY_OPTIONS = [
-  { value: '', label: 'Tutte le disponibilità' },
-  { value: 'in_stock', label: 'In stock' },
-  { value: 'out_of_stock', label: 'Esaurito (OOS)' },
-]
-
-const VISIBILITY_OPTIONS = [
-  { value: '', label: 'Tutte le visibilità' },
-  { value: 'visible', label: 'Visibili' },
-  { value: 'hidden', label: 'Nascosti' },
-]
-
 const PAGE_SIZE = 25
 
 type View = 'groups' | 'products'
 
 function iconButtonClass() {
   return 'rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]'
+}
+
+function SortableTh({
+  label,
+  field,
+  sortBy,
+  sortDir,
+  onSort,
+  className = '',
+}: {
+  label: string
+  field: string
+  sortBy: string
+  sortDir: SortDir
+  onSort: (field: string) => void
+  className?: string
+}) {
+  const active = sortBy === field
+  return (
+    <Th className={className}>
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        className="inline-flex items-center gap-1 font-semibold uppercase tracking-wide text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
+      >
+        {label}
+        {active ? (
+          sortDir === 'asc' ? (
+            <ChevronUp className="h-3 w-3" />
+          ) : (
+            <ChevronDown className="h-3 w-3" />
+          )
+        ) : (
+          <ArrowUpDown className="h-3 w-3 text-[var(--ui-text-faint)]" />
+        )}
+      </button>
+    </Th>
+  )
 }
 
 function AvailabilityBadge({ availability }: { availability: string }) {
@@ -110,11 +139,8 @@ export function ListingsSection() {
   const [groups, setGroups] = useState<ListingGroup[]>([])
   const [featuredCount, setFeaturedCount] = useState(0)
   const [items, setItems] = useState<ListingVariant[]>([])
-  const [query, setQuery] = useState('')
-  const [appliedQuery, setAppliedQuery] = useState('')
-  const [status, setStatus] = useState('')
-  const [availability, setAvailability] = useState('')
-  const [visibility, setVisibility] = useState('')
+  const [sortBy, setSortBy] = useState('title')
+  const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -126,20 +152,13 @@ export function ListingsSection() {
   const [selling, setSelling] = useState<ListingVariant | null>(null)
   const [saleQty, setSaleQty] = useState('1')
   const [salePrice, setSalePrice] = useState('')
+  const [saleEmail, setSaleEmail] = useState('')
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
     getCollections().then(setCollections).catch(() => {})
   }, [])
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setAppliedQuery(query)
-      setPage(1)
-    }, 300)
-    return () => clearTimeout(t)
-  }, [query])
 
   const load = useCallback(
     async (opts: { page?: number } = {}) => {
@@ -148,9 +167,8 @@ export function ListingsSection() {
       try {
         if (view === 'groups') {
           const res = await searchListings({
-            search: appliedQuery || undefined,
-            availability: availability || undefined,
-            visibility: visibility || undefined,
+            sortBy,
+            sortDir,
             limit: PAGE_SIZE,
             page: pageNum,
           })
@@ -164,10 +182,8 @@ export function ListingsSection() {
           setTotalPages(Math.max(1, res.totalPages))
         } else {
           const res = await searchListingProducts({
-            search: appliedQuery || undefined,
-            status: status || undefined,
-            availability: availability || undefined,
-            visibility: visibility || undefined,
+            sortBy,
+            sortDir,
             limit: PAGE_SIZE,
             page: pageNum,
           })
@@ -185,7 +201,7 @@ export function ListingsSection() {
         setLoading(false)
       }
     },
-    [view, appliedQuery, status, availability, visibility, page],
+    [view, sortBy, sortDir, page],
   )
 
   useEffect(() => {
@@ -199,6 +215,16 @@ export function ListingsSection() {
     setPage(1)
     setEditing(null)
     setSelling(null)
+  }
+
+  const handleSort = (field: string) => {
+    setPage(1)
+    if (sortBy === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortBy(field)
+      setSortDir('asc')
+    }
   }
 
   const applyGroupPatch = (title: string, patch: { isVisible?: boolean; featured?: boolean }) => {
@@ -306,6 +332,7 @@ export function ListingsSection() {
     setSelling(v)
     setSaleQty('1')
     setSalePrice(v.price != null ? String(v.price) : '')
+    setSaleEmail('')
   }
 
   const handleSale = async () => {
@@ -322,7 +349,12 @@ export function ListingsSection() {
     }
     setBusy(true)
     try {
-      const res = await recordManualWebsiteSale({ productId: selling.id, quantity: qty, price })
+      const res = await recordManualWebsiteSale({
+        productId: selling.id,
+        quantity: qty,
+        price,
+        email: saleEmail.trim() || undefined,
+      })
       if (!res.ok) {
         notify(res.message || 'Errore durante la vendita', 'error')
         return
@@ -358,58 +390,6 @@ export function ListingsSection() {
         />
       </PageHeader>
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          {view === 'products' ? (
-            <Select
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value)
-                setPage(1)
-              }}
-              className="w-auto"
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          ) : null}
-          <Select
-            value={availability}
-            onChange={(e) => {
-              setAvailability(e.target.value)
-              setPage(1)
-            }}
-            className="w-auto"
-          >
-            {AVAILABILITY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </Select>
-          <Select
-            value={visibility}
-            onChange={(e) => {
-              setVisibility(e.target.value)
-              setPage(1)
-            }}
-            className="w-auto"
-          >
-            {VISIBILITY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </Select>
-        </div>
-        <div className="relative w-72 shrink-0">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cerca per nome prodotto..."
-            className="pl-9"
-          />
-        </div>
-      </div>
-
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
 
       {loading ? (
@@ -421,21 +401,21 @@ export function ListingsSection() {
           <Table>
             <THead>
               <Tr>
-                <Th>Prodotto</Th>
-                <Th>Qty</Th>
-                <Th>Venduti</Th>
-                <Th>Disponibilità</Th>
-                <Th>Prezzo</Th>
-                <Th>Costo medio</Th>
+                <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Qty" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Venduti" field="sold" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
                 <Th className="text-right">Azioni</Th>
               </Tr>
             </THead>
             <TBody>
               {groups.map((g) => (
-                <Tr key={g.title} className="bg-[var(--ui-surface-alt)]">
+                <Tr key={g.title}>
                   <Td>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="break-words font-semibold text-[var(--ui-text)]">{g.title}</span>
+                      <span className="break-words font-medium text-[var(--ui-text)]">{g.title}</span>
                       {g.featured ? (
                         <Star className="h-3.5 w-3.5 fill-[var(--ui-accent)] text-[var(--ui-accent)]" aria-label="In vetrina" />
                       ) : null}
@@ -499,13 +479,13 @@ export function ListingsSection() {
         <Table>
           <THead>
             <Tr>
-              <Th>Prodotto</Th>
-              <Th>Stock</Th>
-              <Th>Venduti</Th>
-              <Th>Disponibilità</Th>
-              <Th>Prezzo</Th>
-              <Th>Costo medio</Th>
-              <Th>Stato</Th>
+              <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Stock" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Venduti" field="sold" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Stato" field="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
               <Th className="text-right">Azioni</Th>
             </Tr>
           </THead>
@@ -643,6 +623,15 @@ export function ListingsSection() {
                 min="0"
                 value={salePrice}
                 onChange={(e) => setSalePrice(e.target.value)}
+              />
+            </Field>
+            <Field label="Email cliente" htmlFor="sale-email">
+              <Input
+                id="sale-email"
+                type="email"
+                value={saleEmail}
+                onChange={(e) => setSaleEmail(e.target.value)}
+                placeholder="nome@esempio.com (opzionale)"
               />
             </Field>
             <p className="text-xs text-[var(--ui-text-faint)]">

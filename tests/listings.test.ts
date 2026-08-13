@@ -6,6 +6,8 @@ import {
   filterListingGroups,
   deriveAvailability,
   flattenListingItems,
+  sortListingGroups,
+  sortListingItems,
   type ListingSale,
 } from '@/lib/listings'
 
@@ -202,6 +204,66 @@ describe('countFeaturedGroups', () => {
       [],
     )
     expect(countFeaturedGroups(groups)).toBe(2)
+  })
+})
+
+describe('sortListingGroups', () => {
+  const groups = buildListingGroups(
+    [
+      product({ id: '1', title: 'Box B', quantity: 3, price: 30, featured: true }),
+      product({ id: '2', title: 'Box A', quantity: 5, price: 10 }),
+      product({ id: '3', title: 'Box C', quantity: 1, price: 20 }),
+    ],
+    [],
+  )
+
+  it('sorts by title asc/desc', () => {
+    expect(sortListingGroups(groups, { by: 'title', dir: 'asc' }).map((g) => g.title)).toEqual(['Box A', 'Box B', 'Box C'])
+    expect(sortListingGroups(groups, { by: 'title', dir: 'desc' }).map((g) => g.title)).toEqual(['Box C', 'Box B', 'Box A'])
+  })
+
+  it('sorts by quantity numerically', () => {
+    expect(sortListingGroups(groups, { by: 'quantity', dir: 'asc' }).map((g) => g.title)).toEqual(['Box C', 'Box B', 'Box A'])
+    expect(sortListingGroups(groups, { by: 'quantity', dir: 'desc' }).map((g) => g.title)).toEqual(['Box A', 'Box B', 'Box C'])
+  })
+
+  it('sorts by price, keeping nulls last', () => {
+    const withNull = buildListingGroups(
+      [
+        product({ id: '1', title: 'B', price: 20 }),
+        product({ id: '2', title: 'A', price: null }),
+        product({ id: '3', title: 'C', price: 10 }),
+      ],
+      [],
+    )
+    expect(sortListingGroups(withNull, { by: 'price', dir: 'asc' }).map((g) => g.title)).toEqual(['C', 'B', 'A'])
+  })
+
+  it('returns a new array without mutating the input', () => {
+    const sorted = sortListingGroups(groups, { by: 'price', dir: 'desc' })
+    expect(sorted).not.toBe(groups)
+    expect(groups.map((g) => g.title)).toEqual(['Box A', 'Box B', 'Box C'])
+  })
+})
+
+describe('sortListingItems', () => {
+  const items = flattenListingItems(
+    buildListingGroups(
+      [
+        product({ id: '1', title: 'Box B', quantity: 3, status: 'sold' }),
+        product({ id: '2', title: 'Box A', quantity: 5, status: 'listed' }),
+        product({ id: '3', title: 'Box C', quantity: 1, status: 'hold' }),
+      ],
+      [],
+    ),
+  )
+
+  it('sorts by status asc', () => {
+    expect(sortListingItems(items, { by: 'status', dir: 'asc' }).map((i) => i.status)).toEqual(['hold', 'listed', 'sold'])
+  })
+
+  it('sorts by quantity desc', () => {
+    expect(sortListingItems(items, { by: 'quantity', dir: 'desc' }).map((i) => i.id)).toEqual(['2', '1', '3'])
   })
 })
 

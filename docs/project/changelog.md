@@ -1,7 +1,19 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix "Mostra" nel Listino + homepage "In evidenza" guidata dalla stella (4 slot)**.
+Ultima sessione: **Listino: tabella stile /inventory, sorting per header, email cliente**.
+
+---
+
+## Sessione recente 21 — Listino: tabella allineata a /inventory + sorting per header + email cliente
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-13-listings-sortable-clean.md`). Su `main`.
+
+- **Tabella Gruppi allineata a /inventory**: righe piatte (via sfondo evidenziato), titolo `font-medium`, stessi stili delle viste Prodotti/inventory.
+- **Sorting per header (server-side)**: header cliccabili (1° click asc, 2° desc, freccia sull'attivo) in Gruppi e Prodotti; `sortBy`/`sortDir` nelle action + helper puri `sortListingGroups`/`sortListingItems`.
+- **Rimozione search bar e dropdown** (Stato/Disponibilità/Visibilità) da entrambe le viste → tabella pulita.
+- **Email cliente** nella vendita manuale (campo opzionale nel modale Vendi; validata, fallback `manual@darkcardcollection.com`).
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 69/69 ✓ · `next build` ✓ · **Playwright su bundle prod 40/40** ✓.
 
 ---
 

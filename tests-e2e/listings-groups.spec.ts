@@ -112,6 +112,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     await row.locator('button[title="Vendi"]').click()
     await page.locator('#sale-qty').fill('1')
     await page.locator('#sale-price').fill('55')
+    await page.locator('#sale-email').fill('cliente@example.com')
     await page.getByRole('button', { name: 'Registra Vendita' }).click()
     await expect(page.getByText('Vendita registrata')).toBeVisible()
 
@@ -173,20 +174,32 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     await expect(page.getByText(names[0], { exact: true })).toHaveCount(0)
   })
 
-  test('live search without a Cerca button filters from the database', async ({ page }) => {
-    const first = title('Zanzara')
-    const second = title('Topo')
-    await createProduct(page, first, '1', '10')
-    await createProduct(page, second, '1', '20')
+  test('clicking a column header sorts asc then desc (no search bar)', async ({ page }) => {
+    const a = title('Alfa Box')
+    const b = title('Beta Box')
+    const c = title('Gamma Box')
+    await createProduct(page, a, '1', '70')
+    await createProduct(page, b, '1', '10')
+    await createProduct(page, c, '1', '200')
 
     await page.goto('/dashboard/listings')
-    const search = page.locator('input[placeholder="Cerca per nome prodotto..."]')
-    await search.fill(first.split(' ')[0]!)
-    await expect(page.locator('tr', { hasText: first })).toHaveCount(1)
-    await expect(page.locator('tr', { hasText: second })).toHaveCount(0)
+    await expect(page.locator('input[placeholder="Cerca per nome prodotto..."]')).toHaveCount(0)
 
-    await search.fill('')
-    await expect(page.locator('tr', { hasText: first })).toHaveCount(1)
-    await expect(page.locator('tr', { hasText: second })).toHaveCount(1)
+    const firstRowTitle = () => page.locator('tbody tr').first().locator('td').first().innerText()
+    const orderOf = async (...names: string[]) => {
+      const texts = await page.locator('tbody tr').evaluateAll((rows) => rows.map((r) => r.textContent || ''))
+      return names.map((n) => texts.findIndex((t) => t.includes(n)))
+    }
+
+    await page.getByRole('button', { name: /^Prezzo/ }).click()
+    await expect.poll(firstRowTitle).toContain('Beta')
+    await expect.poll(async () => (await orderOf(b, a, c))[0] < (await orderOf(b, a, c))[1]).toBe(true)
+
+    await page.getByRole('button', { name: /^Prezzo/ }).click()
+    await expect.poll(firstRowTitle).toContain('Gamma')
+    await expect.poll(async () => (await orderOf(c, a, b))[0] < (await orderOf(c, a, b))[1]).toBe(true)
+
+    await page.getByRole('button', { name: /^Qty/ }).click()
+    await expect.poll(async () => (await orderOf(a, b, c))[0] < (await orderOf(a, b, c))[1]).toBe(true)
   })
 })

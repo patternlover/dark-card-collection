@@ -12,6 +12,8 @@ import {
   countFeaturedGroups,
   filterListingGroups,
   flattenListingItems,
+  sortListingGroups,
+  sortListingItems,
   type ListingSale,
 } from '@/lib/listings'
 import { logAudit } from '@/lib/audit'
@@ -667,6 +669,8 @@ export interface ListingSearchFilters {
   search?: string
   availability?: string
   visibility?: string
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
   limit?: number
   page?: number
 }
@@ -747,7 +751,10 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
     const { products, sales } = await fetchListingDataset(payload, filters.search)
     const groups = buildListingGroups(products, sales)
     const featuredCount = countFeaturedGroups(groups)
-    const filtered = filterListingGroups(groups, filters)
+    const filtered = sortListingGroups(filterListingGroups(groups, filters), {
+      by: filters.sortBy || 'title',
+      dir: filters.sortDir || 'asc',
+    })
     const limit = filters.limit || 25
     const pageNum = filters.page || 1
     const totalPages = Math.max(1, Math.ceil(filtered.length / limit))
@@ -769,6 +776,8 @@ export interface ListingProductFilters {
   status?: string
   availability?: string
   visibility?: string
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
   limit?: number
   page?: number
 }
@@ -795,7 +804,7 @@ export async function searchListingProducts(filters: ListingProductFilters = {})
     if (filters.availability === 'out_of_stock') items = items.filter((v) => v.availability === 'out_of_stock')
     if (filters.visibility === 'visible') items = items.filter((v) => v.isVisible)
     if (filters.visibility === 'hidden') items = items.filter((v) => !v.isVisible)
-    items.sort((a, b) => a.title.localeCompare(b.title))
+    items = sortListingItems(items, { by: filters.sortBy || 'title', dir: filters.sortDir || 'asc' })
 
     const limit = filters.limit || 25
     const pageNum = filters.page || 1
@@ -895,6 +904,7 @@ export async function recordManualWebsiteSale(data: {
   productId: string
   quantity: number
   price: number
+  email?: string
 }): Promise<ManualSaleResult> {
   await requireAuth()
   const payload = await getPayloadClient()
@@ -905,6 +915,10 @@ export async function recordManualWebsiteSale(data: {
     if (!Number.isFinite(price) || price <= 0) {
       return { ok: false, message: 'Inserisci un prezzo di vendita valido' }
     }
+    const email = (data.email || '').trim()
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return { ok: false, message: 'Inserisci un\'email valida' }
+    }
     const prodRes = await payload.findByID({ overrideAccess: true,  collection: 'products', id: data.productId, draft: false })
     if (!prodRes) return { ok: false, message: 'Prodotto non trovato in inventario' }
     const stock = Number((prodRes as { quantity?: number }).quantity ?? 0)
@@ -913,11 +927,11 @@ export async function recordManualWebsiteSale(data: {
     }
 
     const transactionId = `WEB-MANUAL-${Date.now()}`
-    logAudit('sale.manual', { productId: data.productId, quantity: qty, channel: 'website', value: price * qty })
+    logAudit('sale.manual', { productId: data.productId, quantity: qty, channel: 'website', value: price * qty, hasEmail: Boolean(email) })
     await recordSale(payload, {
       transactionId,
       channel: 'website',
-      email: 'manual@darkcardcollection.com',
+      email: email || 'manual@darkcardcollection.com',
       items: [{ productId: Number(data.productId), quantity: qty, price }],
       value: price * qty,
       currency: 'EUR',

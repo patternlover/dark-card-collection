@@ -168,6 +168,73 @@ export function countFeaturedGroups(groups: ListingGroup[]): number {
   return groups.filter((g) => g.featured).length
 }
 
+export type SortDir = 'asc' | 'desc'
+
+export interface ListingSort {
+  by?: string
+  dir?: SortDir
+}
+
+function compareForSort(a: unknown, b: unknown): number {
+  const aNull = a === null || a === undefined
+  const bNull = b === null || b === undefined
+  if (aNull && bNull) return 0
+  if (aNull) return 1
+  if (bNull) return -1
+  if (typeof a === 'number' && typeof b === 'number') return a - b
+  return String(a).localeCompare(String(b))
+}
+
+function groupField(g: ListingGroup, field: string): unknown {
+  switch (field) {
+    case 'quantity':
+      return g.totalQuantity
+    case 'sold':
+      return g.totalSold
+    case 'availability':
+      return g.availability
+    case 'price':
+      return g.price
+    case 'cost':
+      return g.cost
+    default:
+      return g.title
+  }
+}
+
+export function sortListingGroups(groups: ListingGroup[], sort: ListingSort = {}): ListingGroup[] {
+  const by = sort.by
+  if (!by) return groups
+  const sign = sort.dir === 'desc' ? -1 : 1
+  return [...groups].sort((a, b) => compareForSort(groupField(a, by), groupField(b, by)) * sign)
+}
+
+function itemField(v: ListingVariant, field: string): unknown {
+  switch (field) {
+    case 'quantity':
+      return v.quantity
+    case 'sold':
+      return v.soldQuantity
+    case 'availability':
+      return v.availability
+    case 'price':
+      return v.price
+    case 'cost':
+      return v.cost
+    case 'status':
+      return v.status
+    default:
+      return v.title
+  }
+}
+
+export function sortListingItems(items: ListingVariant[], sort: ListingSort = {}): ListingVariant[] {
+  const by = sort.by
+  if (!by) return items
+  const sign = sort.dir === 'desc' ? -1 : 1
+  return [...items].sort((a, b) => compareForSort(itemField(a, by), itemField(b, by)) * sign)
+}
+
 export function filterListingGroups(groups: ListingGroup[], filters: ListingFilters = {}): ListingGroup[] {
   const q = (filters.search || '').trim().toLowerCase()
   let out = groups
