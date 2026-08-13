@@ -164,6 +164,10 @@ export function flattenListingItems(groups: ListingGroup[]): ListingVariant[] {
   return groups.flatMap((g) => g.variants)
 }
 
+export function countFeaturedGroups(groups: ListingGroup[]): number {
+  return groups.filter((g) => g.featured).length
+}
+
 export function filterListingGroups(groups: ListingGroup[], filters: ListingFilters = {}): ListingGroup[] {
   const q = (filters.search || '').trim().toLowerCase()
   let out = groups

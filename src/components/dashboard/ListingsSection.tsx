@@ -108,6 +108,7 @@ function variantAttrLabel(v: ListingVariant): string {
 export function ListingsSection() {
   const [view, setView] = useState<View>('groups')
   const [groups, setGroups] = useState<ListingGroup[]>([])
+  const [featuredCount, setFeaturedCount] = useState(0)
   const [items, setItems] = useState<ListingVariant[]>([])
   const [query, setQuery] = useState('')
   const [appliedQuery, setAppliedQuery] = useState('')
@@ -158,6 +159,7 @@ export function ListingsSection() {
             return
           }
           setGroups(res.groups)
+          setFeaturedCount(res.featuredCount)
           setTotal(res.total)
           setTotalPages(Math.max(1, res.totalPages))
         } else {
@@ -231,6 +233,7 @@ export function ListingsSection() {
         return
       }
       notify(target ? 'Gruppo visibile nello shop' : 'Gruppo nascosto dallo shop')
+      load()
     } catch {
       notify('Errore durante l\'aggiornamento del gruppo', 'error')
       load()
@@ -251,6 +254,7 @@ export function ListingsSection() {
         return
       }
       notify(target ? 'Gruppo in vetrina' : 'Gruppo rimosso dalla vetrina')
+      load()
     } catch {
       notify('Errore durante l\'aggiornamento del gruppo', 'error')
       load()
@@ -271,6 +275,7 @@ export function ListingsSection() {
         return
       }
       notify(target ? 'Prodotto visibile nello shop' : 'Prodotto nascosto dallo shop')
+      load()
     } catch {
       notify('Errore durante l\'aggiornamento del prodotto', 'error')
       load()
@@ -339,7 +344,7 @@ export function ListingsSection() {
         title="Listino"
         description={
           view === 'groups'
-            ? `${total} gruppi (per nome prodotto) · prezzo, costo medio, quantità, disponibilità e vendite`
+            ? `${total} gruppi (per nome prodotto) · In evidenza ${featuredCount}/4 · prezzo, costo medio, quantità e disponibilità`
             : `${total} prodotti singoli · dettaglio per item, stato e vendite`
         }
       >
@@ -449,8 +454,14 @@ export function ListingsSection() {
                         variant="secondary"
                         size="sm"
                         onClick={() => toggleFeatured(g)}
-                        disabled={busy}
-                        title={g.featured ? 'Togli dalla vetrina' : 'Metti in vetrina (bestseller)'}
+                        disabled={busy || (!g.featured && featuredCount >= 4)}
+                        title={
+                          !g.featured && featuredCount >= 4
+                            ? 'Slot in evidenza pieni (4/4)'
+                            : g.featured
+                              ? 'Togli dalla vetrina'
+                              : 'Metti in vetrina (bestseller)'
+                        }
                         className={iconButtonClass()}
                       >
                         <Star className={`h-3.5 w-3.5 ${g.featured ? 'fill-[var(--ui-accent)] text-[var(--ui-accent)]' : ''}`} />

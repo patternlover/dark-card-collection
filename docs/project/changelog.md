@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino a 2 viste: Gruppi prodotto / Prodotti singoli**.
+Ultima sessione: **Fix "Mostra" nel Listino + homepage "In evidenza" guidata dalla stella (4 slot)**.
+
+---
+
+## Sessione recente 20 — Fix "Mostra" prodotto + homepage In evidenza = featured (4 slot)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-listings-fix-show-featured.md`). Su `main`.
+
+- **Homepage "Prodotti in Evidenza"**: ora filtra `featured: true` (prima mostrava i 4 più recenti, ignorando la stella) con `slice(0, 4)`; **fallback** ai 4 più recenti se nessun gruppo è in evidenza.
+- **Listino vista Gruppi**: contatore **"In evidenza n/4"** e **stella disabilitata** quando i 4 slot sono pieni (tooltip "Slot in evidenza pieni (4/4)"). `searchListings` espone `featuredCount`.
+- **Hardening toggle visibilità**: `updateGroup`/`toggleVariantVisibility` restituiscono `ok:false` chiaro se 0 documenti aggiornati; dopo ogni toggle riuscito il Listino fa `load()` (stato autoritativo, niente icone stantie).
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 63/63 ✓ · `next build` ✓ · **Playwright su bundle prod 40/40** ✓ (nota: i server E2E vanno lanciati con `--max-old-space-size` per evitare OOM/flakiness).
 
 ---
 

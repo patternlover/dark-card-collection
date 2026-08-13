@@ -121,6 +121,58 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     await expect(group).toContainText('1')
   })
 
+  test('products view: hiding then showing a product persists and shows on the shop', async ({ page }) => {
+    const name = title('Mostra Di Nuovo')
+    await createProduct(page, name, '2', '40')
+
+    await page.goto('/dashboard/listings')
+    await page.getByRole('button', { name: 'Prodotti' }).click()
+    const row = page.locator('tr', { hasText: name }).first()
+
+    await row.locator('button[title="Nascondi singolo prodotto"]').click()
+    await expect(page.getByText('Prodotto nascosto dallo shop')).toBeVisible()
+    await expect(row.locator('button[title="Mostra singolo prodotto"]')).toBeVisible()
+
+    await row.locator('button[title="Mostra singolo prodotto"]').click()
+    await expect(page.getByText('Prodotto visibile nello shop')).toBeVisible()
+    await expect(row.locator('button[title="Nascondi singolo prodotto"]')).toBeVisible()
+
+    await page.reload()
+    await page.getByRole('button', { name: 'Prodotti' }).click()
+    await expect(page.locator('tr', { hasText: name }).first().locator('button[title="Nascondi singolo prodotto"]')).toBeVisible()
+
+    await page.goto('/shop')
+    await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
+  })
+
+  test('featured slots: counter n/4 and star locked when full, homepage shows featured', async ({ page }) => {
+    const names: string[] = []
+    for (let i = 1; i <= 5; i++) {
+      const n = title(`Evidenza ${i}`)
+      names.push(n)
+      await createProduct(page, n, '1', '10')
+    }
+
+    await page.goto('/dashboard/listings')
+    const rowFor = (n: string) => page.locator('tr', { hasText: n }).first()
+
+    for (let i = 0; i < 4; i++) {
+      await rowFor(names[i]).locator('button[title="Metti in vetrina (bestseller)"]').click()
+    }
+    await expect(page.getByText(/In evidenza 4\/4/)).toBeVisible()
+
+    const star5 = rowFor(names[4]).locator('button[title="Slot in evidenza pieni (4/4)"]')
+    await expect(star5).toBeVisible()
+    await expect(star5).toBeDisabled()
+
+    await rowFor(names[0]).locator('button[title="Togli dalla vetrina"]').click()
+    await expect(rowFor(names[4]).locator('button[title="Metti in vetrina (bestseller)"]')).toBeVisible()
+
+    await page.goto('/')
+    await expect(page.getByText(names[1], { exact: true }).first()).toBeVisible()
+    await expect(page.getByText(names[0], { exact: true })).toHaveCount(0)
+  })
+
   test('live search without a Cerca button filters from the database', async ({ page }) => {
     const first = title('Zanzara')
     const second = title('Topo')

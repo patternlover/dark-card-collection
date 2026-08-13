@@ -8,15 +8,25 @@ export async function FeaturedProducts() {
 
   try {
     const payload = await getPayloadClient()
-    const result = await payload.find({ overrideAccess: true, 
+    const baseWhere: any = { status: { in: ['listed', 'hold', 'sold'] } }
+    const featuredResult = await payload.find({
+      overrideAccess: true,
       collection: 'products',
-      where: {
-        AND: [{ status: { in: ['listed', 'hold', 'sold'] } }, { is_visible: { equals: true } }],
-      },
+      where: { AND: [{ ...baseWhere }, { is_visible: { equals: true } }, { featured: { equals: true } }] },
       limit: 100,
       sort: '-createdAt',
     })
-    products = result.docs
+    products = featuredResult.docs
+    if (products.length === 0) {
+      const fallback = await payload.find({
+        overrideAccess: true,
+        collection: 'products',
+        where: { AND: [{ ...baseWhere }, { is_visible: { equals: true } }] },
+        limit: 100,
+        sort: '-createdAt',
+      })
+      products = fallback.docs
+    }
   } catch {
     // DB might not be connected during build
   }

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import type { ProductDTO } from '@/app/dashboard/actions'
 import {
   buildListingGroups,
+  countFeaturedGroups,
   filterListingGroups,
   deriveAvailability,
   flattenListingItems,
@@ -186,6 +187,21 @@ describe('flattenListingItems', () => {
     const listed = items.find((i) => i.id === '2')!
     expect(listed.status).toBe('listed')
     expect(listed.availability).toBe('in_stock')
+  })
+})
+
+describe('countFeaturedGroups', () => {
+  it('counts groups with at least one featured variant', () => {
+    const groups = buildListingGroups(
+      [
+        product({ id: '1', title: 'Box A', featured: true }),
+        product({ id: '2', title: 'Box B', featured: false }),
+        product({ id: '3', title: 'Box C', featured: false }),
+        product({ id: '4', title: 'Box C', featured: true }),
+      ],
+      [],
+    )
+    expect(countFeaturedGroups(groups)).toBe(2)
   })
 })
 

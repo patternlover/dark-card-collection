@@ -7,7 +7,13 @@ import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
 import { recordSale, type SalesChannel } from '@/lib/record-sale'
 import { applyPurchaseDeletion, applyStockDelta, productIdFrom, purchaseStockDelta } from '@/lib/inventory'
-import { buildListingGroups, filterListingGroups, flattenListingItems, type ListingSale } from '@/lib/listings'
+import {
+  buildListingGroups,
+  countFeaturedGroups,
+  filterListingGroups,
+  flattenListingItems,
+  type ListingSale,
+} from '@/lib/listings'
 import { logAudit } from '@/lib/audit'
 import type { Payload } from 'payload'
 
@@ -667,6 +673,7 @@ export interface ListingSearchFilters {
 
 export interface ListingSearchResult {
   groups: ReturnType<typeof buildListingGroups>
+  featuredCount: number
   total: number
   totalPages: number
   error?: string
@@ -734,11 +741,12 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
   await requireAuth()
   const payload = await getPayloadClient()
 
-  const empty = { groups: [], total: 0, totalPages: 1 }
+  const empty = { groups: [], featuredCount: 0, total: 0, totalPages: 1 }
 
   try {
     const { products, sales } = await fetchListingDataset(payload, filters.search)
     const groups = buildListingGroups(products, sales)
+    const featuredCount = countFeaturedGroups(groups)
     const filtered = filterListingGroups(groups, filters)
     const limit = filters.limit || 25
     const pageNum = filters.page || 1
@@ -747,6 +755,7 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
 
     return {
       groups: slice,
+      featuredCount,
       total: filtered.length,
       totalPages,
     }
@@ -827,6 +836,9 @@ export async function updateGroup(
       depth: 1,
       draft: false,
     })
+    if (res.docs.length === 0) {
+      return { ok: false, message: 'Gruppo non trovato: nessun prodotto con questo nome' }
+    }
     for (const doc of res.docs) {
       const data: Record<string, any> = {}
       if (patch.isVisible !== undefined) data.is_visible = patch.isVisible
@@ -857,6 +869,10 @@ export async function toggleVariantVisibility(id: string, isVisible: boolean): P
   const payload = await getPayloadClient()
 
   try {
+    const existing = await payload.findByID({ overrideAccess: true,  collection: 'products', id, draft: false })
+    if (!existing) {
+      return { ok: false, message: 'Prodotto non trovato' }
+    }
     await payload.update({
       overrideAccess: true,
       collection: 'products',

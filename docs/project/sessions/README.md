@@ -25,3 +25,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-12 — Listino: filtri ridotti + tabella piatta](2026-08-12-listings-simplify.md)
 - [2026-08-12 — Listino: vista iniziale compatta + layout filtri](2026-08-12-listings-compact-view.md)
 - [2026-08-12 — Listino a 2 viste: Gruppi / Prodotti + vendita manuale](2026-08-12-listings-two-views.md)
+- [2026-08-12 — Fix Mostra + homepage In evidenza (featured 4 slot)](2026-08-12-listings-fix-show-featured.md)
