@@ -142,7 +142,7 @@ export function DashboardShell({ children, sqlEnabled }: { children: React.React
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
-        <main className="mx-auto max-w-6xl px-4 py-8 lg:px-8">{children}</main>
+        <main className="mx-auto max-w-[1440px] px-4 py-8 lg:px-8">{children}</main>
       </div>
     </div>
   )

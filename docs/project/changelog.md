@@ -1,7 +1,16 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino: nome su una riga + stella in fondo riga + header uniforme**.
+Ultima sessione: **Dashboard più larga (1440px) — niente scroll orizzontale**.
+
+---
+
+## Sessione recente 23 — Dashboard più larga (contenuto fino a 1440px)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-13-dashboard-wider.md`). Su `main`.
+
+- `DashboardShell`: `<main>` da `max-w-6xl` (1152px) a **`max-w-[1440px]`** → le tabelle del Listino (8 colonne) e delle altre sezioni stanno senza slider orizzontale sui desktop tipici; `overflow-x-auto` resta come fallback per schermi piccoli.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 75/75 ✓ · `next build` ✓ · E2E bundle prod Listino+Magazzino 15/15 ✓.
 
 ---
 
