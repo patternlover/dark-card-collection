@@ -1,7 +1,31 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino: tabella stile /inventory, sorting per header, email cliente**.
+Ultima sessione: **Rivisitazione modali dashboard completa + merge con main + E2E su bundle prod**.
+
+---
+
+## Sessione recente 22 — Modali dashboard completi, merge con main, E2E stabile su prod
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-12-dashboard-modals-redesign.md`). Branch: `feat/dashboard-modals-redesign`.
+
+### Rivisitazione modali (tutti i moduli)
+- **Ordini → Vendita Esterna**: select Prodotto raggruppato per nome, varianti in optgroup con attributo discriminante.
+- **Lotti → Registra/Modifica Lotto**: sezioni chiare (`ui/ModalSection`), Luogo/Fornitore a ricerca (`datalist` con `source_name` esistenti, ricaricati a ogni apertura), errori nel modale.
+- **Magazzino**: rimosso il bottone "Nuovo Prodotto" (i prodotti arrivano dai Lotti).
+- **Listino → Modifica Prodotto**: 6 sezioni, rimossi Costo medio/Disponibilità (auto-calcolati), errori nel modale.
+- **Categorie/Collezioni**: invariati per decisione utente.
+- **Bug reali corretti**: hook `Products.beforeChange` (ripristino `sold→listed`), cast a `Number` di categoria/collezione nel flusso lotto, race toggle Listino, Fragment key nelle tabelle.
+
+### Merge con main
+- Rebase del branch su `origin/main` (main aveva avanzato con Listino 2 viste, sorting, featured, vendita manuale). `ListingsSection.tsx` prende la versione di main (il suo hardening toggle supera il vecchio guard del branch).
+
+### Suite E2E su bundle di produzione
+- La flakiness (toggle visibilità, fetch dati) era un artefatto del **dev server** (`pnpm dev` cadeva richieste sotto carico). Ora il webServer E2E usa **`next start`** (build: `next build` diretto; `payload migrate` non eseguito perché si blocca su DB pushato non migrato) + `retries: 1`.
+- Nuovo spec `tests-e2e/modals-flows.spec.ts` (7 test) sui flussi modali tra pagine + helper `createProductViaLot`.
+
+### Verifica
+`pnpm lint` ✓ · `pnpm test` 75/75 ✓ · **Full E2E su bundle prod 47/47 ✓**.
 
 ---
 

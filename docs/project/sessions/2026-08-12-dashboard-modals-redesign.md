@@ -88,6 +88,17 @@ Rivisitare i modali di inserimento/modifica dati delle sezioni del `/dashboard`,
 - Verifica: `pnpm lint` ✓ · `pnpm test` 66/66 ✓ · **Full E2E 42/42 ✓**.
 
 ### Step successivi
-- [ ] Categorie / Collezioni (modali inline)
-- [ ] Adottare `ModalSection` negli altri modali per coerenza
+- [x] Categorie / Collezioni: **invariati per decisione utente** (funzionamento verificato da `catalog.spec.ts`)
+- [x] **Merge con main** (sotto)
+
+### Step 5 — Merge con main + suite su bundle di produzione
+- `main` era avanzato (sessioni 18-21: Listino 2 viste, sorting, featured, vendita manuale con email). **Rebase** del branch su `origin/main` (9 commit rigiocati sopra `3bbc0ca`). Conflitti risolti:
+  - docs (`PENDING.md`/`changelog.md`): tenuta la versione di main (le sessioni di main sono le più recenti; l'entry modali verrà riscritta a fine sessione).
+  - `ListingsSection.tsx`: **presa la versione di main** (riscrittura 2 viste + sorting + hardening toggle con `load()` autoritativo della sessione 20/21) — il mio guard `loadSeq` era per la vecchia struttura ed è superato. La suite valida.
+  - `actions.ts`, `listings-groups.spec.ts`: auto-merge senza conflitti.
+- **Flakiness E2E diagnosticata**: le scritture (toggle visibilità, fetch source names) fallivano sporadicamente sotto carico sul **dev server** (`pnpm dev` → richieste "aborted"). Main aveva già validato su **bundle di produzione**. Fix: `playwright.config.ts` → webServer `pnpm exec next start` (build: `next build` diretto — nota: `payload migrate` si blocca su dcc_test perché la schema è pushato e non migrato; per l'E2E non serve) + `retries: 1` come rete di sicurezza.
+- **Verifica finale**: `pnpm lint` ✓ · `pnpm test` 75/75 ✓ · **Full E2E su bundle prod 47/47 ✓** (4.2 min).
+
+### Stato finale rivisitazione modali
+Tutti i modali rivisitati: **Ordini** (Vendita Esterna con select raggruppato) · **Lotti** (Registra/Modifica Lotto a sezioni, combobox Luogo/Fornitore, errori nel modale) · **Magazzino** (bottone Nuovo Prodotto rimosso) · **Listino** (Modifica Prodotto a 6 sezioni, via campi auto-calcolati, errori nel modale). **Categorie/Collezioni** invariati per scelta utente. Bug reali trovati e corretti: hook `Products.beforeChange` (relist), cast id categoria/collezione, race toggle, Fragment key, refresh source names a ogni apertura.
 

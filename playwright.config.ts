@@ -20,6 +20,7 @@ export default defineConfig({
   expect: { timeout: 20_000 },
   fullyParallel: false,
   workers: 1,
+  retries: 1,
   reporter: [['list']],
   use: {
     baseURL: 'http://localhost:3100',
@@ -28,7 +29,7 @@ export default defineConfig({
     navigationTimeout: 90_000,
   },
   webServer: {
-    command: 'pnpm dev',
+    command: 'pnpm exec next start',
     url: 'http://localhost:3100',
     reuseExistingServer: false,
     timeout: 180_000,

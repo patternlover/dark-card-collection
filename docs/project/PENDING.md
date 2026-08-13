@@ -7,7 +7,7 @@
 > Stati: `open` · `in-progress` · `blocked (motivo)` · `waiting-user` (serve input utente) · `done (verifica)`.
 > Un task si chiude SOLO con verifica fatta (`pnpm lint`, `pnpm test`, build/E2E/CI dove applicabile).
 
-Ultimo aggiornamento: 2026-08-13 (sessione 21: Listino tabella /inventory + sorting header + email cliente; sessione 20: fix Mostra + homepage featured; sessione 19: Listino 2 viste; sessione 18: vista compatta; sessione 17: filtri ridotti; sessione 16: modali dashboard; sessione 15: Listino a gruppi; sessione 14: fix delete prodotto live).
+Ultimo aggiornamento: 2026-08-13 (sessione 22: modali dashboard completi + merge con main + E2E su bundle prod; sessione 21: Listino tabella /inventory + sorting header + email cliente; sessione 20: fix Mostra + homepage featured; sessione 19: Listino 2 viste; sessione 18: vista compatta; sessione 17: filtri ridotti; sessione 16: modali dashboard; sessione 15: Listino a gruppi; sessione 14: fix delete prodotto live).
 
 ---
 
@@ -17,7 +17,7 @@ Ultimo aggiornamento: 2026-08-13 (sessione 21: Listino tabella /inventory + sort
 |---|------|-------|
 | B1 (#22) | **Data-cleanup legacy**: DECISIONE UTENTE 2026-08-12 — l'utente eliminerà tutti i prodotti e li reinserirà col flusso normale (niente merge script). ⚠️ Ordine sicuro di delete: prima `purchases` (lotti) e `orders` che referenziano i prodotti, poi i prodotti (vincolo FK `orders_items.product_id`/`purchases_lines.product_id` NOT NULL). Da verificare dopo l'operazione: grouping, PDP, sitemap, drift-check | waiting-user (operazione manuale utente) |
 | B2 | **Server actions: niente throw** — Next 16 in produzione sostituisce il messaggio degli errori lanciati dalle server action col testo minificato `Minified React error #441` (verificato). `deleteProduct` è migrato al pattern risultato-strutturato; restano da migrare le altre: validazioni `createProduct`/`updateProduct`/`createPurchase`/`updatePurchase`/`updateOrderStatus`/`createCategory`/`updateCategory`/`createCollection`/`updateCollection`/`recordExternalSale` e `requireAuth` (messaggio `Unauthorized`). Pattern: ritornare `{ ok, message }` e consumarlo nel componente | open |
-| M1 | **Rivisitazione modali dashboard** (branch `feat/dashboard-modals-redesign`, guida utente step by step, dettagli in `docs/project/sessions/2026-08-12-dashboard-modals-redesign.md`): step 1 Vendita Esterna **done** (select raggruppato per `title`, `src/lib/sale-options.ts`); step 2 **done** (Magazzino senza "Nuovo Prodotto"; Lotti con Luogo/Fornitore a ricerca `datalist`, errori nel modale, sezioni via `ui/ModalSection.tsx`); rimanenti: Listino → Modifica Prodotto · Categorie/Collezioni · adottare `ModalSection` negli altri modali | in-progress |
+| M1 | **Rivisitazione modali dashboard** — **done (verifica)**: tutti i modali rivisitati (Ordini Vendita Esterna · Lotti Registra/Modifica · Magazzino senza Nuovo Prodotto · Listino Modifica Prodotto; Categorie/Collezioni invariati per decisione utente); bug reali corretti (hook `Products.beforeChange`, cast id categoria/collezione, race toggle, Fragment key); branch `feat/dashboard-modals-redesign` riallineato a `main` (rebase) e suite E2E su bundle prod 47/47 ✓ (dettagli in `docs/project/sessions/2026-08-12-dashboard-modals-redesign.md`). Resta: merge finale su `main` + push + CI + deploy | done (in attesa merge finale) |
 
 ## 2. In attesa di input utente (`waiting-user`)
 
