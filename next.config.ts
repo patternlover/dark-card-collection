@@ -43,6 +43,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/shop/collections', destination: '/shop/espansioni', permanent: true },
       { source: '/shop/collections/:slug', destination: '/shop/espansioni/:slug', permanent: true },
+      { source: '/dashboard/listings', destination: '/dashboard/listati', permanent: true },
     ]
   },
   async headers() {

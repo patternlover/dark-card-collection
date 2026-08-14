@@ -1,12 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import type {
-  CategoryOption,
-  EspansioneOption,
-  ProductDTO,
-  UpdateProductPatch,
-} from '@/app/dashboard/actions'
+import type { ProductDTO, UpdateProductPatch } from '@/app/dashboard/actions'
 import { updateProduct } from '@/app/dashboard/actions'
 import { Button, Field, Input, Modal, Select, Textarea } from './ui'
 
@@ -56,21 +51,6 @@ const RARITY_OPTIONS = [
   { value: 'secret-rare', label: 'Secret Rare' },
 ]
 
-const PRODUCT_SUBCATEGORIES = [
-  { value: 'spc', label: 'SPC' },
-  { value: 'box', label: 'BOX' },
-  { value: 'bundle', label: 'BUNDLE' },
-  { value: 'etb', label: 'ETB' },
-  { value: 'tin', label: 'TIN' },
-  { value: 'other', label: 'ALTRO' },
-]
-
-const CARD_SUBCATEGORIES = [
-  { value: 'single', label: 'SINGOLA' },
-  { value: 'slab', label: 'SLAB' },
-  { value: 'other', label: 'ALTRO' },
-]
-
 function AutoHint({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs text-[var(--ui-text-faint)]">
@@ -84,29 +64,21 @@ function AutoHint({ text }: { text: string }) {
 
 interface EditProductModalProps {
   product: ProductDTO
-  categories: CategoryOption[]
-  espansioni: EspansioneOption[]
   onClose: () => void
   onSaved: (saved: ProductDTO) => void
   onError: (msg: string) => void
 }
 
-export function EditProductModal({
-  product,
-  categories,
-  espansioni,
-  onClose,
-  onSaved,
-  onError,
-}: EditProductModalProps) {
+export function EditProductModal({ product, onClose, onSaved, onError }: EditProductModalProps) {
+  const isCard = product.itemCategory1 === 'card'
+  const isProduct = product.itemCategory1 === 'product'
+
   const [form, setForm] = useState({
     title: product.title || '',
     slug: product.slug || '',
-    itemGroupId: product.itemGroupId || '',
     description: product.description || '',
     price: product.price != null ? String(product.price) : '',
     salePrice: product.salePrice != null ? String(product.salePrice) : '',
-    costOfGoodsSold: product.costOfGoodsSold != null ? String(product.costOfGoodsSold) : '',
     status: product.status || 'listed',
     availability: product.availability || 'in_stock',
     isPreorder: product.isPreorder ?? false,
@@ -115,15 +87,10 @@ export function EditProductModal({
     productType: product.productType || '',
     googleProductCategory: product.googleProductCategory || '',
     language: product.language || 'italian',
-    category: product.category?.id ? String(product.category.id) : '',
-    expansion: product.expansion?.id ? String(product.expansion.id) : '',
     cardNumber: product.cardNumber || '',
     rarity: product.rarity || '',
-    quantity: product.quantity != null ? String(product.quantity) : '1',
     imageLink: product.imageLink || '',
-    itemCategory1: product.itemCategory1 || 'product',
-    itemCategory2: product.itemCategory2 || '',
-    itemCategory3: product.itemCategory3 || '',
+    itemGroupId: product.itemGroupId || '',
     showGoogle: Boolean(
       product.itemGroupId || product.productType || product.googleProductCategory,
     ),
@@ -132,24 +99,6 @@ export function EditProductModal({
 
   const handleChange = (field: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleItemCategory1 = (value: string) => {
-    setForm((prev) => {
-      const next = { ...prev, itemCategory1: value, itemCategory2: '' }
-      if (value === 'card') {
-        next.productType = ''
-        next.googleProductCategory = ''
-        next.isPreorder = false
-      } else {
-        next.grade = 'near-mint'
-        next.condition = 'new'
-        next.language = 'italian'
-        next.cardNumber = ''
-        next.rarity = ''
-      }
-      return next
-    })
   }
 
   const handleSave = async () => {
@@ -164,27 +113,17 @@ export function EditProductModal({
         salePrice: form.salePrice === '' ? null : Number(form.salePrice),
         status: form.status,
         availability: form.availability,
-        isPreorder: form.itemCategory1 === 'product' ? form.isPreorder : false,
-        grade: form.itemCategory1 === 'card' ? form.grade : 'near-mint',
-        condition: form.itemCategory1 === 'card' ? form.condition : 'new',
-        productType: form.showGoogle
-          ? form.itemCategory1 === 'product'
-            ? (form.productType.trim() || null)
-            : null
-          : null,
+        isPreorder: isProduct ? form.isPreorder : false,
+        grade: isCard ? form.grade : 'near-mint',
+        condition: isCard ? form.condition : 'new',
+        productType: form.showGoogle ? (form.productType.trim() || null) : null,
         googleProductCategory: form.showGoogle
           ? (form.googleProductCategory.trim() || null)
           : null,
-        language: form.itemCategory1 === 'card' ? form.language : 'italian',
-        category: form.category ? Number(form.category) : null,
-        expansion: form.expansion ? Number(form.expansion) : null,
-        cardNumber: form.itemCategory1 === 'card' ? (form.cardNumber.trim() || null) : null,
-        rarity: form.itemCategory1 === 'card' ? (form.rarity || null) : null,
-        quantity: Number(form.quantity) || 0,
+        language: isCard ? form.language : 'italian',
+        cardNumber: isCard ? (form.cardNumber.trim() || null) : null,
+        rarity: isCard ? (form.rarity || null) : null,
         imageLink: form.imageLink.trim() || null,
-        itemCategory1: form.itemCategory1,
-        itemCategory2: form.itemCategory2 || null,
-        itemCategory3: form.itemCategory3.trim() || null,
       }
       const saved = await updateProduct(product.id, patch)
       onSaved(saved)
@@ -196,9 +135,6 @@ export function EditProductModal({
   }
 
   const checkboxClass = 'h-4 w-4 accent-[var(--ui-accent)]'
-  const isCard = form.itemCategory1 === 'card'
-  const isProduct = form.itemCategory1 === 'product'
-  const subcategories = isCard ? CARD_SUBCATEGORIES : PRODUCT_SUBCATEGORIES
 
   return (
     <Modal
@@ -223,40 +159,6 @@ export function EditProductModal({
               type="text"
               value={form.title}
               onChange={(e) => handleChange('title', e.target.value)}
-            />
-          </Field>
-          <Field label="Tipo articolo" htmlFor="ep-item-category-1">
-            <Select
-              id="ep-item-category-1"
-              value={form.itemCategory1}
-              onChange={(e) => handleItemCategory1(e.target.value)}
-            >
-              <option value="product">Prodotto</option>
-              <option value="card">Carta</option>
-            </Select>
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Sottocategoria" htmlFor="ep-item-category-2">
-            <Select
-              id="ep-item-category-2"
-              value={form.itemCategory2}
-              onChange={(e) => handleChange('itemCategory2', e.target.value)}
-            >
-              <option value="">—</option>
-              {subcategories.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Livello 3 (opzionale)" htmlFor="ep-item-category-3">
-            <Input
-              id="ep-item-category-3"
-              type="text"
-              value={form.itemCategory3}
-              onChange={(e) => handleChange('itemCategory3', e.target.value)}
-              placeholder="dettaglio libero"
             />
           </Field>
           <Field label="Slug" htmlFor="ep-slug">
@@ -290,7 +192,7 @@ export function EditProductModal({
           </Field>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <Field label="Prezzo Vendita (€)" htmlFor="ep-price">
             <Input
               id="ep-price"
@@ -301,10 +203,6 @@ export function EditProductModal({
               onChange={(e) => handleChange('price', e.target.value)}
             />
           </Field>
-          <Field label="Costo Acquisto (€)" htmlFor="ep-cogs">
-            <Input id="ep-cogs" type="number" step="0.01" min="0" value={form.costOfGoodsSold} disabled />
-            <AutoHint text="calcolato dai lotti (media ponderata)" />
-          </Field>
           <Field label="Prezzo Barrato (€)" htmlFor="ep-sale-price">
             <Input
               id="ep-sale-price"
@@ -314,42 +212,6 @@ export function EditProductModal({
               value={form.salePrice}
               onChange={(e) => handleChange('salePrice', e.target.value)}
             />
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Quantità" htmlFor="ep-quantity">
-            <Input
-              id="ep-quantity"
-              type="number"
-              min="0"
-              value={form.quantity}
-              onChange={(e) => handleChange('quantity', e.target.value)}
-            />
-          </Field>
-          <Field label="Categoria" htmlFor="ep-category">
-            <Select
-              id="ep-category"
-              value={form.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-            >
-              <option value="">—</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Espansione" htmlFor="ep-expansion">
-            <Select
-              id="ep-expansion"
-              value={form.expansion}
-              onChange={(e) => handleChange('expansion', e.target.value)}
-            >
-              <option value="">—</option>
-              {espansioni.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </Select>
           </Field>
         </div>
 

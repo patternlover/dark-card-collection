@@ -3,7 +3,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import {
-  getCategories,
   getEspansioni,
   getPurchases,
   getPurchaseSourceNames,
@@ -11,7 +10,6 @@ import {
   deletePurchase,
   updatePurchase,
   searchProducts,
-  type CategoryOption,
   type EspansioneOption,
   type PurchaseDTO,
 } from '@/app/dashboard/actions'
@@ -63,7 +61,6 @@ interface LineForm {
   newProduct: boolean
   newProductTitle: string
   newProductPrice: string
-  newProductCategory: string
   newProductExpansion: string
   newProductImageLink: string
   newProductItemCategory1: string
@@ -78,7 +75,6 @@ function emptyLine(): LineForm {
     newProduct: false,
     newProductTitle: '',
     newProductPrice: '',
-    newProductCategory: '',
     newProductExpansion: '',
     newProductImageLink: '',
     newProductItemCategory1: 'product',
@@ -96,7 +92,6 @@ export function PurchasesSection() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
-  const [categories, setCategories] = useState<CategoryOption[]>([])
   const [espansioni, setEspansioni] = useState<EspansioneOption[]>([])
   const [sourceOptions, setSourceOptions] = useState<string[]>([])
   const [productOptions, setProductOptions] = useState<ProductOption[]>([])
@@ -164,7 +159,6 @@ export function PurchasesSection() {
   }, [])
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => {})
     getEspansioni().then(setEspansioni).catch(() => {})
     getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     refreshProductOptions()
@@ -221,8 +215,7 @@ export function PurchasesSection() {
             newProduct: false,
             newProductTitle: '',
             newProductPrice: '',
-            newProductCategory: '',
-            newProductExpansion: '',
+                    newProductExpansion: '',
             newProductItemCategory1: 'product',
             newProductItemCategory2: '',
             newProductImageLink: '',
@@ -256,7 +249,6 @@ export function PurchasesSection() {
       productId: l.newProduct ? null : l.productId || null,
       newProductTitle: l.newProduct ? l.newProductTitle.trim() || null : null,
       newProductPrice: l.newProduct && l.newProductPrice ? Number(l.newProductPrice) : null,
-      newProductCategory: l.newProduct ? l.newProductCategory || null : null,
       newProductExpansion: l.newProduct ? l.newProductExpansion || null : null,
       newProductImageLink: l.newProduct ? l.newProductImageLink.trim() || null : null,
       newProductItemCategory1: l.newProduct ? l.newProductItemCategory1 || 'product' : undefined,
@@ -610,15 +602,6 @@ export function PurchasesSection() {
                               placeholder="Prezzo vendita (€)"
                             />
                             <Select
-                              value={line.newProductCategory}
-                              onChange={(e) => updateLine(index, { newProductCategory: e.target.value })}
-                            >
-                              <option value="">— Categoria —</option>
-                              {categories.map((c) => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                              ))}
-                            </Select>
-                            <Select
                               value={line.newProductExpansion}
                               onChange={(e) => updateLine(index, { newProductExpansion: e.target.value })}
                             >
@@ -636,28 +619,28 @@ export function PurchasesSection() {
                                 })
                               }
                             >
-                              <option value="product">Tipo: Prodotto</option>
-                              <option value="card">Tipo: Carta</option>
+                              <option value="product">Macro: Prodotto</option>
+                              <option value="card">Macro: Carta</option>
                             </Select>
                             <Select
                               value={line.newProductItemCategory2}
                               onChange={(e) => updateLine(index, { newProductItemCategory2: e.target.value })}
                             >
-                              <option value="">— Sottocategoria —</option>
+                              <option value="">— Micro prodotto —</option>
                               {line.newProductItemCategory1 === 'card' ? (
                                 <>
-                                  <option value="single">SINGOLA</option>
-                                  <option value="slab">SLAB</option>
-                                  <option value="other">ALTRO</option>
+                                  <option value="single">Singola</option>
+                                  <option value="slab">Slab</option>
+                                  <option value="other">Altro</option>
                                 </>
                               ) : (
                                 <>
-                                  <option value="spc">SPC</option>
-                                  <option value="box">BOX</option>
-                                  <option value="bundle">BUNDLE</option>
-                                  <option value="etb">ETB</option>
-                                  <option value="tin">TIN</option>
-                                  <option value="other">ALTRO</option>
+                                  <option value="spc">Spc</option>
+                                  <option value="box">Box</option>
+                                  <option value="bundle">Bundle</option>
+                                  <option value="etb">Etb</option>
+                                  <option value="tin">Tin</option>
+                                  <option value="other">Altro</option>
                                 </>
                               )}
                             </Select>

@@ -13,7 +13,7 @@ export const LANGUAGE_OPTIONS = [
 interface FilterCounts {
   cond: Record<string, number>
   lang: Record<string, number>
-  cat: Record<string, number>
+  micro: Record<string, number>
   col: Record<string, number>
 }
 
@@ -26,16 +26,15 @@ function addToSet(map: Map<string, Set<string>>, key: string | undefined | null,
 export function computeFilterCounts(products: any[]): FilterCounts {
   const cond = new Map<string, Set<string>>()
   const lang = new Map<string, Set<string>>()
-  const cat = new Map<string, Set<string>>()
+  const micro = new Map<string, Set<string>>()
   const col = new Map<string, Set<string>>()
 
   for (const p of products) {
     const title = p.title || 'Untitled'
     addToSet(cond, p.grade, title)
     addToSet(lang, p.language, title)
-    const cid = p.category?.id
-    if (cid != null) addToSet(cat, String(cid), title)
-    const colid = p.collection?.id
+    if (p.item_category_3) addToSet(micro, p.item_category_3, title)
+    const colid = p.item_category_2?.id
     if (colid != null) addToSet(col, String(colid), title)
   }
 
@@ -45,7 +44,7 @@ export function computeFilterCounts(products: any[]): FilterCounts {
   return {
     cond: toCounts(cond),
     lang: toCounts(lang),
-    cat: toCounts(cat),
+    micro: toCounts(micro),
     col: toCounts(col),
   }
 }

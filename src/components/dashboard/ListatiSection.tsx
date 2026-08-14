@@ -14,16 +14,12 @@ import {
   Star,
 } from 'lucide-react'
 import {
-  getCategories,
-  getEspansioni,
   getProductById,
   recordManualWebsiteSale,
   searchListingProducts,
   searchListings,
   toggleVariantVisibility as toggleVariantVisibilityAction,
   updateGroup,
-  type CategoryOption,
-  type EspansioneOption,
   type ProductDTO,
 } from '@/app/dashboard/actions'
 import type { ListingGroup, ListingVariant, SortDir } from '@/lib/listings'
@@ -134,7 +130,7 @@ function variantAttrLabel(v: ListingVariant): string {
   return parts.join(' · ')
 }
 
-export function ListingsSection() {
+export function ListatiSection() {
   const [view, setView] = useState<View>('groups')
   const [groups, setGroups] = useState<ListingGroup[]>([])
   const [featuredCount, setFeaturedCount] = useState(0)
@@ -146,8 +142,6 @@ export function ListingsSection() {
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
-  const [categories, setCategories] = useState<CategoryOption[]>([])
-  const [espansioni, setEspansioni] = useState<EspansioneOption[]>([])
   const [editing, setEditing] = useState<ProductDTO | null>(null)
   const [selling, setSelling] = useState<ListingVariant | null>(null)
   const [saleQty, setSaleQty] = useState('1')
@@ -155,10 +149,7 @@ export function ListingsSection() {
   const [saleEmail, setSaleEmail] = useState('')
   const [busy, setBusy] = useState(false)
 
-  useEffect(() => {
-    getCategories().then(setCategories).catch(() => {})
-    getEspansioni().then(setEspansioni).catch(() => {})
-  }, [])
+
 
   const load = useCallback(
     async (opts: { page?: number } = {}) => {
@@ -196,7 +187,7 @@ export function ListingsSection() {
           setTotalPages(Math.max(1, res.totalPages))
         }
       } catch {
-        setMessage({ text: 'Errore nel caricamento del listino', type: 'error' })
+        setMessage({ text: 'Errore nel caricamento dei listati', type: 'error' })
       } finally {
         setLoading(false)
       }
@@ -373,7 +364,7 @@ export function ListingsSection() {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Listino"
+        title="Listati"
         description={
           view === 'groups'
             ? `${total} gruppi (per nome prodotto) · In evidenza ${featuredCount}/4 · prezzo, costo medio, quantità e disponibilità`
@@ -396,7 +387,7 @@ export function ListingsSection() {
         <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
       ) : view === 'groups' ? (
         groups.length === 0 ? (
-          <p className="text-sm text-[var(--ui-text-muted)]">Nessun gruppo in listino</p>
+          <p className="text-sm text-[var(--ui-text-muted)]">Nessun gruppo nei listati</p>
         ) : (
           <Table>
             <THead>
@@ -471,7 +462,7 @@ export function ListingsSection() {
           </Table>
         )
       ) : items.length === 0 ? (
-        <p className="text-sm text-[var(--ui-text-muted)]">Nessun prodotto in listino</p>
+        <p className="text-sm text-[var(--ui-text-muted)]">Nessun prodotto nei listati</p>
       ) : (
         <Table>
           <THead>
@@ -572,8 +563,6 @@ export function ListingsSection() {
       {editing ? (
         <EditProductModal
           product={editing}
-          categories={categories}
-          espansioni={espansioni}
           onClose={() => setEditing(null)}
           onSaved={onSaved}
           onError={(msg) => notify(msg, 'error')}

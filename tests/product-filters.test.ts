@@ -4,7 +4,7 @@ import { computeFilterCounts } from '@/lib/product-filters'
 const base = {
   status: 'listed',
   is_visible: true,
-  category: { id: 1, name: 'Booster Box' },
+  item_category_3: 'box',
   collection: { id: 10, name: 'Prima Serie' },
   slug: 'slug',
 }
@@ -30,14 +30,14 @@ describe('computeFilterCounts', () => {
     expect(counts.cond['near-mint']).toBe(1)
   })
 
-  it('counts categories and collections per unique title', () => {
+  it('counts micro prodotti and espansioni per unique title', () => {
     const counts = computeFilterCounts([
-      { ...base, title: 'Box', category: { id: 1, name: 'Booster Box' }, collection: { id: 10, name: 'Prima Serie' } },
-      { ...base, title: 'Box', category: { id: 1, name: 'Booster Box' }, collection: { id: 10, name: 'Prima Serie' } },
-      { ...base, title: 'ETB', category: { id: 2, name: 'ETB' }, collection: { id: 10, name: 'Prima Serie' } },
+      { ...base, title: 'Box', item_category_3: 'box', item_category_2: { id: 10, name: 'Prima Serie' } },
+      { ...base, title: 'Box', item_category_3: 'box', item_category_2: { id: 10, name: 'Prima Serie' } },
+      { ...base, title: 'ETB', item_category_3: 'etb', item_category_2: { id: 10, name: 'Prima Serie' } },
     ])
-    expect(counts.cat['1']).toBe(1)
-    expect(counts.cat['2']).toBe(1)
+    expect(counts.micro['box']).toBe(1)
+    expect(counts.micro['etb']).toBe(1)
     expect(counts.col['10']).toBe(2)
   })
 

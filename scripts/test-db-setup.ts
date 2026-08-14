@@ -18,15 +18,11 @@ async function main() {
 
   console.log('Resetting test collections...')
   // ordine per rispettare le FK (prima i figli che referenziano i prodotti)
-  for (const slug of ['orders', 'messages', 'purchases', 'products', 'categories', 'espansioni'] as const) {
+  for (const slug of ['orders', 'messages', 'purchases', 'products', 'espansioni'] as const) {
     await clearCollection(payload, slug)
   }
 
   console.log('Seeding baseline...')
-  const category = await payload.create({ overrideAccess: true, 
-    collection: 'categories',
-    data: { name: 'Sealed', slug: 'sealed', description: 'Categoria di test' } as any,
-  })
   const collection = await payload.create({ overrideAccess: true, 
     collection: 'espansioni',
     data: { name: 'Test Set', slug: 'test-set', description: 'Collezione di test' } as any,
@@ -44,7 +40,6 @@ async function main() {
       grade: 'mint',
       condition: 'new',
       product_type: 'booster-box',
-      category: category.id,
       collection: collection.id,
     } as any,
   })

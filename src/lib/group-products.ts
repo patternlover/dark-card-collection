@@ -9,8 +9,7 @@ export interface ProductGroup {
   imageCard: string | null
   imagePdp: string | null
   variantCount: number
-  category: any
-  collection: any
+  itemCategory2: any
   slug: string
   itemCategory1: string
 }
@@ -65,8 +64,7 @@ export function groupProducts(products: any[]): ProductGroup[] {
       imageCard: imageInfo.cardUrl,
       imagePdp: imageInfo.pdpUrl,
       variantCount: sorted.length,
-      category: sorted[0]?.category || null,
-      collection: sorted[0]?.collection || null,
+      itemCategory2: sorted[0]?.item_category_2 || null,
       slug: sorted[0]?.slug || '',
       itemCategory1: sorted[0]?.item_category_1 || 'product',
     })

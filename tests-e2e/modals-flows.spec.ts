@@ -20,7 +20,6 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
       price: '99.90',
       cost: '30',
       sourceName: SRC,
-      category: 'Sealed',
       expansion: 'Test Set',
     })
 
@@ -31,7 +30,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await expect(row).toContainText('99,90')
     await expect(row.getByText('Disponibile', { exact: true })).toBeVisible()
 
-    await page.goto('/dashboard/listings')
+    await page.goto('/dashboard/listati')
     const lrow = page.locator('tr', { hasText: name }).first()
     await expect(lrow.getByText('In stock', { exact: true })).toBeVisible()
   })
@@ -93,7 +92,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await expect(row0).toContainText('0')
     await expect(row0.getByText('Venduto', { exact: true })).toBeVisible()
 
-    await page.goto('/dashboard/listings')
+    await page.goto('/dashboard/listati')
     const lrow0 = page.locator('tr', { hasText: name }).first()
     await expect(lrow0.getByText('Esaurito (OOS)', { exact: true })).toBeVisible()
 
@@ -112,20 +111,13 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await expect(row1).toContainText('1')
     await expect(row1.getByText('Disponibile', { exact: true })).toBeVisible()
 
-    await page.goto('/dashboard/listings')
+    await page.goto('/dashboard/listati')
     const lrow1 = page.locator('tr', { hasText: name }).first()
     await expect(lrow1.getByText('In stock', { exact: true })).toBeVisible()
   })
 
-  test('i modali Categoria ed Espansione creano voci che compaiono nel modale Lotto', async ({ page }) => {
-    const cat = `Flow Cat ${stamp}`
+  test('il modale Espansione crea voci che compaiono nel modale Lotto', async ({ page }) => {
     const col = `Flow Col ${stamp}`
-
-    await page.goto('/dashboard/categorie')
-    await page.getByRole('button', { name: 'Nuova Categoria' }).click()
-    await page.locator('#category-name').fill(cat)
-    await page.getByRole('button', { name: 'Salva', exact: true }).click()
-    await expect(page.getByText('Categoria creata')).toBeVisible()
 
     await page.goto('/dashboard/espansioni')
     await page.getByRole('button', { name: 'Nuova Espansione' }).click()
@@ -137,7 +129,6 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await page.getByRole('button', { name: 'Registra Lotto' }).click()
     const line = page.getByTestId('purchase-line').nth(0)
     await line.getByTestId('line-product').selectOption('__new__')
-    await expect(line.locator('select').nth(1).locator('option', { hasText: cat })).toHaveCount(1)
-    await expect(line.locator('select').nth(2).locator('option', { hasText: col })).toHaveCount(1)
+    await expect(line.locator('select').nth(1).locator('option', { hasText: col })).toHaveCount(1)
   })
 })

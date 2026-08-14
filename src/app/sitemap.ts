@@ -50,21 +50,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
     }
 
-    const categories = await payload.find({ overrideAccess: true, 
-      collection: 'categories',
-      limit: 500,
-      sort: 'name',
-    })
-    for (const cat of categories.docs) {
-      if (!cat.slug) continue
-      entries.push({
-        url: `${SITE_URL}/shop/categories/${cat.slug}`,
-        lastModified: new Date(cat.updatedAt || Date.now()),
-        changeFrequency: 'daily' as const,
-        priority: 0.8,
-      })
-    }
-
     let page = 1
     while (page <= 20) {
       const products = await payload.find({ overrideAccess: true, 

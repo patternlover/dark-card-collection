@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Gerarchia item_category_1/2/3 + tipo articolo nel lotto + restyle modali**.
+Ultima sessione: **Remap item_category_1/2/3 (Macro/Espansione/Micro) + via categories + Listati**.
+
+---
+
+## Sessione recente 28 — Remap item_category (Macro/Espansione/Micro), via categories, Listino→Listati
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-14-item-category-remap-listati.md`). Su `main`.
+
+- **Remap**: `item_category_1` = Macro prodotto · `item_category_2` = Espansione (relationship, ex `expansion`, colonna `item_category_2_id`) · `item_category_3` = Micro prodotto (ex sottocategoria; etichette non-caps `Spc/Box/…`). Migration idempotente con **migrazione dati** dalla collection `categories` → `item_category_3` (mapping per nome) e rimozione di `categories` (tabella, colonna, rels Payload, codice, storefront, filtro → "Micro prodotto").
+- **Listino → Listati**: etichette + route `/dashboard/listati` (redirect 308 da `/dashboard/listings`).
+- **Modale di modifica minimale**: via categoria 1/2/3, espansione, categoria, costo acquisto e quantità; resta tutto il resto (dettagli carta/prodotto, Google collassabile, slug Auto).
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 79/79 ✓ · `next build` ✓ · **Playwright bundle prod 52/52** ✓ · migration validata + drift-check NESSUNO.
 
 ---
 

@@ -25,8 +25,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     items: [
       { href: '/dashboard/purchases', label: 'Lotti', icon: Receipt },
       { href: '/dashboard/inventory', label: 'Magazzino', icon: Package },
-      { href: '/dashboard/listings', label: 'Listino', icon: Tags },
-      { href: '/dashboard/categorie', label: 'Categorie', icon: Tag },
+      { href: '/dashboard/listati', label: 'Listati', icon: Tags },
       { href: '/dashboard/espansioni', label: 'Espansioni', icon: Layers },
     ],
   },

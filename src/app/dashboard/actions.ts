@@ -31,11 +31,6 @@ export async function logout(): Promise<void> {
   redirect('/')
 }
 
-export interface CategoryOption {
-  id: string
-  name: string
-}
-
 export interface EspansioneOption {
   id: string
   name: string
@@ -57,11 +52,9 @@ export interface ProductDTO {
   condition?: string | null
   productType?: string | null
   itemCategory1?: string | null
-  itemCategory2?: string | null
+  itemCategory2?: { id: string; name: string } | null
   itemCategory3?: string | null
   googleProductCategory?: string | null
-  category?: { id: string; name: string } | null
-  expansion?: { id: string; name: string } | null
   language?: string | null
   cardNumber?: string | null
   rarity?: string | null
@@ -143,13 +136,11 @@ function toProductDTO(doc: any): ProductDTO {
     condition: doc.condition ?? null,
     productType: doc.product_type ?? null,
     itemCategory1: doc.item_category_1 ?? 'product',
-    itemCategory2: doc.item_category_2 ?? null,
+    itemCategory2: doc.item_category_2
+      ? { id: String(doc.item_category_2.id ?? doc.item_category_2), name: relName(doc.item_category_2) }
+      : null,
     itemCategory3: doc.item_category_3 ?? null,
     googleProductCategory: doc.google_product_category ?? null,
-    category: doc.category ? { id: String(doc.category.id ?? doc.category), name: relName(doc.category) } : null,
-    expansion: doc.expansion
-      ? { id: String(doc.expansion.id ?? doc.expansion), name: relName(doc.expansion) }
-      : null,
     language: doc.language ?? null,
     cardNumber: doc.card_number ?? null,
     rarity: doc.rarity ?? null,
@@ -320,7 +311,6 @@ export async function getOverview(): Promise<OverviewData> {
 export interface ProductFilters {
   search?: string
   status?: string
-  category?: string
   expansion?: string
   withImage?: string
   limit?: number
@@ -345,7 +335,6 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
     })
   }
   if (filters.status) where.push({ status: { equals: filters.status } })
-  if (filters.category) where.push({ category: { equals: Number(filters.category) } })
   if (filters.expansion) where.push({ expansion: { equals: Number(filters.expansion) } })
   if (filters.withImage === 'yes') where.push({ image_link: { exists: true } })
   if (filters.withImage === 'no') where.push({ image_link: { exists: false } })
@@ -364,13 +353,6 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
     total: res.totalDocs,
     totalPages: res.totalPages,
   }
-}
-
-export async function getCategories(): Promise<CategoryOption[]> {
-  await requireAuth()
-  const payload = await getPayloadClient()
-  const res = await payload.find({ overrideAccess: true,  collection: 'categories', limit: 500, sort: 'name' })
-  return res.docs.map((d: any) => ({ id: String(d.id), name: d.name }))
 }
 
 export async function getEspansioni(): Promise<EspansioneOption[]> {
@@ -395,11 +377,9 @@ export interface UpdateProductPatch {
   condition?: string
   productType?: string | null
   itemCategory1?: string | null
-  itemCategory2?: string | null
+  itemCategory2?: string | number | null
   itemCategory3?: string | null
   googleProductCategory?: string | null
-  category?: string | number | null
-  expansion?: string | number | null
   language?: string
   cardNumber?: string | null
   rarity?: string | null
@@ -449,8 +429,6 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     'itemCategory1',
     'itemCategory2',
     'itemCategory3',
-    'category',
-    'expansion',
     'language',
     'cardNumber',
     'rarity',
@@ -463,7 +441,7 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     if (!(key in patch)) continue
     const value = patch[key]
     const mapped =
-      key === 'category' || key === 'expansion'
+      key === 'itemCategory2'
         ? value != null
           ? Number(value)
           : undefined
@@ -525,11 +503,9 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
       condition: data.condition || 'used',
       product_type: data.productType || undefined,
       item_category_1: data.itemCategory1 || 'product',
-      item_category_2: data.itemCategory2 || undefined,
+      item_category_2: data.itemCategory2 != null ? Number(data.itemCategory2) : undefined,
       item_category_3: data.itemCategory3 || undefined,
       google_product_category: data.googleProductCategory || undefined,
-      category: data.category != null ? Number(data.category) : undefined,
-      expansion: data.expansion != null ? Number(data.expansion) : undefined,
       language: data.language || 'italian',
       card_number: data.cardNumber || undefined,
       rarity: data.rarity || undefined,
@@ -968,78 +944,6 @@ export async function recordManualWebsiteSale(data: {
   }
 }
 
-export interface CategoryDTO {
-  id: string
-  name: string
-  slug: string
-  description?: string | null
-}
-
-export async function getCategoriesFull(): Promise<CategoryDTO[]> {
-  await requireAuth()
-  const payload = await getPayloadClient()
-  const res = await payload.find({ overrideAccess: true,  collection: 'categories', limit: 500, sort: 'name', draft: false })
-  return res.docs.map((d: any) => ({
-    id: String(d.id),
-    name: d.name || '',
-    slug: d.slug || '',
-    description: d.description ?? null,
-  }))
-}
-
-export async function createCategory(data: { name: string; slug?: string; description?: string }): Promise<CategoryDTO> {
-  await requireAuth()
-  const payload = await getPayloadClient()
-
-  const name = (data.name || '').trim()
-  if (!name) throw new Error('Il nome è obbligatorio')
-
-  let slug = (data.slug || '').trim() || slugify(name)
-  let candidate = slug
-  let i = 2
-  while (true) {
-    const existing = await payload.find({ overrideAccess: true,  collection: 'categories', where: { slug: { equals: candidate } }, limit: 1 })
-    if (existing.docs.length === 0) break
-    candidate = `${slug}-${i++}`
-  }
-
-  const res = await payload.create({ overrideAccess: true, 
-    collection: 'categories',
-    data: { name, slug: candidate, description: data.description || undefined } as any,
-  })
-  return {
-    id: String(res.id),
-    name: res.name as string,
-    slug: res.slug as string,
-    description: (res.description ?? null) as string | null,
-  }
-}
-
-export async function updateCategory(
-  id: string,
-  data: { name?: string; slug?: string; description?: string | null },
-): Promise<CategoryDTO> {
-  await requireAuth()
-  const payload = await getPayloadClient()
-  const patch: Record<string, any> = {}
-  if (data.name !== undefined) patch.name = data.name
-  if (data.slug !== undefined) patch.slug = data.slug
-  if (data.description !== undefined) patch.description = data.description ?? undefined
-  const res = await payload.update({ overrideAccess: true,  collection: 'categories', id, data: patch as any })
-  return {
-    id: String(res.id),
-    name: res.name as string,
-    slug: res.slug as string,
-    description: (res.description ?? null) as string | null,
-  }
-}
-
-export async function deleteCategory(id: string): Promise<void> {
-  await requireAuth()
-  const payload = await getPayloadClient()
-  await payload.delete({ overrideAccess: true,  collection: 'categories', id })
-}
-
 export interface EspansioneDTO {
   id: string
   name: string
@@ -1356,7 +1260,6 @@ export interface CreatePurchaseLineInput {
   productId?: string | number | null
   newProductTitle?: string | null
   newProductPrice?: number | null
-  newProductCategory?: string | number | null
   newProductExpansion?: string | number | null
   newProductImageLink?: string | null
   newProductItemCategory1?: string
@@ -1394,11 +1297,10 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
       const created = await createProduct({
         title,
         price: line.newProductPrice ?? undefined,
-        category: line.newProductCategory || undefined,
-        expansion: line.newProductExpansion || undefined,
         imageLink: line.newProductImageLink || undefined,
         itemCategory1: line.newProductItemCategory1 || 'product',
-        itemCategory2: line.newProductItemCategory2 || undefined,
+        itemCategory2: line.newProductExpansion || undefined,
+        itemCategory3: line.newProductItemCategory2 || undefined,
         quantity: 0,
         status: 'listed',
       })
@@ -1471,11 +1373,10 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
       const created = await createProduct({
         title,
         price: line.newProductPrice ?? undefined,
-        category: line.newProductCategory || undefined,
-        expansion: line.newProductExpansion || undefined,
         imageLink: line.newProductImageLink || undefined,
         itemCategory1: line.newProductItemCategory1 || 'product',
-        itemCategory2: line.newProductItemCategory2 || undefined,
+        itemCategory2: line.newProductExpansion || undefined,
+        itemCategory3: line.newProductItemCategory2 || undefined,
         quantity: 0,
         status: 'listed',
       })

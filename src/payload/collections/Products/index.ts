@@ -150,12 +150,7 @@ export const Products: CollectionConfig = {
       },
     },
     {
-      name: 'category',
-      type: 'relationship',
-      relationTo: 'categories',
-    },
-    {
-      name: 'expansion',
+      name: 'item_category_2',
       type: 'relationship',
       relationTo: 'espansioni',
     },
@@ -172,27 +167,20 @@ export const Products: CollectionConfig = {
       },
     },
     {
-      name: 'item_category_2',
+      name: 'item_category_3',
       type: 'select',
       options: [
-        { label: 'SPC', value: 'spc' },
-        { label: 'BOX', value: 'box' },
-        { label: 'BUNDLE', value: 'bundle' },
-        { label: 'ETB', value: 'etb' },
-        { label: 'TIN', value: 'tin' },
-        { label: 'SINGOLA', value: 'single' },
-        { label: 'SLAB', value: 'slab' },
-        { label: 'ALTRO', value: 'other' },
+        { label: 'Spc', value: 'spc' },
+        { label: 'Box', value: 'box' },
+        { label: 'Bundle', value: 'bundle' },
+        { label: 'Etb', value: 'etb' },
+        { label: 'Tin', value: 'tin' },
+        { label: 'Singola', value: 'single' },
+        { label: 'Slab', value: 'slab' },
+        { label: 'Altro', value: 'other' },
       ],
       admin: {
-        description: 'Sottocategoria (livello 2): SPC/BOX/BUNDLE/ETB/TIN per prodotti, SINGOLA/SLAB per carte',
-      },
-    },
-    {
-      name: 'item_category_3',
-      type: 'text',
-      admin: {
-        description: 'Dettaglio aggiuntivo (livello 3, opzionale)',
+        description: 'Micro prodotto (livello 3): Spc/Box/Bundle/Etb/Tin per prodotti, Singola/Slab per carte',
       },
     },
     {

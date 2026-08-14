@@ -12,6 +12,7 @@ import * as migration_20260812_fix_locked_documents_rels from './20260812_fix_lo
 import * as migration_20260812_align_orders_stripe_session_index from './20260812_align_orders_stripe_session_index';
 import * as migration_20260813_espansioni_item_category from './20260813_espansioni_item_category';
 import * as migration_20260814_item_category_hierarchy from './20260814_item_category_hierarchy';
+import * as migration_20260814_item_category_remap from './20260814_item_category_remap';
 
 export const migrations = [
   {
@@ -83,5 +84,10 @@ export const migrations = [
     up: migration_20260814_item_category_hierarchy.up,
     down: migration_20260814_item_category_hierarchy.down,
     name: '20260814_item_category_hierarchy'
+  },
+  {
+    up: migration_20260814_item_category_remap.up,
+    down: migration_20260814_item_category_remap.down,
+    name: '20260814_item_category_remap'
   },
 ];

@@ -10,7 +10,7 @@ interface ProductCardProps {
 
 export function ProductCard({ group }: ProductCardProps) {
   const imgSrc = group.imageCard || group.image
-  const collectionName = group.collection?.name || ''
+  const collectionName = group.itemCategory2?.name || ''
 
   const cheapest = group.products.find(
     (p: any) => (p.status === 'listed' || p.status === 'hold') && p.price && p.price > 0,

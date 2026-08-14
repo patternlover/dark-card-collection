@@ -15,7 +15,6 @@ export const metadata: Metadata = {
 
 export default async function PreordersPage() {
   let products: any[] = []
-  let categories: any[] = []
   let espansioni: any[] = []
 
   try {
@@ -31,12 +30,6 @@ export default async function PreordersPage() {
     })
     products = result.docs
 
-    const catResult = await payload.find({ overrideAccess: true, 
-      collection: 'categories',
-      limit: 50,
-      sort: 'name',
-    })
-    categories = catResult.docs
 
     const colResult = await payload.find({ overrideAccess: true, 
       collection: 'espansioni',
@@ -53,7 +46,6 @@ export default async function PreordersPage() {
       title="In Attesa"
       subtitle="Prodotti attualmente in hold, disponibili a breve"
       action="/shop/preorders"
-      categories={categories}
       espansioni={espansioni}
       products={products}
     />

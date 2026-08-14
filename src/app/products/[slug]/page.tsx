@@ -59,8 +59,8 @@ export async function generateMetadata({
     const price =
       product.price && product.price > 0 ? `€${product.price.toFixed(2)}` : ''
     const collectionName =
-      typeof product.expansion === 'object' && product.expansion?.name
-        ? product.expansion.name
+      typeof product.item_category_2 === 'object' && product.item_category_2?.name
+        ? product.item_category_2.name
         : ''
 
     const title = collectionName
@@ -175,7 +175,7 @@ export default async function ProductPage({
   group = groups[0] || null
 
   if (product?.expansion) {
-    const colId = typeof product.expansion === 'object' ? product.expansion.id : product.expansion
+    const colId = typeof product.item_category_2 === 'object' ? product.item_category_2.id : product.item_category_2
     const related = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
@@ -201,15 +201,15 @@ export default async function ProductPage({
     sold: 'Esaurito',
   }
 
-  const collectionName = product.expansion
-    ? typeof product.expansion === 'object'
-      ? product.expansion.name
-      : product.expansion
+  const collectionName = product.item_category_2
+    ? typeof product.item_category_2 === 'object'
+      ? product.item_category_2.name
+      : product.item_category_2
     : ''
 
   const collectionSlug =
-    typeof product.expansion === 'object' && product.expansion?.slug
-      ? product.expansion.slug
+    typeof product.item_category_2 === 'object' && product.item_category_2?.slug
+      ? product.item_category_2.slug
       : ''
 
   const categoryName = product.category

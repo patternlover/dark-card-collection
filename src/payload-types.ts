@@ -69,7 +69,6 @@ export interface Config {
   collections: {
     users: User;
     products: Product;
-    categories: Category;
     espansioni: Espansioni;
     orders: Order;
     media: Media;
@@ -84,7 +83,6 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
-    categories: CategoriesSelect<false> | CategoriesSelect<true>;
     espansioni: EspansioniSelect<false> | EspansioniSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -203,20 +201,15 @@ export interface Product {
    * Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile
    */
   is_preorder?: boolean | null;
-  category?: (number | null) | Category;
-  expansion?: (number | null) | Espansioni;
+  item_category_2?: (number | null) | Espansioni;
   /**
    * Tipo articolo (livello 1): prodotto sigillato o carta singola
    */
   item_category_1?: ('product' | 'card') | null;
   /**
-   * Sottocategoria (livello 2): SPC/BOX/BUNDLE/ETB/TIN per prodotti, SINGOLA/SLAB per carte
+   * Micro prodotto (livello 3): Spc/Box/Bundle/Etb/Tin per prodotti, Singola/Slab per carte
    */
-  item_category_2?: ('spc' | 'box' | 'bundle' | 'etb' | 'tin' | 'single' | 'slab' | 'other') | null;
-  /**
-   * Dettaglio aggiuntivo (livello 3, opzionale)
-   */
-  item_category_3?: string | null;
+  item_category_3?: ('spc' | 'box' | 'bundle' | 'etb' | 'tin' | 'single' | 'slab' | 'other') | null;
   /**
    * Merchant product_type (es. nome collezione/categoria)
    */
@@ -255,18 +248,6 @@ export interface Product {
    * Mostra il prodotto nello shop (indipendente dallo stato)
    */
   is_visible?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories".
- */
-export interface Category {
-  id: number;
-  name: string;
-  slug: string;
-  description?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -456,10 +437,6 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
-        relationTo: 'categories';
-        value: number | Category;
-      } | null)
-    | ({
         relationTo: 'espansioni';
         value: number | Espansioni;
       } | null)
@@ -560,10 +537,8 @@ export interface ProductsSelect<T extends boolean = true> {
   condition?: T;
   grade?: T;
   is_preorder?: T;
-  category?: T;
-  expansion?: T;
-  item_category_1?: T;
   item_category_2?: T;
+  item_category_1?: T;
   item_category_3?: T;
   product_type?: T;
   google_product_category?: T;
@@ -582,17 +557,6 @@ export interface ProductsSelect<T extends boolean = true> {
   last_price_update?: T;
   featured?: T;
   is_visible?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "categories_select".
- */
-export interface CategoriesSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  description?: T;
   updatedAt?: T;
   createdAt?: T;
 }

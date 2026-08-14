@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import type {
-  CategoryOption,
   CreateProductData,
   EspansioneOption,
   ProductDTO,
@@ -57,18 +56,18 @@ const RARITY_OPTIONS = [
 ]
 
 const PRODUCT_SUBCATEGORIES = [
-  { value: 'spc', label: 'SPC' },
-  { value: 'box', label: 'BOX' },
-  { value: 'bundle', label: 'BUNDLE' },
-  { value: 'etb', label: 'ETB' },
-  { value: 'tin', label: 'TIN' },
-  { value: 'other', label: 'ALTRO' },
+  { value: 'spc', label: 'Spc' },
+  { value: 'box', label: 'Box' },
+  { value: 'bundle', label: 'Bundle' },
+  { value: 'etb', label: 'Etb' },
+  { value: 'tin', label: 'Tin' },
+  { value: 'other', label: 'Altro' },
 ]
 
 const CARD_SUBCATEGORIES = [
-  { value: 'single', label: 'SINGOLA' },
-  { value: 'slab', label: 'SLAB' },
-  { value: 'other', label: 'ALTRO' },
+  { value: 'single', label: 'Singola' },
+  { value: 'slab', label: 'Slab' },
+  { value: 'other', label: 'Altro' },
 ]
 
 function AutoHint({ text }: { text: string }) {
@@ -83,7 +82,6 @@ function AutoHint({ text }: { text: string }) {
 }
 
 interface CreateProductModalProps {
-  categories: CategoryOption[]
   espansioni: EspansioneOption[]
   initialProduct?: ProductDTO
   onClose: () => void
@@ -92,7 +90,6 @@ interface CreateProductModalProps {
 }
 
 export function CreateProductModal({
-  categories,
   espansioni,
   initialProduct,
   onClose,
@@ -115,14 +112,12 @@ export function CreateProductModal({
     productType: initialProduct?.productType || '',
     googleProductCategory: initialProduct?.googleProductCategory || '',
     language: initialProduct?.language || 'italian',
-    category: String(initialProduct?.category?.id || ''),
-    expansion: String(initialProduct?.expansion?.id || ''),
+    itemCategory2: String(initialProduct?.itemCategory2?.id || ''),
     cardNumber: initialProduct?.cardNumber || '',
     rarity: initialProduct?.rarity || '',
     quantity: '1',
     imageLink: initialProduct?.imageLink || '',
     itemCategory1: initialProduct?.itemCategory1 || 'product',
-    itemCategory2: initialProduct?.itemCategory2 || '',
     itemCategory3: initialProduct?.itemCategory3 || '',
     showGoogle: Boolean(
       initialProduct?.itemGroupId ||
@@ -138,7 +133,7 @@ export function CreateProductModal({
 
   const handleItemCategory1 = (value: string) => {
     setForm((prev) => {
-      const next = { ...prev, itemCategory1: value, itemCategory2: '' }
+      const next = { ...prev, itemCategory1: value, itemCategory3: '' }
       if (value === 'card') {
         next.productType = ''
         next.googleProductCategory = ''
@@ -178,15 +173,13 @@ export function CreateProductModal({
           ? (form.googleProductCategory.trim() || null)
           : null,
         language: form.itemCategory1 === 'card' ? form.language : 'italian',
-        category: form.category ? Number(form.category) : null,
-        expansion: form.expansion ? Number(form.expansion) : null,
+        itemCategory2: form.itemCategory2 ? Number(form.itemCategory2) : null,
         cardNumber: form.itemCategory1 === 'card' ? (form.cardNumber.trim() || null) : null,
         rarity: form.itemCategory1 === 'card' ? (form.rarity || null) : null,
         quantity: Number(form.quantity) || 0,
         imageLink: form.imageLink.trim() || null,
         itemCategory1: form.itemCategory1,
-        itemCategory2: form.itemCategory2 || null,
-        itemCategory3: form.itemCategory3.trim() || null,
+        itemCategory3: form.itemCategory3 || null,
       }
       await createProduct(input)
       onCreated()
@@ -227,7 +220,7 @@ export function CreateProductModal({
               onChange={(e) => handleChange('title', e.target.value)}
             />
           </Field>
-          <Field label="Tipo articolo" htmlFor="cp-item-category-1">
+          <Field label="Macro prodotto" htmlFor="cp-item-category-1">
             <Select
               id="cp-item-category-1"
               value={form.itemCategory1}
@@ -240,26 +233,17 @@ export function CreateProductModal({
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <Field label="Sottocategoria" htmlFor="cp-item-category-2">
+          <Field label="Micro prodotto" htmlFor="cp-item-category-2">
             <Select
               id="cp-item-category-2"
-              value={form.itemCategory2}
-              onChange={(e) => handleChange('itemCategory2', e.target.value)}
+              value={form.itemCategory3}
+              onChange={(e) => handleChange('itemCategory3', e.target.value)}
             >
               <option value="">—</option>
               {subcategories.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </Select>
-          </Field>
-          <Field label="Livello 3 (opzionale)" htmlFor="cp-item-category-3">
-            <Input
-              id="cp-item-category-3"
-              type="text"
-              value={form.itemCategory3}
-              onChange={(e) => handleChange('itemCategory3', e.target.value)}
-              placeholder="dettaglio libero"
-            />
           </Field>
           <Field label="Slug" htmlFor="cp-slug">
             <Input id="cp-slug" type="text" value={form.slug} disabled />
@@ -329,23 +313,11 @@ export function CreateProductModal({
               onChange={(e) => handleChange('quantity', e.target.value)}
             />
           </Field>
-          <Field label="Categoria" htmlFor="cp-category">
-            <Select
-              id="cp-category"
-              value={form.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-            >
-              <option value="">—</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </Select>
-          </Field>
           <Field label="Espansione" htmlFor="cp-expansion">
             <Select
               id="cp-expansion"
-              value={form.expansion}
-              onChange={(e) => handleChange('expansion', e.target.value)}
+              value={form.itemCategory2}
+              onChange={(e) => handleChange('itemCategory2', e.target.value)}
             >
               <option value="">—</option>
               {espansioni.map((c) => (

@@ -15,7 +15,6 @@ export const metadata: Metadata = {
 
 export default async function BestsellersPage() {
   let products: any[] = []
-  let categories: any[] = []
   let espansioni: any[] = []
 
   try {
@@ -50,12 +49,6 @@ export default async function BestsellersPage() {
       products = fallback.docs
     }
 
-    const catResult = await payload.find({ overrideAccess: true, 
-      collection: 'categories',
-      limit: 50,
-      sort: 'name',
-    })
-    categories = catResult.docs
 
     const colResult = await payload.find({ overrideAccess: true, 
       collection: 'espansioni',
@@ -72,7 +65,6 @@ export default async function BestsellersPage() {
       title="Bestseller"
       subtitle="I prodotti più venduti e più amati dai nostri clienti"
       action="/shop/bestsellers"
-      categories={categories}
       espansioni={espansioni}
       products={products}
     />
