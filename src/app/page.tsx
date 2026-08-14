@@ -3,7 +3,7 @@ import { JsonLd } from '@/components/seo/JsonLd'
 import { HeroSection } from '@/components/sections/HeroSection'
 import { HeroBackground } from '@/components/sections/HeroBackground'
 import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
-import { CollectionsShowcase } from '@/components/sections/CollectionsShowcase'
+import { EspansionsShowcase } from '@/components/sections/EspansionsShowcase'
 import { CartSocialProof } from '@/components/sections/CartSocialProof'
 import { CtaBanner } from '@/components/sections/CtaBanner'
 import { TrustBadges } from '@/components/sections/TrustBadges'
@@ -114,7 +114,7 @@ export default function Home() {
           <HeroSection />
           <CartSocialProof />
           <FeaturedProducts />
-          <CollectionsShowcase />
+          <EspansionsShowcase />
         </div>
       </div>
       <CtaBanner />

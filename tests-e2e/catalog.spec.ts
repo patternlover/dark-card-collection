@@ -35,30 +35,30 @@ test.describe('Categorie', () => {
   })
 })
 
-test.describe('Collezioni', () => {
+test.describe('Espansioni', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page)
   })
 
-  test('creates, edits and deletes a collection', async ({ page }) => {
+  test('creates, edits and deletes an espansione', async ({ page }) => {
     const name = `E2E Col ${stamp}`
     const renamed = `${name} Renamed`
 
-    await page.goto('/dashboard/collezioni')
-    await page.getByRole('button', { name: 'Nuova Collezione' }).click()
-    await page.locator('#collection-name').fill(name)
+    await page.goto('/dashboard/espansioni')
+    await page.getByRole('button', { name: 'Nuova Espansione' }).click()
+    await page.locator('#expansion-name').fill(name)
     await page.getByRole('button', { name: 'Salva' }).click()
-    await expect(page.getByText('Collezione creata')).toBeVisible()
+    await expect(page.getByText('Espansione creata')).toBeVisible()
     await expect(page.locator('tr', { hasText: name })).toBeVisible()
 
     await page.getByRole('button', { name: `Modifica ${name}` }).click()
-    await page.locator('#collection-name').fill(renamed)
+    await page.locator('#expansion-name').fill(renamed)
     await page.getByRole('button', { name: 'Salva' }).click()
-    await expect(page.getByText('Collezione aggiornata')).toBeVisible()
+    await expect(page.getByText('Espansione aggiornata')).toBeVisible()
 
     page.on('dialog', (d) => d.accept())
     await page.getByRole('button', { name: `Elimina ${renamed}` }).click()
-    await expect(page.getByText('Collezione eliminata')).toBeVisible()
+    await expect(page.getByText('Espansione eliminata')).toBeVisible()
     await expect(page.locator('tr', { hasText: renamed })).toHaveCount(0)
   })
 })

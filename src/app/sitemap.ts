@@ -11,7 +11,7 @@ const staticRoutes = [
   { path: '/shop/bestsellers', priority: 0.8, changeFrequency: 'weekly' as const },
   { path: '/shop/new-arrivals', priority: 0.8, changeFrequency: 'daily' as const },
   { path: '/shop/preorders', priority: 0.7, changeFrequency: 'daily' as const },
-  { path: '/shop/collections', priority: 0.9, changeFrequency: 'weekly' as const },
+  { path: '/shop/espansioni', priority: 0.9, changeFrequency: 'weekly' as const },
   { path: '/guide', priority: 0.7, changeFrequency: 'monthly' as const },
   { path: '/guide/dove-comprare-carte-pokemon-originali', priority: 0.6, changeFrequency: 'monthly' as const },
   { path: '/guide/come-scegliere-booster-box', priority: 0.6, changeFrequency: 'monthly' as const },
@@ -36,14 +36,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const payload = await getPayloadClient()
 
     const collections = await payload.find({ overrideAccess: true, 
-      collection: 'collections',
+      collection: 'espansioni',
       limit: 500,
       sort: 'name',
     })
     for (const col of collections.docs) {
       if (!col.slug) continue
       entries.push({
-        url: `${SITE_URL}/shop/collections/${col.slug}`,
+        url: `${SITE_URL}/shop/espansioni/${col.slug}`,
         lastModified: new Date(col.updatedAt || Date.now()),
         changeFrequency: 'daily' as const,
         priority: 0.8,

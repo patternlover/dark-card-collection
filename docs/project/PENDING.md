@@ -7,7 +7,7 @@
 > Stati: `open` · `in-progress` · `blocked (motivo)` · `waiting-user` (serve input utente) · `done (verifica)`.
 > Un task si chiude SOLO con verifica fatta (`pnpm lint`, `pnpm test`, build/E2E/CI dove applicabile).
 
-Ultimo aggiornamento: 2026-08-14 (sessione 25: Lotti dropdown per gruppo prodotto + select Variante, branch fix/ui-ux; sessione 24: dashboard più larga 1440px; sessione 23: merge rivisitazione modali dashboard in main + E2E su bundle prod 47/47; sessione 22: Listino righe allineate nome una riga; sessione 21: Listino tabella /inventory + sorting header + email cliente; sessione 20: fix Mostra + homepage featured; sessione 19: Listino 2 viste; sessione 18: vista compatta; sessione 17: filtri ridotti; sessione 16: modali dashboard; sessione 15: Listino a gruppi; sessione 14: fix delete prodotto live).
+Ultimo aggiornamento: 2026-08-14 (sessione 26: item_category + rename Espansioni; sessione 25: Lotti dropdown per gruppo prodotto + select Variante, branch fix/ui-ux; sessione 24: dashboard più larga 1440px; sessione 23: merge rivisitazione modali dashboard in main + E2E su bundle prod 47/47; sessione 22: Listino righe allineate nome una riga; sessione 21: Listino tabella /inventory + sorting header + email cliente; sessione 20: fix Mostra + homepage featured; sessione 19: Listino 2 viste; sessione 18: vista compatta; sessione 17: filtri ridotti; sessione 16: modali dashboard; sessione 15: Listino a gruppi; sessione 14: fix delete prodotto live).
 
 ---
 

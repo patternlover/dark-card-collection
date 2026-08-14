@@ -13,7 +13,7 @@ import { trackFilter } from '@/lib/analytics'
 interface ClientListingProps {
   products: any[]
   categories?: any[]
-  collections?: any[]
+  espansioni?: any[]
   basePath: string
   emptyTitle?: string
   emptySubtitle?: string
@@ -24,12 +24,12 @@ interface ClientListingProps {
 interface Filters {
   q: string
   category: string
-  collection: string
+  expansion: string
   grade: string
   language: string
 }
 
-const EMPTY_FILTERS: Filters = { q: '', category: '', collection: '', grade: '', language: '' }
+const EMPTY_FILTERS: Filters = { q: '', category: '', expansion: '', grade: '', language: '' }
 
 const selectClass =
   'w-full appearance-none border-2 border-zinc-700 bg-zinc-800 py-2.5 pl-3 pr-9 text-sm text-white focus:border-[var(--accent)] focus:outline-none shadow-[2px_2px_0px_0px_#27272a] disabled:opacity-40 disabled:cursor-not-allowed'
@@ -98,7 +98,7 @@ function FilterSelect({
 export function ClientListing({
   products,
   categories = [],
-  collections = [],
+  espansioni = [],
   basePath,
   emptyTitle = 'Nessun prodotto trovato.',
   emptySubtitle = 'Prova a modificare i filtri di ricerca.',
@@ -111,7 +111,7 @@ export function ClientListing({
   const [filters, setFilters] = useState<Filters>(() => ({
     q: searchParams.get('q') || '',
     category: searchParams.get('category') || '',
-    collection: searchParams.get('collection') || '',
+    expansion: searchParams.get('collection') || '',
     grade: searchParams.get('grade') || '',
     language: searchParams.get('language') || '',
   }))
@@ -121,7 +121,7 @@ export function ClientListing({
       const sp = new URLSearchParams()
       if (next.q) sp.set('q', next.q)
       if (next.category) sp.set('category', next.category)
-      if (next.collection) sp.set('collection', next.collection)
+      if (next.expansion) sp.set('collection', next.expansion)
       if (next.grade) sp.set('grade', next.grade)
       if (next.language) sp.set('language', next.language)
       const qs = sp.toString()
@@ -141,7 +141,7 @@ export function ClientListing({
     [router, buildUrl],
   )
 
-  const handleSelect = (key: 'category' | 'collection' | 'grade' | 'language', value: string) => {
+  const handleSelect = (key: 'category' | 'expansion' | 'grade' | 'language', value: string) => {
     trackFilter(key, value)
     updateFilters({ [key]: value })
   }
@@ -152,7 +152,7 @@ export function ClientListing({
   }
 
   const active = Boolean(
-    filters.q || filters.category || filters.collection || filters.grade || filters.language,
+    filters.q || filters.category || filters.expansion || filters.grade || filters.language,
   )
 
   const counts = useMemo(() => computeFilterCounts(products), [products])
@@ -163,7 +163,7 @@ export function ClientListing({
         return false
       }
       if (filters.category && String(p.category?.id) !== filters.category) return false
-      if (filters.collection && String(p.collection?.id) !== filters.collection) return false
+      if (filters.expansion && String(p.expansion?.id) !== filters.expansion) return false
       if (filters.grade && p.grade !== filters.grade) return false
       if (filters.language && p.language !== filters.language) return false
       return true
@@ -279,15 +279,15 @@ export function ClientListing({
             />
           )}
 
-          {collections.length > 0 && (
+          {espansioni.length > 0 && (
             <FilterSelect
-              label="Collezione"
-              value={filters.collection}
-              onChange={(v) => handleSelect('collection', v)}
-              options={collections.map((col: any) => ({ value: String(col.id), label: col.name }))}
+              label="Espansione"
+              value={filters.expansion}
+              onChange={(v) => handleSelect('expansion', v)}
+              options={espansioni.map((col: any) => ({ value: String(col.id), label: col.name }))}
               counts={counts.col}
-              allLabel="Tutte le collezioni"
-              current={filters.collection}
+              allLabel="Tutte le espansioni"
+              current={filters.expansion}
             />
           )}
 

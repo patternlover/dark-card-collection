@@ -101,7 +101,7 @@ export default function GuideHubPage() {
               Vai allo Shop
             </Link>
             <Link
-              href="/shop/collections"
+              href="/shop/espansioni"
               className="border-2 border-zinc-600 px-5 py-2 text-sm font-black uppercase tracking-wide text-white transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >
               Le Collezioni

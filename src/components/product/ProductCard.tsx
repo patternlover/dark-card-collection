@@ -49,6 +49,11 @@ export function ProductCard({ group }: ProductCardProps) {
           )}
 
           <div className="mb-2 flex flex-wrap gap-1.5">
+            {group.itemCategory === 'card' ? (
+              <Badge variant="card">Carta</Badge>
+            ) : (
+              <Badge variant="new">Prodotto</Badge>
+            )}
             {isPreorderOrHold && <Badge variant="preorder">In Attesa</Badge>}
             {isMint && <Badge variant="new">Sigillato</Badge>}
             {isGraded && <Badge variant="bestseller">Graded</Badge>}

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function BestsellersPage() {
   let products: any[] = []
   let categories: any[] = []
-  let collections: any[] = []
+  let espansioni: any[] = []
 
   try {
     const payload = await getPayloadClient()
@@ -58,11 +58,11 @@ export default async function BestsellersPage() {
     categories = catResult.docs
 
     const colResult = await payload.find({ overrideAccess: true, 
-      collection: 'collections',
+      collection: 'espansioni',
       limit: 50,
       sort: 'name',
     })
-    collections = colResult.docs
+    espansioni = colResult.docs
   } catch {
     // DB might not be connected during build
   }
@@ -73,7 +73,7 @@ export default async function BestsellersPage() {
       subtitle="I prodotti più venduti e più amati dai nostri clienti"
       action="/shop/bestsellers"
       categories={categories}
-      collections={collections}
+      espansioni={espansioni}
       products={products}
     />
   )

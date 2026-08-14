@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import type {
   CategoryOption,
-  CollectionOption,
   CreateProductData,
+  EspansioneOption,
   ProductDTO,
 } from '@/app/dashboard/actions'
 import { createProduct } from '@/app/dashboard/actions'
@@ -56,9 +56,14 @@ const RARITY_OPTIONS = [
   { value: 'secret-rare', label: 'Secret Rare' },
 ]
 
+const ITEM_CATEGORY_OPTIONS = [
+  { value: 'product', label: 'Prodotto' },
+  { value: 'card', label: 'Carta' },
+]
+
 interface CreateProductModalProps {
   categories: CategoryOption[]
-  collections: CollectionOption[]
+  espansioni: EspansioneOption[]
   initialProduct?: ProductDTO
   onClose: () => void
   onCreated: () => void
@@ -67,7 +72,7 @@ interface CreateProductModalProps {
 
 export function CreateProductModal({
   categories,
-  collections,
+  espansioni,
   initialProduct,
   onClose,
   onCreated,
@@ -90,18 +95,37 @@ export function CreateProductModal({
     googleProductCategory: initialProduct?.googleProductCategory || '',
     language: initialProduct?.language || 'italian',
     category: String(initialProduct?.category?.id || ''),
-    collection: String(initialProduct?.collection?.id || ''),
+    expansion: String(initialProduct?.expansion?.id || ''),
     cardNumber: initialProduct?.cardNumber || '',
     rarity: initialProduct?.rarity || '',
     quantity: '1',
     imageLink: initialProduct?.imageLink || '',
     featured: initialProduct?.featured || false,
     isVisible: initialProduct?.isVisible ?? true,
+    itemCategory: initialProduct?.itemCategory || 'product',
   })
   const [saving, setSaving] = useState(false)
 
   const handleChange = (field: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleItemCategory = (value: string) => {
+    setForm((prev) => {
+      const next = { ...prev, itemCategory: value }
+      if (value === 'card') {
+        next.productType = ''
+        next.googleProductCategory = ''
+        next.isPreorder = false
+      } else {
+        next.grade = 'near-mint'
+        next.condition = 'new'
+        next.language = 'italian'
+        next.cardNumber = ''
+        next.rarity = ''
+      }
+      return next
+    })
   }
 
   const handleCreate = async () => {
@@ -117,20 +141,22 @@ export function CreateProductModal({
         costOfGoodsSold: form.costOfGoodsSold === '' ? null : Number(form.costOfGoodsSold),
         status: form.status,
         availability: form.availability,
-        isPreorder: form.isPreorder,
-        grade: form.grade,
-        condition: form.condition,
-        productType: form.productType.trim() || null,
-        googleProductCategory: form.googleProductCategory.trim() || null,
-        language: form.language,
+        isPreorder: form.itemCategory === 'product' ? form.isPreorder : false,
+        grade: form.itemCategory === 'card' ? form.grade : 'near-mint',
+        condition: form.itemCategory === 'card' ? form.condition : 'new',
+        productType: form.itemCategory === 'product' ? (form.productType.trim() || null) : null,
+        googleProductCategory:
+          form.itemCategory === 'product' ? (form.googleProductCategory.trim() || null) : null,
+        language: form.itemCategory === 'card' ? form.language : 'italian',
         category: form.category ? Number(form.category) : null,
-        collection: form.collection ? Number(form.collection) : null,
-        cardNumber: form.cardNumber.trim() || null,
-        rarity: form.rarity || null,
+        expansion: form.expansion ? Number(form.expansion) : null,
+        cardNumber: form.itemCategory === 'card' ? (form.cardNumber.trim() || null) : null,
+        rarity: form.itemCategory === 'card' ? (form.rarity || null) : null,
         quantity: Number(form.quantity) || 0,
         imageLink: form.imageLink.trim() || null,
         featured: form.featured,
         isVisible: form.isVisible,
+        itemCategory: form.itemCategory,
       }
       await createProduct(input)
       onCreated()
@@ -142,6 +168,8 @@ export function CreateProductModal({
   }
 
   const checkboxClass = 'h-4 w-4 accent-[var(--ui-accent)]'
+  const isCard = form.itemCategory === 'card'
+  const isProduct = form.itemCategory === 'product'
 
   return (
     <Modal
@@ -168,6 +196,20 @@ export function CreateProductModal({
               onChange={(e) => handleChange('title', e.target.value)}
             />
           </Field>
+          <Field label="Tipo articolo" htmlFor="cp-item-category">
+            <Select
+              id="cp-item-category"
+              value={form.itemCategory}
+              onChange={(e) => handleItemCategory(e.target.value)}
+            >
+              {ITEM_CATEGORY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <Field label="Item Group ID" htmlFor="cp-item-group">
             <Input
               id="cp-item-group"
@@ -176,9 +218,6 @@ export function CreateProductModal({
               onChange={(e) => handleChange('itemGroupId', e.target.value)}
             />
           </Field>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <Field label="Slug" htmlFor="cp-slug">
             <Input
               id="cp-slug"
@@ -187,6 +226,9 @@ export function CreateProductModal({
               onChange={(e) => handleChange('slug', e.target.value)}
             />
           </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <Field label="Disponibilità" htmlFor="cp-availability">
             <Select
               id="cp-availability"
@@ -194,6 +236,17 @@ export function CreateProductModal({
               onChange={(e) => handleChange('availability', e.target.value)}
             >
               {AVAILABILITY_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Stato" htmlFor="cp-status">
+            <Select
+              id="cp-status"
+              value={form.status}
+              onChange={(e) => handleChange('status', e.target.value)}
+            >
+              {STATUS_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </Select>
@@ -234,53 +287,6 @@ export function CreateProductModal({
         </div>
 
         <div className="grid grid-cols-3 gap-4">
-          <Field label="Stato" htmlFor="cp-status">
-            <Select
-              id="cp-status"
-              value={form.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Grado" htmlFor="cp-grade">
-            <Select
-              id="cp-grade"
-              value={form.grade}
-              onChange={(e) => handleChange('grade', e.target.value)}
-            >
-              {GRADE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Condizione" htmlFor="cp-condition">
-            <Select
-              id="cp-condition"
-              value={form.condition}
-              onChange={(e) => handleChange('condition', e.target.value)}
-            >
-              {CONDITION_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Lingua" htmlFor="cp-language">
-            <Select
-              id="cp-language"
-              value={form.language}
-              onChange={(e) => handleChange('language', e.target.value)}
-            >
-              {LANGUAGE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
           <Field label="Quantità" htmlFor="cp-quantity">
             <Input
               id="cp-quantity"
@@ -290,49 +296,6 @@ export function CreateProductModal({
               onChange={(e) => handleChange('quantity', e.target.value)}
             />
           </Field>
-          <Field label="Card Number" htmlFor="cp-card-number">
-            <Input
-              id="cp-card-number"
-              type="text"
-              value={form.cardNumber}
-              onChange={(e) => handleChange('cardNumber', e.target.value)}
-            />
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Rarità" htmlFor="cp-rarity">
-            <Select
-              id="cp-rarity"
-              value={form.rarity}
-              onChange={(e) => handleChange('rarity', e.target.value)}
-            >
-              {RARITY_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Product Type (Google)" htmlFor="cp-product-type">
-            <Input
-              id="cp-product-type"
-              type="text"
-              value={form.productType}
-              onChange={(e) => handleChange('productType', e.target.value)}
-              placeholder="es. Trading Card Game"
-            />
-          </Field>
-          <Field label="Google Product Category" htmlFor="cp-gpc">
-            <Input
-              id="cp-gpc"
-              type="text"
-              value={form.googleProductCategory}
-              onChange={(e) => handleChange('googleProductCategory', e.target.value)}
-              placeholder="es. Toys & Games > Trading Card Game Cards"
-            />
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
           <Field label="Categoria" htmlFor="cp-category">
             <Select
               id="cp-category"
@@ -345,19 +308,120 @@ export function CreateProductModal({
               ))}
             </Select>
           </Field>
-          <Field label="Collezione" htmlFor="cp-collection">
+          <Field label="Espansione" htmlFor="cp-expansion">
             <Select
-              id="cp-collection"
-              value={form.collection}
-              onChange={(e) => handleChange('collection', e.target.value)}
+              id="cp-expansion"
+              value={form.expansion}
+              onChange={(e) => handleChange('expansion', e.target.value)}
             >
               <option value="">—</option>
-              {collections.map((c) => (
+              {espansioni.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </Select>
           </Field>
         </div>
+
+        {isCard ? (
+          <div className="space-y-4 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
+              Dettagli carta
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="Condizione / Grado" htmlFor="cp-grade">
+                <Select
+                  id="cp-grade"
+                  value={form.grade}
+                  onChange={(e) => handleChange('grade', e.target.value)}
+                >
+                  {GRADE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Condizione (Google)" htmlFor="cp-condition">
+                <Select
+                  id="cp-condition"
+                  value={form.condition}
+                  onChange={(e) => handleChange('condition', e.target.value)}
+                >
+                  {CONDITION_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Lingua" htmlFor="cp-language">
+                <Select
+                  id="cp-language"
+                  value={form.language}
+                  onChange={(e) => handleChange('language', e.target.value)}
+                >
+                  {LANGUAGE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Card Number" htmlFor="cp-card-number">
+                <Input
+                  id="cp-card-number"
+                  type="text"
+                  value={form.cardNumber}
+                  onChange={(e) => handleChange('cardNumber', e.target.value)}
+                />
+              </Field>
+              <Field label="Rarità" htmlFor="cp-rarity">
+                <Select
+                  id="cp-rarity"
+                  value={form.rarity}
+                  onChange={(e) => handleChange('rarity', e.target.value)}
+                >
+                  {RARITY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+          </div>
+        ) : null}
+
+        {isProduct ? (
+          <div className="space-y-4 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 p-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
+              Dettagli prodotto
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Product Type (Google)" htmlFor="cp-product-type">
+                <Input
+                  id="cp-product-type"
+                  type="text"
+                  value={form.productType}
+                  onChange={(e) => handleChange('productType', e.target.value)}
+                  placeholder="es. Trading Card Game"
+                />
+              </Field>
+              <Field label="Google Product Category" htmlFor="cp-gpc">
+                <Input
+                  id="cp-gpc"
+                  type="text"
+                  value={form.googleProductCategory}
+                  onChange={(e) => handleChange('googleProductCategory', e.target.value)}
+                  placeholder="es. Toys & Games > Trading Card Game Cards"
+                />
+              </Field>
+            </div>
+            <label className="flex cursor-pointer items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.isPreorder}
+                onChange={(e) => handleChange('isPreorder', e.target.checked)}
+                className={checkboxClass}
+              />
+              <span className="text-sm font-medium text-[var(--ui-text-muted)]">Pre-Ordine</span>
+            </label>
+          </div>
+        ) : null}
 
         <Field label="Image Link" htmlFor="cp-image-link">
           <Input
@@ -386,15 +450,6 @@ export function CreateProductModal({
               className={checkboxClass}
             />
             <span className="text-sm font-medium text-[var(--ui-text-muted)]">In Evidenza</span>
-          </label>
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.isPreorder}
-              onChange={(e) => handleChange('isPreorder', e.target.checked)}
-              className={checkboxClass}
-            />
-            <span className="text-sm font-medium text-[var(--ui-text-muted)]">Pre-Ordine</span>
           </label>
           <label className="flex cursor-pointer items-center gap-2">
             <input

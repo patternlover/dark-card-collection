@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import {
   getCategories,
-  getCollections,
+  getEspansioni,
   getProductById,
   recordManualWebsiteSale,
   searchListingProducts,
@@ -23,7 +23,7 @@ import {
   toggleVariantVisibility as toggleVariantVisibilityAction,
   updateGroup,
   type CategoryOption,
-  type CollectionOption,
+  type EspansioneOption,
   type ProductDTO,
 } from '@/app/dashboard/actions'
 import type { ListingGroup, ListingVariant, SortDir } from '@/lib/listings'
@@ -147,7 +147,7 @@ export function ListingsSection() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [categories, setCategories] = useState<CategoryOption[]>([])
-  const [collections, setCollections] = useState<CollectionOption[]>([])
+  const [espansioni, setEspansioni] = useState<EspansioneOption[]>([])
   const [editing, setEditing] = useState<ProductDTO | null>(null)
   const [selling, setSelling] = useState<ListingVariant | null>(null)
   const [saleQty, setSaleQty] = useState('1')
@@ -157,7 +157,7 @@ export function ListingsSection() {
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
-    getCollections().then(setCollections).catch(() => {})
+    getEspansioni().then(setEspansioni).catch(() => {})
   }, [])
 
   const load = useCallback(
@@ -573,9 +573,10 @@ export function ListingsSection() {
         <EditProductModal
           product={editing}
           categories={categories}
-          collections={collections}
+          espansioni={espansioni}
           onClose={() => setEditing(null)}
           onSaved={onSaved}
+          onError={(msg) => notify(msg, 'error')}
         />
       ) : null}
 

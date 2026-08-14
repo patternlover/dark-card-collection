@@ -70,7 +70,7 @@ export interface Config {
     users: User;
     products: Product;
     categories: Category;
-    collections: Collection;
+    espansioni: Espansioni;
     orders: Order;
     media: Media;
     messages: Message;
@@ -85,7 +85,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
-    collections: CollectionsSelect<false> | CollectionsSelect<true>;
+    espansioni: EspansioniSelect<false> | EspansioniSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     messages: MessagesSelect<false> | MessagesSelect<true>;
@@ -204,7 +204,11 @@ export interface Product {
    */
   is_preorder?: boolean | null;
   category?: (number | null) | Category;
-  collection?: (number | null) | Collection;
+  expansion?: (number | null) | Espansioni;
+  /**
+   * Tipo articolo: prodotto sigillato o carta singola
+   */
+  item_category?: ('product' | 'card') | null;
   /**
    * Merchant product_type (es. nome collezione/categoria)
    */
@@ -260,9 +264,9 @@ export interface Category {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "collections".
+ * via the `definition` "espansioni".
  */
-export interface Collection {
+export interface Espansioni {
   id: number;
   name: string;
   slug: string;
@@ -448,8 +452,8 @@ export interface PayloadLockedDocument {
         value: number | Category;
       } | null)
     | ({
-        relationTo: 'collections';
-        value: number | Collection;
+        relationTo: 'espansioni';
+        value: number | Espansioni;
       } | null)
     | ({
         relationTo: 'orders';
@@ -549,7 +553,8 @@ export interface ProductsSelect<T extends boolean = true> {
   grade?: T;
   is_preorder?: T;
   category?: T;
-  collection?: T;
+  expansion?: T;
+  item_category?: T;
   product_type?: T;
   google_product_category?: T;
   language?: T;
@@ -583,9 +588,9 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "collections_select".
+ * via the `definition` "espansioni_select".
  */
-export interface CollectionsSelect<T extends boolean = true> {
+export interface EspansioniSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   description?: T;

@@ -58,7 +58,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/shop/collections" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
+                <Link href="/shop/espansioni" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
                   Collezioni
                 </Link>
               </li>

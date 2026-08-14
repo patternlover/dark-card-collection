@@ -23,7 +23,7 @@ export interface CreateProductViaLotOptions {
   cost?: string
   sourceName?: string
   category?: string
-  collection?: string
+  expansion?: string
 }
 
 // Products are created exclusively via Lotti (Registra Lotto → "Nuovo prodotto").
@@ -42,8 +42,8 @@ export async function createProductViaLot(page: Page, opts: CreateProductViaLotO
   if (opts.category) {
     await line.locator('select').nth(1).selectOption({ label: opts.category })
   }
-  if (opts.collection) {
-    await line.locator('select').nth(2).selectOption({ label: opts.collection })
+  if (opts.expansion) {
+    await line.locator('select').nth(2).selectOption({ label: opts.expansion })
   }
   await line.getByTestId('line-quantity').fill(opts.quantity)
   await line.getByTestId('line-cost').fill(opts.cost ?? '20')

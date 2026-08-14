@@ -1,8 +1,8 @@
 import type { CollectionConfig } from 'payload'
 import { allowRead, denyAll } from '@/payload/access'
 
-export const Collections: CollectionConfig = {
-  slug: 'collections',
+export const Espansioni: CollectionConfig = {
+  slug: 'espansioni',
   admin: {
     useAsTitle: 'name',
   },

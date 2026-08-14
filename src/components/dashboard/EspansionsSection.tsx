@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
-  createCollection,
-  deleteCollection,
-  getCollectionsFull,
-  updateCollection,
-  type CollectionDTO,
+  createEspansione,
+  deleteEspansione,
+  getEspansioniFull,
+  updateEspansione,
+  type EspansioneDTO,
 } from '@/app/dashboard/actions'
 import {
   Alert,
@@ -35,8 +35,8 @@ interface FormState {
 
 const EMPTY_FORM: FormState = { id: null, name: '', slug: '', description: '', releaseDate: '' }
 
-export function CollectionsSection() {
-  const [collections, setCollections] = useState<CollectionDTO[]>([])
+export function EspansionsSection() {
+  const [espansioni, setEspansioni] = useState<EspansioneDTO[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState | null>(null)
@@ -46,9 +46,9 @@ export function CollectionsSection() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      setCollections(await getCollectionsFull())
+      setEspansioni(await getEspansioniFull())
     } catch {
-      setError('Errore nel caricamento collezioni')
+      setError('Errore nel caricamento espansioni')
     } finally {
       setLoading(false)
     }
@@ -59,7 +59,7 @@ export function CollectionsSection() {
   }, [load])
 
   const openCreate = () => setForm(EMPTY_FORM)
-  const openEdit = (c: CollectionDTO) =>
+  const openEdit = (c: EspansioneDTO) =>
     setForm({
       id: c.id,
       name: c.name,
@@ -74,24 +74,24 @@ export function CollectionsSection() {
     setError(null)
     try {
       if (form.id) {
-        const saved = await updateCollection(form.id, {
+        const saved = await updateEspansione(form.id, {
           name: form.name.trim() || undefined,
           slug: form.slug.trim() || undefined,
           description: form.description.trim() || null,
           releaseDate: form.releaseDate || null,
         })
-        setCollections((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
+        setEspansioni((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
       } else {
-        const saved = await createCollection({
+        const saved = await createEspansione({
           name: form.name,
           slug: form.slug,
           description: form.description,
           releaseDate: form.releaseDate || null,
         })
-        setCollections((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
+        setEspansioni((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
       }
       setForm(null)
-      setNotice(form.id ? 'Collezione aggiornata' : 'Collezione creata')
+      setNotice(form.id ? 'Espansione aggiornata' : 'Espansione creata')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Errore durante il salvataggio')
     } finally {
@@ -99,14 +99,14 @@ export function CollectionsSection() {
     }
   }
 
-  const remove = async (c: CollectionDTO) => {
-    if (!confirm(`Eliminare la collezione "${c.name}"?`)) return
+  const remove = async (c: EspansioneDTO) => {
+    if (!confirm(`Eliminare l'espansione "${c.name}"?`)) return
     setBusy(true)
     setError(null)
     try {
-      await deleteCollection(c.id)
-      setCollections((prev) => prev.filter((x) => x.id !== c.id))
-      setNotice('Collezione eliminata')
+      await deleteEspansione(c.id)
+      setEspansioni((prev) => prev.filter((x) => x.id !== c.id))
+      setNotice('Espansione eliminata')
     } catch {
       setError('Errore durante l\'eliminazione')
     } finally {
@@ -123,9 +123,9 @@ export function CollectionsSection() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Collezioni" description="Serie ed edizioni del catalogo.">
+      <PageHeader title="Espansioni" description="Serie ed edizioni del catalogo.">
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Nuova Collezione
+          <Plus className="h-4 w-4" /> Nuova Espansione
         </Button>
       </PageHeader>
 
@@ -134,8 +134,8 @@ export function CollectionsSection() {
 
       {loading ? (
         <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
-      ) : collections.length === 0 ? (
-        <p className="text-sm text-[var(--ui-text-muted)]">Nessuna collezione</p>
+      ) : espansioni.length === 0 ? (
+        <p className="text-sm text-[var(--ui-text-muted)]">Nessuna espansione</p>
       ) : (
         <Table>
           <THead>
@@ -148,7 +148,7 @@ export function CollectionsSection() {
             </Tr>
           </THead>
           <TBody>
-            {collections.map((c) => (
+            {espansioni.map((c) => (
               <Tr key={c.id}>
                 <Td className="font-medium text-[var(--ui-text)]">{c.name}</Td>
                 <Td className="font-mono text-xs text-[var(--ui-text-muted)]">{c.slug}</Td>
@@ -184,7 +184,7 @@ export function CollectionsSection() {
 
       {form ? (
         <Modal
-          title={form.id ? 'Modifica collezione' : 'Nuova collezione'}
+          title={form.id ? 'Modifica espansione' : 'Nuova espansione'}
           onClose={() => setForm(null)}
           maxWidth="max-w-md"
           footer={
@@ -199,31 +199,31 @@ export function CollectionsSection() {
           }
         >
           <div className="space-y-3">
-            <Field label="Nome *" htmlFor="collection-name">
+            <Field label="Nome *" htmlFor="expansion-name">
               <Input
-                id="collection-name"
+                id="expansion-name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </Field>
-            <Field label="Slug" htmlFor="collection-slug" hint="Lasciato vuoto: generato dal nome">
+            <Field label="Slug" htmlFor="expansion-slug" hint="Lasciato vuoto: generato dal nome">
               <Input
-                id="collection-slug"
+                id="expansion-slug"
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
               />
             </Field>
-            <Field label="Data di uscita" htmlFor="collection-release">
+            <Field label="Data di uscita" htmlFor="expansion-release">
               <Input
-                id="collection-release"
+                id="expansion-release"
                 type="date"
                 value={form.releaseDate}
                 onChange={(e) => setForm({ ...form, releaseDate: e.target.value })}
               />
             </Field>
-            <Field label="Descrizione" htmlFor="collection-description">
+            <Field label="Descrizione" htmlFor="expansion-description">
               <Textarea
-                id="collection-description"
+                id="expansion-description"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />

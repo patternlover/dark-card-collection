@@ -59,8 +59,8 @@ export async function generateMetadata({
     const price =
       product.price && product.price > 0 ? `€${product.price.toFixed(2)}` : ''
     const collectionName =
-      typeof product.collection === 'object' && product.collection?.name
-        ? product.collection.name
+      typeof product.expansion === 'object' && product.expansion?.name
+        ? product.expansion.name
         : ''
 
     const title = collectionName
@@ -174,13 +174,13 @@ export default async function ProductPage({
   const groups = groupProducts(allVariants.docs)
   group = groups[0] || null
 
-  if (product?.collection) {
-    const colId = typeof product.collection === 'object' ? product.collection.id : product.collection
+  if (product?.expansion) {
+    const colId = typeof product.expansion === 'object' ? product.expansion.id : product.expansion
     const related = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
         and: [
-          { collection: { equals: colId } },
+          { expansion: { equals: colId } },
           { id: { not_equals: product.id } },
           { status: { in: ['listed', 'hold', 'sold'] } },
           { is_visible: { equals: true } },
@@ -201,15 +201,15 @@ export default async function ProductPage({
     sold: 'Esaurito',
   }
 
-  const collectionName = product.collection
-    ? typeof product.collection === 'object'
-      ? product.collection.name
-      : product.collection
+  const collectionName = product.expansion
+    ? typeof product.expansion === 'object'
+      ? product.expansion.name
+      : product.expansion
     : ''
 
   const collectionSlug =
-    typeof product.collection === 'object' && product.collection?.slug
-      ? product.collection.slug
+    typeof product.expansion === 'object' && product.expansion?.slug
+      ? product.expansion.slug
       : ''
 
   const categoryName = product.category
@@ -256,10 +256,10 @@ export default async function ProductPage({
   const breadcrumbItems: { label: string; href?: string }[] = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/shop' },
-    { label: 'Collezioni', href: '/shop/collections' },
+    { label: 'Espansioni', href: '/shop/espansioni' },
   ]
   if (collectionSlug) {
-    breadcrumbItems.push({ label: collectionName, href: `/shop/collections/${collectionSlug}` })
+    breadcrumbItems.push({ label: collectionName, href: `/shop/espansioni/${collectionSlug}` })
   }
   breadcrumbItems.push({ label: product.title })
 
@@ -286,14 +286,14 @@ export default async function ProductPage({
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
         { '@type': 'ListItem', position: 2, name: 'Shop', item: `${SITE_URL}/shop` },
-        { '@type': 'ListItem', position: 3, name: 'Collezioni', item: `${SITE_URL}/shop/collections` },
+        { '@type': 'ListItem', position: 3, name: 'Espansioni', item: `${SITE_URL}/shop/espansioni` },
         ...(collectionSlug
           ? [
               {
                 '@type': 'ListItem' as const,
                 position: 4,
                 name: collectionName,
-                item: `${SITE_URL}/shop/collections/${collectionSlug}`,
+                item: `${SITE_URL}/shop/espansioni/${collectionSlug}`,
               },
             ]
           : []),
@@ -435,10 +435,10 @@ export default async function ProductPage({
                 )}
                 {collectionSlug && (
                   <Link
-                    href={`/shop/collections/${collectionSlug}`}
+                    href={`/shop/espansioni/${collectionSlug}`}
                     className="border border-zinc-700 px-3 py-1 text-sm text-zinc-400 transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   >
-                    Collezione: {collectionName}
+                    Espansione: {collectionName}
                   </Link>
                 )}
               </div>

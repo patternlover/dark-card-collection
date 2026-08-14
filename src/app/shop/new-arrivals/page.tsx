@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function NewArrivalsPage() {
   let products: any[] = []
   let categories: any[] = []
-  let collections: any[] = []
+  let espansioni: any[] = []
 
   try {
     const payload = await getPayloadClient()
@@ -39,11 +39,11 @@ export default async function NewArrivalsPage() {
     categories = catResult.docs
 
     const colResult = await payload.find({ overrideAccess: true, 
-      collection: 'collections',
+      collection: 'espansioni',
       limit: 50,
       sort: 'name',
     })
-    collections = colResult.docs
+    espansioni = colResult.docs
   } catch {
     // DB might not be connected during build
   }
@@ -54,7 +54,7 @@ export default async function NewArrivalsPage() {
       subtitle="Scopri gli ultimi prodotti aggiunti al nostro catalogo"
       action="/shop/new-arrivals"
       categories={categories}
-      collections={collections}
+      espansioni={espansioni}
       products={products}
     />
   )

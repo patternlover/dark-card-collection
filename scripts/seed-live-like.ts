@@ -8,7 +8,7 @@ async function main() {
   const payload = await getPayload({ config })
 
   const cat = await payload.create({ overrideAccess: true,  collection: 'categories', data: { name: 'Booster Box', slug: 'booster-box' } as any })
-  const col = await payload.create({ overrideAccess: true,  collection: 'collections', data: { name: 'Scarlet & Violet', slug: 'sv' } as any })
+  const col = await payload.create({ overrideAccess: true,  collection: 'espansioni', data: { name: 'Scarlet & Violet', slug: 'sv' } as any })
 
   const base = [
     { title: 'Live Full Box', slug: 'live-full-box', price: 150, sale_price: 180, cost_of_goods_sold: 95, quantity: 5, featured: true, is_visible: true, category: cat.id, collection: col.id, product_type: 'booster-box', google_product_category: 'Toys & Games > Trading Card Game Cards', average_sale_price: 155, last_price_update: new Date().toISOString(), item_group_id: 'live-full-box', grade: 'mint', condition: 'new', availability: 'in_stock' },

@@ -21,7 +21,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
       cost: '30',
       sourceName: SRC,
       category: 'Sealed',
-      collection: 'Test Set',
+      expansion: 'Test Set',
     })
 
     await page.goto('/dashboard/inventory')
@@ -117,7 +117,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await expect(lrow1.getByText('In stock', { exact: true })).toBeVisible()
   })
 
-  test('i modali Categoria e Collezione creano voci che compaiono nel modale Lotto', async ({ page }) => {
+  test('i modali Categoria ed Espansione creano voci che compaiono nel modale Lotto', async ({ page }) => {
     const cat = `Flow Cat ${stamp}`
     const col = `Flow Col ${stamp}`
 
@@ -127,11 +127,11 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await page.getByRole('button', { name: 'Salva', exact: true }).click()
     await expect(page.getByText('Categoria creata')).toBeVisible()
 
-    await page.goto('/dashboard/collezioni')
-    await page.getByRole('button', { name: 'Nuova Collezione' }).click()
-    await page.locator('#collection-name').fill(col)
+    await page.goto('/dashboard/espansioni')
+    await page.getByRole('button', { name: 'Nuova Espansione' }).click()
+    await page.locator('#expansion-name').fill(col)
     await page.getByRole('button', { name: 'Salva', exact: true }).click()
-    await expect(page.getByText('Collezione creata')).toBeVisible()
+    await expect(page.getByText('Espansione creata')).toBeVisible()
 
     await page.goto('/dashboard/purchases')
     await page.getByRole('button', { name: 'Registra Lotto' }).click()

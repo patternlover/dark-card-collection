@@ -1,22 +1,37 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Lotti: dropdown prodotto per gruppo + select Variante (branch fix/ui-ux → main)**.
+Ultima sessione: **item_category (carte/prodotti) + rename completo Collezioni→Espansioni**.
 
 ---
 
-## Sessione recente 24 — Lotti: dropdown prodotto per gruppo + select Variante
+## Sessione recente 26 — item_category + rename Collezioni→Espansioni (DB, route, modali)
 
-Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-14-purchases-grouped-product-select.md`). Branch `fix/ui-ux` → main.
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-13-item-category-espansioni.md`). Su `main`.
 
-- **Dropdown "Seleziona prodotto esistente" (Registra/Modifica Lotto): una riga per GRUPPO** (title), non più una per prodotto/variant. Il `productId` della riga = parent canonicale (primo variant per lingua→prezzo, stessa logica storefront `groupProducts`).
-- **Select "Variante"** per i gruppi con più prodotti: permette di assegnare la riga del lotto allo specifico variant (es. grado diverso). Helper `buildVariantOptions` in `src/lib/sale-options.ts` (+ 4 unit test).
-- **Refetch prodotti all'apertura del modal** (create/edit): i prodotti appena creati da un lotto compaiono subito, senza reload di pagina.
-- **Verifica**: `pnpm lint` ✓ · `pnpm test` 79/79 ✓ · `next build` ✓ · **Playwright su bundle prod 49/49** ✓ · CI + deploy live verificati.
+- **Rename completo**: collection Payload `espansioni` (migration idempotente: rename tabella + FK + `payload_locked_documents_rels`), campo `Products.expansion` (ex `collection`), route `/dashboard/espansioni` e `/shop/espansioni` con **redirect** dalla vecchia; etichette ovunque.
+- **`item_category`** su Products (`product` | `card`, default `product`): modali Create/Edit con selettore "Tipo articolo" e sezioni condizionali **"Dettagli carta"** / **"Dettagli prodotto"**; campi carta NULL sui prodotti; `item_group_id` per entrambi.
+- **Badge "Carta"/"Prodotto"** sulle card dello shop.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 75/75 ✓ · `next build` ✓ · **Playwright bundle prod 51/51** ✓ · migration validata (up/down/idempotenza) · drift-check NESSUNO.
 
 ---
 
-## Sessione recente 23 — Dashboard più larga (contenuto fino a 1440px)
+## Sessione recente 25 — Lotti: dropdown prodotto per gruppo + select Variante
+
+---
+
+## Sessione recente 25 — item_category + rename Collezioni→Espansioni (DB, route, modali)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-13-item-category-espansioni.md`). Su `main`.
+
+- **Rename completo**: collection Payload `espansioni` (tabella rinominata da migration idempotente + FK + tabelle di sistema `payload_locked_documents_rels`), campo `Products.expansion` (ex `collection`), route `/dashboard/espansioni` e `/shop/espansioni` con **redirect** dalla vecchia; etichette ovunque (dashboard + storefront, `EspansionsShowcase`, footer, sitemap, guide).
+- **`item_category`** su Products (`product` | `card`, default `product`): modali Create/Edit con selettore "Tipo articolo" e sezioni condizionali **"Dettagli carta"** (grade MINT-NM, lingua, card number, rarità) / **"Dettagli prodotto"** (product type, google category, pre-ordine); campi carta NULL sui prodotti; `item_group_id` per entrambi.
+- **Badge "Carta"/"Prodotto"** sulle card dello shop.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 75/75 ✓ · `next build` ✓ · **Playwright bundle prod 51/51** ✓ · migration validata (up/down + idempotenza) · drift-check NESSUNO.
+
+---
+
+## Sessione recente 24 — Dashboard più larga (contenuto fino a 1440px)
 
 Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-13-dashboard-wider.md`). Su `main`.
 

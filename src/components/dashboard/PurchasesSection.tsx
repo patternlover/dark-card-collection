@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import {
   getCategories,
-  getCollections,
+  getEspansioni,
   getPurchases,
   getPurchaseSourceNames,
   createPurchase,
@@ -12,7 +12,7 @@ import {
   updatePurchase,
   searchProducts,
   type CategoryOption,
-  type CollectionOption,
+  type EspansioneOption,
   type PurchaseDTO,
 } from '@/app/dashboard/actions'
 import { groupProducts, type ProductGroup } from '@/lib/group-products'
@@ -64,7 +64,7 @@ interface LineForm {
   newProductTitle: string
   newProductPrice: string
   newProductCategory: string
-  newProductCollection: string
+  newProductExpansion: string
   newProductImageLink: string
   quantity: string
   unitCost: string
@@ -77,7 +77,7 @@ function emptyLine(): LineForm {
     newProductTitle: '',
     newProductPrice: '',
     newProductCategory: '',
-    newProductCollection: '',
+    newProductExpansion: '',
     newProductImageLink: '',
     quantity: '1',
     unitCost: '',
@@ -93,7 +93,7 @@ export function PurchasesSection() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [categories, setCategories] = useState<CategoryOption[]>([])
-  const [collections, setCollections] = useState<CollectionOption[]>([])
+  const [espansioni, setEspansioni] = useState<EspansioneOption[]>([])
   const [sourceOptions, setSourceOptions] = useState<string[]>([])
   const [productOptions, setProductOptions] = useState<ProductOption[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -161,7 +161,7 @@ export function PurchasesSection() {
 
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
-    getCollections().then(setCollections).catch(() => {})
+    getEspansioni().then(setEspansioni).catch(() => {})
     getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     refreshProductOptions()
   }, [refreshProductOptions])
@@ -218,7 +218,7 @@ export function PurchasesSection() {
             newProductTitle: '',
             newProductPrice: '',
             newProductCategory: '',
-            newProductCollection: '',
+            newProductExpansion: '',
             newProductImageLink: '',
             quantity: String(l.quantity),
             unitCost: String(l.unitCost),
@@ -251,7 +251,7 @@ export function PurchasesSection() {
       newProductTitle: l.newProduct ? l.newProductTitle.trim() || null : null,
       newProductPrice: l.newProduct && l.newProductPrice ? Number(l.newProductPrice) : null,
       newProductCategory: l.newProduct ? l.newProductCategory || null : null,
-      newProductCollection: l.newProduct ? l.newProductCollection || null : null,
+      newProductExpansion: l.newProduct ? l.newProductExpansion || null : null,
       newProductImageLink: l.newProduct ? l.newProductImageLink.trim() || null : null,
       quantity: Number(l.quantity) || 0,
       unitCost: Number(l.unitCost) || 0,
@@ -611,11 +611,11 @@ export function PurchasesSection() {
                               ))}
                             </Select>
                             <Select
-                              value={line.newProductCollection}
-                              onChange={(e) => updateLine(index, { newProductCollection: e.target.value })}
+                              value={line.newProductExpansion}
+                              onChange={(e) => updateLine(index, { newProductExpansion: e.target.value })}
                             >
-                              <option value="">— Collezione —</option>
-                              {collections.map((c) => (
+                              <option value="">— Espansione —</option>
+                              {espansioni.map((c) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                               ))}
                             </Select>

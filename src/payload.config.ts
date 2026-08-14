@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url'
 import { Products } from './payload/collections/Products'
 import { Users } from './payload/collections/Users'
 import { Categories } from './payload/collections/Categories'
-import { Collections } from './payload/collections/Collections'
+import { Espansioni } from './payload/collections/Espansioni'
 import { Orders } from './payload/collections/Orders'
 import { Media } from './payload/collections/Media'
 import { Messages } from './payload/collections/Messages'
@@ -25,7 +25,7 @@ export default buildConfig({
   admin: {
     disable: true,
   },
-  collections: [Users, Products, Categories, Collections, Orders, Media, Messages, Purchases],
+  collections: [Users, Products, Categories, Espansioni, Orders, Media, Messages, Purchases],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
   sharp,

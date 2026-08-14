@@ -8,7 +8,7 @@ import { useCart } from '@/hooks/useCart'
 
 const navItems = [
   { label: 'Shop', href: '/shop' },
-  { label: 'Collezioni', href: '/shop/collections' },
+  { label: 'Espansioni', href: '/shop/espansioni' },
   { label: 'Chi Siamo', href: '/info/about' },
   { label: 'FAQ', href: '/info/faq' },
   { label: 'Contatti', href: '/info/contact' },

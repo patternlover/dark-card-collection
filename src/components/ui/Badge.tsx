@@ -2,7 +2,7 @@ import { clsx } from 'clsx'
 
 interface BadgeProps {
   children: React.ReactNode
-  variant?: 'default' | 'new' | 'bestseller' | 'preorder' | 'sold-out'
+  variant?: 'default' | 'new' | 'bestseller' | 'preorder' | 'sold-out' | 'card'
   className?: string
 }
 
@@ -17,6 +17,7 @@ export function Badge({ children, variant = 'default', className }: BadgeProps) 
           'border-amber-600 bg-amber-950 text-amber-300': variant === 'bestseller',
           'border-purple-700 bg-purple-950 text-purple-300': variant === 'preorder',
           'border-red-700 bg-red-950 text-red-300': variant === 'sold-out',
+          'border-teal-700 bg-teal-950 text-teal-300': variant === 'card',
         },
         className
       )}

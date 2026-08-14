@@ -29,7 +29,7 @@ function product(over: Partial<ProductDTO> & { id: string | number; title: strin
     productType: null,
     googleProductCategory: null,
     category: null,
-    collection: null,
+    expansion: null,
     language: over.language ?? 'italian',
     cardNumber: null,
     rarity: null,

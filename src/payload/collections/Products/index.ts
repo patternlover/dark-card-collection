@@ -155,9 +155,21 @@ export const Products: CollectionConfig = {
       relationTo: 'categories',
     },
     {
-      name: 'collection',
+      name: 'expansion',
       type: 'relationship',
-      relationTo: 'collections',
+      relationTo: 'espansioni',
+    },
+    {
+      name: 'item_category',
+      type: 'select',
+      options: [
+        { label: 'Prodotto', value: 'product' },
+        { label: 'Carta', value: 'card' },
+      ],
+      defaultValue: 'product',
+      admin: {
+        description: 'Tipo articolo: prodotto sigillato o carta singola',
+      },
     },
     {
       name: 'product_type',

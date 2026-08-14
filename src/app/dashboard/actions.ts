@@ -36,7 +36,7 @@ export interface CategoryOption {
   name: string
 }
 
-export interface CollectionOption {
+export interface EspansioneOption {
   id: string
   name: string
 }
@@ -56,9 +56,10 @@ export interface ProductDTO {
   grade?: string | null
   condition?: string | null
   productType?: string | null
+  itemCategory?: string | null
   googleProductCategory?: string | null
   category?: { id: string; name: string } | null
-  collection?: { id: string; name: string } | null
+  expansion?: { id: string; name: string } | null
   language?: string | null
   cardNumber?: string | null
   rarity?: string | null
@@ -139,10 +140,11 @@ function toProductDTO(doc: any): ProductDTO {
     grade: doc.grade ?? null,
     condition: doc.condition ?? null,
     productType: doc.product_type ?? null,
+    itemCategory: doc.item_category ?? 'product',
     googleProductCategory: doc.google_product_category ?? null,
     category: doc.category ? { id: String(doc.category.id ?? doc.category), name: relName(doc.category) } : null,
-    collection: doc.collection
-      ? { id: String(doc.collection.id ?? doc.collection), name: relName(doc.collection) }
+    expansion: doc.expansion
+      ? { id: String(doc.expansion.id ?? doc.expansion), name: relName(doc.expansion) }
       : null,
     language: doc.language ?? null,
     cardNumber: doc.card_number ?? null,
@@ -315,7 +317,7 @@ export interface ProductFilters {
   search?: string
   status?: string
   category?: string
-  collection?: string
+  expansion?: string
   withImage?: string
   limit?: number
   page?: number
@@ -340,7 +342,7 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
   }
   if (filters.status) where.push({ status: { equals: filters.status } })
   if (filters.category) where.push({ category: { equals: Number(filters.category) } })
-  if (filters.collection) where.push({ collection: { equals: Number(filters.collection) } })
+  if (filters.expansion) where.push({ expansion: { equals: Number(filters.expansion) } })
   if (filters.withImage === 'yes') where.push({ image_link: { exists: true } })
   if (filters.withImage === 'no') where.push({ image_link: { exists: false } })
 
@@ -367,10 +369,10 @@ export async function getCategories(): Promise<CategoryOption[]> {
   return res.docs.map((d: any) => ({ id: String(d.id), name: d.name }))
 }
 
-export async function getCollections(): Promise<CollectionOption[]> {
+export async function getEspansioni(): Promise<EspansioneOption[]> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({ overrideAccess: true,  collection: 'collections', limit: 500, sort: 'name' })
+  const res = await payload.find({ overrideAccess: true,  collection: 'espansioni', limit: 500, sort: 'name' })
   return res.docs.map((d: any) => ({ id: String(d.id), name: d.name }))
 }
 
@@ -388,9 +390,10 @@ export interface UpdateProductPatch {
   grade?: string
   condition?: string
   productType?: string | null
+  itemCategory?: string | null
   googleProductCategory?: string | null
   category?: string | number | null
-  collection?: string | number | null
+  expansion?: string | number | null
   language?: string
   cardNumber?: string | null
   rarity?: string | null
@@ -411,6 +414,7 @@ const PATCH_FIELD_MAP: Record<string, string> = {
   imageLink: 'image_link',
   isVisible: 'is_visible',
   productType: 'product_type',
+  itemCategory: 'item_category',
   googleProductCategory: 'google_product_category',
 }
 
@@ -434,8 +438,9 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     'condition',
     'productType',
     'googleProductCategory',
+    'itemCategory',
     'category',
-    'collection',
+    'expansion',
     'language',
     'cardNumber',
     'rarity',
@@ -448,7 +453,7 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     if (!(key in patch)) continue
     const value = patch[key]
     const mapped =
-      key === 'category' || key === 'collection'
+      key === 'category' || key === 'expansion'
         ? value != null
           ? Number(value)
           : undefined
@@ -509,9 +514,10 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
       grade: data.grade || 'near-mint',
       condition: data.condition || 'used',
       product_type: data.productType || undefined,
+      item_category: data.itemCategory || 'product',
       google_product_category: data.googleProductCategory || undefined,
       category: data.category != null ? Number(data.category) : undefined,
-      collection: data.collection != null ? Number(data.collection) : undefined,
+      expansion: data.expansion != null ? Number(data.expansion) : undefined,
       language: data.language || 'italian',
       card_number: data.cardNumber || undefined,
       rarity: data.rarity || undefined,
@@ -1022,7 +1028,7 @@ export async function deleteCategory(id: string): Promise<void> {
   await payload.delete({ overrideAccess: true,  collection: 'categories', id })
 }
 
-export interface CollectionDTO {
+export interface EspansioneDTO {
   id: string
   name: string
   slug: string
@@ -1030,10 +1036,10 @@ export interface CollectionDTO {
   releaseDate?: string | null
 }
 
-export async function getCollectionsFull(): Promise<CollectionDTO[]> {
+export async function getEspansioniFull(): Promise<EspansioneDTO[]> {
   await requireAuth()
   const payload = await getPayloadClient()
-  const res = await payload.find({ overrideAccess: true,  collection: 'collections', limit: 500, sort: 'name', draft: false })
+  const res = await payload.find({ overrideAccess: true,  collection: 'espansioni', limit: 500, sort: 'name', draft: false })
   return res.docs.map((d: any) => ({
     id: String(d.id),
     name: d.name || '',
@@ -1043,12 +1049,12 @@ export async function getCollectionsFull(): Promise<CollectionDTO[]> {
   }))
 }
 
-export async function createCollection(data: {
+export async function createEspansione(data: {
   name: string
   slug?: string
   description?: string
   releaseDate?: string | null
-}): Promise<CollectionDTO> {
+}): Promise<EspansioneDTO> {
   await requireAuth()
   const payload = await getPayloadClient()
 
@@ -1059,13 +1065,13 @@ export async function createCollection(data: {
   let candidate = slug
   let i = 2
   while (true) {
-    const existing = await payload.find({ overrideAccess: true,  collection: 'collections', where: { slug: { equals: candidate } }, limit: 1 })
+    const existing = await payload.find({ overrideAccess: true,  collection: 'espansioni', where: { slug: { equals: candidate } }, limit: 1 })
     if (existing.docs.length === 0) break
     candidate = `${slug}-${i++}`
   }
 
   const res = await payload.create({ overrideAccess: true, 
-    collection: 'collections',
+    collection: 'espansioni',
     data: {
       name,
       slug: candidate,
@@ -1082,10 +1088,10 @@ export async function createCollection(data: {
   }
 }
 
-export async function updateCollection(
+export async function updateEspansione(
   id: string,
   data: { name?: string; slug?: string; description?: string | null; releaseDate?: string | null },
-): Promise<CollectionDTO> {
+): Promise<EspansioneDTO> {
   await requireAuth()
   const payload = await getPayloadClient()
   const patch: Record<string, any> = {}
@@ -1093,7 +1099,7 @@ export async function updateCollection(
   if (data.slug !== undefined) patch.slug = data.slug
   if (data.description !== undefined) patch.description = data.description ?? undefined
   if (data.releaseDate !== undefined) patch.releaseDate = data.releaseDate || undefined
-  const res = await payload.update({ overrideAccess: true,  collection: 'collections', id, data: patch as any })
+  const res = await payload.update({ overrideAccess: true,  collection: 'espansioni', id, data: patch as any })
   return {
     id: String(res.id),
     name: res.name as string,
@@ -1103,10 +1109,10 @@ export async function updateCollection(
   }
 }
 
-export async function deleteCollection(id: string): Promise<void> {
+export async function deleteEspansione(id: string): Promise<void> {
   await requireAuth()
   const payload = await getPayloadClient()
-  await payload.delete({ overrideAccess: true,  collection: 'collections', id })
+  await payload.delete({ overrideAccess: true,  collection: 'espansioni', id })
 }
 
 export interface MessageDTO {
@@ -1339,7 +1345,7 @@ export interface CreatePurchaseLineInput {
   newProductTitle?: string | null
   newProductPrice?: number | null
   newProductCategory?: string | number | null
-  newProductCollection?: string | number | null
+  newProductExpansion?: string | number | null
   newProductImageLink?: string | null
   quantity: number
   unitCost: number
@@ -1375,7 +1381,7 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
         title,
         price: line.newProductPrice ?? undefined,
         category: line.newProductCategory || undefined,
-        collection: line.newProductCollection || undefined,
+        expansion: line.newProductExpansion || undefined,
         imageLink: line.newProductImageLink || undefined,
         quantity: 0,
         status: 'listed',
@@ -1450,7 +1456,7 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
         title,
         price: line.newProductPrice ?? undefined,
         category: line.newProductCategory || undefined,
-        collection: line.newProductCollection || undefined,
+        expansion: line.newProductExpansion || undefined,
         imageLink: line.newProductImageLink || undefined,
         quantity: 0,
         status: 'listed',

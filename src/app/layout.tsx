@@ -104,7 +104,7 @@ export default function RootLayout({
         <noscript>
           <ul className="hidden">
             <li><a href="/shop">Shop</a></li>
-            <li><a href="/shop/collections">Collezioni</a></li>
+            <li><a href="/shop/espansioni">Espansioni</a></li>
             <li><a href="/guide">Guide</a></li>
             <li><a href="/info/faq">FAQ</a></li>
             <li><a href="/info/about">Chi Siamo</a></li>

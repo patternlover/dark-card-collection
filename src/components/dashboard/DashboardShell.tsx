@@ -27,7 +27,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { href: '/dashboard/inventory', label: 'Magazzino', icon: Package },
       { href: '/dashboard/listings', label: 'Listino', icon: Tags },
       { href: '/dashboard/categorie', label: 'Categorie', icon: Tag },
-      { href: '/dashboard/collezioni', label: 'Collezioni', icon: Layers },
+      { href: '/dashboard/espansioni', label: 'Espansioni', icon: Layers },
     ],
   },
   {
