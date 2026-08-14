@@ -1,6 +1,6 @@
 'use client'
 
-import { Fragment, useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
 import {
   getCategories,
@@ -15,6 +15,8 @@ import {
   type CollectionOption,
   type PurchaseDTO,
 } from '@/app/dashboard/actions'
+import { groupProducts, type ProductGroup } from '@/lib/group-products'
+import { buildVariantOptions } from '@/lib/sale-options'
 import {
   Alert,
   Button,
@@ -35,6 +37,16 @@ import {
 } from './ui'
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
+
+interface ProductOption {
+  id: string
+  title: string
+  price?: number | null
+  language?: string | null
+  quantity: number
+  grade?: string | null
+  condition?: string | null
+}
 
 const SOURCE_TYPE_OPTIONS = [
   { value: '', label: '— Seleziona fonte —' },
@@ -83,7 +95,7 @@ export function PurchasesSection() {
   const [categories, setCategories] = useState<CategoryOption[]>([])
   const [collections, setCollections] = useState<CollectionOption[]>([])
   const [sourceOptions, setSourceOptions] = useState<string[]>([])
-  const [productOptions, setProductOptions] = useState<{ id: string; title: string }[]>([])
+  const [productOptions, setProductOptions] = useState<ProductOption[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [editing, setEditing] = useState<PurchaseDTO | null>(null)
@@ -98,6 +110,15 @@ export function PurchasesSection() {
     notes: '',
   })
   const [lines, setLines] = useState<LineForm[]>([emptyLine()])
+
+  const groups = useMemo(() => groupProducts(productOptions), [productOptions])
+  const groupByProductId = useMemo(() => {
+    const map = new Map<string, ProductGroup>()
+    for (const g of groups) {
+      for (const p of g.products) map.set(String(p.id), g)
+    }
+    return map
+  }, [groups])
 
   const load = useCallback(
     async (opts: { page?: number; search?: string } = {}) => {
@@ -120,14 +141,30 @@ export function PurchasesSection() {
     [query, page],
   )
 
+  const refreshProductOptions = useCallback(() => {
+    searchProducts({ limit: 200 })
+      .then((res) =>
+        setProductOptions(
+          res.docs.map((p) => ({
+            id: p.id,
+            title: p.title,
+            price: p.price ?? null,
+            language: p.language ?? null,
+            quantity: p.quantity ?? 0,
+            grade: p.grade ?? null,
+            condition: p.condition ?? null,
+          })),
+        ),
+      )
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     getCategories().then(setCategories).catch(() => {})
     getCollections().then(setCollections).catch(() => {})
     getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
-    searchProducts({ limit: 200 })
-      .then((res) => setProductOptions(res.docs.map((p) => ({ id: p.id, title: p.title }))))
-      .catch(() => {})
-  }, [])
+    refreshProductOptions()
+  }, [refreshProductOptions])
 
   useEffect(() => {
     load()
@@ -148,6 +185,7 @@ export function PurchasesSection() {
     setEditing(null)
     setModalError(null)
     getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
+    refreshProductOptions()
     setForm({
       purchaseDate: new Date().toISOString().split('T')[0],
       sourceType: '',
@@ -164,6 +202,7 @@ export function PurchasesSection() {
     setExpandedId(null)
     setModalError(null)
     setEditing(p)
+    refreshProductOptions()
     setForm({
       purchaseDate: p.purchaseDate ? p.purchaseDate.slice(0, 10) : new Date().toISOString().split('T')[0],
       sourceType: p.sourceType || '',
@@ -502,24 +541,49 @@ export function PurchasesSection() {
               }
             >
               <div className="space-y-3">
-                {lines.map((line, index) => (
-                  <div key={index} data-testid="purchase-line" className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 space-y-2">
-                        <Select
-                          data-testid="line-product"
-                          value={line.newProduct ? '__new__' : line.productId}
-                          onChange={(e) => {
-                            const isNew = e.target.value === '__new__'
-                            updateLine(index, { newProduct: isNew, productId: isNew ? '' : e.target.value })
-                          }}
-                        >
-                          <option value="">— Seleziona prodotto esistente —</option>
-                          {productOptions.map((p) => (
-                            <option key={p.id} value={p.id}>{p.title}</option>
-                          ))}
-                          <option value="__new__">➕ Nuovo prodotto (crea dal lotto)</option>
-                        </Select>
+                {lines.map((line, index) => {
+                  const lineGroup =
+                    !line.newProduct && line.productId ? groupByProductId.get(line.productId) : undefined
+                  return (
+                    <div key={index} data-testid="purchase-line" className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 space-y-2">
+                          <Select
+                            data-testid="line-product"
+                            value={line.newProduct ? '__new__' : (lineGroup?.title ?? '')}
+                            onChange={(e) => {
+                              const isNew = e.target.value === '__new__'
+                              if (isNew) {
+                                updateLine(index, { newProduct: true, productId: '' })
+                                return
+                              }
+                              const group = groups.find((g) => g.title === e.target.value)
+                              updateLine(index, {
+                                newProduct: false,
+                                productId: group ? String(group.products[0].id) : '',
+                              })
+                            }}
+                          >
+                            <option value="">— Seleziona prodotto esistente —</option>
+                            {groups.map((g) => (
+                              <option key={g.title} value={g.title}>{g.title}</option>
+                            ))}
+                            <option value="__new__">➕ Nuovo prodotto (crea dal lotto)</option>
+                          </Select>
+
+                          {lineGroup && lineGroup.products.length > 1 ? (
+                            <Field label="Variante">
+                              <Select
+                                data-testid="line-variant"
+                                value={line.productId}
+                                onChange={(e) => updateLine(index, { productId: e.target.value })}
+                              >
+                                {buildVariantOptions(lineGroup.products).map((o) => (
+                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                ))}
+                              </Select>
+                            </Field>
+                          ) : null}
 
                         {line.newProduct ? (
                           <div className="grid grid-cols-2 gap-2">
@@ -598,7 +662,8 @@ export function PurchasesSection() {
                       </Field>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </ModalSection>
 

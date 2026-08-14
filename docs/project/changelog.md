@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Listino: nome su una riga + stella in fondo riga + header uniforme**.
+Ultima sessione: **Lotti: dropdown prodotto per gruppo + select Variante (branch fix/ui-ux → main)**.
+
+---
+
+## Sessione recente 23 — Lotti: dropdown prodotto per gruppo + select Variante
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-14-purchases-grouped-product-select.md`). Branch `fix/ui-ux` → main.
+
+- **Dropdown "Seleziona prodotto esistente" (Registra/Modifica Lotto): una riga per GRUPPO** (title), non più una per prodotto/variant. Il `productId` della riga = parent canonicale (primo variant per lingua→prezzo, stessa logica storefront `groupProducts`).
+- **Select "Variante"** per i gruppi con più prodotti: permette di assegnare la riga del lotto allo specifico variant (es. grado diverso). Helper `buildVariantOptions` in `src/lib/sale-options.ts` (+ 4 unit test).
+- **Refetch prodotti all'apertura del modal** (create/edit): i prodotti appena creati da un lotto compaiono subito, senza reload di pagina.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 79/79 ✓ · `next build` ✓ · **Playwright su bundle prod 49/49** ✓ · CI + deploy live verificati.
 
 ---
 
