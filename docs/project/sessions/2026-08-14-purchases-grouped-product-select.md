@@ -36,4 +36,4 @@
 ### Verifica
 - `pnpm lint` ✓ · `pnpm test` 79/79 ✓ (75 + 4 nuovi) · `next build` (dcc_test) ✓ · E2E bundle prod **49/49** ✓ (incluse purchases 7/7 con il nuovo test).
 - Collections Payload: NON toccate → nessuna migration/generate:types necessaria.
-- Commit: `(da compilare)` · push `fix/ui-ux` → PR → merge main · CI ✓ · deploy Vercel live verificato.
+- Commit: `944fe99` (feature) + `9bddc7f` (merge origin/main dashboard-wider) + `8020541` (merge PR #1) · fix CI separato: `nanoid ^3.3.17 → ^3.3.18` (advisory high, pre-esistente; PR #2 → `003638d`) · push `fix/ui-ux` → PR #1 → merge main · CI main ✓ (run 31815331272: audit/typecheck/test/build) · **deploy Vercel live verificato** (`line-variant` presente nel chunk prod `0u-eb83lbxac7.js`; homepage + dashboard 200).
