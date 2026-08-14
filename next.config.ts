@@ -39,6 +39,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      { source: '/shop/collections', destination: '/shop/espansioni', permanent: true },
+      { source: '/shop/collections/:slug', destination: '/shop/espansioni/:slug', permanent: true },
+    ]
+  },
   async headers() {
     return [
       {
