@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **item_category (carte/prodotti) + rename completo Collezioni→Espansioni**.
+Ultima sessione: **Gerarchia item_category_1/2/3 + tipo articolo nel lotto + restyle modali**.
+
+---
+
+## Sessione recente 27 — item_category_1/2/3 (stile Google) + tipo articolo nel lotto + restyle modali
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-14-item-category-hierarchy-modals.md`). Su `main`.
+
+- **Gerarchia stile Google** in sostituzione di `item_category`: `item_category_1` (prodotto/carta) · `item_category_2` (SPC/BOX/BUNDLE/ETB/TIN · SINGOLA/SLAB/ALTRO) · `item_category_3` (testo opzionale). Migration idempotente (rename colonna+enum, nuove colonne), drift-check NESSUNO.
+- **Lotti**: nel quick-create "Nuovo prodotto (crea dal lotto)" selezioni Tipo articolo + Sottocategoria.
+- **Restyle modali**: via i checkbox "In Evidenza"/"Visibile nello shop"; sezione **Google / Merchant Center collassabile** (Item Group ID, Product Type, Google Product Category); `slug` e `costo acquisto` disabilitati con badge "Auto" + hint.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 79/79 ✓ · `next build` ✓ · **Playwright bundle prod 54/54** ✓.
 
 ---
 

@@ -30,3 +30,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-13 — Listino: nome su una riga + stella in fondo riga + header uniforme](2026-08-13-listings-row-height.md)
 - [2026-08-13 — Dashboard più larga (niente scroll orizzontale)](2026-08-13-dashboard-wider.md)
 - [2026-08-13 — item_category + rename Collezioni→Espansioni](2026-08-13-item-category-espansioni.md)
+- [2026-08-14 — Gerarchia item_category_1/2/3 + restyle modali](2026-08-14-item-category-hierarchy-modals.md)

@@ -56,10 +56,31 @@ const RARITY_OPTIONS = [
   { value: 'secret-rare', label: 'Secret Rare' },
 ]
 
-const ITEM_CATEGORY_OPTIONS = [
-  { value: 'product', label: 'Prodotto' },
-  { value: 'card', label: 'Carta' },
+const PRODUCT_SUBCATEGORIES = [
+  { value: 'spc', label: 'SPC' },
+  { value: 'box', label: 'BOX' },
+  { value: 'bundle', label: 'BUNDLE' },
+  { value: 'etb', label: 'ETB' },
+  { value: 'tin', label: 'TIN' },
+  { value: 'other', label: 'ALTRO' },
 ]
+
+const CARD_SUBCATEGORIES = [
+  { value: 'single', label: 'SINGOLA' },
+  { value: 'slab', label: 'SLAB' },
+  { value: 'other', label: 'ALTRO' },
+]
+
+function AutoHint({ text }: { text: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs text-[var(--ui-text-faint)]">
+      <span className="rounded bg-[var(--ui-surface-alt)] px-1.5 py-0.5 font-semibold uppercase tracking-wide text-[var(--ui-text-muted)]">
+        Auto
+      </span>
+      {text}
+    </span>
+  )
+}
 
 interface CreateProductModalProps {
   categories: CategoryOption[]
@@ -100,9 +121,14 @@ export function CreateProductModal({
     rarity: initialProduct?.rarity || '',
     quantity: '1',
     imageLink: initialProduct?.imageLink || '',
-    featured: initialProduct?.featured || false,
-    isVisible: initialProduct?.isVisible ?? true,
-    itemCategory: initialProduct?.itemCategory || 'product',
+    itemCategory1: initialProduct?.itemCategory1 || 'product',
+    itemCategory2: initialProduct?.itemCategory2 || '',
+    itemCategory3: initialProduct?.itemCategory3 || '',
+    showGoogle: Boolean(
+      initialProduct?.itemGroupId ||
+        initialProduct?.productType ||
+        initialProduct?.googleProductCategory,
+    ),
   })
   const [saving, setSaving] = useState(false)
 
@@ -110,9 +136,9 @@ export function CreateProductModal({
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleItemCategory = (value: string) => {
+  const handleItemCategory1 = (value: string) => {
     setForm((prev) => {
-      const next = { ...prev, itemCategory: value }
+      const next = { ...prev, itemCategory1: value, itemCategory2: '' }
       if (value === 'card') {
         next.productType = ''
         next.googleProductCategory = ''
@@ -134,29 +160,33 @@ export function CreateProductModal({
       const input: CreateProductData = {
         title: form.title.trim(),
         slug: form.slug.trim(),
-        itemGroupId: form.itemGroupId.trim() || null,
+        itemGroupId: form.showGoogle ? (form.itemGroupId.trim() || null) : null,
         description: form.description.trim() || null,
         price: form.price === '' ? null : Number(form.price),
         salePrice: form.salePrice === '' ? null : Number(form.salePrice),
-        costOfGoodsSold: form.costOfGoodsSold === '' ? null : Number(form.costOfGoodsSold),
         status: form.status,
         availability: form.availability,
-        isPreorder: form.itemCategory === 'product' ? form.isPreorder : false,
-        grade: form.itemCategory === 'card' ? form.grade : 'near-mint',
-        condition: form.itemCategory === 'card' ? form.condition : 'new',
-        productType: form.itemCategory === 'product' ? (form.productType.trim() || null) : null,
-        googleProductCategory:
-          form.itemCategory === 'product' ? (form.googleProductCategory.trim() || null) : null,
-        language: form.itemCategory === 'card' ? form.language : 'italian',
+        isPreorder: form.itemCategory1 === 'product' ? form.isPreorder : false,
+        grade: form.itemCategory1 === 'card' ? form.grade : 'near-mint',
+        condition: form.itemCategory1 === 'card' ? form.condition : 'new',
+        productType: form.showGoogle
+          ? form.itemCategory1 === 'product'
+            ? (form.productType.trim() || null)
+            : null
+          : null,
+        googleProductCategory: form.showGoogle
+          ? (form.googleProductCategory.trim() || null)
+          : null,
+        language: form.itemCategory1 === 'card' ? form.language : 'italian',
         category: form.category ? Number(form.category) : null,
         expansion: form.expansion ? Number(form.expansion) : null,
-        cardNumber: form.itemCategory === 'card' ? (form.cardNumber.trim() || null) : null,
-        rarity: form.itemCategory === 'card' ? (form.rarity || null) : null,
+        cardNumber: form.itemCategory1 === 'card' ? (form.cardNumber.trim() || null) : null,
+        rarity: form.itemCategory1 === 'card' ? (form.rarity || null) : null,
         quantity: Number(form.quantity) || 0,
         imageLink: form.imageLink.trim() || null,
-        featured: form.featured,
-        isVisible: form.isVisible,
-        itemCategory: form.itemCategory,
+        itemCategory1: form.itemCategory1,
+        itemCategory2: form.itemCategory2 || null,
+        itemCategory3: form.itemCategory3.trim() || null,
       }
       await createProduct(input)
       onCreated()
@@ -168,8 +198,9 @@ export function CreateProductModal({
   }
 
   const checkboxClass = 'h-4 w-4 accent-[var(--ui-accent)]'
-  const isCard = form.itemCategory === 'card'
-  const isProduct = form.itemCategory === 'product'
+  const isCard = form.itemCategory1 === 'card'
+  const isProduct = form.itemCategory1 === 'product'
+  const subcategories = isCard ? CARD_SUBCATEGORIES : PRODUCT_SUBCATEGORIES
 
   return (
     <Modal
@@ -196,35 +227,43 @@ export function CreateProductModal({
               onChange={(e) => handleChange('title', e.target.value)}
             />
           </Field>
-          <Field label="Tipo articolo" htmlFor="cp-item-category">
+          <Field label="Tipo articolo" htmlFor="cp-item-category-1">
             <Select
-              id="cp-item-category"
-              value={form.itemCategory}
-              onChange={(e) => handleItemCategory(e.target.value)}
+              id="cp-item-category-1"
+              value={form.itemCategory1}
+              onChange={(e) => handleItemCategory1(e.target.value)}
             >
-              {ITEM_CATEGORY_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
+              <option value="product">Prodotto</option>
+              <option value="card">Carta</option>
             </Select>
           </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Item Group ID" htmlFor="cp-item-group">
+        <div className="grid grid-cols-3 gap-4">
+          <Field label="Sottocategoria" htmlFor="cp-item-category-2">
+            <Select
+              id="cp-item-category-2"
+              value={form.itemCategory2}
+              onChange={(e) => handleChange('itemCategory2', e.target.value)}
+            >
+              <option value="">—</option>
+              {subcategories.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Livello 3 (opzionale)" htmlFor="cp-item-category-3">
             <Input
-              id="cp-item-group"
+              id="cp-item-category-3"
               type="text"
-              value={form.itemGroupId}
-              onChange={(e) => handleChange('itemGroupId', e.target.value)}
+              value={form.itemCategory3}
+              onChange={(e) => handleChange('itemCategory3', e.target.value)}
+              placeholder="dettaglio libero"
             />
           </Field>
           <Field label="Slug" htmlFor="cp-slug">
-            <Input
-              id="cp-slug"
-              type="text"
-              value={form.slug}
-              onChange={(e) => handleChange('slug', e.target.value)}
-            />
+            <Input id="cp-slug" type="text" value={form.slug} disabled />
+            <AutoHint text="generato dal titolo" />
           </Field>
         </div>
 
@@ -265,14 +304,8 @@ export function CreateProductModal({
             />
           </Field>
           <Field label="Costo Acquisto (€)" htmlFor="cp-cogs">
-            <Input
-              id="cp-cogs"
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.costOfGoodsSold}
-              onChange={(e) => handleChange('costOfGoodsSold', e.target.value)}
-            />
+            <Input id="cp-cogs" type="number" step="0.01" min="0" value={form.costOfGoodsSold} disabled />
+            <AutoHint text="calcolato dai lotti (media ponderata)" />
           </Field>
           <Field label="Prezzo Barrato (€)" htmlFor="cp-sale-price">
             <Input
@@ -339,17 +372,6 @@ export function CreateProductModal({
                   ))}
                 </Select>
               </Field>
-              <Field label="Condizione (Google)" htmlFor="cp-condition">
-                <Select
-                  id="cp-condition"
-                  value={form.condition}
-                  onChange={(e) => handleChange('condition', e.target.value)}
-                >
-                  {CONDITION_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
               <Field label="Lingua" htmlFor="cp-language">
                 <Select
                   id="cp-language"
@@ -361,8 +383,6 @@ export function CreateProductModal({
                   ))}
                 </Select>
               </Field>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <Field label="Card Number" htmlFor="cp-card-number">
                 <Input
                   id="cp-card-number"
@@ -371,6 +391,8 @@ export function CreateProductModal({
                   onChange={(e) => handleChange('cardNumber', e.target.value)}
                 />
               </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <Field label="Rarità" htmlFor="cp-rarity">
                 <Select
                   id="cp-rarity"
@@ -378,6 +400,17 @@ export function CreateProductModal({
                   onChange={(e) => handleChange('rarity', e.target.value)}
                 >
                   {RARITY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Condizione (Google)" htmlFor="cp-condition">
+                <Select
+                  id="cp-condition"
+                  value={form.condition}
+                  onChange={(e) => handleChange('condition', e.target.value)}
+                >
+                  {CONDITION_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </Select>
@@ -391,26 +424,6 @@ export function CreateProductModal({
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
               Dettagli prodotto
             </p>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Product Type (Google)" htmlFor="cp-product-type">
-                <Input
-                  id="cp-product-type"
-                  type="text"
-                  value={form.productType}
-                  onChange={(e) => handleChange('productType', e.target.value)}
-                  placeholder="es. Trading Card Game"
-                />
-              </Field>
-              <Field label="Google Product Category" htmlFor="cp-gpc">
-                <Input
-                  id="cp-gpc"
-                  type="text"
-                  value={form.googleProductCategory}
-                  onChange={(e) => handleChange('googleProductCategory', e.target.value)}
-                  placeholder="es. Toys & Games > Trading Card Game Cards"
-                />
-              </Field>
-            </div>
             <label className="flex cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
@@ -441,25 +454,53 @@ export function CreateProductModal({
           />
         </Field>
 
-        <div className="flex flex-wrap items-center gap-6">
+        <div className="space-y-3">
           <label className="flex cursor-pointer items-center gap-2">
             <input
               type="checkbox"
-              checked={form.featured}
-              onChange={(e) => handleChange('featured', e.target.checked)}
+              checked={form.showGoogle}
+              onChange={(e) => handleChange('showGoogle', e.target.checked)}
               className={checkboxClass}
             />
-            <span className="text-sm font-medium text-[var(--ui-text-muted)]">In Evidenza</span>
+            <span className="text-sm font-medium text-[var(--ui-text-muted)]">
+              Inserisci dati Google / Merchant Center
+            </span>
           </label>
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.isVisible}
-              onChange={(e) => handleChange('isVisible', e.target.checked)}
-              className={checkboxClass}
-            />
-            <span className="text-sm font-medium text-[var(--ui-text-muted)]">Visibile nello shop</span>
-          </label>
+          {form.showGoogle ? (
+            <div className="space-y-4 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 p-4">
+              <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
+                Google / Merchant Center
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Item Group ID" htmlFor="cp-item-group">
+                  <Input
+                    id="cp-item-group"
+                    type="text"
+                    value={form.itemGroupId}
+                    onChange={(e) => handleChange('itemGroupId', e.target.value)}
+                  />
+                </Field>
+                <Field label="Product Type (Google)" htmlFor="cp-product-type">
+                  <Input
+                    id="cp-product-type"
+                    type="text"
+                    value={form.productType}
+                    onChange={(e) => handleChange('productType', e.target.value)}
+                    placeholder="es. Trading Card Game"
+                  />
+                </Field>
+              </div>
+              <Field label="Google Product Category" htmlFor="cp-gpc">
+                <Input
+                  id="cp-gpc"
+                  type="text"
+                  value={form.googleProductCategory}
+                  onChange={(e) => handleChange('googleProductCategory', e.target.value)}
+                  placeholder="es. Toys & Games > Trading Card Game Cards"
+                />
+              </Field>
+            </div>
+          ) : null}
         </div>
       </div>
     </Modal>

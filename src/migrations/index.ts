@@ -11,6 +11,7 @@ import * as migration_20260812_purchases_lines_schema from './20260812_purchases
 import * as migration_20260812_fix_locked_documents_rels from './20260812_fix_locked_documents_rels';
 import * as migration_20260812_align_orders_stripe_session_index from './20260812_align_orders_stripe_session_index';
 import * as migration_20260813_espansioni_item_category from './20260813_espansioni_item_category';
+import * as migration_20260814_item_category_hierarchy from './20260814_item_category_hierarchy';
 
 export const migrations = [
   {
@@ -77,5 +78,10 @@ export const migrations = [
     up: migration_20260813_espansioni_item_category.up,
     down: migration_20260813_espansioni_item_category.down,
     name: '20260813_espansioni_item_category'
+  },
+  {
+    up: migration_20260814_item_category_hierarchy.up,
+    down: migration_20260814_item_category_hierarchy.down,
+    name: '20260814_item_category_hierarchy'
   },
 ];

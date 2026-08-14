@@ -160,7 +160,7 @@ export const Products: CollectionConfig = {
       relationTo: 'espansioni',
     },
     {
-      name: 'item_category',
+      name: 'item_category_1',
       type: 'select',
       options: [
         { label: 'Prodotto', value: 'product' },
@@ -168,7 +168,31 @@ export const Products: CollectionConfig = {
       ],
       defaultValue: 'product',
       admin: {
-        description: 'Tipo articolo: prodotto sigillato o carta singola',
+        description: 'Tipo articolo (livello 1): prodotto sigillato o carta singola',
+      },
+    },
+    {
+      name: 'item_category_2',
+      type: 'select',
+      options: [
+        { label: 'SPC', value: 'spc' },
+        { label: 'BOX', value: 'box' },
+        { label: 'BUNDLE', value: 'bundle' },
+        { label: 'ETB', value: 'etb' },
+        { label: 'TIN', value: 'tin' },
+        { label: 'SINGOLA', value: 'single' },
+        { label: 'SLAB', value: 'slab' },
+        { label: 'ALTRO', value: 'other' },
+      ],
+      admin: {
+        description: 'Sottocategoria (livello 2): SPC/BOX/BUNDLE/ETB/TIN per prodotti, SINGOLA/SLAB per carte',
+      },
+    },
+    {
+      name: 'item_category_3',
+      type: 'text',
+      admin: {
+        description: 'Dettaglio aggiuntivo (livello 3, opzionale)',
       },
     },
     {

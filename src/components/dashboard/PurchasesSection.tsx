@@ -66,6 +66,8 @@ interface LineForm {
   newProductCategory: string
   newProductExpansion: string
   newProductImageLink: string
+  newProductItemCategory1: string
+  newProductItemCategory2: string
   quantity: string
   unitCost: string
 }
@@ -79,6 +81,8 @@ function emptyLine(): LineForm {
     newProductCategory: '',
     newProductExpansion: '',
     newProductImageLink: '',
+    newProductItemCategory1: 'product',
+    newProductItemCategory2: '',
     quantity: '1',
     unitCost: '',
   }
@@ -219,6 +223,8 @@ export function PurchasesSection() {
             newProductPrice: '',
             newProductCategory: '',
             newProductExpansion: '',
+            newProductItemCategory1: 'product',
+            newProductItemCategory2: '',
             newProductImageLink: '',
             quantity: String(l.quantity),
             unitCost: String(l.unitCost),
@@ -253,6 +259,8 @@ export function PurchasesSection() {
       newProductCategory: l.newProduct ? l.newProductCategory || null : null,
       newProductExpansion: l.newProduct ? l.newProductExpansion || null : null,
       newProductImageLink: l.newProduct ? l.newProductImageLink.trim() || null : null,
+      newProductItemCategory1: l.newProduct ? l.newProductItemCategory1 || 'product' : undefined,
+      newProductItemCategory2: l.newProduct ? l.newProductItemCategory2 || undefined : undefined,
       quantity: Number(l.quantity) || 0,
       unitCost: Number(l.unitCost) || 0,
     }))
@@ -618,6 +626,40 @@ export function PurchasesSection() {
                               {espansioni.map((c) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                               ))}
+                            </Select>
+                            <Select
+                              value={line.newProductItemCategory1}
+                              onChange={(e) =>
+                                updateLine(index, {
+                                  newProductItemCategory1: e.target.value,
+                                  newProductItemCategory2: '',
+                                })
+                              }
+                            >
+                              <option value="product">Tipo: Prodotto</option>
+                              <option value="card">Tipo: Carta</option>
+                            </Select>
+                            <Select
+                              value={line.newProductItemCategory2}
+                              onChange={(e) => updateLine(index, { newProductItemCategory2: e.target.value })}
+                            >
+                              <option value="">— Sottocategoria —</option>
+                              {line.newProductItemCategory1 === 'card' ? (
+                                <>
+                                  <option value="single">SINGOLA</option>
+                                  <option value="slab">SLAB</option>
+                                  <option value="other">ALTRO</option>
+                                </>
+                              ) : (
+                                <>
+                                  <option value="spc">SPC</option>
+                                  <option value="box">BOX</option>
+                                  <option value="bundle">BUNDLE</option>
+                                  <option value="etb">ETB</option>
+                                  <option value="tin">TIN</option>
+                                  <option value="other">ALTRO</option>
+                                </>
+                              )}
                             </Select>
                             <Input
                               type="url"

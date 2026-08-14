@@ -12,7 +12,7 @@ export interface ProductGroup {
   category: any
   collection: any
   slug: string
-  itemCategory: string
+  itemCategory1: string
 }
 
 const LANG_ORDER: Record<string, number> = {
@@ -68,7 +68,7 @@ export function groupProducts(products: any[]): ProductGroup[] {
       category: sorted[0]?.category || null,
       collection: sorted[0]?.collection || null,
       slug: sorted[0]?.slug || '',
-      itemCategory: sorted[0]?.item_category || 'product',
+      itemCategory1: sorted[0]?.item_category_1 || 'product',
     })
   }
 

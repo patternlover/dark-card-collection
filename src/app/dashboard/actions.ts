@@ -56,7 +56,9 @@ export interface ProductDTO {
   grade?: string | null
   condition?: string | null
   productType?: string | null
-  itemCategory?: string | null
+  itemCategory1?: string | null
+  itemCategory2?: string | null
+  itemCategory3?: string | null
   googleProductCategory?: string | null
   category?: { id: string; name: string } | null
   expansion?: { id: string; name: string } | null
@@ -140,7 +142,9 @@ function toProductDTO(doc: any): ProductDTO {
     grade: doc.grade ?? null,
     condition: doc.condition ?? null,
     productType: doc.product_type ?? null,
-    itemCategory: doc.item_category ?? 'product',
+    itemCategory1: doc.item_category_1 ?? 'product',
+    itemCategory2: doc.item_category_2 ?? null,
+    itemCategory3: doc.item_category_3 ?? null,
     googleProductCategory: doc.google_product_category ?? null,
     category: doc.category ? { id: String(doc.category.id ?? doc.category), name: relName(doc.category) } : null,
     expansion: doc.expansion
@@ -390,7 +394,9 @@ export interface UpdateProductPatch {
   grade?: string
   condition?: string
   productType?: string | null
-  itemCategory?: string | null
+  itemCategory1?: string | null
+  itemCategory2?: string | null
+  itemCategory3?: string | null
   googleProductCategory?: string | null
   category?: string | number | null
   expansion?: string | number | null
@@ -414,7 +420,9 @@ const PATCH_FIELD_MAP: Record<string, string> = {
   imageLink: 'image_link',
   isVisible: 'is_visible',
   productType: 'product_type',
-  itemCategory: 'item_category',
+  itemCategory1: 'item_category_1',
+  itemCategory2: 'item_category_2',
+  itemCategory3: 'item_category_3',
   googleProductCategory: 'google_product_category',
 }
 
@@ -438,7 +446,9 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     'condition',
     'productType',
     'googleProductCategory',
-    'itemCategory',
+    'itemCategory1',
+    'itemCategory2',
+    'itemCategory3',
     'category',
     'expansion',
     'language',
@@ -514,7 +524,9 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
       grade: data.grade || 'near-mint',
       condition: data.condition || 'used',
       product_type: data.productType || undefined,
-      item_category: data.itemCategory || 'product',
+      item_category_1: data.itemCategory1 || 'product',
+      item_category_2: data.itemCategory2 || undefined,
+      item_category_3: data.itemCategory3 || undefined,
       google_product_category: data.googleProductCategory || undefined,
       category: data.category != null ? Number(data.category) : undefined,
       expansion: data.expansion != null ? Number(data.expansion) : undefined,
@@ -1347,6 +1359,8 @@ export interface CreatePurchaseLineInput {
   newProductCategory?: string | number | null
   newProductExpansion?: string | number | null
   newProductImageLink?: string | null
+  newProductItemCategory1?: string
+  newProductItemCategory2?: string
   quantity: number
   unitCost: number
 }
@@ -1383,6 +1397,8 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
         category: line.newProductCategory || undefined,
         expansion: line.newProductExpansion || undefined,
         imageLink: line.newProductImageLink || undefined,
+        itemCategory1: line.newProductItemCategory1 || 'product',
+        itemCategory2: line.newProductItemCategory2 || undefined,
         quantity: 0,
         status: 'listed',
       })
@@ -1458,6 +1474,8 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
         category: line.newProductCategory || undefined,
         expansion: line.newProductExpansion || undefined,
         imageLink: line.newProductImageLink || undefined,
+        itemCategory1: line.newProductItemCategory1 || 'product',
+        itemCategory2: line.newProductItemCategory2 || undefined,
         quantity: 0,
         status: 'listed',
       })

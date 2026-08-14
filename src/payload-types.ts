@@ -206,9 +206,17 @@ export interface Product {
   category?: (number | null) | Category;
   expansion?: (number | null) | Espansioni;
   /**
-   * Tipo articolo: prodotto sigillato o carta singola
+   * Tipo articolo (livello 1): prodotto sigillato o carta singola
    */
-  item_category?: ('product' | 'card') | null;
+  item_category_1?: ('product' | 'card') | null;
+  /**
+   * Sottocategoria (livello 2): SPC/BOX/BUNDLE/ETB/TIN per prodotti, SINGOLA/SLAB per carte
+   */
+  item_category_2?: ('spc' | 'box' | 'bundle' | 'etb' | 'tin' | 'single' | 'slab' | 'other') | null;
+  /**
+   * Dettaglio aggiuntivo (livello 3, opzionale)
+   */
+  item_category_3?: string | null;
   /**
    * Merchant product_type (es. nome collezione/categoria)
    */
@@ -554,7 +562,9 @@ export interface ProductsSelect<T extends boolean = true> {
   is_preorder?: T;
   category?: T;
   expansion?: T;
-  item_category?: T;
+  item_category_1?: T;
+  item_category_2?: T;
+  item_category_3?: T;
   product_type?: T;
   google_product_category?: T;
   language?: T;
