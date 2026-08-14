@@ -75,6 +75,19 @@ function sortVariants(a: SaleProductOption, b: SaleProductOption): number {
   return (a.price ?? Infinity) - (b.price ?? Infinity)
 }
 
+export function buildVariantOptions(products: SaleProductOption[]): SaleOption[] {
+  const discriminator = discriminatorFor(products)
+  const sorted = [...products].sort(sortVariants)
+  return sorted.map((p) => {
+    const attr = discriminator ? attributeLabel(discriminator, p[discriminator]) : null
+    const suffix = attr ? ` · ${attr}` : ''
+    return {
+      value: p.id,
+      label: `${p.title}${suffix} ${stockLabel(p)}`,
+    }
+  })
+}
+
 export function buildSaleOptions(products: SaleProductOption[]): SaleSelectEntry[] {
   const byTitle = new Map<string, SaleProductOption[]>()
   for (const p of products) {

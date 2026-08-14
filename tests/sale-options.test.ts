@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildSaleOptions, type SaleProductOption } from '@/lib/sale-options'
+import { buildSaleOptions, buildVariantOptions, type SaleProductOption } from '@/lib/sale-options'
 
 const base = { quantity: 1, price: 10, language: 'italian' } as const
 
@@ -77,5 +77,40 @@ describe('buildSaleOptions', () => {
       'Alfata (stock 1)',
       'Zetacolo (stock 1)',
     ])
+  })
+})
+
+describe('buildVariantOptions', () => {
+  it('returns a single option for a single product with stock', () => {
+    const options = buildVariantOptions([{ id: '1', title: 'ETB', ...base, quantity: 3 }])
+    expect(options).toEqual([{ value: '1', label: 'ETB (stock 3)' }])
+  })
+
+  it('labels options by the differing attribute', () => {
+    const options = buildVariantOptions([
+      { id: '1', title: 'Charizard 9', ...base, grade: 'mint' },
+      { id: '2', title: 'Charizard 9', ...base, grade: 'near-mint', quantity: 2 },
+    ])
+    expect(options).toEqual([
+      { value: '1', label: 'Charizard 9 · Mint (stock 1)' },
+      { value: '2', label: 'Charizard 9 · Near Mint (stock 2)' },
+    ])
+  })
+
+  it('sorts variants by language then price', () => {
+    const options = buildVariantOptions([
+      { id: '1', title: 'Box', ...base, language: 'japanese', price: 100 },
+      { id: '2', title: 'Box', ...base, language: 'english', price: 120 },
+      { id: '3', title: 'Box', ...base, language: 'english', price: 90 },
+    ])
+    expect(options.map((o) => o.value)).toEqual(['3', '2', '1'])
+  })
+
+  it('drops the attribute suffix when variants are identical', () => {
+    const options = buildVariantOptions([
+      { id: '1', title: 'Sealed', ...base },
+      { id: '2', title: 'Sealed', ...base },
+    ])
+    expect(options.map((o) => o.label)).toEqual(['Sealed (stock 1)', 'Sealed (stock 1)'])
   })
 })
