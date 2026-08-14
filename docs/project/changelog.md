@@ -5,7 +5,7 @@ Ultima sessione: **Lotti: dropdown prodotto per gruppo + select Variante (branch
 
 ---
 
-## Sessione recente 23 — Lotti: dropdown prodotto per gruppo + select Variante
+## Sessione recente 24 — Lotti: dropdown prodotto per gruppo + select Variante
 
 Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-14-purchases-grouped-product-select.md`). Branch `fix/ui-ux` → main.
 
@@ -13,6 +13,15 @@ Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-14-purchases-grouped
 - **Select "Variante"** per i gruppi con più prodotti: permette di assegnare la riga del lotto allo specifico variant (es. grado diverso). Helper `buildVariantOptions` in `src/lib/sale-options.ts` (+ 4 unit test).
 - **Refetch prodotti all'apertura del modal** (create/edit): i prodotti appena creati da un lotto compaiono subito, senza reload di pagina.
 - **Verifica**: `pnpm lint` ✓ · `pnpm test` 79/79 ✓ · `next build` ✓ · **Playwright su bundle prod 49/49** ✓ · CI + deploy live verificati.
+
+---
+
+## Sessione recente 23 — Dashboard più larga (contenuto fino a 1440px)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-13-dashboard-wider.md`). Su `main`.
+
+- `DashboardShell`: `<main>` da `max-w-6xl` (1152px) a **`max-w-[1440px]`** → le tabelle del Listino (8 colonne) e delle altre sezioni stanno senza slider orizzontale sui desktop tipici; `overflow-x-auto` resta come fallback per schermi piccoli.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 75/75 ✓ · `next build` ✓ · E2E bundle prod Listino+Magazzino 15/15 ✓.
 
 ---
 
