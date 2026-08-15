@@ -72,19 +72,27 @@ export function CategoriesSection() {
     setError(null)
     try {
       if (form.id) {
-        const saved = await updateCategory(form.id, {
+        const res = await updateCategory(form.id, {
           name: form.name.trim() || undefined,
           slug: form.slug.trim() || undefined,
           description: form.description.trim() || null,
         })
-        setCategories((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
+        if (!res.ok) {
+          setError(res.message)
+          return
+        }
+        setCategories((prev) => prev.map((c) => (c.id === form.id ? res.data : c)))
       } else {
-        const saved = await createCategory({
+        const res = await createCategory({
           name: form.name,
           slug: form.slug,
           description: form.description,
         })
-        setCategories((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
+        if (!res.ok) {
+          setError(res.message)
+          return
+        }
+        setCategories((prev) => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name)))
       }
       setForm(null)
       setNotice(form.id ? 'Categoria aggiornata' : 'Categoria creata')

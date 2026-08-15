@@ -136,8 +136,12 @@ export function OrdersSection() {
 
   const handleStatus = async (id: string, status: string) => {
     try {
-      const updated = await updateOrderStatus(id, status)
-      setOrders((prev) => prev.map((o) => (o.id === id ? updated : o)))
+      const res = await updateOrderStatus(id, status)
+      if (!res.ok) {
+        setError(res.message)
+        return
+      }
+      setOrders((prev) => prev.map((o) => (o.id === id ? res.data : o)))
     } catch {
       setError('Errore durante l\'aggiornamento')
     }
@@ -184,7 +188,11 @@ export function OrdersSection() {
     setBusy(true)
     setError(null)
     try {
-      await recordExternalSale({ productId: ext.productId, quantity: qty, platform: ext.platform, salePrice: price })
+      const res = await recordExternalSale({ productId: ext.productId, quantity: qty, platform: ext.platform, salePrice: price })
+      if (!res.ok) {
+        setError(res.message ?? 'Errore durante la registrazione della vendita')
+        return
+      }
       setShowExternal(false)
       setExt({ productId: '', platform: 'vinted', quantity: '1', salePrice: '' })
       load()

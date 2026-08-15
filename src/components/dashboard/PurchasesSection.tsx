@@ -317,10 +317,18 @@ export function PurchasesSection() {
         lines: lineInputs,
       }
       if (editing) {
-        await updatePurchase(editing.id, data)
+        const res = await updatePurchase(editing.id, data)
+        if (!res.ok) {
+          setModalError(res.message)
+          return
+        }
         notify('Lotto aggiornato e inventario riconciliato')
       } else {
-        await createPurchase(data)
+        const res = await createPurchase(data)
+        if (!res.ok) {
+          setModalError(res.message)
+          return
+        }
         notify('Lotto registrato e inventario aggiornato con successo')
       }
       resetForm()

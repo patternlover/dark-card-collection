@@ -34,3 +34,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-14 — Remap item_category (Macro/Espansione/Micro) + via categories + Listati](2026-08-14-item-category-remap-listati.md)
 - [2026-08-14 — Categorie dinamiche + semplificazione stato + tabelle uniformi](2026-08-14-unify-tables-simplify-state.md)
 - [2026-08-15 — Lotti Nuovo prodotto/Nuova carta + espansioni multiple](2026-08-15-lot-create-card-product-hasmany.md)
+- [2026-08-15 — B2: server action senza throw + lingua comune nel modale prodotto](2026-08-15-server-actions-structured-results.md)

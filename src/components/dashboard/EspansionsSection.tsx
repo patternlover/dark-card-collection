@@ -79,21 +79,29 @@ export function EspansionsSection() {
     setError(null)
     try {
       if (form.id) {
-        const saved = await updateEspansione(form.id, {
+        const res = await updateEspansione(form.id, {
           name: form.name.trim() || undefined,
           slug: form.slug.trim() || undefined,
           description: form.description.trim() || null,
           releaseDate: form.releaseDate || null,
         })
-        setEspansioni((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
+        if (!res.ok) {
+          setError(res.message)
+          return
+        }
+        setEspansioni((prev) => prev.map((c) => (c.id === form.id ? res.data : c)))
       } else {
-        const saved = await createEspansione({
+        const res = await createEspansione({
           name: form.name,
           slug: form.slug,
           description: form.description,
           releaseDate: form.releaseDate || null,
         })
-        setEspansioni((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
+        if (!res.ok) {
+          setError(res.message)
+          return
+        }
+        setEspansioni((prev) => [...prev, res.data].sort((a, b) => a.name.localeCompare(b.name)))
       }
       setForm(null)
       setNotice(form.id ? 'Espansione aggiornata' : 'Espansione creata')

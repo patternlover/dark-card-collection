@@ -93,8 +93,12 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
         rarity: isCard ? (form.rarity || null) : null,
         imageLink: form.imageLink.trim() || null,
       }
-      const saved = await updateProduct(product.id, patch)
-      onSaved(saved)
+      const res = await updateProduct(product.id, patch)
+      if (!res.ok) {
+        onError(res.message)
+        return
+      }
+      onSaved(res.data)
     } catch (err) {
       onError(err instanceof Error ? err.message : String(err))
     } finally {

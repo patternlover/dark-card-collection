@@ -25,6 +25,20 @@ async function requireAuth(): Promise<void> {
   }
 }
 
+/** Structured auth check for write actions: returns an error message or null. */
+async function authError(): Promise<string | null> {
+  return (await isAuthed()) ? null : 'Non autorizzato'
+}
+
+/** Result payload for actions that return data. */
+export type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string }
+
+/** Result payload for actions without a meaningful payload. */
+export interface WriteResult {
+  ok: boolean
+  message?: string
+}
+
 export async function logout(): Promise<void> {
   logAudit('dashboard.logout', {})
   await clearDashSession()
@@ -414,8 +428,9 @@ const PATCH_FIELD_MAP: Record<string, string> = {
   googleProductCategory: 'google_product_category',
 }
 
-export async function updateProduct(id: string, patch: UpdateProductPatch): Promise<ProductDTO> {
-  await requireAuth()
+export async function updateProduct(id: string, patch: UpdateProductPatch): Promise<ActionResult<ProductDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   logAudit('product.update', { id, keys: Object.keys(patch) })
   const payload = await getPayloadClient()
   const data: Record<string, any> = {}
@@ -462,7 +477,7 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     depth: 1,
     draft: false,
   })
-  return toProductDTO(res)
+  return { ok: true, data: toProductDTO(res) }
 }
 
 export async function getProductById(id: string): Promise<ProductDTO> {
@@ -472,12 +487,13 @@ export async function getProductById(id: string): Promise<ProductDTO> {
   return toProductDTO(res)
 }
 
-export async function createProduct(data: CreateProductData): Promise<ProductDTO> {
-  await requireAuth()
+export async function createProduct(data: CreateProductData): Promise<ActionResult<ProductDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
 
   const title = (data.title || '').trim()
-  if (!title) throw new Error('Il titolo è obbligatorio')
+  if (!title) return { ok: false, message: 'Il titolo è obbligatorio' }
 
   let slug = (data.slug || '').trim() || slugify(title)
   let candidate = slug
@@ -523,7 +539,7 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
     depth: 1,
     draft: false,
   })
-  return toProductDTO(res)
+  return { ok: true, data: toProductDTO(res) }
 }
 
 export async function getOrders(): Promise<OrderDTO[]> {
@@ -539,8 +555,9 @@ export async function getOrders(): Promise<OrderDTO[]> {
   return res.docs.map(toOrderDTO)
 }
 
-export async function updateOrderStatus(id: string, status: string): Promise<OrderDTO> {
-  await requireAuth()
+export async function updateOrderStatus(id: string, status: string): Promise<ActionResult<OrderDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   logAudit('order.status', { id, status })
   const payload = await getPayloadClient()
   const res = await payload.update({ overrideAccess: true, 
@@ -550,7 +567,7 @@ export async function updateOrderStatus(id: string, status: string): Promise<Ord
     depth: 1,
     draft: false,
   })
-  return toOrderDTO(res)
+  return { ok: true, data: toOrderDTO(res) }
 }
 
 export async function runQuery(sql: string): Promise<QueryOutcome> {
@@ -692,12 +709,13 @@ export async function getCategoriesFull(): Promise<CategoryDTO[]> {
   }))
 }
 
-export async function createCategory(data: { name: string; slug?: string; description?: string }): Promise<CategoryDTO> {
-  await requireAuth()
+export async function createCategory(data: { name: string; slug?: string; description?: string }): Promise<ActionResult<CategoryDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
 
   const name = (data.name || '').trim()
-  if (!name) throw new Error('Il nome è obbligatorio')
+  if (!name) return { ok: false, message: 'Il nome è obbligatorio' }
 
   let slug = (data.slug || '').trim() || slugify(name)
   let candidate = slug
@@ -713,18 +731,22 @@ export async function createCategory(data: { name: string; slug?: string; descri
     data: { name, slug: candidate, description: data.description || undefined } as any,
   })
   return {
-    id: String(res.id),
-    name: res.name as string,
-    slug: res.slug as string,
-    description: (res.description ?? null) as string | null,
+    ok: true,
+    data: {
+      id: String(res.id),
+      name: res.name as string,
+      slug: res.slug as string,
+      description: (res.description ?? null) as string | null,
+    },
   }
 }
 
 export async function updateCategory(
   id: string,
   data: { name?: string; slug?: string; description?: string | null },
-): Promise<CategoryDTO> {
-  await requireAuth()
+): Promise<ActionResult<CategoryDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
   const patch: Record<string, any> = {}
   if (data.name !== undefined) patch.name = data.name
@@ -732,10 +754,13 @@ export async function updateCategory(
   if (data.description !== undefined) patch.description = data.description ?? undefined
   const res = await payload.update({ overrideAccess: true,  collection: 'categories', id, data: patch as any })
   return {
-    id: String(res.id),
-    name: res.name as string,
-    slug: res.slug as string,
-    description: (res.description ?? null) as string | null,
+    ok: true,
+    data: {
+      id: String(res.id),
+      name: res.name as string,
+      slug: res.slug as string,
+      description: (res.description ?? null) as string | null,
+    },
   }
 }
 
@@ -1046,12 +1071,13 @@ export async function createEspansione(data: {
   slug?: string
   description?: string
   releaseDate?: string | null
-}): Promise<EspansioneDTO> {
-  await requireAuth()
+}): Promise<ActionResult<EspansioneDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
 
   const name = (data.name || '').trim()
-  if (!name) throw new Error('Il nome è obbligatorio')
+  if (!name) return { ok: false, message: 'Il nome è obbligatorio' }
 
   let slug = (data.slug || '').trim() || slugify(name)
   let candidate = slug
@@ -1072,19 +1098,23 @@ export async function createEspansione(data: {
     } as any,
   })
   return {
-    id: String(res.id),
-    name: res.name as string,
-    slug: res.slug as string,
-    description: (res.description ?? null) as string | null,
-    releaseDate: (res.releaseDate ?? null) as string | null,
+    ok: true,
+    data: {
+      id: String(res.id),
+      name: res.name as string,
+      slug: res.slug as string,
+      description: (res.description ?? null) as string | null,
+      releaseDate: (res.releaseDate ?? null) as string | null,
+    },
   }
 }
 
 export async function updateEspansione(
   id: string,
   data: { name?: string; slug?: string; description?: string | null; releaseDate?: string | null },
-): Promise<EspansioneDTO> {
-  await requireAuth()
+): Promise<ActionResult<EspansioneDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
   const patch: Record<string, any> = {}
   if (data.name !== undefined) patch.name = data.name
@@ -1093,11 +1123,14 @@ export async function updateEspansione(
   if (data.releaseDate !== undefined) patch.releaseDate = data.releaseDate || undefined
   const res = await payload.update({ overrideAccess: true,  collection: 'espansioni', id, data: patch as any })
   return {
-    id: String(res.id),
-    name: res.name as string,
-    slug: res.slug as string,
-    description: (res.description ?? null) as string | null,
-    releaseDate: (res.releaseDate ?? null) as string | null,
+    ok: true,
+    data: {
+      id: String(res.id),
+      name: res.name as string,
+      slug: res.slug as string,
+      description: (res.description ?? null) as string | null,
+      releaseDate: (res.releaseDate ?? null) as string | null,
+    },
   }
 }
 
@@ -1367,12 +1400,13 @@ export interface CreatePurchaseInput {
   lines: CreatePurchaseLineInput[]
 }
 
-export async function createPurchase(data: CreatePurchaseInput): Promise<PurchaseDTO> {
-  await requireAuth()
+export async function createPurchase(data: CreatePurchaseInput): Promise<ActionResult<PurchaseDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
 
   const purchaseDate = (data.purchaseDate || '').trim()
-  if (!purchaseDate) throw new Error('La data di acquisto è obbligatoria')
+  if (!purchaseDate) return { ok: false, message: 'La data di acquisto è obbligatoria' }
 
   const lines: { product: number; quantity: number; unit_cost: number }[] = []
   for (const line of data.lines ?? []) {
@@ -1383,7 +1417,7 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
     let productId = line.productId ? Number(line.productId) : undefined
     if (!productId) {
       const title = (line.newProductTitle || '').trim()
-      if (!title) throw new Error('Ogni riga deve avere un prodotto esistente o un nuovo titolo')
+      if (!title) return { ok: false, message: 'Ogni riga deve avere un prodotto esistente o un nuovo titolo' }
       const created = await createProduct({
         title,
         price: line.newProductPrice ?? undefined,
@@ -1400,13 +1434,14 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
         rarity: line.newProductItemCategory1 === 'card' ? (line.newProductRarity || null) : null,
         quantity: 0,
       })
-      productId = Number(created.id)
+      if (!created.ok) return { ok: false, message: created.message }
+      productId = Number(created.data.id)
     }
 
     lines.push({ product: productId, quantity, unit_cost: unitCost })
   }
 
-  if (lines.length === 0) throw new Error('Aggiungi almeno una riga con quantità maggiore di 0')
+  if (lines.length === 0) return { ok: false, message: 'Aggiungi almeno una riga con quantità maggiore di 0' }
 
   const res = await payload.create({ overrideAccess: true, 
     collection: 'purchases',
@@ -1421,7 +1456,7 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
   })
 
   await applyStockDelta(payload, purchaseStockDelta(res.lines ?? []))
-  return toPurchaseDTO(res)
+  return { ok: true, data: toPurchaseDTO(res) }
 }
 
 export async function deletePurchase(id: string): Promise<void> {
@@ -1431,16 +1466,17 @@ export async function deletePurchase(id: string): Promise<void> {
   await applyPurchaseDeletion(payload, deleted as { lines?: { product?: unknown; quantity?: number; remaining_quantity?: number }[] })
 }
 
-export async function updatePurchase(id: string, data: CreatePurchaseInput): Promise<PurchaseDTO> {
-  await requireAuth()
+export async function updatePurchase(id: string, data: CreatePurchaseInput): Promise<ActionResult<PurchaseDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   logAudit('purchase.update', { id, lines: (data.lines ?? []).length })
   const payload = await getPayloadClient()
 
   const purchaseDate = (data.purchaseDate || '').trim()
-  if (!purchaseDate) throw new Error('La data di acquisto è obbligatoria')
+  if (!purchaseDate) return { ok: false, message: 'La data di acquisto è obbligatoria' }
 
   const existing = await payload.findByID({ overrideAccess: true,  collection: 'purchases', id, depth: 1 })
-  if (!existing) throw new Error('Lotto non trovato')
+  if (!existing) return { ok: false, message: 'Lotto non trovato' }
 
   const oldLines = Array.isArray(existing.lines) ? existing.lines : []
   const oldByProduct = new Map<number, { id?: string | null; quantity: number; remaining: number }>()
@@ -1465,7 +1501,7 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
     let productId = line.productId ? Number(line.productId) : undefined
     if (!productId) {
       const title = (line.newProductTitle || '').trim()
-      if (!title) throw new Error('Ogni riga deve avere un prodotto esistente o un nuovo titolo')
+      if (!title) return { ok: false, message: 'Ogni riga deve avere un prodotto esistente o un nuovo titolo' }
       const created = await createProduct({
         title,
         price: line.newProductPrice ?? undefined,
@@ -1482,7 +1518,8 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
         rarity: line.newProductItemCategory1 === 'card' ? (line.newProductRarity || null) : null,
         quantity: 0,
       })
-      productId = Number(created.id)
+      if (!created.ok) return { ok: false, message: created.message }
+      productId = Number(created.data.id)
     }
 
     const old = oldByProduct.get(productId)
@@ -1500,7 +1537,7 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
     newDelta.set(productId, (newDelta.get(productId) ?? 0) + quantity)
   }
 
-  if (newLines.length === 0) throw new Error('Aggiungi almeno una riga con quantità maggiore di 0')
+  if (newLines.length === 0) return { ok: false, message: 'Aggiungi almeno una riga con quantità maggiore di 0' }
 
   const delta = new Map<number, number>()
   for (const [pid, qty] of oldByProduct) delta.set(pid, -qty)
@@ -1521,7 +1558,7 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
   })
 
   await applyStockDelta(payload, delta)
-  return toPurchaseDTO(res)
+  return { ok: true, data: toPurchaseDTO(res) }
 }
 
 export interface PurchaseHistoryEntry {
@@ -1591,12 +1628,13 @@ export async function recordExternalSale(data: {
   quantity: number
   platform: string // vinted, ebay, cardmarket, other (wallapop/subito/altro → other)
   salePrice: number
-}): Promise<void> {
-  await requireAuth()
+}): Promise<WriteResult> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
 
   const prodRes = await payload.findByID({ overrideAccess: true,  collection: 'products', id: data.productId })
-  if (!prodRes) throw new Error('Prodotto non trovato in inventario')
+  if (!prodRes) return { ok: false, message: 'Prodotto non trovato in inventario' }
 
   const soldQty = Math.max(1, data.quantity)
   const channel = normalizeChannel(data.platform)
@@ -1611,4 +1649,5 @@ export async function recordExternalSale(data: {
     value: data.salePrice * soldQty,
     currency: 'EUR',
   })
+  return { ok: true }
 }

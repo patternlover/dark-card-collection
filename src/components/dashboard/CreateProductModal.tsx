@@ -112,7 +112,6 @@ export function CreateProductModal({
       } else {
         next.grade = 'near-mint'
         next.condition = 'new'
-        next.language = 'italian'
         next.cardNumber = ''
         next.rarity = ''
       }
@@ -140,7 +139,7 @@ export function CreateProductModal({
         googleProductCategory: form.showGoogle
           ? (form.googleProductCategory.trim() || null)
           : null,
-        language: form.itemCategory1 === 'card' ? form.language : 'italian',
+        language: form.language,
         itemCategory2: form.itemCategory2 ? [Number(form.itemCategory2)] : undefined,
         cardNumber: form.itemCategory1 === 'card' ? (form.cardNumber.trim() || null) : null,
         rarity: form.itemCategory1 === 'card' ? (form.rarity || null) : null,
@@ -149,7 +148,11 @@ export function CreateProductModal({
         itemCategory1: form.itemCategory1,
         itemCategory3: form.itemCategory3 || null,
       }
-      await createProduct(input)
+      const res = await createProduct(input)
+      if (!res.ok) {
+        onError(res.message)
+        return
+      }
       onCreated()
     } catch (err) {
       onError(err instanceof Error ? err.message : String(err))
@@ -265,6 +268,17 @@ export function CreateProductModal({
               ))}
             </Select>
           </Field>
+          <Field label="Lingua" htmlFor="cp-language">
+            <Select
+              id="cp-language"
+              value={form.language}
+              onChange={(e) => handleChange('language', e.target.value)}
+            >
+              {LANGUAGE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
         </div>
 
         {isCard ? (
@@ -280,17 +294,6 @@ export function CreateProductModal({
                   onChange={(e) => handleChange('grade', e.target.value)}
                 >
                   {GRADE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Lingua" htmlFor="cp-language">
-                <Select
-                  id="cp-language"
-                  value={form.language}
-                  onChange={(e) => handleChange('language', e.target.value)}
-                >
-                  {LANGUAGE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </Select>

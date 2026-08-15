@@ -1,7 +1,19 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix dashboard: nav highlight, colonne listati/lotti/inventario, hint slug, niente legacy**.
+Ultima sessione: **B2: server action senza `throw` + lingua comune nel modale prodotto**.
+
+---
+
+## Sessione recente 32 — B2: server action senza `throw` + lingua comune nel modale prodotto
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-15-server-actions-structured-results.md`). Su `main`.
+
+- **B2 chiuso — server action di scrittura senza più `throw`** (Next 16 in prod minifica gli errori lanciati in `Minified React error #441`). Migrate al pattern `{ ok, message }` (`ActionResult<T>` / `WriteResult`): `createProduct`, `updateProduct`, `createCategory`, `updateCategory`, `createEspansione`, `updateEspansione`, `createPurchase`, `updatePurchase`, `updateOrderStatus`, `recordExternalSale`; helper `authError()` per l'auth strutturato nelle write. `requireAuth()` resta per le read-only (protezione layout).
+- **Consumer aggiornati**: `CreateProductModal`, `EditProductModal`, `CategoriesSection`, `EspansionsSection`, `OrdersSection`, `PurchasesSection` — leggono `res.ok` e mostrano `res.message` (niente più `catch` per errori attesi).
+- **Lingua come campo comune nel modale prodotto**: visibile e inviata sia per carta che per prodotto (riga Quantità/Espansione/Lingua); via il campo duplicato dal blocco "Dettagli carta"; `handleItemCategory1` non resetta più `language`; `createProduct` passa sempre `form.language`.
+- **Verifica**: `pnpm lint` (file toccati) ✓ · `pnpm test` 78/78 ✓ · nessuna collection Payload toccata → nessuna migration.
+- Nota di processo: durante la verifica lo `git stash && pnpm lint; git stash pop` ha lasciato il lavoro nello stash — recuperato con `git stash apply`.
 
 ---
 
