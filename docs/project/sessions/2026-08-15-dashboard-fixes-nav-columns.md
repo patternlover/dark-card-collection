@@ -33,9 +33,9 @@
 - **Hint slug**: via `"Lasciato vuoto: generato dal nome"` in `CategoriesSection` ed `EspansionsSection` (falso in modifica: lo slug non viene rigenerato dal nome; solo la creazione genera slug dal nome).
 
 ### Test
-- `pnpm lint` ✓ · `pnpm test` 78/78 ✓ (campo `set` additivo, nessuna deep-equality rotta).
+- Commit `2b70a81` · `pnpm lint` ✓ · `pnpm test` 78/78 ✓ (campo `set` additivo, nessuna deep-equality rotta).
 - Nessuna collection Payload toccata → nessuna migration.
-- CI ✓ · deploy Vercel Production ✓ · rotta `/dashboard/listings` 200 su live.
+- CI ✓ (run `31874712177`) · push `origin/main` ✓ · deploy Vercel Production ✓ · live: `/dashboard/listings` 200, `/dashboard/listati` 308 → `/dashboard/listings` (highlight nav ora scatta).
 
 ### Note per le prossime sessioni
 - **Lezione**: i changelog devono riportare SOLO modifiche committate — la sessione 30 dichiarò fix (nav, vista Prodotti) mai presenti nel repo; verificare sempre con `git show <commit> --name-only`.
