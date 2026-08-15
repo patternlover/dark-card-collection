@@ -24,7 +24,6 @@ import {
 } from '@/app/dashboard/actions'
 import type { ListingGroup, ListingVariant, SortDir } from '@/lib/listings'
 import { EditProductModal } from '@/components/dashboard/EditProductModal'
-import { StatusBadge } from './productShared'
 import { GRADE_LABELS, LANGUAGE_LABELS } from './productShared'
 import { Badge } from './ui'
 import {
@@ -34,6 +33,7 @@ import {
   Input,
   Modal,
   PageHeader,
+  SortableTh,
   Table,
   TBody,
   Td,
@@ -41,6 +41,7 @@ import {
   THead,
   TogglePills,
   Tr,
+  useSort,
 } from './ui'
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
@@ -61,47 +62,9 @@ function iconButtonClass() {
   return 'rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]'
 }
 
-function SortableTh({
-  label,
-  field,
-  sortBy,
-  sortDir,
-  onSort,
-  className = '',
-}: {
-  label: string
-  field: string
-  sortBy: string
-  sortDir: SortDir
-  onSort: (field: string) => void
-  className?: string
-}) {
-  const active = sortBy === field
-  return (
-    <Th className={className}>
-      <button
-        type="button"
-        onClick={() => onSort(field)}
-        className="inline-flex items-center gap-1 whitespace-nowrap font-semibold uppercase tracking-wide text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
-      >
-        {label}
-        {active ? (
-          sortDir === 'asc' ? (
-            <ChevronUp className="h-3 w-3" />
-          ) : (
-            <ChevronDown className="h-3 w-3" />
-          )
-        ) : (
-          <ArrowUpDown className="h-3 w-3 text-[var(--ui-text-faint)]" />
-        )}
-      </button>
-    </Th>
-  )
-}
-
 function AvailabilityBadge({ availability }: { availability: string }) {
   if (availability === 'in_stock') return <Badge tone="success">In stock</Badge>
-  if (availability === 'out_of_stock') return <Badge tone="danger">Esaurito (OOS)</Badge>
+  if (availability === 'out_of_stock') return <Badge tone="danger">Esaurito</Badge>
   return <Badge tone="warning">Preordine</Badge>
 }
 
@@ -131,12 +94,15 @@ function variantAttrLabel(v: ListingVariant): string {
 }
 
 export function ListatiSection() {
+  const { sortBy, sortDir, handleSort } = useSort('title')
+  const onSort = (field: string) => {
+    setPage(1)
+    handleSort(field)
+  }
   const [view, setView] = useState<View>('groups')
   const [groups, setGroups] = useState<ListingGroup[]>([])
   const [featuredCount, setFeaturedCount] = useState(0)
   const [items, setItems] = useState<ListingVariant[]>([])
-  const [sortBy, setSortBy] = useState('title')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -208,15 +174,6 @@ export function ListatiSection() {
     setSelling(null)
   }
 
-  const handleSort = (field: string) => {
-    setPage(1)
-    if (sortBy === field) {
-      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
-    } else {
-      setSortBy(field)
-      setSortDir('asc')
-    }
-  }
 
   const applyGroupPatch = (title: string, patch: { isVisible?: boolean; featured?: boolean }) => {
     setGroups((prev) =>
@@ -392,12 +349,12 @@ export function ListatiSection() {
           <Table>
             <THead>
               <Tr>
-                <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <SortableTh label="Qty" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <SortableTh label="Venduti" field="sold" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+                <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                <SortableTh label="Qty" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                <SortableTh label="Venduti" field="sold" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                 <Th className="text-right">Azioni</Th>
               </Tr>
             </THead>
@@ -467,13 +424,12 @@ export function ListatiSection() {
         <Table>
           <THead>
             <Tr>
-              <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-              <SortableTh label="Stock" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-              <SortableTh label="Venduti" field="sold" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-              <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-              <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-              <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-              <SortableTh label="Stato" field="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Stock" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Venduti" field="sold" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <Th className="text-right">Azioni</Th>
             </Tr>
           </THead>
@@ -491,9 +447,8 @@ export function ListatiSection() {
                 <Td className="font-semibold text-[var(--ui-text)]">{v.quantity}</Td>
                 <Td><SaleSummary variant={v} /></Td>
                 <Td><AvailabilityBadge availability={v.availability} /></Td>
-                <Td className="font-semibold text-[var(--ui-text)]">{v.price != null ? euro.format(v.price) : '—'}</Td>
                 <Td className="text-[var(--ui-text-muted)]">{v.cost != null ? euro.format(v.cost) : '—'}</Td>
-                <Td><StatusBadge status={v.status || 'listed'} /></Td>
+                <Td className="font-semibold text-[var(--ui-text)]">{v.price != null ? euro.format(v.price) : '—'}</Td>
                 <Td>
                   <div className="flex items-center justify-end gap-1.5">
                     <Button

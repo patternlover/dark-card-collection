@@ -172,7 +172,6 @@ async function getCatalogSection(): Promise<string> {
         collection: 'products',
         where: {
           and: [
-            { status: { in: ['listed', 'hold', 'sold'] } },
             { is_visible: { equals: true } },
           ],
         },

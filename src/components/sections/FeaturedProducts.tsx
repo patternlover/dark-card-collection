@@ -8,7 +8,7 @@ export async function FeaturedProducts() {
 
   try {
     const payload = await getPayloadClient()
-    const baseWhere: any = { status: { in: ['listed', 'hold', 'sold'] } }
+    const baseWhere: any = {}
     const featuredResult = await payload.find({
       overrideAccess: true,
       collection: 'products',

@@ -24,6 +24,9 @@ import {
   Th,
   THead,
   Tr,
+  SortableTh,
+  useSort,
+  useSortedList,
 } from './ui'
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
@@ -106,6 +109,8 @@ function OrderDetail({ order }: { order: OrderDTO }) {
 
 export function OrdersSection() {
   const [orders, setOrders] = useState<OrderDTO[]>([])
+  const { sortBy, sortDir, handleSort } = useSort('createdAt')
+  const sorted = useSortedList(orders, sortBy, sortDir)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -141,7 +146,7 @@ export function OrdersSection() {
   const openExternal = async () => {
     setShowExternal(true)
     try {
-      const res = await searchProducts({ limit: 200, status: 'listed' })
+      const res = await searchProducts({ limit: 200 })
       setProductOptions(
         res.docs.map((p) => ({
           id: p.id,
@@ -203,13 +208,13 @@ export function OrdersSection() {
       <Table>
         <THead>
           <tr>
-            <Th>Ordine</Th>
-            <Th>Data</Th>
-            <Th>Canale</Th>
-            <Th>Articoli</Th>
-            <Th>Totale</Th>
-            <Th>Margine</Th>
-            <Th>Stato</Th>
+            <SortableTh label="Ordine" field="transactionId" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+            <SortableTh label="Data" field="createdAt" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+            <SortableTh label="Canale" field="salesChannel" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+            <SortableTh label="Articoli" field="itemCount" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+            <SortableTh label="Totale" field="value" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+            <SortableTh label="Margine" field="margin" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+            <SortableTh label="Stato" field="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
           </tr>
         </THead>
         <TBody>
@@ -226,7 +231,7 @@ export function OrdersSection() {
               </Td>
             </Tr>
           ) : (
-            orders.map((o) => {
+            sorted.map((o) => {
               const expanded = expandedId === o.id
               return (
                 <OrderRow

@@ -10,7 +10,6 @@ const staticRoutes = [
   { path: '/shop', priority: 0.9, changeFrequency: 'daily' as const },
   { path: '/shop/bestsellers', priority: 0.8, changeFrequency: 'weekly' as const },
   { path: '/shop/new-arrivals', priority: 0.8, changeFrequency: 'daily' as const },
-  { path: '/shop/preorders', priority: 0.7, changeFrequency: 'daily' as const },
   { path: '/shop/espansioni', priority: 0.9, changeFrequency: 'weekly' as const },
   { path: '/guide', priority: 0.7, changeFrequency: 'monthly' as const },
   { path: '/guide/dove-comprare-carte-pokemon-originali', priority: 0.6, changeFrequency: 'monthly' as const },
@@ -56,7 +55,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         collection: 'products',
         where: {
           and: [
-            { status: { in: ['listed', 'hold', 'sold'] } },
             { is_visible: { equals: true } },
           ],
         },

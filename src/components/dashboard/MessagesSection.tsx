@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 import { CheckCheck, ChevronLeft, ChevronRight, Mail, MailOpen, Reply, Trash2 } from 'lucide-react'
 import {
   deleteMessage,
@@ -10,12 +10,14 @@ import {
   toggleMessageReplied,
   type MessageDTO,
 } from '@/app/dashboard/actions'
-import { Alert, Badge, Button, Card, PageHeader, Spinner } from './ui'
+import { Alert, Badge, Button, PageHeader, SortableTh, Spinner, Table, TBody, Td, Th, THead, Tr, useSort, useSortedList } from './ui'
 
 const PAGE_SIZE = 20
 
 export function MessagesSection() {
   const [messages, setMessages] = useState<MessageDTO[]>([])
+  const { sortBy, sortDir, handleSort } = useSort('createdAt')
+  const sorted = useSortedList(messages, sortBy, sortDir)
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -105,82 +107,100 @@ export function MessagesSection() {
       ) : messages.length === 0 ? (
         <p className="text-sm text-[var(--ui-text-muted)]">Nessun messaggio</p>
       ) : (
-        <div className="space-y-2">
-          {messages.map((m) => {
-            const expanded = expandedId === m.id
-            const body = bodies[m.id]
-            const loadingBody = loadingBodyId === m.id
-            return (
-              <Card
-                key={m.id}
-                className={m.read ? '' : 'border-[var(--ui-accent)]/50'}
-              >
-                <button
-                  onClick={() => toggleExpanded(m)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left"
-                >
-                  {m.read ? (
-                    <MailOpen className="h-4 w-4 shrink-0 text-[var(--ui-text-faint)]" />
-                  ) : (
-                    <Mail className="h-4 w-4 shrink-0 text-[var(--ui-accent-hover)]" />
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className={`truncate text-sm font-semibold ${m.read ? 'text-[var(--ui-text-muted)]' : 'text-[var(--ui-text)]'}`}>
-                        {m.name}
-                      </span>
+        <Table>
+          <THead>
+            <Tr>
+              <SortableTh label="Nome" field="name" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Email" field="email" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Oggetto" field="subject" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <SortableTh label="Data" field="createdAt" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <Th>Stato</Th>
+              <Th className="text-right">Azioni</Th>
+            </Tr>
+          </THead>
+          <TBody>
+            {sorted.map((m) => {
+              const expanded = expandedId === m.id
+              const body = bodies[m.id]
+              const loadingBody = loadingBodyId === m.id
+              return (
+                <Fragment key={m.id}>
+                  <Tr className={expanded ? 'bg-[var(--ui-surface-alt)]/60' : ''}>
+                    <Td>
+                      <div className="flex items-center gap-2">
+                        {m.read ? <MailOpen className="h-3.5 w-3.5 shrink-0 text-[var(--ui-text-faint)]" /> : <Mail className="h-3.5 w-3.5 shrink-0 text-[var(--ui-accent-hover)]" />}
+                        <span className={`truncate font-medium ${m.read ? 'text-[var(--ui-text-muted)]' : 'text-[var(--ui-text)]'}`}>{m.name}</span>
+                      </div>
+                    </Td>
+                    <Td className="text-[var(--ui-text-muted)]">{m.email}</Td>
+                    <Td className="max-w-xs truncate text-[var(--ui-text-muted)]">{m.subject || '(nessun oggetto)'}</Td>
+                    <Td className="text-[var(--ui-text-muted)]">{new Date(m.createdAt).toLocaleDateString('it-IT')}</Td>
+                    <Td>
                       {!m.read ? <Badge tone="accent">Nuovo</Badge> : null}
                       {m.replied ? <Badge tone="success">Risposto</Badge> : null}
-                    </span>
-                    <span className="block truncate text-xs text-[var(--ui-text-faint)]">
-                      {m.subject || '(nessun oggetto)'} · {m.email}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-xs text-[var(--ui-text-faint)]">
-                    {new Date(m.createdAt).toLocaleDateString('it-IT')}
-                  </span>
-                </button>
-                {expanded ? (
-                  <div className="border-t border-[var(--ui-border)] px-4 py-3">
-                    {loadingBody ? (
-                      <p className="flex items-center gap-2 text-sm text-[var(--ui-text-muted)]">
-                        <Spinner /> Caricamento...
-                      </p>
-                    ) : (
-                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--ui-text-muted)]">
-                        {body ?? m.message ?? '—'}
-                      </p>
-                    )}
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Button variant="secondary" size="sm" onClick={() => setRead(m, !m.read)}>
-                        <CheckCheck className="h-3.5 w-3.5" />
-                        {m.read ? 'Segna come non letto' : 'Segna come letto'}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setReplied(m, !m.replied)}
-                        className="hover:border-[var(--ui-success)] hover:text-[var(--ui-success)]"
-                      >
-                        <Reply className="h-3.5 w-3.5" />
-                        {m.replied ? 'Segna come non risposto' : 'Segna come risposto'}
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => remove(m)}
-                        className="text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Elimina
-                      </Button>
-                    </div>
-                  </div>
-                ) : null}
-              </Card>
-            )
-          })}
+                    </Td>
+                    <Td>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setRead(m, !m.read)}
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
+                          title={m.read ? 'Segna come non letto' : 'Segna come letto'}
+                        >
+                          <CheckCheck className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setReplied(m, !m.replied)}
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
+                          title={m.replied ? 'Segna come non risposto' : 'Segna come risposto'}
+                        >
+                          <Reply className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => remove(m)}
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                          title="Elimina"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </Td>
+                  </Tr>
+                  {expanded ? (
+                    <Tr key={`${m.id}-detail`}>
+                      <Td colSpan={6} className="p-0">
+                        <div className="border-t border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 px-4 py-3">
+                          {loadingBody ? (
+                            <p className="flex items-center gap-2 text-sm text-[var(--ui-text-muted)]">
+                              <Spinner /> Caricamento...
+                            </p>
+                          ) : (
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--ui-text-muted)]">
+                              {body ?? m.message ?? '—'}
+                            </p>
+                          )}
+                        </div>
+                      </Td>
+                    </Tr>
+                  ) : null}
+                </Fragment>
+              )
+            })}
+          </TBody>
+        </Table>
+      )}
 
-          <div className="flex items-center justify-between pt-2">
+      {totalPages > 1 ? (
+        <div className="flex items-center justify-between border-t border-[var(--ui-border)] pt-4">
+          <p className="text-xs text-[var(--ui-text-muted)]">
+            Pagina {page} di {totalPages}
+          </p>
+          <div className="flex items-center gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -189,9 +209,6 @@ export function MessagesSection() {
             >
               <ChevronLeft className="h-3.5 w-3.5" /> Precedente
             </Button>
-            <span className="text-xs text-[var(--ui-text-muted)]">
-              Pagina {page} di {totalPages}
-            </span>
             <Button
               variant="secondary"
               size="sm"
@@ -202,7 +219,7 @@ export function MessagesSection() {
             </Button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

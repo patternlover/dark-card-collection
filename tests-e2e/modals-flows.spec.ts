@@ -28,9 +28,8 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await expect(row).toBeVisible()
     await expect(row).toContainText('4')
     await expect(row).toContainText('99,90')
-    await expect(row.getByText('Disponibile', { exact: true })).toBeVisible()
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     const lrow = page.locator('tr', { hasText: name }).first()
     await expect(lrow.getByText('In stock', { exact: true })).toBeVisible()
   })
@@ -90,13 +89,12 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await page.goto('/dashboard/inventory')
     const row0 = page.locator('tr', { hasText: name }).first()
     await expect(row0).toContainText('0')
-    await expect(row0.getByText('Venduto', { exact: true })).toBeVisible()
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     const lrow0 = page.locator('tr', { hasText: name }).first()
-    await expect(lrow0.getByText('Esaurito (OOS)', { exact: true })).toBeVisible()
+    await expect(lrow0.getByText('Esaurito', { exact: true })).toBeVisible()
 
-    // nuovo lotto → ripristina listed + in stock
+    // nuovo lotto → ripristina lo stock
     await page.goto('/dashboard/purchases')
     await page.getByRole('button', { name: 'Registra Lotto' }).click()
     const line = page.getByTestId('purchase-line').nth(0)
@@ -109,9 +107,8 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await page.goto('/dashboard/inventory')
     const row1 = page.locator('tr', { hasText: name }).first()
     await expect(row1).toContainText('1')
-    await expect(row1.getByText('Disponibile', { exact: true })).toBeVisible()
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     const lrow1 = page.locator('tr', { hasText: name }).first()
     await expect(lrow1.getByText('In stock', { exact: true })).toBeVisible()
   })
@@ -119,7 +116,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
   test('il modale Espansione crea voci che compaiono nel modale Lotto', async ({ page }) => {
     const col = `Flow Col ${stamp}`
 
-    await page.goto('/dashboard/espansioni')
+    await page.goto('/dashboard/expansions')
     await page.getByRole('button', { name: 'Nuova Espansione' }).click()
     await page.locator('#expansion-name').fill(col)
     await page.getByRole('button', { name: 'Salva', exact: true }).click()

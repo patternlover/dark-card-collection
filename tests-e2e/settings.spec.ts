@@ -11,7 +11,7 @@ test.describe('Impostazioni', () => {
 
   test('updates the site settings and persists them', async ({ page }) => {
     const name = `Dark Card Test ${Date.now()}`
-    await page.goto('/dashboard/impostazioni')
+    await page.goto('/dashboard/settings')
     await page.locator('#site-name').fill(name)
     await page.getByRole('button', { name: 'Salva' }).first().click()
     await expect(page.getByText('Impostazioni salvate')).toBeVisible()
@@ -21,7 +21,7 @@ test.describe('Impostazioni', () => {
   })
 
   test('adds a header nav item and persists it', async ({ page }) => {
-    await page.goto('/dashboard/impostazioni')
+    await page.goto('/dashboard/settings')
     const label = 'Contatti E2E'
     const url = '/info/contact'
     await page.locator('input[placeholder="Etichetta"]').first().fill(label)

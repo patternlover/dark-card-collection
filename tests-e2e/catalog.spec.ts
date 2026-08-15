@@ -15,7 +15,7 @@ test.describe('Espansioni', () => {
     const name = `E2E Col ${stamp}`
     const renamed = `${name} Renamed`
 
-    await page.goto('/dashboard/espansioni')
+    await page.goto('/dashboard/expansions')
     await page.getByRole('button', { name: 'Nuova Espansione' }).click()
     await page.locator('#expansion-name').fill(name)
     await page.getByRole('button', { name: 'Salva' }).click()

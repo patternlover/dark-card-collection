@@ -6,6 +6,7 @@ interface ListingShellProps {
   title: string
   subtitle?: string
   action: string
+  categories?: any[]
   espansioni?: any[]
   products: any[]
   emptyTitle?: string
@@ -16,6 +17,7 @@ export function ListingShell({
   title,
   subtitle,
   action,
+  categories = [],
   espansioni = [],
   products,
   emptyTitle,
@@ -27,7 +29,8 @@ export function ListingShell({
         <Suspense fallback={<ListingSkeleton />}>
           <ClientListing
             products={products}
-                        espansioni={espansioni}
+                        categories={categories}
+            espansioni={espansioni}
             basePath={action}
             emptyTitle={emptyTitle}
             emptySubtitle={emptySubtitle}

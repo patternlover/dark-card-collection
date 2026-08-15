@@ -21,9 +21,7 @@ function product(over: Partial<ProductDTO> & { id: string | number; title: strin
     price: over.price ?? null,
     salePrice: over.salePrice ?? null,
     costOfGoodsSold: over.costOfGoodsSold ?? null,
-    status: over.status ?? 'listed',
     availability: over.availability ?? 'in_stock',
-    isPreorder: over.isPreorder ?? false,
     grade: over.grade ?? null,
     condition: over.condition ?? null,
     productType: null,
@@ -175,18 +173,16 @@ describe('flattenListingItems', () => {
   it('keeps per-item detail (status, availability, sold)', () => {
     const groups = buildListingGroups(
       [
-        product({ id: '1', title: 'Box', quantity: 0, status: 'sold' }),
-        product({ id: '2', title: 'Box', quantity: 3, status: 'listed' }),
+        product({ id: '1', title: 'Box', quantity: 0 }),
+        product({ id: '2', title: 'Box', quantity: 3 }),
       ],
       [{ productId: 1, channel: 'vinted', quantity: 1, value: 40, createdAt: '2026-01-15T10:00:00Z' }],
     )
     const items = flattenListingItems(groups)
     const sold = items.find((i) => i.id === '1')!
-    expect(sold.status).toBe('sold')
     expect(sold.availability).toBe('out_of_stock')
     expect(sold.soldQuantity).toBe(1)
     const listed = items.find((i) => i.id === '2')!
-    expect(listed.status).toBe('listed')
     expect(listed.availability).toBe('in_stock')
   })
 })
@@ -249,17 +245,13 @@ describe('sortListingItems', () => {
   const items = flattenListingItems(
     buildListingGroups(
       [
-        product({ id: '1', title: 'Box B', quantity: 3, status: 'sold' }),
-        product({ id: '2', title: 'Box A', quantity: 5, status: 'listed' }),
-        product({ id: '3', title: 'Box C', quantity: 1, status: 'hold' }),
+        product({ id: '1', title: 'Box B', quantity: 3 }),
+        product({ id: '2', title: 'Box A', quantity: 5 }),
+        product({ id: '3', title: 'Box C', quantity: 1 }),
       ],
       [],
     ),
   )
-
-  it('sorts by status asc', () => {
-    expect(sortListingItems(items, { by: 'status', dir: 'asc' }).map((i) => i.status)).toEqual(['hold', 'listed', 'sold'])
-  })
 
   it('sorts by quantity desc', () => {
     expect(sortListingItems(items, { by: 'quantity', dir: 'desc' }).map((i) => i.id)).toEqual(['2', '1', '3'])

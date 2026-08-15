@@ -14,7 +14,7 @@ test.describe('Console pulita (no hydration errors)', () => {
     '/products/test-booster-box',
     '/cart',
     '/dashboard',
-    '/dashboard/listati',
+    '/dashboard/listings',
     '/dashboard/purchases',
     '/dashboard/inventory',
     '/dashboard/orders',

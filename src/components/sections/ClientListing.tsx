@@ -12,6 +12,7 @@ import { trackFilter } from '@/lib/analytics'
 
 interface ClientListingProps {
   products: any[]
+  categories?: any[]
   espansioni?: any[]
   basePath: string
   emptyTitle?: string
@@ -96,6 +97,7 @@ function FilterSelect({
 
 export function ClientListing({
   products,
+  categories = [],
   espansioni = [],
   basePath,
   emptyTitle = 'Nessun prodotto trovato.',
@@ -160,7 +162,7 @@ export function ClientListing({
       if (filters.q && !String(p.title || '').toLowerCase().includes(filters.q.toLowerCase())) {
         return false
       }
-      if (filters.micro && p.item_category_3 !== filters.micro) return false
+      if (filters.micro && String(p.item_category_3?.id) !== filters.micro) return false
       if (filters.expansion && String(p.item_category_2?.id) !== filters.expansion) return false
       if (filters.grade && p.grade !== filters.grade) return false
       if (filters.language && p.language !== filters.language) return false
@@ -265,24 +267,17 @@ export function ClientListing({
             current={filters.language}
           />
 
-          <FilterSelect
-            label="Micro prodotto"
-            value={filters.micro}
-            onChange={(v) => handleSelect('micro', v)}
-            options={[
-              { value: 'spc', label: 'Spc' },
-              { value: 'box', label: 'Box' },
-              { value: 'bundle', label: 'Bundle' },
-              { value: 'etb', label: 'Etb' },
-              { value: 'tin', label: 'Tin' },
-              { value: 'single', label: 'Singola' },
-              { value: 'slab', label: 'Slab' },
-              { value: 'other', label: 'Altro' },
-            ]}
-            counts={counts.micro}
-            allLabel="Tutti i micro prodotti"
-            current={filters.micro}
-          />
+          {categories.length > 0 && (
+            <FilterSelect
+              label="Micro prodotto"
+              value={filters.micro}
+              onChange={(v) => handleSelect('micro', v)}
+              options={categories.map((c: any) => ({ value: String(c.id), label: c.name }))}
+              counts={counts.micro}
+              allLabel="Tutti i micro prodotti"
+              current={filters.micro}
+            />
+          )}
 
           {espansioni.length > 0 && (
             <FilterSelect

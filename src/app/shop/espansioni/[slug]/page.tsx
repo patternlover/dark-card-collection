@@ -66,11 +66,7 @@ export default async function EspansionePage({
     const prodResult = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
-        AND: [
-          { expansion: { equals: colId } },
-          { status: { in: ['listed', 'hold', 'sold'] } },
-          { is_visible: { equals: true } },
-        ],
+        AND: [{ expansion: { equals: colId } }, { is_visible: { equals: true } }],
       },
       limit: 100,
       sort: '-createdAt',

@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     users: User;
     products: Product;
+    categories: Category;
     espansioni: Espansioni;
     orders: Order;
     media: Media;
@@ -83,6 +84,7 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
     espansioni: EspansioniSelect<false> | EspansioniSelect<true>;
     orders: OrdersSelect<false> | OrdersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -187,7 +189,6 @@ export interface Product {
    * Disponibilità Google (auto da status, quantity e is_preorder)
    */
   availability?: ('in_stock' | 'out_of_stock' | 'preorder' | 'backorder') | null;
-  status?: ('listed' | 'hold' | 'sold') | null;
   /**
    * Condizione Google (sealed = new, carte singole = used)
    */
@@ -197,10 +198,6 @@ export interface Product {
    */
   grade?:
     ('mint' | 'near-mint' | 'lightly-played' | 'moderately-played' | 'heavily-played' | 'damaged' | 'graded') | null;
-  /**
-   * Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile
-   */
-  is_preorder?: boolean | null;
   item_category_2?: (number | null) | Espansioni;
   /**
    * Tipo articolo (livello 1): prodotto sigillato o carta singola
@@ -209,7 +206,7 @@ export interface Product {
   /**
    * Micro prodotto (livello 3): Spc/Box/Bundle/Etb/Tin per prodotti, Singola/Slab per carte
    */
-  item_category_3?: ('spc' | 'box' | 'bundle' | 'etb' | 'tin' | 'single' | 'slab' | 'other') | null;
+  item_category_3?: (number | null) | Category;
   /**
    * Merchant product_type (es. nome collezione/categoria)
    */
@@ -261,6 +258,18 @@ export interface Espansioni {
   slug: string;
   description?: string | null;
   releaseDate?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -437,6 +446,10 @@ export interface PayloadLockedDocument {
         value: number | Product;
       } | null)
     | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
         relationTo: 'espansioni';
         value: number | Espansioni;
       } | null)
@@ -533,10 +546,8 @@ export interface ProductsSelect<T extends boolean = true> {
   sale_price?: T;
   cost_of_goods_sold?: T;
   availability?: T;
-  status?: T;
   condition?: T;
   grade?: T;
-  is_preorder?: T;
   item_category_2?: T;
   item_category_1?: T;
   item_category_3?: T;
@@ -557,6 +568,17 @@ export interface ProductsSelect<T extends boolean = true> {
   last_price_update?: T;
   featured?: T;
   is_visible?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
   updatedAt?: T;
   createdAt?: T;
 }

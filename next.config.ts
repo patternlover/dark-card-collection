@@ -41,9 +41,11 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      { source: '/dashboard/espansioni', destination: '/dashboard/expansions', permanent: true },
+      { source: '/dashboard/impostazioni', destination: '/dashboard/settings', permanent: true },
+      { source: '/dashboard/listati', destination: '/dashboard/listings', permanent: true },
       { source: '/shop/collections', destination: '/shop/espansioni', permanent: true },
       { source: '/shop/collections/:slug', destination: '/shop/espansioni/:slug', permanent: true },
-      { source: '/dashboard/listings', destination: '/dashboard/listati', permanent: true },
     ]
   },
   async headers() {

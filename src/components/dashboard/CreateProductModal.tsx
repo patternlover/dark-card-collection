@@ -2,18 +2,13 @@
 
 import { useState } from 'react'
 import type {
+  CategoryOption,
   CreateProductData,
   EspansioneOption,
   ProductDTO,
 } from '@/app/dashboard/actions'
 import { createProduct } from '@/app/dashboard/actions'
 import { Button, Field, Input, Modal, Select, Textarea } from './ui'
-
-const STATUS_OPTIONS = [
-  { value: 'listed', label: 'Disponibile' },
-  { value: 'hold', label: 'In Attesa' },
-  { value: 'sold', label: 'Venduto' },
-]
 
 const GRADE_OPTIONS = [
   { value: 'mint', label: 'Mint / Sigillato' },
@@ -29,13 +24,6 @@ const CONDITION_OPTIONS = [
   { value: 'used', label: 'Usato' },
   { value: 'new', label: 'Nuovo' },
   { value: 'refurbished', label: 'Rigenerato' },
-]
-
-const AVAILABILITY_OPTIONS = [
-  { value: 'in_stock', label: 'Disponibile' },
-  { value: 'out_of_stock', label: 'Esaurito' },
-  { value: 'preorder', label: 'Pre-Ordine' },
-  { value: 'backorder', label: 'Backorder' },
 ]
 
 const LANGUAGE_OPTIONS = [
@@ -55,21 +43,6 @@ const RARITY_OPTIONS = [
   { value: 'secret-rare', label: 'Secret Rare' },
 ]
 
-const PRODUCT_SUBCATEGORIES = [
-  { value: 'spc', label: 'Spc' },
-  { value: 'box', label: 'Box' },
-  { value: 'bundle', label: 'Bundle' },
-  { value: 'etb', label: 'Etb' },
-  { value: 'tin', label: 'Tin' },
-  { value: 'other', label: 'Altro' },
-]
-
-const CARD_SUBCATEGORIES = [
-  { value: 'single', label: 'Singola' },
-  { value: 'slab', label: 'Slab' },
-  { value: 'other', label: 'Altro' },
-]
-
 function AutoHint({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs text-[var(--ui-text-faint)]">
@@ -82,6 +55,7 @@ function AutoHint({ text }: { text: string }) {
 }
 
 interface CreateProductModalProps {
+  categories: CategoryOption[]
   espansioni: EspansioneOption[]
   initialProduct?: ProductDTO
   onClose: () => void
@@ -90,6 +64,7 @@ interface CreateProductModalProps {
 }
 
 export function CreateProductModal({
+  categories,
   espansioni,
   initialProduct,
   onClose,
@@ -104,9 +79,6 @@ export function CreateProductModal({
     price: String(initialProduct?.price ?? ''),
     salePrice: String(initialProduct?.salePrice ?? ''),
     costOfGoodsSold: '',
-    status: initialProduct?.status || 'listed',
-    availability: initialProduct?.availability || 'in_stock',
-    isPreorder: initialProduct?.isPreorder || false,
     grade: initialProduct?.grade || 'near-mint',
     condition: initialProduct?.condition || 'used',
     productType: initialProduct?.productType || '',
@@ -118,7 +90,7 @@ export function CreateProductModal({
     quantity: '1',
     imageLink: initialProduct?.imageLink || '',
     itemCategory1: initialProduct?.itemCategory1 || 'product',
-    itemCategory3: initialProduct?.itemCategory3 || '',
+    itemCategory3: String(initialProduct?.itemCategory3?.id || ''),
     showGoogle: Boolean(
       initialProduct?.itemGroupId ||
         initialProduct?.productType ||
@@ -137,7 +109,6 @@ export function CreateProductModal({
       if (value === 'card') {
         next.productType = ''
         next.googleProductCategory = ''
-        next.isPreorder = false
       } else {
         next.grade = 'near-mint'
         next.condition = 'new'
@@ -159,9 +130,6 @@ export function CreateProductModal({
         description: form.description.trim() || null,
         price: form.price === '' ? null : Number(form.price),
         salePrice: form.salePrice === '' ? null : Number(form.salePrice),
-        status: form.status,
-        availability: form.availability,
-        isPreorder: form.itemCategory1 === 'product' ? form.isPreorder : false,
         grade: form.itemCategory1 === 'card' ? form.grade : 'near-mint',
         condition: form.itemCategory1 === 'card' ? form.condition : 'new',
         productType: form.showGoogle
@@ -190,10 +158,7 @@ export function CreateProductModal({
     }
   }
 
-  const checkboxClass = 'h-4 w-4 accent-[var(--ui-accent)]'
   const isCard = form.itemCategory1 === 'card'
-  const isProduct = form.itemCategory1 === 'product'
-  const subcategories = isCard ? CARD_SUBCATEGORIES : PRODUCT_SUBCATEGORIES
 
   return (
     <Modal
@@ -240,39 +205,14 @@ export function CreateProductModal({
               onChange={(e) => handleChange('itemCategory3', e.target.value)}
             >
               <option value="">—</option>
-              {subcategories.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </Select>
           </Field>
           <Field label="Slug" htmlFor="cp-slug">
             <Input id="cp-slug" type="text" value={form.slug} disabled />
             <AutoHint text="generato dal titolo" />
-          </Field>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Disponibilità" htmlFor="cp-availability">
-            <Select
-              id="cp-availability"
-              value={form.availability}
-              onChange={(e) => handleChange('availability', e.target.value)}
-            >
-              {AVAILABILITY_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Stato" htmlFor="cp-status">
-            <Select
-              id="cp-status"
-              value={form.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
           </Field>
         </div>
 
@@ -391,23 +331,6 @@ export function CreateProductModal({
           </div>
         ) : null}
 
-        {isProduct ? (
-          <div className="space-y-4 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 p-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
-              Dettagli prodotto
-            </p>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.isPreorder}
-                onChange={(e) => handleChange('isPreorder', e.target.checked)}
-                className={checkboxClass}
-              />
-              <span className="text-sm font-medium text-[var(--ui-text-muted)]">Pre-Ordine</span>
-            </label>
-          </div>
-        ) : null}
-
         <Field label="Image Link" htmlFor="cp-image-link">
           <Input
             id="cp-image-link"
@@ -432,7 +355,7 @@ export function CreateProductModal({
               type="checkbox"
               checked={form.showGoogle}
               onChange={(e) => handleChange('showGoogle', e.target.checked)}
-              className={checkboxClass}
+              className="h-4 w-4 accent-[var(--ui-accent)]"
             />
             <span className="text-sm font-medium text-[var(--ui-text-muted)]">
               Inserisci dati Google / Merchant Center

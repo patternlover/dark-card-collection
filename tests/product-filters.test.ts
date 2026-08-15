@@ -32,12 +32,12 @@ describe('computeFilterCounts', () => {
 
   it('counts micro prodotti and espansioni per unique title', () => {
     const counts = computeFilterCounts([
-      { ...base, title: 'Box', item_category_3: 'box', item_category_2: { id: 10, name: 'Prima Serie' } },
-      { ...base, title: 'Box', item_category_3: 'box', item_category_2: { id: 10, name: 'Prima Serie' } },
-      { ...base, title: 'ETB', item_category_3: 'etb', item_category_2: { id: 10, name: 'Prima Serie' } },
+      { ...base, title: 'Box', item_category_3: { id: 2, name: 'Box' }, item_category_2: { id: 10, name: 'Prima Serie' } },
+      { ...base, title: 'Box', item_category_3: { id: 2, name: 'Box' }, item_category_2: { id: 10, name: 'Prima Serie' } },
+      { ...base, title: 'ETB', item_category_3: { id: 4, name: 'Etb' }, item_category_2: { id: 10, name: 'Prima Serie' } },
     ])
-    expect(counts.micro['box']).toBe(1)
-    expect(counts.micro['etb']).toBe(1)
+    expect(counts.micro['2']).toBe(1)
+    expect(counts.micro['4']).toBe(1)
     expect(counts.col['10']).toBe(2)
   })
 

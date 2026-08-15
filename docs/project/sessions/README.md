@@ -32,3 +32,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-13 — item_category + rename Collezioni→Espansioni](2026-08-13-item-category-espansioni.md)
 - [2026-08-14 — Gerarchia item_category_1/2/3 + restyle modali](2026-08-14-item-category-hierarchy-modals.md)
 - [2026-08-14 — Remap item_category (Macro/Espansione/Micro) + via categories + Listati](2026-08-14-item-category-remap-listati.md)
+- [2026-08-14 — Categorie dinamiche + semplificazione stato + tabelle uniformi](2026-08-14-unify-tables-simplify-state.md)

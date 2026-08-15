@@ -18,7 +18,7 @@ async function main() {
 
   console.log('Resetting test collections...')
   // ordine per rispettare le FK (prima i figli che referenziano i prodotti)
-  for (const slug of ['orders', 'messages', 'purchases', 'products', 'espansioni'] as const) {
+  for (const slug of ['orders', 'messages', 'purchases', 'products', 'categories', 'espansioni'] as const) {
     await clearCollection(payload, slug)
   }
 
@@ -27,6 +27,19 @@ async function main() {
     collection: 'espansioni',
     data: { name: 'Test Set', slug: 'test-set', description: 'Collezione di test' } as any,
   })
+  const microNames = [
+    ['Spc', 'spc'],
+    ['Box', 'box'],
+    ['Bundle', 'bundle'],
+    ['Etb', 'etb'],
+    ['Tin', 'tin'],
+    ['Singola', 'single'],
+    ['Slab', 'slab'],
+    ['Altro', 'other'],
+  ]
+  for (const [name, slug] of microNames) {
+    await payload.create({ overrideAccess: true,  collection: 'categories', data: { name, slug } as any })
+  }
 
   const product1 = await payload.create({ overrideAccess: true, 
     collection: 'products',

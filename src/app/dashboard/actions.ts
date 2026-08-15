@@ -31,6 +31,11 @@ export async function logout(): Promise<void> {
   redirect('/')
 }
 
+export interface CategoryOption {
+  id: string
+  name: string
+}
+
 export interface EspansioneOption {
   id: string
   name: string
@@ -45,15 +50,13 @@ export interface ProductDTO {
   price?: number | null
   salePrice?: number | null
   costOfGoodsSold?: number | null
-  status: string
   availability?: string | null
-  isPreorder?: boolean | null
   grade?: string | null
   condition?: string | null
   productType?: string | null
   itemCategory1?: string | null
   itemCategory2?: { id: string; name: string } | null
-  itemCategory3?: string | null
+  itemCategory3?: { id: string; name: string } | null
   googleProductCategory?: string | null
   language?: string | null
   cardNumber?: string | null
@@ -94,9 +97,8 @@ export interface OrderDTO {
 export interface OverviewData {
   products: {
     total: number
-    listed: number
-    hold: number
-    sold: number
+    inStock: number
+    outOfStock: number
     visible: number
     lowStock: number
   }
@@ -129,9 +131,7 @@ function toProductDTO(doc: any): ProductDTO {
     price: doc.price ?? null,
     salePrice: doc.sale_price ?? null,
     costOfGoodsSold: doc.cost_of_goods_sold ?? null,
-    status: doc.status || 'listed',
     availability: doc.availability ?? null,
-    isPreorder: doc.is_preorder ?? null,
     grade: doc.grade ?? null,
     condition: doc.condition ?? null,
     productType: doc.product_type ?? null,
@@ -139,7 +139,9 @@ function toProductDTO(doc: any): ProductDTO {
     itemCategory2: doc.item_category_2
       ? { id: String(doc.item_category_2.id ?? doc.item_category_2), name: relName(doc.item_category_2) }
       : null,
-    itemCategory3: doc.item_category_3 ?? null,
+    itemCategory3: doc.item_category_3
+      ? { id: String(doc.item_category_3.id ?? doc.item_category_3), name: relName(doc.item_category_3) }
+      : null,
     googleProductCategory: doc.google_product_category ?? null,
     language: doc.language ?? null,
     cardNumber: doc.card_number ?? null,
@@ -195,12 +197,11 @@ function toOrderDTO(doc: any): OrderDTO {
 const OVERVIEW_PRODUCTS_SQL = `
   SELECT
     COUNT(*)::int AS total,
-    COUNT(*) FILTER (WHERE status = 'listed')::int AS listed,
-    COUNT(*) FILTER (WHERE status = 'hold')::int AS hold,
-    COUNT(*) FILTER (WHERE status = 'sold')::int AS sold,
+    COUNT(*) FILTER (WHERE availability = 'in_stock')::int AS in_stock,
+    COUNT(*) FILTER (WHERE availability = 'out_of_stock')::int AS out_of_stock,
     COUNT(*) FILTER (WHERE is_visible IS DISTINCT FROM false)::int AS visible,
     COUNT(*) FILTER (WHERE is_visible IS DISTINCT FROM false AND COALESCE(quantity, 0) <= 1)::int AS low_stock,
-    COALESCE(SUM(CASE WHEN status = 'listed' AND is_visible IS DISTINCT FROM false
+    COALESCE(SUM(CASE WHEN is_visible IS DISTINCT FROM false
       THEN COALESCE(price, 0) * COALESCE(quantity, 0) END), 0)::float8 AS inventory_value
   FROM products
 `
@@ -222,13 +223,11 @@ function num(v: unknown): number {
 }
 
 function computeOverviewFromDocs(products: any[], orders: any[]): OverviewData {
-  const listed = products.filter((p) => p.status === 'listed')
-  const hold = products.filter((p) => p.status === 'hold')
-  const sold = products.filter((p) => p.status === 'sold')
+  const inStock = products.filter((p) => p.availability === 'in_stock')
+  const outOfStock = products.filter((p) => p.availability === 'out_of_stock')
   const visible = products.filter((p) => p.is_visible !== false)
   const lowStock = products.filter((p) => p.is_visible !== false && (Number(p.quantity) || 0) <= 1)
-  const inventoryValue = listed
-    .filter((p) => p.is_visible !== false)
+  const inventoryValue = visible
     .reduce((sum, p) => sum + (Number(p.price) || 0) * (Number(p.quantity) || 0), 0)
 
   const ordersByStatus: OverviewData['orders'] = {
@@ -249,9 +248,8 @@ function computeOverviewFromDocs(products: any[], orders: any[]): OverviewData {
   return {
     products: {
       total: products.length,
-      listed: listed.length,
-      hold: hold.length,
-      sold: sold.length,
+      inStock: inStock.length,
+      outOfStock: outOfStock.length,
       visible: visible.length,
       lowStock: lowStock.length,
     },
@@ -288,9 +286,8 @@ export async function getOverview(): Promise<OverviewData> {
   return {
     products: {
       total: num(p.total),
-      listed: num(p.listed),
-      hold: num(p.hold),
-      sold: num(p.sold),
+      inStock: num(p.in_stock),
+      outOfStock: num(p.out_of_stock),
       visible: num(p.visible),
       lowStock: num(p.low_stock),
     },
@@ -310,9 +307,10 @@ export async function getOverview(): Promise<OverviewData> {
 
 export interface ProductFilters {
   search?: string
-  status?: string
   expansion?: string
   withImage?: string
+  sortBy?: string
+  sortDir?: 'asc' | 'desc'
   limit?: number
   page?: number
 }
@@ -334,17 +332,26 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
       or: [{ title: { contains: q } }, { item_group_id: { contains: q } }, { description: { contains: q } }],
     })
   }
-  if (filters.status) where.push({ status: { equals: filters.status } })
   if (filters.expansion) where.push({ expansion: { equals: Number(filters.expansion) } })
   if (filters.withImage === 'yes') where.push({ image_link: { exists: true } })
   if (filters.withImage === 'no') where.push({ image_link: { exists: false } })
 
+  const sortField: Record<string, string> = {
+    title: 'title',
+    quantity: 'quantity',
+    cost: 'cost_of_goods_sold',
+    price: 'price',
+  }
+  const sort =
+    filters.sortBy && sortField[filters.sortBy]
+      ? `${filters.sortDir === 'desc' ? '-' : ''}${sortField[filters.sortBy]}`
+      : '-createdAt'
   const res = await payload.find({ overrideAccess: true, 
     collection: 'products',
     where: where.length > 0 ? ({ and: where } as any) : undefined,
     limit: filters.limit || 50,
     page: filters.page || 1,
-    sort: '-createdAt',
+    sort,
     depth: 1,
     draft: false,
   })
@@ -370,15 +377,13 @@ export interface UpdateProductPatch {
   price?: number | null
   salePrice?: number | null
   costOfGoodsSold?: number | null
-  status?: string
   availability?: string
-  isPreorder?: boolean
   grade?: string
   condition?: string
   productType?: string | null
   itemCategory1?: string | null
   itemCategory2?: string | number | null
-  itemCategory3?: string | null
+  itemCategory3?: string | number | null
   googleProductCategory?: string | null
   language?: string
   cardNumber?: string | null
@@ -395,7 +400,6 @@ const PATCH_FIELD_MAP: Record<string, string> = {
   itemGroupId: 'item_group_id',
   salePrice: 'sale_price',
   costOfGoodsSold: 'cost_of_goods_sold',
-  isPreorder: 'is_preorder',
   cardNumber: 'card_number',
   imageLink: 'image_link',
   isVisible: 'is_visible',
@@ -419,9 +423,7 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     'price',
     'salePrice',
     'costOfGoodsSold',
-    'status',
     'availability',
-    'isPreorder',
     'grade',
     'condition',
     'productType',
@@ -496,15 +498,13 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
       price: data.price ?? undefined,
       sale_price: data.salePrice ?? undefined,
       cost_of_goods_sold: data.costOfGoodsSold ?? undefined,
-      status: data.status || 'listed',
       availability: data.availability || 'in_stock',
-      is_preorder: data.isPreorder ?? false,
       grade: data.grade || 'near-mint',
       condition: data.condition || 'used',
       product_type: data.productType || undefined,
       item_category_1: data.itemCategory1 || 'product',
       item_category_2: data.itemCategory2 != null ? Number(data.itemCategory2) : undefined,
-      item_category_3: data.itemCategory3 || undefined,
+      item_category_3: data.itemCategory3 != null ? Number(data.itemCategory3) : undefined,
       google_product_category: data.googleProductCategory || undefined,
       language: data.language || 'italian',
       card_number: data.cardNumber || undefined,
@@ -667,6 +667,78 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
   }
 }
 
+export interface CategoryDTO {
+  id: string
+  name: string
+  slug: string
+  description?: string | null
+}
+
+export async function getCategoriesFull(): Promise<CategoryDTO[]> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const res = await payload.find({ overrideAccess: true,  collection: 'categories', limit: 500, sort: 'name', draft: false })
+  return res.docs.map((d: any) => ({
+    id: String(d.id),
+    name: d.name || '',
+    slug: d.slug || '',
+    description: d.description ?? null,
+  }))
+}
+
+export async function createCategory(data: { name: string; slug?: string; description?: string }): Promise<CategoryDTO> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+
+  const name = (data.name || '').trim()
+  if (!name) throw new Error('Il nome è obbligatorio')
+
+  let slug = (data.slug || '').trim() || slugify(name)
+  let candidate = slug
+  let i = 2
+  while (true) {
+    const existing = await payload.find({ overrideAccess: true,  collection: 'categories', where: { slug: { equals: candidate } }, limit: 1 })
+    if (existing.docs.length === 0) break
+    candidate = `${slug}-${i++}`
+  }
+
+  const res = await payload.create({ overrideAccess: true, 
+    collection: 'categories',
+    data: { name, slug: candidate, description: data.description || undefined } as any,
+  })
+  return {
+    id: String(res.id),
+    name: res.name as string,
+    slug: res.slug as string,
+    description: (res.description ?? null) as string | null,
+  }
+}
+
+export async function updateCategory(
+  id: string,
+  data: { name?: string; slug?: string; description?: string | null },
+): Promise<CategoryDTO> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const patch: Record<string, any> = {}
+  if (data.name !== undefined) patch.name = data.name
+  if (data.slug !== undefined) patch.slug = data.slug
+  if (data.description !== undefined) patch.description = data.description ?? undefined
+  const res = await payload.update({ overrideAccess: true,  collection: 'categories', id, data: patch as any })
+  return {
+    id: String(res.id),
+    name: res.name as string,
+    slug: res.slug as string,
+    description: (res.description ?? null) as string | null,
+  }
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  await payload.delete({ overrideAccess: true,  collection: 'categories', id })
+}
+
 export interface ListingSearchFilters {
   search?: string
   availability?: string
@@ -775,7 +847,6 @@ export async function searchListings(filters: ListingSearchFilters = {}): Promis
 
 export interface ListingProductFilters {
   search?: string
-  status?: string
   availability?: string
   visibility?: string
   sortBy?: string
@@ -801,8 +872,7 @@ export async function searchListingProducts(filters: ListingProductFilters = {})
     const { products, sales } = await fetchListingDataset(payload, filters.search)
     const groups = buildListingGroups(products, sales)
     let items = flattenListingItems(groups)
-    if (filters.status) items = items.filter((v) => v.status === filters.status)
-    if (filters.availability === 'in_stock') items = items.filter((v) => v.availability === 'in_stock')
+      if (filters.availability === 'in_stock') items = items.filter((v) => v.availability === 'in_stock')
     if (filters.availability === 'out_of_stock') items = items.filter((v) => v.availability === 'out_of_stock')
     if (filters.visibility === 'visible') items = items.filter((v) => v.isVisible)
     if (filters.visibility === 'hidden') items = items.filter((v) => !v.isVisible)
@@ -1210,7 +1280,7 @@ function toPurchaseDTO(doc: any): PurchaseDTO {
   }
 }
 
-export async function getPurchases(opts: { search?: string; page?: number; limit?: number } = {}): Promise<{ docs: PurchaseDTO[]; total: number; totalPages: number }> {
+export async function getPurchases(opts: { search?: string; sortBy?: string; sortDir?: 'asc' | 'desc'; page?: number; limit?: number } = {}): Promise<{ docs: PurchaseDTO[]; total: number; totalPages: number }> {
   await requireAuth()
   const payload = await getPayloadClient()
   const page = opts.page || 1
@@ -1223,12 +1293,21 @@ export async function getPurchases(opts: { search?: string; page?: number; limit
       { notes: { contains: opts.search } },
     ]
   }
+  const sortField: Record<string, string> = {
+    purchaseDate: 'purchase_date',
+    sourceName: 'source_name',
+    totalCost: 'total_cost',
+  }
+  const sort =
+    opts.sortBy && sortField[opts.sortBy]
+      ? `${opts.sortDir === 'desc' ? '-' : ''}${sortField[opts.sortBy]}`
+      : '-purchase_date'
   const res = await payload.find({ overrideAccess: true, 
     collection: 'purchases',
     where,
     page,
     limit,
-    sort: '-purchase_date',
+    sort,
     depth: 1,
   })
   return {
@@ -1302,7 +1381,6 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
         itemCategory2: line.newProductExpansion || undefined,
         itemCategory3: line.newProductItemCategory2 || undefined,
         quantity: 0,
-        status: 'listed',
       })
       productId = Number(created.id)
     }
@@ -1378,7 +1456,6 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
         itemCategory2: line.newProductExpansion || undefined,
         itemCategory3: line.newProductItemCategory2 || undefined,
         quantity: 0,
-        status: 'listed',
       })
       productId = Number(created.id)
     }

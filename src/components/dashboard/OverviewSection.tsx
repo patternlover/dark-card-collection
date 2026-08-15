@@ -18,9 +18,6 @@ import {
 import type { BadgeTone } from './ui'
 
 const STATUS_LABELS: Record<string, string> = {
-  listed: 'Disponibile',
-  hold: 'In Attesa',
-  sold: 'Venduto',
   pending: 'In Attesa pagamento',
   paid: 'Pagato',
   shipped: 'Spedito',
@@ -29,9 +26,6 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_TONES: Record<string, BadgeTone> = {
-  listed: 'success',
-  hold: 'warning',
-  sold: 'neutral',
   pending: 'warning',
   paid: 'info',
   shipped: 'accent',
@@ -93,9 +87,9 @@ export function OverviewSection() {
         <SectionTitle>Inventario</SectionTitle>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <StatCard label="Totale" value={overview.products.total} />
-          <StatCard label="Disponibili" value={overview.products.listed} />
-          <StatCard label="In Attesa" value={overview.products.hold} />
-          <StatCard label="Venduti" value={overview.products.sold} />
+          <StatCard label="In stock" value={overview.products.inStock} />
+          <StatCard label="Esauriti" value={overview.products.outOfStock} />
+          
           <StatCard label="Visibili" value={overview.products.visible} />
           <StatCard label="Stock basso" value={overview.products.lowStock} />
         </div>

@@ -5,12 +5,6 @@ import type { ProductDTO, UpdateProductPatch } from '@/app/dashboard/actions'
 import { updateProduct } from '@/app/dashboard/actions'
 import { Button, Field, Input, Modal, Select, Textarea } from './ui'
 
-const STATUS_OPTIONS = [
-  { value: 'listed', label: 'Disponibile' },
-  { value: 'hold', label: 'In Attesa' },
-  { value: 'sold', label: 'Venduto' },
-]
-
 const GRADE_OPTIONS = [
   { value: 'mint', label: 'Mint / Sigillato' },
   { value: 'near-mint', label: 'Near Mint' },
@@ -25,13 +19,6 @@ const CONDITION_OPTIONS = [
   { value: 'used', label: 'Usato' },
   { value: 'new', label: 'Nuovo' },
   { value: 'refurbished', label: 'Rigenerato' },
-]
-
-const AVAILABILITY_OPTIONS = [
-  { value: 'in_stock', label: 'Disponibile' },
-  { value: 'out_of_stock', label: 'Esaurito' },
-  { value: 'preorder', label: 'Pre-Ordine' },
-  { value: 'backorder', label: 'Backorder' },
 ]
 
 const LANGUAGE_OPTIONS = [
@@ -51,17 +38,6 @@ const RARITY_OPTIONS = [
   { value: 'secret-rare', label: 'Secret Rare' },
 ]
 
-function AutoHint({ text }: { text: string }) {
-  return (
-    <span className="inline-flex items-center gap-1 text-xs text-[var(--ui-text-faint)]">
-      <span className="rounded bg-[var(--ui-surface-alt)] px-1.5 py-0.5 font-semibold uppercase tracking-wide text-[var(--ui-text-muted)]">
-        Auto
-      </span>
-      {text}
-    </span>
-  )
-}
-
 interface EditProductModalProps {
   product: ProductDTO
   onClose: () => void
@@ -75,13 +51,9 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
 
   const [form, setForm] = useState({
     title: product.title || '',
-    slug: product.slug || '',
     description: product.description || '',
     price: product.price != null ? String(product.price) : '',
     salePrice: product.salePrice != null ? String(product.salePrice) : '',
-    status: product.status || 'listed',
-    availability: product.availability || 'in_stock',
-    isPreorder: product.isPreorder ?? false,
     grade: product.grade || 'near-mint',
     condition: product.condition || 'used',
     productType: product.productType || '',
@@ -106,14 +78,10 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
     try {
       const patch: UpdateProductPatch = {
         title: form.title.trim() || product.title,
-        slug: form.slug.trim(),
         itemGroupId: form.showGoogle ? (form.itemGroupId.trim() || null) : null,
         description: form.description.trim() || null,
         price: form.price === '' ? null : Number(form.price),
         salePrice: form.salePrice === '' ? null : Number(form.salePrice),
-        status: form.status,
-        availability: form.availability,
-        isPreorder: isProduct ? form.isPreorder : false,
         grade: isCard ? form.grade : 'near-mint',
         condition: isCard ? form.condition : 'new',
         productType: form.showGoogle ? (form.productType.trim() || null) : null,
@@ -134,7 +102,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
     }
   }
 
-  const checkboxClass = 'h-4 w-4 accent-[var(--ui-accent)]'
 
   return (
     <Modal
@@ -161,36 +128,8 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
               onChange={(e) => handleChange('title', e.target.value)}
             />
           </Field>
-          <Field label="Slug" htmlFor="ep-slug">
-            <Input id="ep-slug" type="text" value={form.slug} disabled />
-            <AutoHint text="generato dal titolo" />
-          </Field>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Disponibilità" htmlFor="ep-availability">
-            <Select
-              id="ep-availability"
-              value={form.availability}
-              onChange={(e) => handleChange('availability', e.target.value)}
-            >
-              {AVAILABILITY_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-          <Field label="Stato" htmlFor="ep-status">
-            <Select
-              id="ep-status"
-              value={form.status}
-              onChange={(e) => handleChange('status', e.target.value)}
-            >
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Field label="Prezzo Vendita (€)" htmlFor="ep-price">
@@ -279,23 +218,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
           </div>
         ) : null}
 
-        {isProduct ? (
-          <div className="space-y-4 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 p-4">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
-              Dettagli prodotto
-            </p>
-            <label className="flex cursor-pointer items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.isPreorder}
-                onChange={(e) => handleChange('isPreorder', e.target.checked)}
-                className={checkboxClass}
-              />
-              <span className="text-sm font-medium text-[var(--ui-text-muted)]">Pre-Ordine</span>
-            </label>
-          </div>
-        ) : null}
-
         <Field label="Image Link" htmlFor="ep-image-link">
           <Input
             id="ep-image-link"
@@ -320,7 +242,7 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
               type="checkbox"
               checked={form.showGoogle}
               onChange={(e) => handleChange('showGoogle', e.target.checked)}
-              className={checkboxClass}
+              className="h-4 w-4 accent-[var(--ui-accent)]"
             />
             <span className="text-sm font-medium text-[var(--ui-text-muted)]">
               Inserisci dati Google / Merchant Center

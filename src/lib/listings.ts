@@ -29,7 +29,6 @@ export interface ListingVariant {
   price?: number | null
   salePrice?: number | null
   cost?: number | null
-  status: string
   availability: string
   isVisible: boolean
   featured: boolean
@@ -129,7 +128,6 @@ export function buildListingGroups(products: ProductDTO[], sales: ListingSale[])
         price: p.price ?? null,
         salePrice: p.salePrice ?? null,
         cost: p.costOfGoodsSold ?? null,
-        status: p.status || 'listed',
         availability: deriveAvailability(Number(p.quantity) || 0, p.availability),
         isVisible: p.isVisible !== false,
         featured: Boolean(p.featured),
@@ -175,7 +173,7 @@ export interface ListingSort {
   dir?: SortDir
 }
 
-function compareForSort(a: unknown, b: unknown): number {
+export function compareForSort(a: unknown, b: unknown): number {
   const aNull = a === null || a === undefined
   const bNull = b === null || b === undefined
   if (aNull && bNull) return 0
@@ -221,8 +219,6 @@ function itemField(v: ListingVariant, field: string): unknown {
       return v.price
     case 'cost':
       return v.cost
-    case 'status':
-      return v.status
     default:
       return v.title
   }

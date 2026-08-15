@@ -9,13 +9,12 @@ import {
   type ProductDTO,
   type PurchaseHistoryEntry,
 } from '@/app/dashboard/actions'
-import { StatusBadge } from './productShared'
 import {
   Alert,
   Button,
   Input,
   PageHeader,
-  Select,
+  SortableTh,
   Table,
   TBody,
   Td,
@@ -23,23 +22,22 @@ import {
   THead,
   Toolbar,
   Tr,
+  useSort,
 } from './ui'
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
-
-const STATUS_OPTIONS = [
-  { value: '', label: 'Tutti gli stati' },
-  { value: 'listed', label: 'Disponibile' },
-  { value: 'hold', label: 'In Attesa' },
-  { value: 'sold', label: 'Venduto' },
-]
 
 const PAGE_SIZE = 25
 
 export function InventorySection() {
   const [products, setProducts] = useState<ProductDTO[]>([])
+  const { sortBy, sortDir, handleSort } = useSort('title')
+  const onSort = (field: string) => {
+    setPage(1)
+    handleSort(field)
+  }
   const [query, setQuery] = useState('')
-  const [status, setStatus] = useState('')
+  const [appliedQuery, setAppliedQuery] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -54,8 +52,9 @@ export function InventorySection() {
       setLoading(true)
       try {
         const res = await searchProducts({
-          search: opts.search ?? query,
-          status: status || undefined,
+          search: appliedQuery,
+          sortBy,
+          sortDir,
           limit: PAGE_SIZE,
           page: opts.page ?? page,
         })
@@ -68,7 +67,7 @@ export function InventorySection() {
         setLoading(false)
       }
     },
-    [query, status, page],
+    [appliedQuery, sortBy, sortDir, page],
   )
 
   useEffect(() => {
@@ -76,11 +75,6 @@ export function InventorySection() {
   }, [load])
 
   const notify = (text: string, type: 'success' | 'error' = 'success') => setMessage({ text, type })
-
-  const runSearch = () => {
-    setPage(1)
-    load({ page: 1, search: query })
-  }
 
   const toggleHistory = async (product: ProductDTO) => {
     if (expandedId === product.id) {
@@ -129,34 +123,16 @@ export function InventorySection() {
         description={`${total} prodotti · stock, costo medio e storico acquisti`}
       />
 
-      <Toolbar>
-        <div className="relative min-w-[240px] flex-1">
+      <Toolbar className="justify-end">
+        <div className="relative w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') runSearch()
-            }}
-            placeholder="Cerca per titolo, item_group_id o descrizione..."
+            placeholder="Cerca per titolo..."
             className="pl-9"
           />
         </div>
-        <Select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value)
-            setPage(1)
-          }}
-          className="w-auto"
-        >
-          {STATUS_OPTIONS.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </Select>
-        <Button variant="secondary" onClick={runSearch}>
-          Cerca
-        </Button>
       </Toolbar>
 
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
@@ -169,10 +145,10 @@ export function InventorySection() {
         <Table>
           <THead>
             <Tr>
-              <Th>Prodotto</Th>
-              <Th>Stock</Th>
-              <Th>Costo medio</Th>
-              <Th>Prezzo</Th>
+              <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Stock" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <Th>Valore inventario</Th>
               <Th className="text-right">Azioni</Th>
             </Tr>
@@ -187,7 +163,6 @@ export function InventorySection() {
                     <Td>
                       <div className="flex items-center gap-3">
                         <span className="min-w-0 break-words font-medium text-[var(--ui-text)]">{p.title}</span>
-                        <StatusBadge status={p.status || 'listed'} />
                       </div>
                     </Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.quantity ?? 0}</Td>

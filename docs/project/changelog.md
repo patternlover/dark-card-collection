@@ -1,7 +1,20 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Remap item_category_1/2/3 (Macro/Espansione/Micro) + via categories + Listati**.
+Ultima sessione: **Categorie dinamiche (micro prodotto), semplificazione stato, slug inglesi, tabelle uniformi**.
+
+---
+
+## Sessione recente 29 — Categorie dinamiche + semplificazione stato + slug inglesi + tabelle uniformi
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-14-unify-tables-simplify-state.md`). Su `main`.
+
+- **`categories` di nuovo collection** (CRUD `/dashboard/categories`): `item_category_3` diventa relationship → categories (migration: create+seed 8 valori+data migration+drop enum+rels Payload); filtro shop "Micro prodotto" dinamico.
+- **Via `status` e `is_preorder`**: availability auto da quantity; via `/shop/preorders` e filtri status; overview conta in_stock/out_of_stock.
+- **Slug dashboard inglesi** (settings, expansions, listings, categories) + redirect 308; etichette italiane invariate.
+- **Modale modifica minimale** (via slug/disponibilità/stato/pre-ordine); "Esaurito" senza (OOS); colonne Prezzo/Costo medio invertite in /listings.
+- **Tabelle uniformi**: `SortableTh`/`useSort`/`useSortedList` condivisi, header ordinabili in tutte le sezioni (server-side Magazzino/Lotti, client-side Ordini/Messaggi/Espansioni/Categorie), via dropdown, search live.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 78/78 ✓ · `next build` ✓ · **Playwright bundle prod 52/52** ✓ · drift-check NESSUNO.
 
 ---
 

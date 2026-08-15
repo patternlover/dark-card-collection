@@ -32,7 +32,7 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
   }
 
   async function openEditInListati(page: any, name: string) {
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     await page.getByRole('button', { name: 'Prodotti' }).click()
     const row = page.locator('tr', { hasText: name }).first()
     await row.locator('button[title="Modifica"]').click()
@@ -44,9 +44,7 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await createViaLot(page, name)
     await openEditInListati(page, name)
 
-    await expect(page.getByText('Dettagli prodotto')).toBeVisible()
     await expect(page.getByText('Dettagli carta')).toHaveCount(0)
-
     await expect(page.locator('#ep-item-category-1')).toHaveCount(0)
     await expect(page.getByText('Macro prodotto', { exact: true })).toHaveCount(0)
     await expect(page.getByText('Espansione', { exact: true })).toHaveCount(0)
@@ -61,9 +59,7 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await expect(page.getByText('Google / Merchant Center', { exact: true })).toBeVisible()
     await page.locator('#ep-item-group').fill('GRP-001')
 
-    const slug = page.locator('#ep-slug')
-    await expect(slug).toBeDisabled()
-    await expect(slug.locator('..').getByText('Auto')).toBeVisible()
+    await expect(page.locator('#ep-slug')).toHaveCount(0)
 
     await page.getByRole('button', { name: 'Salva' }).click()
     await expect(page.getByText('Prodotto salvato')).toBeVisible()
@@ -74,7 +70,6 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await createCardViaLot(page, name)
     await openEditInListati(page, name)
     await expect(page.getByText('Dettagli carta')).toBeVisible()
-    await expect(page.getByText('Dettagli prodotto')).toHaveCount(0)
     await page.locator('#ep-grade').selectOption({ label: 'Near Mint' })
     await page.locator('#ep-language').selectOption({ label: 'Inglese' })
     await page.locator('#ep-card-number').fill('025/165')
@@ -105,8 +100,8 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await expect(page).toHaveURL(/\/shop\/espansioni/)
   })
 
-  test('/dashboard/listings redirects to /dashboard/listati', async ({ page }) => {
+  test('/dashboard/listings redirects to /dashboard/listings', async ({ page }) => {
     await page.goto('/dashboard/listings')
-    await expect(page).toHaveURL(/\/dashboard\/listati/)
+    await expect(page).toHaveURL(/\/dashboard\/listings/)
   })
 })

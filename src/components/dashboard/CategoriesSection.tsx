@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import {
-  createEspansione,
-  deleteEspansione,
-  getEspansioniFull,
-  updateEspansione,
-  type EspansioneDTO,
+  createCategory,
+  deleteCategory,
+  getCategoriesFull,
+  updateCategory,
+  type CategoryDTO,
 } from '@/app/dashboard/actions'
 import {
   Alert,
@@ -33,15 +33,14 @@ interface FormState {
   name: string
   slug: string
   description: string
-  releaseDate: string
 }
 
-const EMPTY_FORM: FormState = { id: null, name: '', slug: '', description: '', releaseDate: '' }
+const EMPTY_FORM: FormState = { id: null, name: '', slug: '', description: '' }
 
-export function EspansionsSection() {
-  const [espansioni, setEspansioni] = useState<EspansioneDTO[]>([])
+export function CategoriesSection() {
+  const [categories, setCategories] = useState<CategoryDTO[]>([])
   const { sortBy, sortDir, handleSort } = useSort('name')
-  const sorted = useSortedList(espansioni, sortBy, sortDir)
+  const sorted = useSortedList(categories, sortBy, sortDir)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState<FormState | null>(null)
@@ -51,9 +50,9 @@ export function EspansionsSection() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      setEspansioni(await getEspansioniFull())
+      setCategories(await getCategoriesFull())
     } catch {
-      setError('Errore nel caricamento espansioni')
+      setError('Errore nel caricamento categorie')
     } finally {
       setLoading(false)
     }
@@ -64,14 +63,8 @@ export function EspansionsSection() {
   }, [load])
 
   const openCreate = () => setForm(EMPTY_FORM)
-  const openEdit = (c: EspansioneDTO) =>
-    setForm({
-      id: c.id,
-      name: c.name,
-      slug: c.slug,
-      description: c.description || '',
-      releaseDate: c.releaseDate ? c.releaseDate.slice(0, 10) : '',
-    })
+  const openEdit = (c: CategoryDTO) =>
+    setForm({ id: c.id, name: c.name, slug: c.slug, description: c.description || '' })
 
   const save = async () => {
     if (!form) return
@@ -79,24 +72,22 @@ export function EspansionsSection() {
     setError(null)
     try {
       if (form.id) {
-        const saved = await updateEspansione(form.id, {
+        const saved = await updateCategory(form.id, {
           name: form.name.trim() || undefined,
           slug: form.slug.trim() || undefined,
           description: form.description.trim() || null,
-          releaseDate: form.releaseDate || null,
         })
-        setEspansioni((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
+        setCategories((prev) => prev.map((c) => (c.id === form.id ? saved : c)))
       } else {
-        const saved = await createEspansione({
+        const saved = await createCategory({
           name: form.name,
           slug: form.slug,
           description: form.description,
-          releaseDate: form.releaseDate || null,
         })
-        setEspansioni((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
+        setCategories((prev) => [...prev, saved].sort((a, b) => a.name.localeCompare(b.name)))
       }
       setForm(null)
-      setNotice(form.id ? 'Espansione aggiornata' : 'Espansione creata')
+      setNotice(form.id ? 'Categoria aggiornata' : 'Categoria creata')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Errore durante il salvataggio')
     } finally {
@@ -104,14 +95,14 @@ export function EspansionsSection() {
     }
   }
 
-  const remove = async (c: EspansioneDTO) => {
-    if (!confirm(`Eliminare l'espansione "${c.name}"?`)) return
+  const remove = async (c: CategoryDTO) => {
+    if (!confirm(`Eliminare la categoria "${c.name}"?`)) return
     setBusy(true)
     setError(null)
     try {
-      await deleteEspansione(c.id)
-      setEspansioni((prev) => prev.filter((x) => x.id !== c.id))
-      setNotice('Espansione eliminata')
+      await deleteCategory(c.id)
+      setCategories((prev) => prev.filter((x) => x.id !== c.id))
+      setNotice('Categoria eliminata')
     } catch {
       setError('Errore durante l\'eliminazione')
     } finally {
@@ -119,18 +110,11 @@ export function EspansionsSection() {
     }
   }
 
-  const fmtDate = (iso?: string | null) => {
-    if (!iso) return '—'
-    const d = new Date(iso)
-    if (Number.isNaN(d.getTime())) return iso
-    return d.toLocaleDateString('it-IT')
-  }
-
   return (
     <div className="space-y-4">
-      <PageHeader title="Espansioni" description="Serie ed edizioni del catalogo.">
+      <PageHeader title="Categorie" description="Organizza i prodotti per categoria di vendita.">
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" /> Nuova Espansione
+          <Plus className="h-4 w-4" /> Nuova Categoria
         </Button>
       </PageHeader>
 
@@ -139,15 +123,14 @@ export function EspansionsSection() {
 
       {loading ? (
         <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
-      ) : espansioni.length === 0 ? (
-        <p className="text-sm text-[var(--ui-text-muted)]">Nessuna espansione</p>
+      ) : categories.length === 0 ? (
+        <p className="text-sm text-[var(--ui-text-muted)]">Nessuna categoria</p>
       ) : (
         <Table>
           <THead>
             <Tr>
               <SortableTh label="Nome" field="name" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
               <SortableTh label="Slug" field="slug" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-              <SortableTh label="Uscita" field="releaseDate" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
               <Th>Descrizione</Th>
               <Th className="text-right">Azioni</Th>
             </Tr>
@@ -157,7 +140,6 @@ export function EspansionsSection() {
               <Tr key={c.id}>
                 <Td className="font-medium text-[var(--ui-text)]">{c.name}</Td>
                 <Td className="font-mono text-xs text-[var(--ui-text-muted)]">{c.slug}</Td>
-                <Td className="text-[var(--ui-text-muted)]">{fmtDate(c.releaseDate)}</Td>
                 <Td className="max-w-xs truncate text-[var(--ui-text-muted)]">{c.description || '—'}</Td>
                 <Td>
                   <div className="flex items-center justify-end gap-2">
@@ -189,7 +171,7 @@ export function EspansionsSection() {
 
       {form ? (
         <Modal
-          title={form.id ? 'Modifica espansione' : 'Nuova espansione'}
+          title={form.id ? 'Modifica categoria' : 'Nuova categoria'}
           onClose={() => setForm(null)}
           maxWidth="max-w-md"
           footer={
@@ -204,31 +186,23 @@ export function EspansionsSection() {
           }
         >
           <div className="space-y-3">
-            <Field label="Nome *" htmlFor="expansion-name">
+            <Field label="Nome *" htmlFor="category-name">
               <Input
-                id="expansion-name"
+                id="category-name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </Field>
-            <Field label="Slug" htmlFor="expansion-slug" hint="Lasciato vuoto: generato dal nome">
+            <Field label="Slug" htmlFor="category-slug" hint="Lasciato vuoto: generato dal nome">
               <Input
-                id="expansion-slug"
+                id="category-slug"
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
               />
             </Field>
-            <Field label="Data di uscita" htmlFor="expansion-release">
-              <Input
-                id="expansion-release"
-                type="date"
-                value={form.releaseDate}
-                onChange={(e) => setForm({ ...form, releaseDate: e.target.value })}
-              />
-            </Field>
-            <Field label="Descrizione" htmlFor="expansion-description">
+            <Field label="Descrizione" htmlFor="category-description">
               <Textarea
-                id="expansion-description"
+                id="category-description"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
               />

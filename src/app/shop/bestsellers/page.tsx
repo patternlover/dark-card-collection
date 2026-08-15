@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function BestsellersPage() {
   let products: any[] = []
+  let categories: any[] = []
   let espansioni: any[] = []
 
   try {
@@ -24,7 +25,6 @@ export default async function BestsellersPage() {
       collection: 'products',
       where: {
         and: [
-          { status: { in: ['listed', 'hold', 'sold'] } },
           { is_visible: { equals: true } },
           { featured: { equals: true } },
         ],
@@ -38,10 +38,7 @@ export default async function BestsellersPage() {
       const fallback = await payload.find({ overrideAccess: true, 
         collection: 'products',
         where: {
-          and: [
-            { status: { in: ['listed', 'hold', 'sold'] } },
-            { is_visible: { equals: true } },
-          ],
+          and: [{ is_visible: { equals: true } }],
         },
         limit: 50,
         sort: '-createdAt',
@@ -49,6 +46,13 @@ export default async function BestsellersPage() {
       products = fallback.docs
     }
 
+
+    const catResult = await payload.find({ overrideAccess: true, 
+      collection: 'categories',
+      limit: 50,
+      sort: 'name',
+    })
+    categories = catResult.docs
 
     const colResult = await payload.find({ overrideAccess: true, 
       collection: 'espansioni',
@@ -65,6 +69,7 @@ export default async function BestsellersPage() {
       title="Bestseller"
       subtitle="I prodotti più venduti e più amati dai nostri clienti"
       action="/shop/bestsellers"
+      categories={categories}
       espansioni={espansioni}
       products={products}
     />

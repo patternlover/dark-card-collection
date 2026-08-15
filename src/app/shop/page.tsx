@@ -15,6 +15,7 @@ export const metadata: Metadata = {
 
 export default async function ShopPage() {
   let products: any[] = []
+  let categories: any[] = []
   let espansioni: any[] = []
 
   try {
@@ -22,14 +23,19 @@ export default async function ShopPage() {
 
     const result = await payload.find({ overrideAccess: true, 
       collection: 'products',
-      where: {
-        AND: [{ status: { in: ['listed', 'hold', 'sold'] } }, { is_visible: { equals: true } }],
-      },
+      where: { is_visible: { equals: true } },
       limit: 50,
       sort: '-createdAt',
     })
     products = result.docs
 
+
+    const catResult = await payload.find({ overrideAccess: true, 
+      collection: 'categories',
+      limit: 50,
+      sort: 'name',
+    })
+    categories = catResult.docs
 
     const colResult = await payload.find({ overrideAccess: true, 
       collection: 'espansioni',
@@ -46,6 +52,7 @@ export default async function ShopPage() {
       title="Shop Pokémon TCG"
       subtitle="Booster Box, ETB, Collection Box e SPC sigillati. Originali al 100%."
       action="/shop"
+      categories={categories}
       espansioni={espansioni}
       products={products}
     />

@@ -8,8 +8,10 @@ import {
   getPurchaseSourceNames,
   createPurchase,
   deletePurchase,
+  getCategoriesFull,
   updatePurchase,
   searchProducts,
+  type CategoryDTO,
   type EspansioneOption,
   type PurchaseDTO,
 } from '@/app/dashboard/actions'
@@ -21,6 +23,8 @@ import {
   Field,
   Input,
   Modal,
+  SortableTh,
+  useSort,
   ModalSection,
   PageHeader,
   Select,
@@ -86,13 +90,20 @@ function emptyLine(): LineForm {
 
 export function PurchasesSection() {
   const [purchases, setPurchases] = useState<PurchaseDTO[]>([])
+  const { sortBy, sortDir, handleSort } = useSort('purchaseDate')
+  const onSort = (field: string) => {
+    setPage(1)
+    handleSort(field)
+  }
   const [query, setQuery] = useState('')
+  const [appliedQuery, setAppliedQuery] = useState('')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [espansioni, setEspansioni] = useState<EspansioneOption[]>([])
+  const [categories, setCategories] = useState<CategoryDTO[]>([])
   const [sourceOptions, setSourceOptions] = useState<string[]>([])
   const [productOptions, setProductOptions] = useState<ProductOption[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -124,7 +135,9 @@ export function PurchasesSection() {
       setLoading(true)
       try {
         const res = await getPurchases({
-          search: opts.search ?? query,
+          search: appliedQuery,
+          sortBy,
+          sortDir,
           page: opts.page ?? page,
           limit: 25,
         })
@@ -137,7 +150,7 @@ export function PurchasesSection() {
         setLoading(false)
       }
     },
-    [query, page],
+    [appliedQuery, sortBy, sortDir, page],
   )
 
   const refreshProductOptions = useCallback(() => {
@@ -160,6 +173,7 @@ export function PurchasesSection() {
 
   useEffect(() => {
     getEspansioni().then(setEspansioni).catch(() => {})
+    getCategoriesFull().then(setCategories).catch(() => {})
     getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     refreshProductOptions()
   }, [refreshProductOptions])
@@ -169,11 +183,6 @@ export function PurchasesSection() {
   }, [load])
 
   const notify = (text: string, type: 'success' | 'error' = 'success') => setMessage({ text, type })
-
-  const runSearch = () => {
-    setPage(1)
-    load({ page: 1, search: query })
-  }
 
   const updateLine = (index: number, patch: Partial<LineForm>) => {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
@@ -316,22 +325,16 @@ export function PurchasesSection() {
         </Button>
       </PageHeader>
 
-      <Toolbar>
-        <div className="relative min-w-[240px] flex-1">
+      <Toolbar className="justify-end">
+        <div className="relative w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') runSearch()
-            }}
             placeholder="Cerca per fonte o note..."
             className="pl-9"
           />
         </div>
-        <Button variant="secondary" onClick={runSearch}>
-          Cerca
-        </Button>
       </Toolbar>
 
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
@@ -344,11 +347,11 @@ export function PurchasesSection() {
         <Table>
           <THead>
             <Tr>
-              <Th>Data</Th>
-              <Th>Fonte</Th>
+              <SortableTh label="Data" field="purchaseDate" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Fonte" field="sourceName" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <Th>Righe</Th>
               <Th>Costo extra</Th>
-              <Th>Costo totale</Th>
+              <SortableTh label="Costo totale" field="totalCost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <Th className="text-right">Azioni</Th>
             </Tr>
           </THead>
@@ -627,22 +630,9 @@ export function PurchasesSection() {
                               onChange={(e) => updateLine(index, { newProductItemCategory2: e.target.value })}
                             >
                               <option value="">— Micro prodotto —</option>
-                              {line.newProductItemCategory1 === 'card' ? (
-                                <>
-                                  <option value="single">Singola</option>
-                                  <option value="slab">Slab</option>
-                                  <option value="other">Altro</option>
-                                </>
-                              ) : (
-                                <>
-                                  <option value="spc">Spc</option>
-                                  <option value="box">Box</option>
-                                  <option value="bundle">Bundle</option>
-                                  <option value="etb">Etb</option>
-                                  <option value="tin">Tin</option>
-                                  <option value="other">Altro</option>
-                                </>
-                              )}
+                              {categories.map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
                             </Select>
                             <Input
                               type="url"

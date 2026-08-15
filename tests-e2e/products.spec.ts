@@ -8,7 +8,7 @@ const LOT_SRC = `Lot ${TITLE}`
 
 test.beforeAll(resetDb)
 
-test.describe('Prodotti: Magazzino + Listino', () => {
+test.describe('Prodotti: Magazzino + Listati', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page)
   })
@@ -44,7 +44,7 @@ test.describe('Prodotti: Magazzino + Listino', () => {
     await expect(page.getByText(TITLE, { exact: true }).first()).toBeVisible()
   })
 
-  test('edit a product price from the Listino', async ({ page }) => {
+  test('edit a product price from the Listati', async ({ page }) => {
     await page.goto('/dashboard/listings')
     const row = page.locator('tr', { hasText: TITLE }).first()
     await row.locator('button[title="Modifica"]').click()
@@ -55,7 +55,7 @@ test.describe('Prodotti: Magazzino + Listino', () => {
     await expect(page.locator('tr', { hasText: TITLE }).first()).toContainText('79,90')
   })
 
-  test('toggle featured from the Listino', async ({ page }) => {
+  test('toggle featured from the Listati', async ({ page }) => {
     await page.goto('/dashboard/listings')
     const row = page.locator('tr', { hasText: TITLE }).first()
     await row.locator('button[title="Metti in vetrina (bestseller)"]').click()

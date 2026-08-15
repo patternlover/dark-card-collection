@@ -102,16 +102,6 @@ export const Products: CollectionConfig = {
       },
     },
     {
-      name: 'status',
-      type: 'select',
-      options: [
-        { label: 'Disponibile', value: 'listed' },
-        { label: 'In Attesa', value: 'hold' },
-        { label: 'Venduto', value: 'sold' },
-      ],
-      defaultValue: 'listed',
-    },
-    {
       name: 'condition',
       type: 'select',
       options: [
@@ -142,14 +132,6 @@ export const Products: CollectionConfig = {
       },
     },
     {
-      name: 'is_preorder',
-      type: 'checkbox',
-      defaultValue: false,
-      admin: {
-        description: 'Prodotto in pre-ordine (In Attesa): visibile in /shop/preorders e acquistabile',
-      },
-    },
-    {
       name: 'item_category_2',
       type: 'relationship',
       relationTo: 'espansioni',
@@ -168,17 +150,8 @@ export const Products: CollectionConfig = {
     },
     {
       name: 'item_category_3',
-      type: 'select',
-      options: [
-        { label: 'Spc', value: 'spc' },
-        { label: 'Box', value: 'box' },
-        { label: 'Bundle', value: 'bundle' },
-        { label: 'Etb', value: 'etb' },
-        { label: 'Tin', value: 'tin' },
-        { label: 'Singola', value: 'single' },
-        { label: 'Slab', value: 'slab' },
-        { label: 'Altro', value: 'other' },
-      ],
+      type: 'relationship',
+      relationTo: 'categories',
       admin: {
         description: 'Micro prodotto (livello 3): Spc/Box/Bundle/Etb/Tin per prodotti, Singola/Slab per carte',
       },

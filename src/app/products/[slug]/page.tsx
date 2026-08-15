@@ -47,8 +47,7 @@ export async function generateMetadata({
         and: [
           { slug: { equals: slug } },
           { is_visible: { equals: true } },
-          { status: { in: ['listed', 'hold', 'sold'] } },
-        ],
+                  ],
       },
       limit: 1,
       depth: 1,
@@ -145,8 +144,7 @@ export default async function ProductPage({
       and: [
         { slug: { equals: slug } },
         { is_visible: { equals: true } },
-        { status: { in: ['listed', 'hold', 'sold'] } },
-      ],
+              ],
     },
     limit: 1,
     depth: 1,
@@ -164,8 +162,7 @@ export default async function ProductPage({
       and: [
         { title: { equals: product.title } },
         { is_visible: { equals: true } },
-        { status: { in: ['listed', 'hold', 'sold'] } },
-      ],
+              ],
     },
     limit: 100,
     depth: 1,
@@ -182,8 +179,7 @@ export default async function ProductPage({
         and: [
           { expansion: { equals: colId } },
           { id: { not_equals: product.id } },
-          { status: { in: ['listed', 'hold', 'sold'] } },
-          { is_visible: { equals: true } },
+                    { is_visible: { equals: true } },
         ],
       },
       limit: 50,
@@ -246,7 +242,7 @@ export default async function ProductPage({
     <div className="flex flex-wrap gap-2">
       {product.grade === 'mint' && <Badge variant="new">Sigillato</Badge>}
       {product.grade === 'graded' && <Badge variant="bestseller">Graded</Badge>}
-      {(product.is_preorder || product.status === 'hold') && <Badge variant="preorder">In Attesa</Badge>}
+
       <Badge variant="default">
         {statusLabels[product.status] || product.status}
       </Badge>
@@ -264,12 +260,9 @@ export default async function ProductPage({
   breadcrumbItems.push({ label: product.title })
 
   const productUrl = `${SITE_URL}/products/${product.slug}`
-  const availability =
-    product.status === 'sold'
-      ? 'https://schema.org/OutOfStock'
-      : product.status === 'hold' || product.is_preorder
-        ? 'https://schema.org/PreOrder'
-        : 'https://schema.org/InStock'
+  const availability = (product.availability ?? 'in_stock') === 'out_of_stock'
+    ? 'https://schema.org/OutOfStock'
+    : 'https://schema.org/InStock'
   const schemaImageUrl = absoluteUrl(group.imagePdp || group.image)
   const priceValidUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   const itemCondition =

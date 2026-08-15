@@ -33,7 +33,7 @@ export function computeFilterCounts(products: any[]): FilterCounts {
     const title = p.title || 'Untitled'
     addToSet(cond, p.grade, title)
     addToSet(lang, p.language, title)
-    if (p.item_category_3) addToSet(micro, p.item_category_3, title)
+    if (p.item_category_3?.id) addToSet(micro, String(p.item_category_3.id), title)
     const colid = p.item_category_2?.id
     if (colid != null) addToSet(col, String(colid), title)
   }

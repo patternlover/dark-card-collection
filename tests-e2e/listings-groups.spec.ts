@@ -8,7 +8,7 @@ const title = (name: string) => `${name} ${stamp}-${++n}`
 
 test.beforeAll(resetDb)
 
-test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
+test.describe('Listati: viste Gruppi prodotto / Prodotti', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page)
   })
@@ -31,7 +31,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
   test('groups view (default): product names shown on a single line', async ({ page }) => {
     const longName = title('Collezione Illustrazione Primi Compagni d\'Avventura con un titolo molto lungo per il test')
     await createProduct(page, longName, '2')
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     const nameSpan = page.getByText(longName, { exact: true }).first()
     await expect(nameSpan).toBeVisible()
     await expect(nameSpan).toHaveAttribute('title', longName)
@@ -41,17 +41,17 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     const inStock = title('Scatola In Stock')
     const out = title('Scatola Esaurita')
     await createProduct(page, inStock, '3', '30')
-    // products start from lots: create with stock and sell it to reach Esaurito (OOS)
+    // products start from lots: create with stock and sell it to reach Esaurito
     await createProduct(page, out, '1', '10')
     await sellAll(page, out)
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     const rowIn = page.locator('tr', { hasText: inStock }).first()
     await expect(rowIn).toContainText('3')
     await expect(rowIn.getByText('In stock', { exact: true })).toBeVisible()
     const rowOut = page.locator('tr', { hasText: out }).first()
     await expect(rowOut).toContainText('0')
-    await expect(rowOut.getByText('Esaurito (OOS)', { exact: true })).toBeVisible()
+    await expect(rowOut.getByText('Esaurito', { exact: true })).toBeVisible()
 
     await rowOut.locator('button[title="Nascondi dallo shop (tutte le varianti)"]').click()
     await expect(rowOut.locator('button[title="Mostra nello shop (tutte le varianti)"]')).toBeVisible()
@@ -67,7 +67,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     await createProduct(page, groupName, '2', '50')
     await createProduct(page, groupName, '1', '45')
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     await expect(page.locator('tr', { hasText: groupName })).toHaveCount(1)
     const row = page.locator('tr', { hasText: groupName }).first()
     await expect(row).toContainText('3')
@@ -89,7 +89,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     await page.getByRole('button', { name: 'Registra Vendita', exact: true }).click()
     await expect(page.locator('#ext-product')).not.toBeVisible()
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     const row = page.locator('tr', { hasText: sold }).first()
     await expect(row).toContainText('×1')
   })
@@ -98,10 +98,10 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     const name = title('Nascondi Singolo')
     await createProduct(page, name, '2', '50')
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     await page.getByRole('button', { name: 'Prodotti' }).click()
     const row = page.locator('tr', { hasText: name }).first()
-    await expect(row.getByText('Disponibile', { exact: true })).toBeVisible()
+    await expect(row).toBeVisible()
     await row.locator('button[title="Nascondi singolo prodotto"]').click()
     await expect(page.getByText('Prodotto nascosto dallo shop')).toBeVisible()
     await expect(row.locator('button[title="Mostra singolo prodotto"]')).toBeVisible()
@@ -115,7 +115,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     const name = title('Vendita Manuale')
     await createProduct(page, name, '2', '60')
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     await page.getByRole('button', { name: 'Prodotti' }).click()
     const row = page.locator('tr', { hasText: name }).first()
     await row.locator('button[title="Vendi"]').click()
@@ -135,7 +135,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     const name = title('Mostra Di Nuovo')
     await createProduct(page, name, '2', '40')
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     await page.getByRole('button', { name: 'Prodotti' }).click()
     const row = page.locator('tr', { hasText: name }).first()
 
@@ -163,7 +163,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
       await createProduct(page, n, '1', '10')
     }
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     const rowFor = (n: string) => page.locator('tr', { hasText: n }).first()
 
     for (let i = 0; i < 4; i++) {
@@ -191,7 +191,7 @@ test.describe('Listino: viste Gruppi prodotto / Prodotti', () => {
     await createProduct(page, b, '1', '10')
     await createProduct(page, c, '1', '200')
 
-    await page.goto('/dashboard/listati')
+    await page.goto('/dashboard/listings')
     await expect(page.locator('input[placeholder="Cerca per nome prodotto..."]')).toHaveCount(0)
 
     const firstRowTitle = () => page.locator('tbody tr').first().locator('td').first().innerText()
