@@ -11,22 +11,6 @@ import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
 // - drop colonna enum + tipo; rels Payload `payload_locked_documents_rels.categories_id`
 // Idempotente.
 
-const SEED = `
-  INSERT INTO "categories" ("name", "slug", "created_at", "updated_at")
-  SELECT v.name, v.slug, now(), now()
-  FROM (VALUES
-    ('Spc', 'spc'),
-    ('Box', 'box'),
-    ('Bundle', 'bundle'),
-    ('Etb', 'etb'),
-    ('Tin', 'tin'),
-    ('Singola', 'single'),
-    ('Slab', 'slab'),
-    ('Altro', 'other')
-  ) AS v(name, slug)
-  WHERE NOT EXISTS (SELECT 1 FROM "categories");
-`
-
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
     DO $$ BEGIN
@@ -45,13 +29,22 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
       END IF;
     END $$;
 
-    -- seed valori enum attuali
+    -- seed valori enum attuali (inline: niente interpolazioni -> niente prepared statement)
     DO $$ BEGIN
       IF to_regclass('public.categories') IS NOT NULL
          AND NOT EXISTS (SELECT 1 FROM "categories") THEN
-        EXECUTE $q$
-          ${SEED}
-        $q$;
+        INSERT INTO "categories" ("name", "slug", "created_at", "updated_at")
+        SELECT v.name, v.slug, now(), now()
+        FROM (VALUES
+          ('Spc', 'spc'),
+          ('Box', 'box'),
+          ('Bundle', 'bundle'),
+          ('Etb', 'etb'),
+          ('Tin', 'tin'),
+          ('Singola', 'single'),
+          ('Slab', 'slab'),
+          ('Altro', 'other')
+        ) AS v(name, slug);
       END IF;
     END $$;
 
