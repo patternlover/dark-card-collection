@@ -193,7 +193,7 @@ export function CategoriesSection() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </Field>
-            <Field label="Slug" htmlFor="category-slug" hint="Lasciato vuoto: generato dal nome">
+            <Field label="Slug" htmlFor="category-slug">
               <Input
                 id="category-slug"
                 value={form.slug}

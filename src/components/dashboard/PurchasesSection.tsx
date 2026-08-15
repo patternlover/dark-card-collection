@@ -381,7 +381,7 @@ export function PurchasesSection() {
             <Tr>
               <SortableTh label="Data" field="purchaseDate" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Fonte" field="sourceName" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
-              <Th>Pezzi</Th>
+              <Th>Qty</Th>
               <Th>Costo extra</Th>
               <SortableTh label="Costo totale" field="totalCost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <Th className="text-right">Azioni</Th>
@@ -401,9 +401,7 @@ export function PurchasesSection() {
                       <p className="font-medium text-[var(--ui-text)]">{p.sourceName || '—'}</p>
                       <p className="text-xs text-[var(--ui-text-faint)]">{p.sourceType || ''}</p>
                     </Td>
-                    <Td className="text-[var(--ui-text-muted)]">
-                      {p.lines.length} riga{p.lines.length !== 1 ? 'e' : ''} · {rowCount} pezzi
-                    </Td>
+                    <Td className="text-[var(--ui-text-muted)]">{rowCount}</Td>
                     <Td className="text-[var(--ui-text-muted)]">{p.extraCosts ? euro.format(p.extraCosts) : '—'}</Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.totalCost != null ? euro.format(p.totalCost) : '—'}</Td>
                     <Td>

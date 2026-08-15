@@ -149,14 +149,12 @@ export function InventorySection() {
               <SortableTh label="Stock" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
-              <Th>Valore inventario</Th>
               <Th className="text-right">Azioni</Th>
             </Tr>
           </THead>
           <TBody>
             {products.map((p) => {
               const expanded = expandedId === p.id
-              const inventoryValue = (Number(p.price) || 0) * (Number(p.quantity) || 0)
               return (
                 <Fragment key={p.id}>
                   <Tr>
@@ -166,9 +164,8 @@ export function InventorySection() {
                       </div>
                     </Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.quantity ?? 0}</Td>
-                    <Td className="text-[var(--ui-text-muted)]">{p.costOfGoodsSold != null ? euro.format(p.costOfGoodsSold) : '—'}</Td>
+                    <Td className="text-[var(--ui-text-muted)]">{p.costOfGoodsSold != null && p.costOfGoodsSold > 0 ? euro.format(p.costOfGoodsSold) : '—'}</Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.price != null ? euro.format(p.price) : '—'}</Td>
-                    <Td className="font-medium text-[var(--ui-text)]">{euro.format(inventoryValue)}</Td>
                     <Td>
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
@@ -194,7 +191,7 @@ export function InventorySection() {
                   </Tr>
                   {expanded ? (
                     <Tr key={`${p.id}-detail`}>
-                      <Td colSpan={6} className="p-0">
+                      <Td colSpan={5} className="p-0">
                         <div className="border-t border-[var(--ui-border)] bg-[var(--ui-bg)]/40 px-4 py-3">
                           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
                             Storico acquisti
@@ -203,7 +200,7 @@ export function InventorySection() {
                             <p className="text-sm text-[var(--ui-text-muted)]">Caricamento...</p>
                           ) : history[p.id].length === 0 ? (
                             <p className="text-sm text-[var(--ui-text-muted)]">
-                              Nessun lotto registrato per questo prodotto (costo manuale o dato legacy)
+                              Nessun lotto registrato per questo prodotto
                             </p>
                           ) : (
                             <div className="divide-y divide-[var(--ui-border)]/80">

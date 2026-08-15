@@ -211,7 +211,7 @@ export function EspansionsSection() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
               />
             </Field>
-            <Field label="Slug" htmlFor="expansion-slug" hint="Lasciato vuoto: generato dal nome">
+            <Field label="Slug" htmlFor="expansion-slug">
               <Input
                 id="expansion-slug"
                 value={form.slug}

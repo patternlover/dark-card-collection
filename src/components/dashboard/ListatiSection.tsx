@@ -371,8 +371,8 @@ export function ListatiSection() {
                     {g.totalSold > 0 ? <span className="font-medium text-[var(--ui-text)]">×{g.totalSold}</span> : '—'}
                   </Td>
                   <Td><AvailabilityBadge availability={g.availability} /></Td>
-                  <Td className="font-semibold text-[var(--ui-text)]">{g.price != null ? euro.format(g.price) : '—'}</Td>
                   <Td className="whitespace-nowrap text-[var(--ui-text-muted)]">{g.cost != null ? euro.format(g.cost) : '—'}</Td>
+                  <Td className="font-semibold text-[var(--ui-text)]">{g.price != null ? euro.format(g.price) : '—'}</Td>
                   <Td>
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
@@ -425,6 +425,8 @@ export function ListatiSection() {
           <THead>
             <Tr>
               <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <Th>Variante</Th>
+              <Th>Set</Th>
               <SortableTh label="Stock" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Venduti" field="sold" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
@@ -437,18 +439,17 @@ export function ListatiSection() {
             {items.map((v) => (
               <Tr key={v.id}>
                 <Td>
-                  <div className="min-w-0">
-                    <p className="break-words font-medium text-[var(--ui-text)]">{v.title}</p>
-                    {variantAttrLabel(v) ? (
-                      <p className="text-xs text-[var(--ui-text-faint)]">{variantAttrLabel(v)}</p>
-                    ) : null}
-                  </div>
+                  <p className="break-words font-medium text-[var(--ui-text)]">{v.title}</p>
                 </Td>
+                <Td className="text-xs text-[var(--ui-text-muted)]">
+                  {variantAttrLabel(v) || '—'}
+                </Td>
+                <Td className="text-xs text-[var(--ui-text-faint)]">{v.set || '—'}</Td>
                 <Td className="font-semibold text-[var(--ui-text)]">{v.quantity}</Td>
                 <Td><SaleSummary variant={v} /></Td>
                 <Td><AvailabilityBadge availability={v.availability} /></Td>
-                <Td className="text-[var(--ui-text-muted)]">{v.cost != null ? euro.format(v.cost) : '—'}</Td>
-                <Td className="font-semibold text-[var(--ui-text)]">{v.price != null ? euro.format(v.price) : '—'}</Td>
+                <Td className="whitespace-nowrap text-[var(--ui-text-muted)]">{v.cost != null ? euro.format(v.cost) : '—'}</Td>
+                <Td className="whitespace-nowrap font-semibold text-[var(--ui-text)]">{v.price != null ? euro.format(v.price) : '—'}</Td>
                 <Td>
                   <div className="flex items-center justify-end gap-1.5">
                     <Button

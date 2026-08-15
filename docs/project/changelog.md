@@ -1,7 +1,21 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Lotti "Nuovo prodotto/Nuova carta", espansioni multiple, date GG/MM/AAAA, fix vari**.
+Ultima sessione: **Fix dashboard: nav highlight, colonne listati/lotti/inventario, hint slug, niente legacy**.
+
+---
+
+## Sessione recente 31 — Fix dashboard: nav highlight, colonne, hint slug, niente valori legacy
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-15-dashboard-fixes-nav-columns.md`). Su `main`.
+
+- **Nav evidenziata**: `DashboardShell` — href `/dashboard/listings` (Listati) e `/dashboard/settings` (Impostazioni). ⚠️ Il fix era stato DICHIARATO nel changelog della sessione 30 ma mai committato (verificato: `DashboardShell.tsx`/`ListatiSection.tsx` intatti in `2e468f9`).
+- **/inventory**: via colonna "Valore inventario" (colSpan 6→5); costo medio mostra `—` se 0/assente (niente "0,00 €" finto); via "costo manuale o dato legacy" nello storico vuoto.
+- **/purchases**: colonna "Pezzi" → "Qty" col solo totale pezzi del lotto (via "N righe ·").
+- **/listings Gruppi prodotto**: colonne scambiate — penultima Costo medio (NON bold), ultima Prezzo listino (IN bold).
+- **/listings Prodotti**: 1 riga = 1 articolo, più dettagliato dei gruppi — colonne dedicate **Variante** (grado · lingua · condizione) e **Set** (espansioni, campo `set` su `ListingVariant`).
+- **Hint slug falso**: via `"Lasciato vuoto: generato dal nome"` in Categorie ed Espansioni (lo slug NON viene rigenerato dal nome in modifica).
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 78/78 ✓ · niente collections toccate → nessuna migration · CI ✓ · deploy Vercel ✓.
 
 ---
 
