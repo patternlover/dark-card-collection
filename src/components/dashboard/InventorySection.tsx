@@ -167,7 +167,7 @@ export function InventorySection() {
                     </Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.quantity ?? 0}</Td>
                     <Td className="text-[var(--ui-text-muted)]">{p.costOfGoodsSold != null ? euro.format(p.costOfGoodsSold) : '—'}</Td>
-                    <Td className="text-[var(--ui-text-muted)]">{p.price != null ? euro.format(p.price) : '—'}</Td>
+                    <Td className="font-semibold text-[var(--ui-text)]">{p.price != null ? euro.format(p.price) : '—'}</Td>
                     <Td className="font-medium text-[var(--ui-text)]">{euro.format(inventoryValue)}</Td>
                     <Td>
                       <div className="flex items-center justify-end gap-1.5">

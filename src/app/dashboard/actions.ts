@@ -55,7 +55,7 @@ export interface ProductDTO {
   condition?: string | null
   productType?: string | null
   itemCategory1?: string | null
-  itemCategory2?: { id: string; name: string } | null
+  itemCategory2?: Array<{ id: string; name: string }>
   itemCategory3?: { id: string; name: string } | null
   googleProductCategory?: string | null
   language?: string | null
@@ -136,9 +136,13 @@ function toProductDTO(doc: any): ProductDTO {
     condition: doc.condition ?? null,
     productType: doc.product_type ?? null,
     itemCategory1: doc.item_category_1 ?? 'product',
-    itemCategory2: doc.item_category_2
-      ? { id: String(doc.item_category_2.id ?? doc.item_category_2), name: relName(doc.item_category_2) }
-      : null,
+    itemCategory2: Array.isArray(doc.item_category_2)
+      ? doc.item_category_2
+          .map((x: any) => ({ id: String(x.id ?? x), name: relName(x) }))
+          .filter((x: { name: string }) => x.name)
+      : doc.item_category_2
+        ? [{ id: String(doc.item_category_2.id ?? doc.item_category_2), name: relName(doc.item_category_2) }]
+        : [],
     itemCategory3: doc.item_category_3
       ? { id: String(doc.item_category_3.id ?? doc.item_category_3), name: relName(doc.item_category_3) }
       : null,
@@ -146,7 +150,7 @@ function toProductDTO(doc: any): ProductDTO {
     language: doc.language ?? null,
     cardNumber: doc.card_number ?? null,
     rarity: doc.rarity ?? null,
-    quantity: doc.quantity ?? 0,
+    quantity: Number.isFinite(Number(doc.quantity)) ? Number(doc.quantity) : 0,
     imageLink: doc.image_link ?? null,
     images: doc.images ?? null,
     averageSalePrice: doc.average_sale_price ?? null,
@@ -378,14 +382,14 @@ export interface UpdateProductPatch {
   salePrice?: number | null
   costOfGoodsSold?: number | null
   availability?: string
-  grade?: string
+  grade?: string | null
   condition?: string
   productType?: string | null
   itemCategory1?: string | null
-  itemCategory2?: string | number | null
+  itemCategory2?: Array<string | number>
   itemCategory3?: string | number | null
   googleProductCategory?: string | null
-  language?: string
+  language?: string | null
   cardNumber?: string | null
   rarity?: string | null
   quantity?: number
@@ -499,12 +503,14 @@ export async function createProduct(data: CreateProductData): Promise<ProductDTO
       sale_price: data.salePrice ?? undefined,
       cost_of_goods_sold: data.costOfGoodsSold ?? undefined,
       availability: data.availability || 'in_stock',
-      grade: data.grade || 'near-mint',
-      condition: data.condition || 'used',
+      grade: data.itemCategory1 === 'card' ? (data.grade || 'near-mint') : null,
+      condition: data.itemCategory1 === 'card' ? (data.condition || 'used') : 'new',
       product_type: data.productType || undefined,
       item_category_1: data.itemCategory1 || 'product',
-      item_category_2: data.itemCategory2 != null ? Number(data.itemCategory2) : undefined,
-      item_category_3: data.itemCategory3 != null ? Number(data.itemCategory3) : undefined,
+      item_category_2:
+        Array.isArray(data.itemCategory2)
+          ? data.itemCategory2.map((id: string | number) => Number(id)).filter((id: number) => Number.isFinite(id) && id > 0)
+          : undefined,      item_category_3: data.itemCategory3 != null ? Number(data.itemCategory3) : undefined,
       google_product_category: data.googleProductCategory || undefined,
       language: data.language || 'italian',
       card_number: data.cardNumber || undefined,
@@ -1343,6 +1349,11 @@ export interface CreatePurchaseLineInput {
   newProductImageLink?: string | null
   newProductItemCategory1?: string
   newProductItemCategory2?: string
+  newProductExpansions?: string[]
+  newProductLanguage?: string | null
+  newProductGrade?: string
+  newProductCardNumber?: string | null
+  newProductRarity?: string | null
   quantity: number
   unitCost: number
 }
@@ -1378,8 +1389,15 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<Purchas
         price: line.newProductPrice ?? undefined,
         imageLink: line.newProductImageLink || undefined,
         itemCategory1: line.newProductItemCategory1 || 'product',
-        itemCategory2: line.newProductExpansion || undefined,
+        itemCategory2: line.newProductExpansions
+          ? line.newProductExpansions.map((id: string) => Number(id)).filter((id: number) => Number.isFinite(id) && id > 0)
+          : undefined,
         itemCategory3: line.newProductItemCategory2 || undefined,
+        language: line.newProductLanguage || 'italian',
+        grade: line.newProductItemCategory1 === 'card' ? (line.newProductGrade || 'near-mint') : null,
+        condition: line.newProductItemCategory1 === 'card' ? 'used' : 'new',
+        cardNumber: line.newProductItemCategory1 === 'card' ? (line.newProductCardNumber || null) : null,
+        rarity: line.newProductItemCategory1 === 'card' ? (line.newProductRarity || null) : null,
         quantity: 0,
       })
       productId = Number(created.id)
@@ -1453,8 +1471,15 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
         price: line.newProductPrice ?? undefined,
         imageLink: line.newProductImageLink || undefined,
         itemCategory1: line.newProductItemCategory1 || 'product',
-        itemCategory2: line.newProductExpansion || undefined,
+        itemCategory2: line.newProductExpansions
+          ? line.newProductExpansions.map((id: string) => Number(id)).filter((id: number) => Number.isFinite(id) && id > 0)
+          : undefined,
         itemCategory3: line.newProductItemCategory2 || undefined,
+        language: line.newProductLanguage || 'italian',
+        grade: line.newProductItemCategory1 === 'card' ? (line.newProductGrade || 'near-mint') : null,
+        condition: line.newProductItemCategory1 === 'card' ? 'used' : 'new',
+        cardNumber: line.newProductItemCategory1 === 'card' ? (line.newProductCardNumber || null) : null,
+        rarity: line.newProductItemCategory1 === 'card' ? (line.newProductRarity || null) : null,
         quantity: 0,
       })
       productId = Number(created.id)

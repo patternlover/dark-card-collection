@@ -64,7 +64,9 @@ export function groupProducts(products: any[]): ProductGroup[] {
       imageCard: imageInfo.cardUrl,
       imagePdp: imageInfo.pdpUrl,
       variantCount: sorted.length,
-      itemCategory2: sorted[0]?.item_category_2 || null,
+      itemCategory2: Array.isArray(sorted[0]?.item_category_2)
+        ? (sorted[0]?.item_category_2[0] ?? null)
+        : (sorted[0]?.item_category_2 || null),
       slug: sorted[0]?.slug || '',
       itemCategory1: sorted[0]?.item_category_1 || 'product',
     })

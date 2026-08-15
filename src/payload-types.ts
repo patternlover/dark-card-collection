@@ -198,7 +198,7 @@ export interface Product {
    */
   grade?:
     ('mint' | 'near-mint' | 'lightly-played' | 'moderately-played' | 'heavily-played' | 'damaged' | 'graded') | null;
-  item_category_2?: (number | null) | Espansioni;
+  item_category_2?: (number | Espansioni)[] | null;
   /**
    * Tipo articolo (livello 1): prodotto sigillato o carta singola
    */

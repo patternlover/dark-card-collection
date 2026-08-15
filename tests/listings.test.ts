@@ -26,7 +26,7 @@ function product(over: Partial<ProductDTO> & { id: string | number; title: strin
     condition: over.condition ?? null,
     productType: null,
     googleProductCategory: null,
-    itemCategory2: null,
+    itemCategory2: [],
     language: over.language ?? 'italian',
     cardNumber: null,
     rarity: null,

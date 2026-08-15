@@ -53,7 +53,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
 
     const dialog = page.locator('[role="dialog"]')
-    await expect(dialog.getByText('La data di acquisto è obbligatoria')).toBeVisible()
+    await expect(dialog.getByText('Data non valida: usa il formato GG/MM/AAAA')).toBeVisible()
     await expect(dialog).toBeVisible()
   })
 

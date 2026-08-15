@@ -84,7 +84,7 @@ export function CreateProductModal({
     productType: initialProduct?.productType || '',
     googleProductCategory: initialProduct?.googleProductCategory || '',
     language: initialProduct?.language || 'italian',
-    itemCategory2: String(initialProduct?.itemCategory2?.id || ''),
+    itemCategory2: String(initialProduct?.itemCategory2?.[0]?.id || ''),
     cardNumber: initialProduct?.cardNumber || '',
     rarity: initialProduct?.rarity || '',
     quantity: '1',
@@ -141,7 +141,7 @@ export function CreateProductModal({
           ? (form.googleProductCategory.trim() || null)
           : null,
         language: form.itemCategory1 === 'card' ? form.language : 'italian',
-        itemCategory2: form.itemCategory2 ? Number(form.itemCategory2) : null,
+        itemCategory2: form.itemCategory2 ? [Number(form.itemCategory2)] : undefined,
         cardNumber: form.itemCategory1 === 'card' ? (form.cardNumber.trim() || null) : null,
         rarity: form.itemCategory1 === 'card' ? (form.rarity || null) : null,
         quantity: Number(form.quantity) || 0,

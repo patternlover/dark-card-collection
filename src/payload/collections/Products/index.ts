@@ -135,6 +135,7 @@ export const Products: CollectionConfig = {
       name: 'item_category_2',
       type: 'relationship',
       relationTo: 'espansioni',
+      hasMany: true,
     },
     {
       name: 'item_category_1',

@@ -57,10 +57,12 @@ export async function generateMetadata({
 
     const price =
       product.price && product.price > 0 ? `€${product.price.toFixed(2)}` : ''
-    const collectionName =
-      typeof product.item_category_2 === 'object' && product.item_category_2?.name
-        ? product.item_category_2.name
-        : ''
+    const expList = (Array.isArray(product.item_category_2)
+      ? product.item_category_2
+      : product.item_category_2
+        ? [product.item_category_2]
+        : []) as any[]
+    const collectionName = expList[0]?.name || ''
 
     const title = collectionName
       ? `${product.title}${price ? ` | ${price}` : ''} | ${collectionName}`
@@ -171,8 +173,14 @@ export default async function ProductPage({
   const groups = groupProducts(allVariants.docs)
   group = groups[0] || null
 
-  if (product?.expansion) {
-    const colId = typeof product.item_category_2 === 'object' ? product.item_category_2.id : product.item_category_2
+  const expList = (Array.isArray(product.item_category_2)
+    ? product.item_category_2
+    : product.item_category_2
+      ? [product.item_category_2]
+      : []) as any[]
+
+  if (expList.length > 0) {
+    const colId = expList[0]?.id
     const related = await payload.find({ overrideAccess: true, 
       collection: 'products',
       where: {
@@ -191,22 +199,8 @@ export default async function ProductPage({
 
   const displayPrice = product.price || 0
 
-  const statusLabels: Record<string, string> = {
-    listed: 'Disponibile',
-    hold: 'In Attesa',
-    sold: 'Esaurito',
-  }
-
-  const collectionName = product.item_category_2
-    ? typeof product.item_category_2 === 'object'
-      ? product.item_category_2.name
-      : product.item_category_2
-    : ''
-
-  const collectionSlug =
-    typeof product.item_category_2 === 'object' && product.item_category_2?.slug
-      ? product.item_category_2.slug
-      : ''
+  const collectionName = expList[0]?.name || ''
+  const collectionSlug = expList[0]?.slug || ''
 
   const categoryName = product.category
     ? typeof product.category === 'object'
@@ -243,9 +237,9 @@ export default async function ProductPage({
       {product.grade === 'mint' && <Badge variant="new">Sigillato</Badge>}
       {product.grade === 'graded' && <Badge variant="bestseller">Graded</Badge>}
 
-      <Badge variant="default">
-        {statusLabels[product.status] || product.status}
-      </Badge>
+      {product.availability === 'out_of_stock' ? (
+        <Badge variant="sold-out">Esaurito</Badge>
+      ) : null}
     </div>
   )
 

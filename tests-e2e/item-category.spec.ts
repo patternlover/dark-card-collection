@@ -21,10 +21,11 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await page.goto('/dashboard/purchases')
     await page.getByRole('button', { name: 'Registra Lotto' }).click()
     const line = page.getByTestId('purchase-line').nth(0)
-    await line.getByTestId('line-product').selectOption('__new__')
+    await line.getByTestId('line-product').selectOption('__new_card__')
     await line.locator('input[placeholder="Titolo nuovo prodotto *"]').fill(name)
-    await line.locator('select').filter({ has: page.locator('option:has-text("Macro: Carta")') }).selectOption({ label: 'Macro: Carta' })
     await line.locator('select').filter({ has: page.locator('option:has-text("Slab")') }).selectOption({ label: 'Slab' })
+    await line.locator('select').filter({ has: page.locator('option:has-text("Near Mint")') }).selectOption({ label: 'Near Mint' })
+    await line.locator('select').filter({ has: page.locator('option:has-text("Inglese")') }).selectOption({ label: 'Inglese' })
     await line.getByTestId('line-quantity').fill('1')
     await line.getByTestId('line-cost').fill('15')
     await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
@@ -93,6 +94,27 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await expect(cardEl.getByText('Carta', { exact: true })).toBeVisible()
     const prodEl = page.locator('.group', { hasText: prod }).first()
     await expect(prodEl.getByText('Prodotto', { exact: true })).toBeVisible()
+  })
+
+
+  test('lot quick-create: Nuovo prodotto has lingua and no card fields', async ({ page }) => {
+    const name = title('Prodotto Lotto')
+    await page.goto('/dashboard/purchases')
+    await page.getByRole('button', { name: 'Registra Lotto' }).click()
+    const line = page.getByTestId('purchase-line').nth(0)
+    await line.getByTestId('line-product').selectOption('__new__')
+    await line.locator('input[placeholder="Titolo nuovo prodotto *"]').fill(name)
+    await expect(line.locator('select').filter({ has: page.locator('option:has-text("Inglese")') })).toBeVisible()
+    await expect(line.locator('input[placeholder="Card Number"]')).toHaveCount(0)
+    await expect(line.locator('select').filter({ has: page.locator('option:has-text("Near Mint")') })).toHaveCount(0)
+    await line.getByTestId('line-quantity').fill('1')
+    await line.getByTestId('line-cost').fill('20')
+    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
+    await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+
+    await page.goto('/shop')
+    const el = page.locator('.group', { hasText: name }).first()
+    await expect(el.getByText('Prodotto', { exact: true })).toBeVisible()
   })
 
   test('/shop/collections redirects to /shop/espansioni', async ({ page }) => {

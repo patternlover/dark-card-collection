@@ -163,7 +163,10 @@ export function ClientListing({
         return false
       }
       if (filters.micro && String(p.item_category_3?.id) !== filters.micro) return false
-      if (filters.expansion && String(p.item_category_2?.id) !== filters.expansion) return false
+      if (filters.expansion) {
+        const cols = Array.isArray(p.item_category_2) ? p.item_category_2 : p.item_category_2 ? [p.item_category_2] : []
+        if (!cols.some((c: any) => String(c?.id) === filters.expansion)) return false
+      }
       if (filters.grade && p.grade !== filters.grade) return false
       if (filters.language && p.language !== filters.language) return false
       return true

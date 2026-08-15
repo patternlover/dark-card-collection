@@ -55,15 +55,21 @@ export async function recomputeAverageCost(payload: Payload, productId: number):
   })
 }
 
+function safeNumber(value: unknown): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
+}
+
 export async function applyStockDelta(payload: Payload, delta: Map<number, number>): Promise<void> {
   for (const [productId, amount] of delta) {
-    if (amount === 0) continue
+    const safeAmount = safeNumber(amount)
+    if (safeAmount === 0) continue
     const product = await payload.findByID({ overrideAccess: true,  collection: 'products', id: productId, depth: 0 })
-    const currentQty = Number((product as { quantity?: number }).quantity ?? 0)
+    const currentQty = safeNumber((product as { quantity?: number }).quantity ?? 0)
     await payload.update({ overrideAccess: true, 
       collection: 'products',
       id: productId,
-      data: { quantity: Math.max(0, currentQty + amount) },
+      data: { quantity: Math.max(0, currentQty + safeAmount) },
     })
     await recomputeAverageCost(payload, productId)
   }

@@ -1,7 +1,19 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Categorie dinamiche (micro prodotto), semplificazione stato, slug inglesi, tabelle uniformi**.
+Ultima sessione: **Lotti "Nuovo prodotto/Nuova carta", espansioni multiple, date GG/MM/AAAA, fix vari**.
+
+---
+
+## Sessione recente 30 — Lotti: Nuovo prodotto/Nuova carta + espansioni multiple + date GG/MM/AAAA
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-15-lot-create-card-product-hasmany.md`). Su `main`.
+
+- **Quick-create lotto a due opzioni**: "➕ Nuovo prodotto" / "➕ Nuova carta" (item_category_1 automatico); campi comuni (Titolo, Prezzo, **Espansioni multi-select**, Categoria, **Lingua**, Image link) + solo carta (Grado, Card Number, Rarità); prodotto → grade/condition NULL.
+- **Espansioni multiple**: `item_category_2` hasMany (join `products_rels`), migration con migrazione dati; DTO array, filtri match-any, PDP/group-products (prima espansione).
+- **Date GG/MM/AAAA**: input testo con validazione nel lotto.
+- **Fix**: nav `/dashboard/listings` evidenziata; modale titolo full-width + Lingua comune; cleanup migration (grade/condition NULL sui prodotti + stock NaN→0); Prezzo in evidenza in Magazzino; Lotti "Pezzi" (via "Righe"); NaN sanitize.
+- **Verifica**: `pnpm lint` ✓ · `pnpm test` 78/78 ✓ · `next build` ✓ · **Playwright bundle prod 53/53** ✓ · drift-check NESSUNO.
 
 ---
 

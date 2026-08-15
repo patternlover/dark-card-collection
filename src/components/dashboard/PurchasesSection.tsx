@@ -65,10 +65,14 @@ interface LineForm {
   newProduct: boolean
   newProductTitle: string
   newProductPrice: string
-  newProductExpansion: string
+  newProductExpansions: string[]
   newProductImageLink: string
   newProductItemCategory1: string
   newProductItemCategory2: string
+  newProductLanguage: string
+  newProductGrade: string
+  newProductCardNumber: string
+  newProductRarity: string
   quantity: string
   unitCost: string
 }
@@ -79,13 +83,32 @@ function emptyLine(): LineForm {
     newProduct: false,
     newProductTitle: '',
     newProductPrice: '',
-    newProductExpansion: '',
+    newProductExpansions: [],
     newProductImageLink: '',
     newProductItemCategory1: 'product',
     newProductItemCategory2: '',
+    newProductLanguage: 'italian',
+    newProductGrade: 'near-mint',
+    newProductCardNumber: '',
+    newProductRarity: '',
     quantity: '1',
     unitCost: '',
   }
+}
+
+function fmtPurchaseDate(value: string): string {
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('it-IT')
+}
+
+function parseDateInput(value: string): string | null {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim())
+  if (!m) return null
+  const day = Number(m[1])
+  const month = Number(m[2])
+  const year = Number(m[3])
+  if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2000) return null
+  return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0')
 }
 
 export function PurchasesSection() {
@@ -113,7 +136,7 @@ export function PurchasesSection() {
   const [busy, setBusy] = useState(false)
 
   const [form, setForm] = useState({
-    purchaseDate: new Date().toISOString().split('T')[0],
+    purchaseDate: new Date().toLocaleDateString('it-IT'),
     sourceType: '',
     sourceName: '',
     extraCosts: '',
@@ -194,7 +217,7 @@ export function PurchasesSection() {
     getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     refreshProductOptions()
     setForm({
-      purchaseDate: new Date().toISOString().split('T')[0],
+      purchaseDate: new Date().toLocaleDateString('it-IT'),
       sourceType: '',
       sourceName: '',
       extraCosts: '',
@@ -211,7 +234,7 @@ export function PurchasesSection() {
     setEditing(p)
     refreshProductOptions()
     setForm({
-      purchaseDate: p.purchaseDate ? p.purchaseDate.slice(0, 10) : new Date().toISOString().split('T')[0],
+      purchaseDate: p.purchaseDate ? fmtPurchaseDate(p.purchaseDate) : new Date().toLocaleDateString('it-IT'),
       sourceType: p.sourceType || '',
       sourceName: p.sourceName || '',
       extraCosts: p.extraCosts != null ? String(p.extraCosts) : '',
@@ -224,9 +247,13 @@ export function PurchasesSection() {
             newProduct: false,
             newProductTitle: '',
             newProductPrice: '',
-                    newProductExpansion: '',
+                    newProductExpansions: [],
             newProductItemCategory1: 'product',
             newProductItemCategory2: '',
+            newProductLanguage: 'italian',
+            newProductGrade: 'near-mint',
+            newProductCardNumber: '',
+            newProductRarity: '',
             newProductImageLink: '',
             quantity: String(l.quantity),
             unitCost: String(l.unitCost),
@@ -240,7 +267,7 @@ export function PurchasesSection() {
     setShowCreate(false)
     setModalError(null)
     setForm({
-      purchaseDate: new Date().toISOString().split('T')[0],
+      purchaseDate: new Date().toLocaleDateString('it-IT'),
       sourceType: '',
       sourceName: '',
       extraCosts: '',
@@ -250,18 +277,23 @@ export function PurchasesSection() {
   }
 
   const handleSubmit = async () => {
-    if (!form.purchaseDate) {
-      setModalError('La data di acquisto è obbligatoria')
+    const isoDate = parseDateInput(form.purchaseDate)
+    if (!isoDate) {
+      setModalError('Data non valida: usa il formato GG/MM/AAAA')
       return
     }
     const lineInputs = lines.map((l) => ({
       productId: l.newProduct ? null : l.productId || null,
       newProductTitle: l.newProduct ? l.newProductTitle.trim() || null : null,
       newProductPrice: l.newProduct && l.newProductPrice ? Number(l.newProductPrice) : null,
-      newProductExpansion: l.newProduct ? l.newProductExpansion || null : null,
+      newProductExpansions: l.newProduct ? l.newProductExpansions : undefined,
       newProductImageLink: l.newProduct ? l.newProductImageLink.trim() || null : null,
       newProductItemCategory1: l.newProduct ? l.newProductItemCategory1 || 'product' : undefined,
       newProductItemCategory2: l.newProduct ? l.newProductItemCategory2 || undefined : undefined,
+      newProductLanguage: l.newProduct ? l.newProductLanguage || 'italian' : undefined,
+      newProductGrade: l.newProduct ? l.newProductGrade || 'near-mint' : undefined,
+      newProductCardNumber: l.newProduct ? l.newProductCardNumber.trim() || null : null,
+      newProductRarity: l.newProduct ? l.newProductRarity || null : null,
       quantity: Number(l.quantity) || 0,
       unitCost: Number(l.unitCost) || 0,
     }))
@@ -277,7 +309,7 @@ export function PurchasesSection() {
     setModalError(null)
     try {
       const data = {
-        purchaseDate: form.purchaseDate,
+        purchaseDate: isoDate,
         sourceType: form.sourceType || undefined,
         sourceName: form.sourceName.trim() || undefined,
         extraCosts: form.extraCosts ? Number(form.extraCosts) : undefined,
@@ -349,7 +381,7 @@ export function PurchasesSection() {
             <Tr>
               <SortableTh label="Data" field="purchaseDate" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Fonte" field="sourceName" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
-              <Th>Righe</Th>
+              <Th>Pezzi</Th>
               <Th>Costo extra</Th>
               <SortableTh label="Costo totale" field="totalCost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <Th className="text-right">Azioni</Th>
@@ -358,7 +390,7 @@ export function PurchasesSection() {
           <TBody>
             {purchases.map((p) => {
               const expanded = expandedId === p.id
-              const rowCount = p.lines.reduce((acc, l) => acc + l.quantity, 0)
+              const rowCount = p.lines.reduce((acc, l) => acc + (Number(l.quantity) || 0), 0)
               return (
                 <Fragment key={p.id}>
                   <Tr>
@@ -555,9 +587,15 @@ export function PurchasesSection() {
                             data-testid="line-product"
                             value={line.newProduct ? '__new__' : (lineGroup?.title ?? '')}
                             onChange={(e) => {
-                              const isNew = e.target.value === '__new__'
+                              const isNew = e.target.value === '__new__' || e.target.value === '__new_card__'
                               if (isNew) {
-                                updateLine(index, { newProduct: true, productId: '' })
+                                updateLine(index, {
+                                  newProduct: true,
+                                  productId: '',
+                                  newProductItemCategory1: e.target.value === '__new_card__' ? 'card' : 'product',
+                                  newProductCardNumber: '',
+                                  newProductRarity: '',
+                                })
                                 return
                               }
                               const group = groups.find((g) => g.title === e.target.value)
@@ -571,7 +609,8 @@ export function PurchasesSection() {
                             {groups.map((g) => (
                               <option key={g.title} value={g.title}>{g.title}</option>
                             ))}
-                            <option value="__new__">➕ Nuovo prodotto (crea dal lotto)</option>
+                            <option value="__new__">➕ Nuovo prodotto</option>
+                            <option value="__new_card__">➕ Nuova carta</option>
                           </Select>
 
                           {lineGroup && lineGroup.products.length > 1 ? (
@@ -605,34 +644,35 @@ export function PurchasesSection() {
                               placeholder="Prezzo vendita (€)"
                             />
                             <Select
-                              value={line.newProductExpansion}
-                              onChange={(e) => updateLine(index, { newProductExpansion: e.target.value })}
+                              multiple
+                              value={line.newProductExpansions}
+                              onChange={(e) =>
+                                updateLine(index, {
+                                  newProductExpansions: Array.from(e.target.selectedOptions).map((o) => o.value),
+                                })
+                              }
                             >
-                              <option value="">— Espansione —</option>
                               {espansioni.map((c) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                               ))}
                             </Select>
                             <Select
-                              value={line.newProductItemCategory1}
-                              onChange={(e) =>
-                                updateLine(index, {
-                                  newProductItemCategory1: e.target.value,
-                                  newProductItemCategory2: '',
-                                })
-                              }
-                            >
-                              <option value="product">Macro: Prodotto</option>
-                              <option value="card">Macro: Carta</option>
-                            </Select>
-                            <Select
                               value={line.newProductItemCategory2}
                               onChange={(e) => updateLine(index, { newProductItemCategory2: e.target.value })}
                             >
-                              <option value="">— Micro prodotto —</option>
+                              <option value="">— Categoria —</option>
                               {categories.map((c) => (
                                 <option key={c.id} value={c.id}>{c.name}</option>
                               ))}
+                            </Select>
+                            <Select
+                              value={line.newProductLanguage}
+                              onChange={(e) => updateLine(index, { newProductLanguage: e.target.value })}
+                            >
+                              <option value="italian">Italiano</option>
+                              <option value="english">Inglese</option>
+                              <option value="chinese">Cinese</option>
+                              <option value="japanese">Giapponese</option>
                             </Select>
                             <Input
                               type="url"
@@ -640,6 +680,40 @@ export function PurchasesSection() {
                               onChange={(e) => updateLine(index, { newProductImageLink: e.target.value })}
                               placeholder="Image link (URL)"
                             />
+                            {line.newProductItemCategory1 === 'card' ? (
+                              <>
+                                <Select
+                                  value={line.newProductGrade}
+                                  onChange={(e) => updateLine(index, { newProductGrade: e.target.value })}
+                                >
+                                  <option value="mint">Mint / Sigillato</option>
+                                  <option value="near-mint">Near Mint</option>
+                                  <option value="lightly-played">Lightly Played</option>
+                                  <option value="moderately-played">Moderately Played</option>
+                                  <option value="heavily-played">Heavily Played</option>
+                                  <option value="damaged">Damaged</option>
+                                  <option value="graded">Graded</option>
+                                </Select>
+                                <Input
+                                  type="text"
+                                  value={line.newProductCardNumber}
+                                  onChange={(e) => updateLine(index, { newProductCardNumber: e.target.value })}
+                                  placeholder="Card Number"
+                                />
+                                <Select
+                                  value={line.newProductRarity}
+                                  onChange={(e) => updateLine(index, { newProductRarity: e.target.value })}
+                                >
+                                  <option value="">— Rarità —</option>
+                                  <option value="common">Common</option>
+                                  <option value="uncommon">Uncommon</option>
+                                  <option value="rare">Rare</option>
+                                  <option value="rare-holo">Rare Holo</option>
+                                  <option value="ultra-rare">Ultra Rare</option>
+                                  <option value="secret-rare">Secret Rare</option>
+                                </Select>
+                              </>
+                            ) : null}
                           </div>
                         ) : null}
                       </div>

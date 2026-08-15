@@ -88,7 +88,7 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
         googleProductCategory: form.showGoogle
           ? (form.googleProductCategory.trim() || null)
           : null,
-        language: isCard ? form.language : 'italian',
+        language: form.language,
         cardNumber: isCard ? (form.cardNumber.trim() || null) : null,
         rarity: isCard ? (form.rarity || null) : null,
         imageLink: form.imageLink.trim() || null,
@@ -119,19 +119,17 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
       }
     >
       <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Titolo *" htmlFor="ep-title">
-            <Input
-              id="ep-title"
-              type="text"
-              value={form.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-            />
-          </Field>
-        </div>
+        <Field label="Titolo *" htmlFor="ep-title">
+          <Input
+            id="ep-title"
+            type="text"
+            value={form.title}
+            onChange={(e) => handleChange('title', e.target.value)}
+          />
+        </Field>
 
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <Field label="Prezzo Vendita (€)" htmlFor="ep-price">
             <Input
               id="ep-price"
@@ -152,6 +150,17 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
               onChange={(e) => handleChange('salePrice', e.target.value)}
             />
           </Field>
+          <Field label="Lingua" htmlFor="ep-language">
+            <Select
+              id="ep-language"
+              value={form.language}
+              onChange={(e) => handleChange('language', e.target.value)}
+            >
+              {LANGUAGE_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
         </div>
 
         {isCard ? (
@@ -159,7 +168,7 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
               Dettagli carta
             </p>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <Field label="Condizione / Grado" htmlFor="ep-grade">
                 <Select
                   id="ep-grade"
@@ -167,17 +176,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
                   onChange={(e) => handleChange('grade', e.target.value)}
                 >
                   {GRADE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Lingua" htmlFor="ep-language">
-                <Select
-                  id="ep-language"
-                  value={form.language}
-                  onChange={(e) => handleChange('language', e.target.value)}
-                >
-                  {LANGUAGE_OPTIONS.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </Select>
