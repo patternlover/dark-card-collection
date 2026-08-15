@@ -187,18 +187,6 @@ export const Products: CollectionConfig = {
       type: 'text',
     },
     {
-      name: 'rarity',
-      type: 'select',
-      options: [
-        { label: 'Common', value: 'common' },
-        { label: 'Uncommon', value: 'uncommon' },
-        { label: 'Rare', value: 'rare' },
-        { label: 'Rare Holo', value: 'rare-holo' },
-        { label: 'Ultra Rare', value: 'ultra-rare' },
-        { label: 'Secret Rare', value: 'secret-rare' },
-      ],
-    },
-    {
       name: 'quantity',
       type: 'number',
       defaultValue: 1,

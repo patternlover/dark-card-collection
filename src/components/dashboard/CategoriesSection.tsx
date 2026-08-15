@@ -16,6 +16,7 @@ import {
   Input,
   Modal,
   PageHeader,
+  Select,
   Table,
   TBody,
   Td,
@@ -32,10 +33,11 @@ interface FormState {
   id: string | null
   name: string
   slug: string
+  kind: 'product' | 'card' | 'both'
   description: string
 }
 
-const EMPTY_FORM: FormState = { id: null, name: '', slug: '', description: '' }
+const EMPTY_FORM: FormState = { id: null, name: '', slug: '', kind: 'both', description: '' }
 
 export function CategoriesSection() {
   const [categories, setCategories] = useState<CategoryDTO[]>([])
@@ -64,7 +66,7 @@ export function CategoriesSection() {
 
   const openCreate = () => setForm(EMPTY_FORM)
   const openEdit = (c: CategoryDTO) =>
-    setForm({ id: c.id, name: c.name, slug: c.slug, description: c.description || '' })
+    setForm({ id: c.id, name: c.name, slug: c.slug, kind: c.kind || 'both', description: c.description || '' })
 
   const save = async () => {
     if (!form) return
@@ -75,6 +77,7 @@ export function CategoriesSection() {
         const res = await updateCategory(form.id, {
           name: form.name.trim() || undefined,
           slug: form.slug.trim() || undefined,
+          kind: form.kind,
           description: form.description.trim() || null,
         })
         if (!res.ok) {
@@ -86,6 +89,7 @@ export function CategoriesSection() {
         const res = await createCategory({
           name: form.name,
           slug: form.slug,
+          kind: form.kind,
           description: form.description,
         })
         if (!res.ok) {
@@ -207,6 +211,17 @@ export function CategoriesSection() {
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
               />
+            </Field>
+            <Field label="Tipo di articolo" htmlFor="category-kind">
+              <Select
+                id="category-kind"
+                value={form.kind}
+                onChange={(e) => setForm({ ...form, kind: e.target.value as FormState['kind'] })}
+              >
+                <option value="both">Entrambi</option>
+                <option value="product">Solo prodotto</option>
+                <option value="card">Solo carta</option>
+              </Select>
             </Field>
             <Field label="Descrizione" htmlFor="category-description">
               <Textarea

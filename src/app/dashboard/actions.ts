@@ -17,6 +17,7 @@ import {
   type ListingSale,
 } from '@/lib/listings'
 import { logAudit } from '@/lib/audit'
+import { uploadReceiptToDrive } from '@/lib/drive'
 import type { Payload } from 'payload'
 
 async function requireAuth(): Promise<void> {
@@ -45,11 +46,6 @@ export async function logout(): Promise<void> {
   redirect('/')
 }
 
-export interface CategoryOption {
-  id: string
-  name: string
-}
-
 export interface EspansioneOption {
   id: string
   name: string
@@ -74,7 +70,6 @@ export interface ProductDTO {
   googleProductCategory?: string | null
   language?: string | null
   cardNumber?: string | null
-  rarity?: string | null
   quantity: number
   imageLink?: string | null
   images?: Array<{ image?: { id: string; url?: string } | string | null }> | null
@@ -163,7 +158,6 @@ function toProductDTO(doc: any): ProductDTO {
     googleProductCategory: doc.google_product_category ?? null,
     language: doc.language ?? null,
     cardNumber: doc.card_number ?? null,
-    rarity: doc.rarity ?? null,
     quantity: Number.isFinite(Number(doc.quantity)) ? Number(doc.quantity) : 0,
     imageLink: doc.image_link ?? null,
     images: doc.images ?? null,
@@ -405,7 +399,6 @@ export interface UpdateProductPatch {
   googleProductCategory?: string | null
   language?: string | null
   cardNumber?: string | null
-  rarity?: string | null
   quantity?: number
   imageLink?: string | null
   featured?: boolean
@@ -452,7 +445,6 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     'itemCategory3',
     'language',
     'cardNumber',
-    'rarity',
     'quantity',
     'imageLink',
     'featured',
@@ -530,7 +522,6 @@ export async function createProduct(data: CreateProductData): Promise<ActionResu
       google_product_category: data.googleProductCategory || undefined,
       language: data.language || 'italian',
       card_number: data.cardNumber || undefined,
-      rarity: data.rarity || undefined,
       quantity: data.quantity ?? 1,
       image_link: data.imageLink || undefined,
       featured: data.featured ?? false,
@@ -694,6 +685,7 @@ export interface CategoryDTO {
   id: string
   name: string
   slug: string
+  kind: 'product' | 'card' | 'both'
   description?: string | null
 }
 
@@ -705,11 +697,12 @@ export async function getCategoriesFull(): Promise<CategoryDTO[]> {
     id: String(d.id),
     name: d.name || '',
     slug: d.slug || '',
+    kind: (d.kind ?? 'both') as 'product' | 'card' | 'both',
     description: d.description ?? null,
   }))
 }
 
-export async function createCategory(data: { name: string; slug?: string; description?: string }): Promise<ActionResult<CategoryDTO>> {
+export async function createCategory(data: { name: string; slug?: string; description?: string; kind?: 'product' | 'card' | 'both' }): Promise<ActionResult<CategoryDTO>> {
   const auth = await authError()
   if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
@@ -728,7 +721,7 @@ export async function createCategory(data: { name: string; slug?: string; descri
 
   const res = await payload.create({ overrideAccess: true, 
     collection: 'categories',
-    data: { name, slug: candidate, description: data.description || undefined } as any,
+    data: { name, slug: candidate, kind: data.kind || 'both', description: data.description || undefined } as any,
   })
   return {
     ok: true,
@@ -736,6 +729,7 @@ export async function createCategory(data: { name: string; slug?: string; descri
       id: String(res.id),
       name: res.name as string,
       slug: res.slug as string,
+      kind: (res.kind ?? 'both') as 'product' | 'card' | 'both',
       description: (res.description ?? null) as string | null,
     },
   }
@@ -743,7 +737,7 @@ export async function createCategory(data: { name: string; slug?: string; descri
 
 export async function updateCategory(
   id: string,
-  data: { name?: string; slug?: string; description?: string | null },
+  data: { name?: string; slug?: string; description?: string | null; kind?: 'product' | 'card' | 'both' },
 ): Promise<ActionResult<CategoryDTO>> {
   const auth = await authError()
   if (auth) return { ok: false, message: auth }
@@ -752,6 +746,7 @@ export async function updateCategory(
   if (data.name !== undefined) patch.name = data.name
   if (data.slug !== undefined) patch.slug = data.slug
   if (data.description !== undefined) patch.description = data.description ?? undefined
+  if (data.kind !== undefined) patch.kind = data.kind
   const res = await payload.update({ overrideAccess: true,  collection: 'categories', id, data: patch as any })
   return {
     ok: true,
@@ -759,6 +754,7 @@ export async function updateCategory(
       id: String(res.id),
       name: res.name as string,
       slug: res.slug as string,
+      kind: (res.kind ?? 'both') as 'product' | 'card' | 'both',
       description: (res.description ?? null) as string | null,
     },
   }
@@ -1291,6 +1287,7 @@ export interface PurchaseDTO {
   sourceType?: string | null
   sourceName?: string | null
   extraCosts?: number | null
+  receipt?: ReceiptInput | null
   notes?: string | null
   totalCost?: number | null
   lines: PurchaseLineDTO[]
@@ -1305,6 +1302,14 @@ function toPurchaseDTO(doc: any): PurchaseDTO {
     sourceType: doc.source_type ?? null,
     sourceName: doc.source_name ?? null,
     extraCosts: doc.extra_costs != null ? Number(doc.extra_costs) : null,
+    receipt:
+      doc.receipt_file_id || doc.receipt_name || doc.receipt_url
+        ? {
+            fileId: doc.receipt_file_id ?? null,
+            name: doc.receipt_name ?? null,
+            url: doc.receipt_url ?? null,
+          }
+        : null,
     notes: doc.notes ?? null,
     totalCost: doc.total_cost != null ? Number(doc.total_cost) : null,
     lines: lines.map((l: any) => ({
@@ -1386,9 +1391,14 @@ export interface CreatePurchaseLineInput {
   newProductLanguage?: string | null
   newProductGrade?: string
   newProductCardNumber?: string | null
-  newProductRarity?: string | null
   quantity: number
   unitCost: number
+}
+
+export interface ReceiptInput {
+  fileId?: string | null
+  name?: string | null
+  url?: string | null
 }
 
 export interface CreatePurchaseInput {
@@ -1396,6 +1406,7 @@ export interface CreatePurchaseInput {
   sourceType?: string | null
   sourceName?: string | null
   extraCosts?: number | null
+  receipt?: ReceiptInput | null
   notes?: string | null
   lines: CreatePurchaseLineInput[]
 }
@@ -1431,7 +1442,6 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<ActionR
         grade: line.newProductItemCategory1 === 'card' ? (line.newProductGrade || 'near-mint') : null,
         condition: line.newProductItemCategory1 === 'card' ? 'used' : 'new',
         cardNumber: line.newProductItemCategory1 === 'card' ? (line.newProductCardNumber || null) : null,
-        rarity: line.newProductItemCategory1 === 'card' ? (line.newProductRarity || null) : null,
         quantity: 0,
       })
       if (!created.ok) return { ok: false, message: created.message }
@@ -1450,6 +1460,9 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<ActionR
       source_type: data.sourceType || undefined,
       source_name: (data.sourceName || '').trim() || undefined,
       extra_costs: data.extraCosts ?? 0,
+      receipt_file_id: data.receipt?.fileId || undefined,
+      receipt_name: data.receipt?.name || undefined,
+      receipt_url: data.receipt?.url || undefined,
       notes: (data.notes || '').trim() || undefined,
       lines,
     } as any,
@@ -1515,7 +1528,6 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
         grade: line.newProductItemCategory1 === 'card' ? (line.newProductGrade || 'near-mint') : null,
         condition: line.newProductItemCategory1 === 'card' ? 'used' : 'new',
         cardNumber: line.newProductItemCategory1 === 'card' ? (line.newProductCardNumber || null) : null,
-        rarity: line.newProductItemCategory1 === 'card' ? (line.newProductRarity || null) : null,
         quantity: 0,
       })
       if (!created.ok) return { ok: false, message: created.message }
@@ -1551,6 +1563,9 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
       source_type: data.sourceType || undefined,
       source_name: (data.sourceName || '').trim() || undefined,
       extra_costs: data.extraCosts ?? 0,
+      receipt_file_id: data.receipt?.fileId || undefined,
+      receipt_name: data.receipt?.name || undefined,
+      receipt_url: data.receipt?.url || undefined,
       notes: (data.notes || '').trim() || undefined,
       lines: newLines,
     } as any,
@@ -1650,4 +1665,30 @@ export async function recordExternalSale(data: {
     currency: 'EUR',
   })
   return { ok: true }
+}
+
+export interface UploadReceiptResult {
+  ok: boolean
+  message?: string
+  receipt?: ReceiptInput
+}
+
+/** Upload a receipt file (image/PDF) to Google Drive and return its metadata. */
+export async function uploadReceipt(file: File): Promise<UploadReceiptResult> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+
+  try {
+    const receipt = await uploadReceiptToDrive(file)
+    return {
+      ok: true,
+      receipt: {
+        fileId: receipt.fileId,
+        name: receipt.name,
+        url: receipt.url,
+      },
+    }
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : 'Errore durante l\'upload dello scontrino' }
+  }
 }

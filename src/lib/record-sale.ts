@@ -93,7 +93,7 @@ async function loadLinesForProduct(payload: Payload, productId: number): Promise
     for (const doc of result.docs) {
       for (const line of doc.lines ?? []) {
         if (productIdFrom(line.product) !== productId) continue
-        const remaining = Number(line.remaining_quantity ?? 0)
+        const remaining = Number(line.remaining_quantity ?? line.quantity ?? 0)
         if (remaining <= 0) continue
         lines.push({
           lineId: line.id ?? '',

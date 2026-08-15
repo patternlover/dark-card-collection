@@ -98,6 +98,27 @@ export const Purchases: CollectionConfig = {
       },
     },
     {
+      name: 'receipt_file_id',
+      type: 'text',
+      admin: {
+        description: 'ID del file scontrino su Google Drive',
+      },
+    },
+    {
+      name: 'receipt_name',
+      type: 'text',
+      admin: {
+        description: 'Nome originale del file scontrino caricato',
+      },
+    },
+    {
+      name: 'receipt_url',
+      type: 'text',
+      admin: {
+        description: 'Link di visualizzazione dello scontrino su Google Drive',
+      },
+    },
+    {
       name: 'notes',
       type: 'textarea',
       admin: {

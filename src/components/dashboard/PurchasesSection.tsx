@@ -1,7 +1,7 @@
 'use client'
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from 'lucide-react'
+import { ChevronDown, ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, Upload, X } from 'lucide-react'
 import {
   getEspansioni,
   getPurchases,
@@ -11,9 +11,11 @@ import {
   getCategoriesFull,
   updatePurchase,
   searchProducts,
+  uploadReceipt,
   type CategoryDTO,
   type EspansioneOption,
   type PurchaseDTO,
+  type ReceiptInput,
 } from '@/app/dashboard/actions'
 import { groupProducts, type ProductGroup } from '@/lib/group-products'
 import { buildVariantOptions } from '@/lib/sale-options'
@@ -72,7 +74,6 @@ interface LineForm {
   newProductLanguage: string
   newProductGrade: string
   newProductCardNumber: string
-  newProductRarity: string
   quantity: string
   unitCost: string
 }
@@ -90,7 +91,6 @@ function emptyLine(): LineForm {
     newProductLanguage: 'italian',
     newProductGrade: 'near-mint',
     newProductCardNumber: '',
-    newProductRarity: '',
     quantity: '1',
     unitCost: '',
   }
@@ -142,6 +142,9 @@ export function PurchasesSection() {
     extraCosts: '',
     notes: '',
   })
+  const [receipt, setReceipt] = useState<ReceiptInput | null>(null)
+  const [receiptBusy, setReceiptBusy] = useState(false)
+  const [receiptDrag, setReceiptDrag] = useState(false)
   const [lines, setLines] = useState<LineForm[]>([emptyLine()])
 
   const groups = useMemo(() => groupProducts(productOptions), [productOptions])
@@ -211,6 +214,32 @@ export function PurchasesSection() {
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
   }
 
+  const handleReceiptFile = async (file: File | undefined | null) => {
+    if (!file) return
+    if (!/^(image\/|application\/pdf)/.test(file.type)) {
+      setModalError('Scontrino: accetta solo immagini o PDF')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setModalError('Scontrino: file troppo grande (max 10 MB)')
+      return
+    }
+    setReceiptBusy(true)
+    setModalError(null)
+    try {
+      const res = await uploadReceipt(file)
+      if (!res.ok) {
+        setModalError(res.message ?? 'Errore durante l\'upload dello scontrino')
+        return
+      }
+      setReceipt(res.receipt ?? null)
+    } catch (err) {
+      setModalError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setReceiptBusy(false)
+    }
+  }
+
   const openCreate = () => {
     setEditing(null)
     setModalError(null)
@@ -223,6 +252,7 @@ export function PurchasesSection() {
       extraCosts: '',
       notes: '',
     })
+    setReceipt(null)
     setLines([emptyLine()])
     setShowCreate(true)
   }
@@ -240,6 +270,7 @@ export function PurchasesSection() {
       extraCosts: p.extraCosts != null ? String(p.extraCosts) : '',
       notes: p.notes || '',
     })
+    setReceipt(p.receipt ?? null)
     setLines(
       p.lines.length > 0
         ? p.lines.map((l) => ({
@@ -247,13 +278,12 @@ export function PurchasesSection() {
             newProduct: false,
             newProductTitle: '',
             newProductPrice: '',
-                    newProductExpansions: [],
+            newProductExpansions: [],
             newProductItemCategory1: 'product',
             newProductItemCategory2: '',
             newProductLanguage: 'italian',
             newProductGrade: 'near-mint',
             newProductCardNumber: '',
-            newProductRarity: '',
             newProductImageLink: '',
             quantity: String(l.quantity),
             unitCost: String(l.unitCost),
@@ -273,6 +303,7 @@ export function PurchasesSection() {
       extraCosts: '',
       notes: '',
     })
+    setReceipt(null)
     setLines([emptyLine()])
   }
 
@@ -293,7 +324,6 @@ export function PurchasesSection() {
       newProductLanguage: l.newProduct ? l.newProductLanguage || 'italian' : undefined,
       newProductGrade: l.newProduct ? l.newProductGrade || 'near-mint' : undefined,
       newProductCardNumber: l.newProduct ? l.newProductCardNumber.trim() || null : null,
-      newProductRarity: l.newProduct ? l.newProductRarity || null : null,
       quantity: Number(l.quantity) || 0,
       unitCost: Number(l.unitCost) || 0,
     }))
@@ -313,6 +343,7 @@ export function PurchasesSection() {
         sourceType: form.sourceType || undefined,
         sourceName: form.sourceName.trim() || undefined,
         extraCosts: form.extraCosts ? Number(form.extraCosts) : undefined,
+        receipt,
         notes: form.notes.trim() || undefined,
         lines: lineInputs,
       }
@@ -521,7 +552,7 @@ export function PurchasesSection() {
             {modalError ? <Alert tone="danger">{modalError}</Alert> : null}
 
             <ModalSection title="Dati lotto">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <Field label="Data Acquisto *" htmlFor="pc-date">
                   <Input
                     id="pc-date"
@@ -530,6 +561,7 @@ export function PurchasesSection() {
                     onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
                   />
                 </Field>
+
                 <Field label="Tipo di fonte" htmlFor="pc-source-type">
                   <Select
                     id="pc-source-type"
@@ -541,9 +573,7 @@ export function PurchasesSection() {
                     ))}
                   </Select>
                 </Field>
-              </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-4">
                 <Field label="Luogo / Fornitore" htmlFor="pc-source-name">
                   <Input
                     id="pc-source-name"
@@ -559,6 +589,7 @@ export function PurchasesSection() {
                     ))}
                   </datalist>
                 </Field>
+
                 <Field label="Costi extra (€)" htmlFor="pc-extra">
                   <Input
                     id="pc-extra"
@@ -568,6 +599,85 @@ export function PurchasesSection() {
                     value={form.extraCosts}
                     onChange={(e) => setForm({ ...form, extraCosts: e.target.value })}
                     placeholder="spedizione / commissioni"
+                  />
+                </Field>
+
+                <Field label="Scontrino">
+                  <div
+                    data-testid="receipt-dropzone"
+                    onDragOver={(e) => {
+                      e.preventDefault()
+                      setReceiptDrag(true)
+                    }}
+                    onDragLeave={() => setReceiptDrag(false)}
+                    onDrop={(e) => {
+                      e.preventDefault()
+                      setReceiptDrag(false)
+                      handleReceiptFile(e.dataTransfer.files?.[0])
+                    }}
+                    className={`flex items-center justify-center rounded-lg border-2 border-dashed px-4 py-3 transition-colors ${
+                      receiptDrag
+                        ? 'border-[var(--ui-accent)] bg-[var(--ui-accent)]/10'
+                        : 'border-[var(--ui-border-strong)] bg-[var(--ui-bg)]/40'
+                    }`}
+                  >
+                    {receiptBusy ? (
+                      <p className="text-sm text-[var(--ui-text-muted)]">Caricamento su Google Drive...</p>
+                    ) : receipt ? (
+                      <div className="flex w-full items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
+                          <span className="truncate text-sm font-medium text-[var(--ui-text)]">{receipt.name}</span>
+                          {receipt.url ? (
+                            <a
+                              href={receipt.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="shrink-0 text-xs text-[var(--ui-accent)] hover:underline"
+                            >
+                              Apri su Drive
+                            </a>
+                          ) : null}
+                        </div>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setReceipt(null)}
+                          title="Rimuovi scontrino"
+                          className="shrink-0 rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <label htmlFor="pc-receipt" className="flex cursor-pointer items-center gap-2 py-1 text-sm text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]">
+                        <Upload className="h-4 w-4" />
+                        Trascina lo scontrino qui o <span className="text-[var(--ui-accent)] underline-offset-2 hover:underline">sfoglia</span>
+                        <input
+                          id="pc-receipt"
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            handleReceiptFile(e.target.files?.[0])
+                            e.target.value = ''
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--ui-text-faint)]">
+                    Immagine o PDF (max 10 MB) — salvato su Google Drive
+                  </p>
+                </Field>
+
+                <Field label="Note">
+                  <Textarea
+                    id="pc-notes"
+                    rows={2}
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    placeholder="Note opzionali..."
                   />
                 </Field>
               </div>
@@ -595,12 +705,14 @@ export function PurchasesSection() {
                             onChange={(e) => {
                               const isNew = e.target.value === '__new__' || e.target.value === '__new_card__'
                               if (isNew) {
+                                const isCard = e.target.value === '__new_card__'
                                 updateLine(index, {
                                   newProduct: true,
                                   productId: '',
-                                  newProductItemCategory1: e.target.value === '__new_card__' ? 'card' : 'product',
+                                  newProductItemCategory1: isCard ? 'card' : 'product',
+                                  newProductItemCategory2: '',
+                                  newProductGrade: 'near-mint',
                                   newProductCardNumber: '',
-                                  newProductRarity: '',
                                 })
                                 return
                               }
@@ -667,9 +779,11 @@ export function PurchasesSection() {
                               onChange={(e) => updateLine(index, { newProductItemCategory2: e.target.value })}
                             >
                               <option value="">— Categoria —</option>
-                              {categories.map((c) => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                              ))}
+                              {categories
+                                .filter((c) => c.kind === 'both' || c.kind === line.newProductItemCategory1)
+                                .map((c) => (
+                                  <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
                             </Select>
                             <Select
                               value={line.newProductLanguage}
@@ -706,18 +820,6 @@ export function PurchasesSection() {
                                   onChange={(e) => updateLine(index, { newProductCardNumber: e.target.value })}
                                   placeholder="Card Number"
                                 />
-                                <Select
-                                  value={line.newProductRarity}
-                                  onChange={(e) => updateLine(index, { newProductRarity: e.target.value })}
-                                >
-                                  <option value="">— Rarità —</option>
-                                  <option value="common">Common</option>
-                                  <option value="uncommon">Uncommon</option>
-                                  <option value="rare">Rare</option>
-                                  <option value="rare-holo">Rare Holo</option>
-                                  <option value="ultra-rare">Ultra Rare</option>
-                                  <option value="secret-rare">Secret Rare</option>
-                                </Select>
                               </>
                             ) : null}
                           </div>
@@ -760,15 +862,6 @@ export function PurchasesSection() {
                   )
                 })}
               </div>
-            </ModalSection>
-
-            <ModalSection title="Note">
-              <Textarea
-                id="pc-notes"
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="Note opzionali..."
-              />
             </ModalSection>
           </div>
         </Modal>

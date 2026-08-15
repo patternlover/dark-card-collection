@@ -25,6 +25,19 @@ export const Categories: CollectionConfig = {
       unique: true,
     },
     {
+      name: 'kind',
+      type: 'select',
+      options: [
+        { label: 'Prodotto', value: 'product' },
+        { label: 'Carta', value: 'card' },
+        { label: 'Entrambi', value: 'both' },
+      ],
+      defaultValue: 'both',
+      admin: {
+        description: 'Tipo di articolo a cui si applica questa categoria micro (prodotto sigillato, carta singola o entrambi)',
+      },
+    },
+    {
       name: 'description',
       type: 'textarea',
     },

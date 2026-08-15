@@ -217,7 +217,6 @@ export interface Product {
   google_product_category?: string | null;
   language?: ('italian' | 'english' | 'chinese' | 'japanese') | null;
   card_number?: string | null;
-  rarity?: ('common' | 'uncommon' | 'rare' | 'rare-holo' | 'ultra-rare' | 'secret-rare') | null;
   quantity?: number | null;
   /**
    * URL immagine principale (Merchant image_link, es. da Cardmarket)
@@ -269,6 +268,10 @@ export interface Category {
   id: number;
   name: string;
   slug: string;
+  /**
+   * Tipo di articolo a cui si applica questa categoria micro (prodotto sigillato, carta singola o entrambi)
+   */
+  kind?: ('product' | 'card' | 'both') | null;
   description?: string | null;
   updatedAt: string;
   createdAt: string;
@@ -380,6 +383,18 @@ export interface Purchase {
    * Spese extra sull'intero lotto (spedizione, commissioni) — ripartite pro-quota sul valore delle righe
    */
   extra_costs?: number | null;
+  /**
+   * ID del file scontrino su Google Drive
+   */
+  receipt_file_id?: string | null;
+  /**
+   * Nome originale del file scontrino caricato
+   */
+  receipt_name?: string | null;
+  /**
+   * Link di visualizzazione dello scontrino su Google Drive
+   */
+  receipt_url?: string | null;
   /**
    * Note aggiuntive sul lotto
    */
@@ -555,7 +570,6 @@ export interface ProductsSelect<T extends boolean = true> {
   google_product_category?: T;
   language?: T;
   card_number?: T;
-  rarity?: T;
   quantity?: T;
   image_link?: T;
   images?:
@@ -578,6 +592,7 @@ export interface ProductsSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  kind?: T;
   description?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -685,6 +700,9 @@ export interface PurchasesSelect<T extends boolean = true> {
   source_type?: T;
   source_name?: T;
   extra_costs?: T;
+  receipt_file_id?: T;
+  receipt_name?: T;
+  receipt_url?: T;
   notes?: T;
   lines?:
     | T

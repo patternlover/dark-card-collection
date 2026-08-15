@@ -28,16 +28,6 @@ const LANGUAGE_OPTIONS = [
   { value: 'japanese', label: 'Giapponese' },
 ]
 
-const RARITY_OPTIONS = [
-  { value: '', label: '—' },
-  { value: 'common', label: 'Common' },
-  { value: 'uncommon', label: 'Uncommon' },
-  { value: 'rare', label: 'Rare' },
-  { value: 'rare-holo', label: 'Rare Holo' },
-  { value: 'ultra-rare', label: 'Ultra Rare' },
-  { value: 'secret-rare', label: 'Secret Rare' },
-]
-
 interface EditProductModalProps {
   product: ProductDTO
   onClose: () => void
@@ -60,7 +50,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
     googleProductCategory: product.googleProductCategory || '',
     language: product.language || 'italian',
     cardNumber: product.cardNumber || '',
-    rarity: product.rarity || '',
     imageLink: product.imageLink || '',
     itemGroupId: product.itemGroupId || '',
     showGoogle: Boolean(
@@ -90,7 +79,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
           : null,
         language: form.language,
         cardNumber: isCard ? (form.cardNumber.trim() || null) : null,
-        rarity: isCard ? (form.rarity || null) : null,
         imageLink: form.imageLink.trim() || null,
       }
       const res = await updateProduct(product.id, patch)
@@ -193,30 +181,17 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
                 />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Rarità" htmlFor="ep-rarity">
-                <Select
-                  id="ep-rarity"
-                  value={form.rarity}
-                  onChange={(e) => handleChange('rarity', e.target.value)}
-                >
-                  {RARITY_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Condizione (Google)" htmlFor="ep-condition">
-                <Select
-                  id="ep-condition"
-                  value={form.condition}
-                  onChange={(e) => handleChange('condition', e.target.value)}
-                >
-                  {CONDITION_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
+            <Field label="Condizione (Google)" htmlFor="ep-condition">
+              <Select
+                id="ep-condition"
+                value={form.condition}
+                onChange={(e) => handleChange('condition', e.target.value)}
+              >
+                {CONDITION_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </Select>
+            </Field>
           </div>
         ) : null}
 

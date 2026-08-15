@@ -1,7 +1,20 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **B2: server action senza `throw` + lingua comune nel modale prodotto**.
+Ultima sessione: **Modale lotto slim + scontrino Google Drive, categorie per tipo, via rarità, fix stock/residuo**.
+
+---
+
+## Sessione recente 33 — Modale lotto slim + scontrino Drive, categorie per tipo, via rarità, fix stock
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-15-lot-modal-receipt-category-fixes.md`). Su `main`.
+
+- **Modale Registra Lotto slim**: sezione "Dati lotto" a colonna singola (Data Acquisto → Tipo fonte → Luogo/Fornitore → Costi extra → Scontrino → Note ridotte); righe prodotto invariate.
+- **Scontrino su Google Drive**: upload drag&drop (immagini/PDF, max 10MB) via `src/lib/drive.ts` (service account JWT) + server action `uploadReceipt`; campi `receipt_file_id/name/url` su Purchases; 3 env nuove (`GOOGLE_DRIVE_*`).
+- **Categorie per tipo**: nuovo campo `Categories.kind` (product|card|both) con backfill per slug; i form filtrano la categoria micro per tipo → "Slab"/"Singola" solo per le carte; reset dei campi card al ritorno su "Nuovo prodotto" (bug fixato).
+- **Rarità rimossa del tutto**: campo via da collection Products, DTO, patch, form (Create/Edit prodotto + riga lotto) e fixture test; migration drop colonna + enum.
+- **Fix stock vs residuo**: root cause = righe legacy con `remaining_quantity` NULL (FIFO non consumava, stock sì). Fallback uniforme `?? line.quantity` in `record-sale.ts`, backfill NULL→quantity in migration, script `scripts/reconcile-stock.ts` — **eseguito live: prodotto 44 "Collezione Illustrazione Primi Compagni d'Avventura Serie 2" stock 0 → 2 (residuo reale), `in_stock`**.
+- **Verifica**: `pnpm lint` ✓ (0 errori file toccati) · `pnpm test` 78/78 ✓ · `next build` ✓ · migration `20260815_lot_receipt_category_kind_drop_rarity` applicata al live ✓.
 
 ---
 

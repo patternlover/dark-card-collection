@@ -29,7 +29,6 @@ function product(over: Partial<ProductDTO> & { id: string | number; title: strin
     itemCategory2: [],
     language: over.language ?? 'italian',
     cardNumber: null,
-    rarity: null,
     quantity: over.quantity ?? 1,
     imageLink: null,
     images: null,

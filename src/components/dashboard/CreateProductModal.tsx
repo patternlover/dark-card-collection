@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type {
-  CategoryOption,
+  CategoryDTO,
   CreateProductData,
   EspansioneOption,
   ProductDTO,
@@ -33,16 +33,6 @@ const LANGUAGE_OPTIONS = [
   { value: 'japanese', label: 'Giapponese' },
 ]
 
-const RARITY_OPTIONS = [
-  { value: '', label: '—' },
-  { value: 'common', label: 'Common' },
-  { value: 'uncommon', label: 'Uncommon' },
-  { value: 'rare', label: 'Rare' },
-  { value: 'rare-holo', label: 'Rare Holo' },
-  { value: 'ultra-rare', label: 'Ultra Rare' },
-  { value: 'secret-rare', label: 'Secret Rare' },
-]
-
 function AutoHint({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs text-[var(--ui-text-faint)]">
@@ -55,7 +45,7 @@ function AutoHint({ text }: { text: string }) {
 }
 
 interface CreateProductModalProps {
-  categories: CategoryOption[]
+  categories: CategoryDTO[]
   espansioni: EspansioneOption[]
   initialProduct?: ProductDTO
   onClose: () => void
@@ -86,7 +76,6 @@ export function CreateProductModal({
     language: initialProduct?.language || 'italian',
     itemCategory2: String(initialProduct?.itemCategory2?.[0]?.id || ''),
     cardNumber: initialProduct?.cardNumber || '',
-    rarity: initialProduct?.rarity || '',
     quantity: '1',
     imageLink: initialProduct?.imageLink || '',
     itemCategory1: initialProduct?.itemCategory1 || 'product',
@@ -113,7 +102,6 @@ export function CreateProductModal({
         next.grade = 'near-mint'
         next.condition = 'new'
         next.cardNumber = ''
-        next.rarity = ''
       }
       return next
     })
@@ -142,7 +130,6 @@ export function CreateProductModal({
         language: form.language,
         itemCategory2: form.itemCategory2 ? [Number(form.itemCategory2)] : undefined,
         cardNumber: form.itemCategory1 === 'card' ? (form.cardNumber.trim() || null) : null,
-        rarity: form.itemCategory1 === 'card' ? (form.rarity || null) : null,
         quantity: Number(form.quantity) || 0,
         imageLink: form.imageLink.trim() || null,
         itemCategory1: form.itemCategory1,
@@ -208,9 +195,11 @@ export function CreateProductModal({
               onChange={(e) => handleChange('itemCategory3', e.target.value)}
             >
               <option value="">—</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {categories
+                .filter((c) => c.kind === 'both' || c.kind === form.itemCategory1)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
             </Select>
           </Field>
           <Field label="Slug" htmlFor="cp-slug">
@@ -307,30 +296,17 @@ export function CreateProductModal({
                 />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Rarità" htmlFor="cp-rarity">
-                <Select
-                  id="cp-rarity"
-                  value={form.rarity}
-                  onChange={(e) => handleChange('rarity', e.target.value)}
-                >
-                  {RARITY_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Condizione (Google)" htmlFor="cp-condition">
-                <Select
-                  id="cp-condition"
-                  value={form.condition}
-                  onChange={(e) => handleChange('condition', e.target.value)}
-                >
-                  {CONDITION_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
+            <Field label="Condizione (Google)" htmlFor="cp-condition">
+              <Select
+                id="cp-condition"
+                value={form.condition}
+                onChange={(e) => handleChange('condition', e.target.value)}
+              >
+                {CONDITION_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </Select>
+            </Field>
           </div>
         ) : null}
 
