@@ -7,6 +7,26 @@ export interface DriveReceipt {
   url: string
 }
 
+/**
+ * Normalizza la private key del service account nei formati accettabili:
+ * - JSON del service account (chiave `private_key`)
+ * - PEM con `\n` escaped (formato env standard)
+ * - PEM con newline reali o virgolette ai bordi
+ */
+function normalizePrivateKey(raw: string): string {
+  let key = raw.trim()
+  if (key.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(key)
+      if (typeof parsed.private_key === 'string') key = parsed.private_key
+    } catch {
+      // lascia il valore così com'è
+    }
+  }
+  key = key.replace(/^"+|"+$/g, '').replace(/\\n/g, '\n').trim()
+  return key
+}
+
 function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: string } | null {
   const email = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL
   const privateKey = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY
@@ -16,7 +36,7 @@ function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: s
 
   const auth = new google.auth.JWT({
     email,
-    key: privateKey.replace(/\\n/g, '\n'),
+    key: normalizePrivateKey(privateKey),
     scopes: ['https://www.googleapis.com/auth/drive.file'],
   })
 

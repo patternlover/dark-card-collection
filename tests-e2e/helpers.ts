@@ -34,7 +34,7 @@ export async function createProductViaLot(page: Page, opts: CreateProductViaLotO
   }
   const line = page.getByTestId('purchase-line').nth(0)
   await line.getByTestId('line-product').selectOption('__new__')
-  await line.locator('input[placeholder="Titolo nuovo prodotto *"]').fill(opts.title)
+  await line.locator('input[placeholder="Titolo nuovo prodotto"]').fill(opts.title)
   if (opts.price) {
     await line.locator('input[placeholder="Prezzo vendita (€)"]').fill(opts.price)
   }

@@ -21,13 +21,6 @@ const CONDITION_OPTIONS = [
   { value: 'refurbished', label: 'Rigenerato' },
 ]
 
-const LANGUAGE_OPTIONS = [
-  { value: 'italian', label: 'Italiano' },
-  { value: 'english', label: 'Inglese' },
-  { value: 'chinese', label: 'Cinese' },
-  { value: 'japanese', label: 'Giapponese' },
-]
-
 interface EditProductModalProps {
   product: ProductDTO
   onClose: () => void
@@ -37,7 +30,6 @@ interface EditProductModalProps {
 
 export function EditProductModal({ product, onClose, onSaved, onError }: EditProductModalProps) {
   const isCard = product.itemCategory1 === 'card'
-  const isProduct = product.itemCategory1 === 'product'
 
   const [form, setForm] = useState({
     title: product.title || '',
@@ -48,7 +40,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
     condition: product.condition || 'used',
     productType: product.productType || '',
     googleProductCategory: product.googleProductCategory || '',
-    language: product.language || 'italian',
     cardNumber: product.cardNumber || '',
     itemGroupId: product.itemGroupId || '',
     showGoogle: Boolean(
@@ -76,7 +67,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
         googleProductCategory: form.showGoogle
           ? (form.googleProductCategory.trim() || null)
           : null,
-        language: form.language,
         cardNumber: isCard ? (form.cardNumber.trim() || null) : null,
       }
       const res = await updateProduct(product.id, patch)
@@ -118,67 +108,52 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
           />
         </Field>
 
+        <Field label="Prezzo Vendita (€)" htmlFor="ep-price">
+          <Input
+            id="ep-price"
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.price}
+            onChange={(e) => handleChange('price', e.target.value)}
+          />
+        </Field>
 
-        <div className="grid grid-cols-3 gap-4">
-          <Field label="Prezzo Vendita (€)" htmlFor="ep-price">
-            <Input
-              id="ep-price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.price}
-              onChange={(e) => handleChange('price', e.target.value)}
-            />
-          </Field>
-          <Field label="Prezzo Barrato (€)" htmlFor="ep-sale-price">
-            <Input
-              id="ep-sale-price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={form.salePrice}
-              onChange={(e) => handleChange('salePrice', e.target.value)}
-            />
-          </Field>
-          <Field label="Lingua" htmlFor="ep-language">
-            <Select
-              id="ep-language"
-              value={form.language}
-              onChange={(e) => handleChange('language', e.target.value)}
-            >
-              {LANGUAGE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </Select>
-          </Field>
-        </div>
+        <Field label="Prezzo Barrato (€)" htmlFor="ep-sale-price">
+          <Input
+            id="ep-sale-price"
+            type="number"
+            step="0.01"
+            min="0"
+            value={form.salePrice}
+            onChange={(e) => handleChange('salePrice', e.target.value)}
+          />
+        </Field>
 
         {isCard ? (
           <div className="space-y-4 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface-alt)]/40 p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
               Dettagli carta
             </p>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Condizione / Grado" htmlFor="ep-grade">
-                <Select
-                  id="ep-grade"
-                  value={form.grade}
-                  onChange={(e) => handleChange('grade', e.target.value)}
-                >
-                  {GRADE_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Card Number" htmlFor="ep-card-number">
-                <Input
-                  id="ep-card-number"
-                  type="text"
-                  value={form.cardNumber}
-                  onChange={(e) => handleChange('cardNumber', e.target.value)}
-                />
-              </Field>
-            </div>
+            <Field label="Condizione / Grado" htmlFor="ep-grade">
+              <Select
+                id="ep-grade"
+                value={form.grade}
+                onChange={(e) => handleChange('grade', e.target.value)}
+              >
+                {GRADE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Card Number" htmlFor="ep-card-number">
+              <Input
+                id="ep-card-number"
+                type="text"
+                value={form.cardNumber}
+                onChange={(e) => handleChange('cardNumber', e.target.value)}
+              />
+            </Field>
             <Field label="Condizione (Google)" htmlFor="ep-condition">
               <Select
                 id="ep-condition"
@@ -218,25 +193,23 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
               <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
                 Google / Merchant Center
               </p>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Item Group ID" htmlFor="ep-item-group">
-                  <Input
-                    id="ep-item-group"
-                    type="text"
-                    value={form.itemGroupId}
-                    onChange={(e) => handleChange('itemGroupId', e.target.value)}
-                  />
-                </Field>
-                <Field label="Product Type (Google)" htmlFor="ep-product-type">
-                  <Input
-                    id="ep-product-type"
-                    type="text"
-                    value={form.productType}
-                    onChange={(e) => handleChange('productType', e.target.value)}
-                    placeholder="es. Trading Card Game"
-                  />
-                </Field>
-              </div>
+              <Field label="Item Group ID" htmlFor="ep-item-group">
+                <Input
+                  id="ep-item-group"
+                  type="text"
+                  value={form.itemGroupId}
+                  onChange={(e) => handleChange('itemGroupId', e.target.value)}
+                />
+              </Field>
+              <Field label="Product Type (Google)" htmlFor="ep-product-type">
+                <Input
+                  id="ep-product-type"
+                  type="text"
+                  value={form.productType}
+                  onChange={(e) => handleChange('productType', e.target.value)}
+                  placeholder="es. Trading Card Game"
+                />
+              </Field>
               <Field label="Google Product Category" htmlFor="ep-gpc">
                 <Input
                   id="ep-gpc"

@@ -604,7 +604,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                   />
                 </Field>
 
-                <div className="grid grid-cols-2 items-stretch gap-4">
+                <div className="space-y-3">
                   <Field label="Scontrino">
                     <div
                       data-testid="receipt-dropzone"
@@ -618,7 +618,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                         setReceiptDrag(false)
                         handleReceiptFile(e.dataTransfer.files?.[0])
                       }}
-                      className={`flex h-full items-center justify-center rounded-lg border-2 border-dashed px-4 py-3 transition-colors ${
+                      className={`flex min-h-[3rem] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed px-3 py-2 transition-colors ${
                         receiptDrag
                           ? 'border-[var(--ui-accent)] bg-[var(--ui-accent)]/10'
                           : 'border-[var(--ui-border-strong)] bg-[var(--ui-bg)]/40'
@@ -627,7 +627,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                       {receiptBusy ? (
                         <p className="text-sm text-[var(--ui-text-muted)]">Caricamento su Google Drive...</p>
                       ) : receipt ? (
-                        <div className="flex w-full items-center justify-between gap-3">
+                        <div className="flex w-full min-w-0 items-center justify-between gap-3">
                           <div className="flex min-w-0 items-center gap-2">
                             <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
                             <span className="truncate text-sm font-medium text-[var(--ui-text)]">{receipt.name}</span>
@@ -653,9 +653,11 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                           </Button>
                         </div>
                       ) : (
-                        <label htmlFor="pc-receipt" className="flex cursor-pointer items-center gap-2 py-1 text-sm text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]">
-                          <Upload className="h-4 w-4" />
-                          Trascina lo scontrino qui o <span className="text-[var(--ui-accent)] underline-offset-2 hover:underline">sfoglia</span>
+                        <label htmlFor="pc-receipt" className="flex w-full cursor-pointer items-center justify-center gap-2 py-1 text-sm text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]">
+                          <Upload className="h-4 w-4 shrink-0" />
+                          <span className="min-w-0 truncate">
+                            Trascina lo scontrino qui o <span className="text-[var(--ui-accent)] underline-offset-2 hover:underline">sfoglia</span>
+                          </span>
                           <input
                             id="pc-receipt"
                             type="file"
@@ -669,16 +671,12 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                         </label>
                       )}
                     </div>
-                    <p className="mt-1 text-xs text-[var(--ui-text-faint)]">
-                      Immagine o PDF (max 10 MB) — salvato su Google Drive
-                    </p>
                   </Field>
 
                   <Field label="Note">
                     <Textarea
                       id="pc-notes"
-                      rows={2}
-                      className="h-full min-h-[5.5rem]"
+                      rows={1}
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
                       placeholder="Note opzionali..."
@@ -721,7 +719,13 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                         <div className="flex-1 space-y-2">
                           <Select
                             data-testid="line-product"
-                            value={line.newProduct ? '__new__' : (lineGroup?.title ?? '')}
+                            value={
+                              line.newProduct
+                                ? line.newProductItemCategory1 === 'card'
+                                  ? '__new_card__'
+                                  : '__new__'
+                                : (lineGroup?.title ?? '')
+                            }
                             onChange={(e) => {
                               const isNew = e.target.value === '__new__' || e.target.value === '__new_card__'
                               if (isNew) {
@@ -747,8 +751,10 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                             {groups.map((g) => (
                               <option key={g.title} value={g.title}>{g.title}</option>
                             ))}
-                            <option value="__new__">➕ Nuovo prodotto</option>
-                            <option value="__new_card__">➕ Nuova carta</option>
+                            <optgroup label="Nuovo articolo">
+                              <option value="__new__">➕ Nuovo prodotto</option>
+                              <option value="__new_card__">➕ Nuova carta</option>
+                            </optgroup>
                           </Select>
 
                           {lineGroup && lineGroup.products.length > 1 ? (
@@ -766,74 +772,88 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                           ) : null}
 
                         {line.newProduct ? (
-                          <div className="grid grid-cols-2 gap-2">
-                            <Input
-                              type="text"
-                              value={line.newProductTitle}
-                              onChange={(e) => updateLine(index, { newProductTitle: e.target.value })}
-                              placeholder="Titolo nuovo prodotto *"
-                            />
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={line.newProductPrice}
-                              onChange={(e) => updateLine(index, { newProductPrice: e.target.value })}
-                              placeholder="Prezzo vendita (€)"
-                            />
-                            <Select
-                              multiple
-                              value={line.newProductExpansions}
-                              onChange={(e) =>
-                                updateLine(index, {
-                                  newProductExpansions: Array.from(e.target.selectedOptions).map((o) => o.value),
-                                })
-                              }
-                            >
-                              {espansioni.map((c) => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                              ))}
-                            </Select>
-                            <Select
-                              value={line.newProductItemCategory2}
-                              onChange={(e) => updateLine(index, { newProductItemCategory2: e.target.value })}
-                            >
-                              <option value="">— Categoria —</option>
-                              {categories
-                                .filter((c) => c.kind === 'both' || c.kind === line.newProductItemCategory1)
-                                .map((c) => (
+                          <div className="space-y-2">
+                            <Field label="Titolo *">
+                              <Input
+                                type="text"
+                                value={line.newProductTitle}
+                                onChange={(e) => updateLine(index, { newProductTitle: e.target.value })}
+                                placeholder="Titolo nuovo prodotto"
+                              />
+                            </Field>
+                            <Field label="Prezzo vendita (€)">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={line.newProductPrice}
+                                onChange={(e) => updateLine(index, { newProductPrice: e.target.value })}
+                                placeholder="0.00"
+                              />
+                            </Field>
+                            <Field label="Espansioni">
+                              <Select
+                                multiple
+                                value={line.newProductExpansions}
+                                onChange={(e) =>
+                                  updateLine(index, {
+                                    newProductExpansions: Array.from(e.target.selectedOptions).map((o) => o.value),
+                                  })
+                                }
+                              >
+                                {espansioni.map((c) => (
                                   <option key={c.id} value={c.id}>{c.name}</option>
                                 ))}
-                            </Select>
-                            <Select
-                              value={line.newProductLanguage}
-                              onChange={(e) => updateLine(index, { newProductLanguage: e.target.value })}
-                            >
-                              <option value="italian">Italiano</option>
-                              <option value="english">Inglese</option>
-                              <option value="chinese">Cinese</option>
-                              <option value="japanese">Giapponese</option>
-                            </Select>
+                              </Select>
+                            </Field>
+                            <Field label="Categoria">
+                              <Select
+                                value={line.newProductItemCategory2}
+                                onChange={(e) => updateLine(index, { newProductItemCategory2: e.target.value })}
+                              >
+                                <option value="">— Categoria —</option>
+                                {categories
+                                  .filter((c) => c.kind === 'both' || c.kind === line.newProductItemCategory1)
+                                  .map((c) => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                  ))}
+                              </Select>
+                            </Field>
+                            <Field label="Lingua">
+                              <Select
+                                value={line.newProductLanguage}
+                                onChange={(e) => updateLine(index, { newProductLanguage: e.target.value })}
+                              >
+                                <option value="italian">Italiano</option>
+                                <option value="english">Inglese</option>
+                                <option value="chinese">Cinese</option>
+                                <option value="japanese">Giapponese</option>
+                              </Select>
+                            </Field>
                             {line.newProductItemCategory1 === 'card' ? (
                               <>
-                                <Select
-                                  value={line.newProductGrade}
-                                  onChange={(e) => updateLine(index, { newProductGrade: e.target.value })}
-                                >
-                                  <option value="mint">Mint</option>
-                                  <option value="near-mint">Near Mint</option>
-                                  <option value="lightly-played">Lightly Played</option>
-                                  <option value="moderately-played">Moderately Played</option>
-                                  <option value="heavily-played">Heavily Played</option>
-                                  <option value="damaged">Damaged</option>
-                                  <option value="graded">Graded</option>
-                                </Select>
-                                <Input
-                                  type="text"
-                                  value={line.newProductCardNumber}
-                                  onChange={(e) => updateLine(index, { newProductCardNumber: e.target.value })}
-                                  placeholder="Card Number"
-                                />
+                                <Field label="Grado">
+                                  <Select
+                                    value={line.newProductGrade}
+                                    onChange={(e) => updateLine(index, { newProductGrade: e.target.value })}
+                                  >
+                                    <option value="mint">Mint</option>
+                                    <option value="near-mint">Near Mint</option>
+                                    <option value="lightly-played">Lightly Played</option>
+                                    <option value="moderately-played">Moderately Played</option>
+                                    <option value="heavily-played">Heavily Played</option>
+                                    <option value="damaged">Damaged</option>
+                                    <option value="graded">Graded</option>
+                                  </Select>
+                                </Field>
+                                <Field label="Card Number">
+                                  <Input
+                                    type="text"
+                                    value={line.newProductCardNumber}
+                                    onChange={(e) => updateLine(index, { newProductCardNumber: e.target.value })}
+                                    placeholder="Card Number"
+                                  />
+                                </Field>
                               </>
                             ) : null}
                           </div>

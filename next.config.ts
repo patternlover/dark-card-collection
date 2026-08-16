@@ -31,6 +31,12 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // upload scontrini (immagini/PDF fino a 10 MB client-side)
+      bodySizeLimit: '12mb',
+    },
+  },
   images: {
     remotePatterns: [
       {

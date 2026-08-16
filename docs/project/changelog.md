@@ -1,7 +1,22 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix batch dashboard: upload Drive, immagini Blob, vendita unificata, Listati solo Gruppi, via image_link**.
+Ultima sessione: **Fix upload Drive (chiave/limite), riga lotto verticale, ricerca lotti, modale edit senza lingua**.
+
+---
+
+## Sessione recente 35 — Fix upload + UX riga lotto + ricerca lotti
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-16-upload-fix-lot-row-vertical-search.md`). Su `main`.
+
+- **Upload PDF risolto** (`error:1E08010C`): `drive.ts` normalizza la private key (JSON/virgolette/`\n` escaped) con `normalizePrivateKey()`.
+- **Upload PNG risolto** (`Minified React error #441`): `serverActions.bodySizeLimit: '12mb'` in `next.config.ts` (default 1MB Next).
+- **Riga lotto**: dropdown con `optgroup "Nuovo articolo"`; blocco nuovo prodotto/carta **verticale** (un input per riga con label); fix value select per "Nuova carta" (mostra "__new_card__") e reset dei campi card al ritorno su "Nuovo prodotto".
+- **Scontrino/Note**: a colonna, compatti (min-h 3rem / rows=1), via dicitura "Immagine o PDF…"; dropzone full-width con overflow-hidden (non deborda più in "Righe del lotto").
+- **Ricerca /purchases funzionante**: via `source_type` (enum) dal where di `getPurchases` — cercare per fonte/note ora funziona come in /inventory.
+- **Magazzino storico**: via "qty N", "costo eff." → "costo".
+- **Modale Modifica Prodotto**: verticalizzato; **via campo Lingua** (si imposta solo in creazione lotto).
+- **Verifica**: `pnpm lint` 0 errori · `pnpm test` 78/78 ✓ · `next build` ✓ · E2E aggiornati (placeholder "Titolo nuovo prodotto", via ep-language/ep-rarity).
 
 ---
 

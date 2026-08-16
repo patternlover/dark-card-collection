@@ -29,7 +29,7 @@ test.describe('Lotti (purchases)', () => {
     await page.getByRole('button', { name: 'Aggiungi riga' }).click()
     const line2 = page.getByTestId('purchase-line').nth(1)
     await line2.getByTestId('line-product').selectOption('__new__')
-    await line2.locator('input[placeholder="Titolo nuovo prodotto *"]').fill(NEW_PROD)
+    await line2.locator('input[placeholder="Titolo nuovo prodotto"]').fill(NEW_PROD)
     await line2.getByTestId('line-quantity').fill('3')
     await line2.getByTestId('line-cost').fill('15')
 
@@ -89,14 +89,14 @@ test.describe('Lotti (purchases)', () => {
     // due righe quick-create con lo stesso titolo → 2 prodotti, 1 gruppo
     const line1 = page.getByTestId('purchase-line').nth(0)
     await line1.getByTestId('line-product').selectOption('__new__')
-    await line1.locator('input[placeholder="Titolo nuovo prodotto *"]').fill(name)
+    await line1.locator('input[placeholder="Titolo nuovo prodotto"]').fill(name)
     await line1.getByTestId('line-quantity').fill('1')
     await line1.getByTestId('line-cost').fill('10')
 
     await page.getByRole('button', { name: 'Aggiungi riga' }).click()
     const line2 = page.getByTestId('purchase-line').nth(1)
     await line2.getByTestId('line-product').selectOption('__new__')
-    await line2.locator('input[placeholder="Titolo nuovo prodotto *"]').fill(name)
+    await line2.locator('input[placeholder="Titolo nuovo prodotto"]').fill(name)
     await line2.getByTestId('line-quantity').fill('1')
     await line2.getByTestId('line-cost').fill('12')
 

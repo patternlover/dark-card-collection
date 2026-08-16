@@ -227,8 +227,7 @@ export function InventorySection() {
                                       h.sourceType || 'Lotto #' + h.purchaseId
                                     )}
                                   </span>
-                                  <span className="text-xs text-[var(--ui-text-muted)]">qty {h.quantity}</span>
-                                  <span className="text-xs text-[var(--ui-text-faint)]">costo eff. {euro.format(h.effectiveUnitCost)}</span>
+                                  <span className="text-xs text-[var(--ui-text-faint)]">costo {euro.format(h.effectiveUnitCost)}</span>
                                   <span className="text-xs text-[var(--ui-text-muted)]">residuo {h.remainingQuantity}</span>
                                 </div>
                               ))}

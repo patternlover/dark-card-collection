@@ -1344,7 +1344,6 @@ export async function getPurchases(opts: { search?: string; sortBy?: string; sor
   if (opts.search) {
     where.or = [
       { source_name: { contains: opts.search } },
-      { source_type: { contains: opts.search } },
       { notes: { contains: opts.search } },
     ]
   }
