@@ -3,23 +3,8 @@
 import { useState } from 'react'
 import type { ProductDTO, UpdateProductPatch } from '@/app/dashboard/actions'
 import { updateProduct } from '@/app/dashboard/actions'
+import { CONDITION_OPTIONS, GRADE_OPTIONS } from '@/lib/labels'
 import { Button, Field, Input, Modal, Select, Textarea } from './ui'
-
-const GRADE_OPTIONS = [
-  { value: 'mint', label: 'Mint' },
-  { value: 'near-mint', label: 'Near Mint' },
-  { value: 'lightly-played', label: 'Lightly Played' },
-  { value: 'moderately-played', label: 'Moderately Played' },
-  { value: 'heavily-played', label: 'Heavily Played' },
-  { value: 'damaged', label: 'Damaged' },
-  { value: 'graded', label: 'Graded' },
-]
-
-const CONDITION_OPTIONS = [
-  { value: 'used', label: 'Usato' },
-  { value: 'new', label: 'Nuovo' },
-  { value: 'refurbished', label: 'Rigenerato' },
-]
 
 interface EditProductModalProps {
   product: ProductDTO

@@ -604,7 +604,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                   />
                 </Field>
 
-                <div className="grid grid-cols-2 items-stretch gap-4">
+                <div className="space-y-3">
                   <Field label="Scontrino">
                     <div
                       data-testid="receipt-dropzone"
@@ -618,7 +618,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                         setReceiptDrag(false)
                         handleReceiptFile(e.dataTransfer.files?.[0])
                       }}
-                      className={`flex h-full min-h-[3.5rem] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed px-3 py-2 transition-colors ${
+                      className={`flex min-h-[3rem] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed px-3 py-2 transition-colors ${
                         receiptDrag
                           ? 'border-[var(--ui-accent)] bg-[var(--ui-accent)]/10'
                           : 'border-[var(--ui-border-strong)] bg-[var(--ui-bg)]/40'
@@ -677,7 +677,6 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     <Textarea
                       id="pc-notes"
                       rows={1}
-                      className="h-full min-h-[3.5rem]"
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
                       placeholder="Note opzionali..."

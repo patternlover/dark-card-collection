@@ -10,6 +10,7 @@ import {
   type OrderDTO,
 } from '@/app/dashboard/actions'
 import { buildSaleOptions, type SaleProductOption } from '@/lib/sale-options'
+import { SALES_CHANNEL_LABELS, STATUS_OPTIONS } from '@/lib/labels'
 import {
   Alert,
   Button,
@@ -30,22 +31,6 @@ import {
 } from './ui'
 
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
-
-const STATUS_OPTIONS = [
-  { value: 'pending', label: 'In Attesa pagamento' },
-  { value: 'paid', label: 'Pagato' },
-  { value: 'shipped', label: 'Spedito' },
-  { value: 'delivered', label: 'Consegnato' },
-  { value: 'cancelled', label: 'Annullato' },
-]
-
-const SALES_CHANNEL_LABELS: Record<string, string> = {
-  website: 'Sito web',
-  vinted: 'Vinted',
-  ebay: 'eBay',
-  cardmarket: 'Cardmarket',
-  other: 'Altro',
-}
 
 const PLATFORM_OPTIONS = [
   { value: 'website', label: 'Sito' },

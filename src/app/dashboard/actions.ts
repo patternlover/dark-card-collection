@@ -34,12 +34,6 @@ async function authError(): Promise<string | null> {
 /** Result payload for actions that return data. */
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; message: string }
 
-/** Result payload for actions without a meaningful payload. */
-export interface WriteResult {
-  ok: boolean
-  message?: string
-}
-
 export async function logout(): Promise<void> {
   logAudit('dashboard.logout', {})
   await clearDashSession()
@@ -1629,38 +1623,6 @@ export async function getPurchaseHistory(productId: string): Promise<PurchaseHis
     page += 1
   }
   return entries
-}
-
-const SALES_CHANNEL_MAP: Record<string, SalesChannel> = {
-  vinted: 'vinted',
-  ebay: 'ebay',
-  cardmarket: 'cardmarket',
-  wallapop: 'other',
-  subito: 'other',
-  altro: 'other',
-  other: 'other',
-}
-
-function normalizeChannel(platform: string): SalesChannel {
-  return SALES_CHANNEL_MAP[platform.toLowerCase()] ?? 'other'
-}
-
-export async function recordExternalSale(data: {
-  productId: string
-  quantity: number
-  platform: string // vinted, ebay, cardmarket, other (wallapop/subito/altro → other)
-  salePrice: number
-  email?: string
-  username?: string
-}): Promise<WriteResult> {
-  return recordDashboardSale({
-    productId: data.productId,
-    quantity: data.quantity,
-    price: data.salePrice,
-    channel: normalizeChannel(data.platform),
-    email: data.email,
-    username: data.username,
-  })
 }
 
 export interface UploadReceiptResult {

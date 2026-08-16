@@ -14,7 +14,7 @@ export interface DriveReceipt {
  * - PEM con newline reali o virgolette ai bordi
  * Ritorna anche `client_email` quando disponibile (JSON).
  */
-function normalizePrivateKey(raw: string): { key: string; clientEmail?: string } {
+export function normalizePrivateKey(raw: string): { key: string; clientEmail?: string } {
   let key = raw.trim()
   let clientEmail: string | undefined
   if (key.startsWith('{')) {

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { getOverview, type OverviewData } from '@/app/dashboard/actions'
+import { STATUS_LABELS } from '@/lib/labels'
 import {
   Alert,
   Badge,
@@ -16,14 +17,6 @@ import {
   Tr,
 } from './ui'
 import type { BadgeTone } from './ui'
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'In Attesa pagamento',
-  paid: 'Pagato',
-  shipped: 'Spedito',
-  delivered: 'Consegnato',
-  cancelled: 'Annullato',
-}
 
 const STATUS_TONES: Record<string, BadgeTone> = {
   pending: 'warning',
