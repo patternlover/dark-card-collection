@@ -12,7 +12,9 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div>
-        <h1 className="text-xl font-bold text-[var(--ui-text)]">{title}</h1>
+        <h1 className="text-xl font-bold tracking-tight text-[var(--ui-text)]">
+          <span className="ui-text-gradient">{title}</span>
+        </h1>
         {description ? (
           <p className="mt-0.5 text-sm text-[var(--ui-text-muted)]">{description}</p>
         ) : null}

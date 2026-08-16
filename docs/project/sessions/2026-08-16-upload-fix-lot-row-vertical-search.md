@@ -33,3 +33,17 @@
 ### Note per le prossime sessioni
 - Il campo lingua in `EditProductModal` è stato rimosso per scelta UX (si imposta in creazione lotto); `updateProduct` supporta ancora `language` (usato da altri percorsi? no — nessun altro consumer) — eventuale cleanup futuro.
 - Per testare l'upload reale serve `GOOGLE_DRIVE_*` nelle env locali (W4 PENDING).
+
+## Commit 2 — Affinamenti grafici "luminous neon" (dashboard)
+
+Secondo commit della sessione (dopo le task funzionali, come richiesto).
+
+- **`globals.css`**: token dashboard più luminosi/neon — sfondi con leggera tinta violacea (`--ui-bg: #0d0d13`, `--ui-surface: #17171f`, `--ui-surface-alt: #21212c`), bordi bluastri, accent indaco brillante `#818cf8` (hover `#a5b4fc`), success/ warning/danger più vividi; nuove utility `ui-glow-sm`/`ui-glow`/`ui-glow-hover`/`ui-text-gradient`.
+- **`ui/Button.tsx`**: primary con glow accent (`shadow-[0_0_12px_var(--ui-accent-soft)]`, hover più intenso); secondary con bordo accent al hover.
+- **`ui/Table.tsx`**: contenitore con glow sottile; THead con gradiente; Tr con hover uniforme.
+- **`ui/Card.tsx`**: hover con glow accent + bordo accent.
+- **`ui/Input.tsx`**: focus con ring accent-soft + glow.
+- **`ui/Modal.tsx`**: bordo accent/30, glow esterno, header con gradiente.
+- **`ui/ModalSection.tsx`**: titoli sezione in accent (indaco).
+- **`ui/PageHeader.tsx`**: titoli con gradiente accent (`ui-text-gradient`).
+- **`DashboardShell.tsx`**: voce di nav attiva con glow + barra laterale accent (`shadow-[inset_2px_0_0_var(--ui-accent)]`).

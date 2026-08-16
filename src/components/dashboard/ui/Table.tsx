@@ -5,7 +5,7 @@ export function Table({
   ...props
 }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)]">
+    <div className="ui-glow-sm overflow-x-auto rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)]">
       <table
         className={`w-full min-w-[720px] text-left text-sm text-[var(--ui-text)] ${className}`}
         {...props}
@@ -20,7 +20,7 @@ export function THead({
 }: HTMLAttributes<HTMLTableSectionElement>) {
   return (
     <thead
-      className={`border-b border-[var(--ui-border)] bg-[var(--ui-surface-alt)] text-xs font-semibold uppercase tracking-wide text-[var(--ui-text-muted)] ${className}`}
+      className={`border-b border-[var(--ui-border)] bg-gradient-to-b from-[var(--ui-surface-alt)] to-[var(--ui-surface)] text-xs font-semibold uppercase tracking-wide text-[var(--ui-text-muted)] ${className}`}
       {...props}
     />
   )
@@ -49,7 +49,7 @@ export function Tr({
   return (
     <tr
       onClick={onClick}
-      className={`transition-colors ${onClick ? 'cursor-pointer hover:bg-[var(--ui-surface-alt)]' : ''} ${className}`}
+      className={`transition-colors ${onClick ? 'cursor-pointer hover:bg-[var(--ui-surface-alt)]' : ''} hover:bg-[var(--ui-surface-alt)]/60 ${className}`}
       {...props}
     />
   )

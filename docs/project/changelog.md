@@ -1,7 +1,23 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix upload Drive (chiave/limite), riga lotto verticale, ricerca lotti, modale edit senza lingua**.
+Ultima sessione: **Fix upload Drive + UX riga lotto + ricerca lotti + tema dashboard luminous neon**.
+
+---
+
+## Sessione recente 36 — Fix upload + task lotto + tema grafico neon
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-16-upload-fix-lot-row-vertical-search.md`). Su `main`. Due commit: task funzionali, poi affinamenti grafici.
+
+**Commit 1 — task funzionali:**
+- **Upload scontrino `invalid_grant: account not found`**: `drive.ts` estrae `client_email` dal JSON della chiave del service account (fallback all'env) — la coppia email/chiave ora matchano anche con solo il JSON in env.
+- **Scontrino e Note stessa altezza**: affiancati in `grid-cols-2 items-stretch`, entrambi `min-h 3.5rem`.
+- **Wording "magazzino"**: toast "Lotto registrato e magazzino aggiornato con successo" / "Lotto aggiornato e magazzino riconciliato", bottone "Registra e Carica in Magazzino"; E2E aggiornati.
+
+**Commit 2 — tema "luminous neon" dashboard:**
+- Token CSS più luminosi/neon (sfondi violacei, accent indaco brillante `#818cf8`, bordi bluastri, success/danger vividi) + utility `ui-glow*`/`ui-text-gradient`.
+- Button primary con glow, Table con gradiente header + glow, Card hover glow, Input focus glow, Modal bordo accent + glow, ModalSection titoli accent, PageHeader titoli gradiente, sidebar voce attiva con glow e barra accent.
+- **Verifica**: `pnpm lint` 0 errori · `pnpm test` 78/78 ✓ · `next build` ✓.
 
 ---
 
