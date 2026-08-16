@@ -106,5 +106,12 @@ export const Orders: CollectionConfig = {
       type: 'email',
       required: true,
     },
+    {
+      name: 'customer_username',
+      type: 'text',
+      admin: {
+        description: 'Username del cliente (vendite manuali/esterne)',
+      },
+    },
   ],
 }

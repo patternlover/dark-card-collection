@@ -14,7 +14,6 @@ interface QuickAddButtonProps {
     title: string
     slug: string
     price: number | null
-    image_link?: string | null
     status: string
     quantity?: number
   }

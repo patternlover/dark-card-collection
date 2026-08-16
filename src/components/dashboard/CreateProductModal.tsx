@@ -11,7 +11,7 @@ import { createProduct } from '@/app/dashboard/actions'
 import { Button, Field, Input, Modal, Select, Textarea } from './ui'
 
 const GRADE_OPTIONS = [
-  { value: 'mint', label: 'Mint / Sigillato' },
+  { value: 'mint', label: 'Mint' },
   { value: 'near-mint', label: 'Near Mint' },
   { value: 'lightly-played', label: 'Lightly Played' },
   { value: 'moderately-played', label: 'Moderately Played' },
@@ -77,7 +77,6 @@ export function CreateProductModal({
     itemCategory2: String(initialProduct?.itemCategory2?.[0]?.id || ''),
     cardNumber: initialProduct?.cardNumber || '',
     quantity: '1',
-    imageLink: initialProduct?.imageLink || '',
     itemCategory1: initialProduct?.itemCategory1 || 'product',
     itemCategory3: String(initialProduct?.itemCategory3?.id || ''),
     showGoogle: Boolean(
@@ -131,7 +130,6 @@ export function CreateProductModal({
         itemCategory2: form.itemCategory2 ? [Number(form.itemCategory2)] : undefined,
         cardNumber: form.itemCategory1 === 'card' ? (form.cardNumber.trim() || null) : null,
         quantity: Number(form.quantity) || 0,
-        imageLink: form.imageLink.trim() || null,
         itemCategory1: form.itemCategory1,
         itemCategory3: form.itemCategory3 || null,
       }
@@ -309,16 +307,6 @@ export function CreateProductModal({
             </Field>
           </div>
         ) : null}
-
-        <Field label="Image Link" htmlFor="cp-image-link">
-          <Input
-            id="cp-image-link"
-            type="url"
-            value={form.imageLink}
-            onChange={(e) => handleChange('imageLink', e.target.value)}
-            placeholder="https://..."
-          />
-        </Field>
 
         <Field label="Descrizione" htmlFor="cp-description">
           <Textarea

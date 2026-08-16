@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 import {
   getOrders,
-  recordExternalSale,
+  recordDashboardSale,
   searchProducts,
   updateOrderStatus,
   type OrderDTO,
@@ -48,6 +48,7 @@ const SALES_CHANNEL_LABELS: Record<string, string> = {
 }
 
 const PLATFORM_OPTIONS = [
+  { value: 'website', label: 'Sito' },
   { value: 'vinted', label: 'Vinted' },
   { value: 'ebay', label: 'eBay' },
   { value: 'cardmarket', label: 'Cardmarket' },
@@ -63,6 +64,11 @@ function OrderDetail({ order }: { order: OrderDTO }) {
           <p className="text-[var(--ui-text-muted)]">
             Email: <span className="font-semibold text-[var(--ui-text)]">{order.email || '—'}</span>
           </p>
+          {order.customerUsername ? (
+            <p className="text-[var(--ui-text-muted)]">
+              Username: <span className="font-semibold text-[var(--ui-text)]">{order.customerUsername}</span>
+            </p>
+          ) : null}
           <p className="text-[var(--ui-text-muted)]">
             Totale: <span className="font-semibold text-[var(--ui-text)]">{euro.format(order.value || 0)}</span>
           </p>
@@ -116,7 +122,14 @@ export function OrdersSection() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showExternal, setShowExternal] = useState(false)
   const [productOptions, setProductOptions] = useState<SaleProductOption[]>([])
-  const [ext, setExt] = useState({ productId: '', platform: 'vinted', quantity: '1', salePrice: '' })
+  const [ext, setExt] = useState({
+    productId: '',
+    channel: 'website',
+    quantity: '1',
+    salePrice: '',
+    email: '',
+    username: '',
+  })
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
@@ -188,13 +201,20 @@ export function OrdersSection() {
     setBusy(true)
     setError(null)
     try {
-      const res = await recordExternalSale({ productId: ext.productId, quantity: qty, platform: ext.platform, salePrice: price })
+      const res = await recordDashboardSale({
+        productId: ext.productId,
+        quantity: qty,
+        price,
+        channel: ext.channel as 'website' | 'vinted' | 'ebay' | 'cardmarket' | 'other',
+        email: ext.email.trim() || undefined,
+        username: ext.username.trim() || undefined,
+      })
       if (!res.ok) {
         setError(res.message ?? 'Errore durante la registrazione della vendita')
         return
       }
       setShowExternal(false)
-      setExt({ productId: '', platform: 'vinted', quantity: '1', salePrice: '' })
+      setExt({ productId: '', channel: 'website', quantity: '1', salePrice: '', email: '', username: '' })
       load()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -207,7 +227,7 @@ export function OrdersSection() {
     <div className="space-y-4">
       <PageHeader title="Ordini" description="Vendite sito web ed esterne, stati e margine.">
         <Button onClick={openExternal}>
-          <Plus className="h-4 w-4" /> Registra Vendita Esterna
+          <Plus className="h-4 w-4" /> Registra Vendita
         </Button>
       </PageHeader>
 
@@ -257,7 +277,7 @@ export function OrdersSection() {
 
       {showExternal ? (
         <Modal
-          title="Registra Vendita Esterna"
+          title="Registra Vendita"
           onClose={() => setShowExternal(false)}
           footer={
             <>
@@ -278,8 +298,8 @@ export function OrdersSection() {
                 onChange={(e) => {
                   const p = productOptions.find((x) => x.id === e.target.value)
                   setExt({
+                    ...ext,
                     productId: e.target.value,
-                    platform: ext.platform,
                     quantity: '1',
                     salePrice: p?.price != null ? String(p.price) : '',
                   })
@@ -304,29 +324,28 @@ export function OrdersSection() {
               </Select>
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Piattaforma *" htmlFor="ext-platform">
-                <Select
-                  id="ext-platform"
-                  value={ext.platform}
-                  onChange={(e) => setExt({ ...ext, platform: e.target.value })}
-                >
-                  {PLATFORM_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Quantità venduta *" htmlFor="ext-qty">
-                <Input
-                  id="ext-qty"
-                  type="number"
-                  min="1"
-                  max={selectedProduct?.quantity ?? undefined}
-                  value={ext.quantity}
-                  onChange={(e) => setExt({ ...ext, quantity: e.target.value })}
-                />
-              </Field>
-            </div>
+            <Field label="Canale *" htmlFor="ext-platform">
+              <Select
+                id="ext-platform"
+                value={ext.channel}
+                onChange={(e) => setExt({ ...ext, channel: e.target.value })}
+              >
+                {PLATFORM_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </Select>
+            </Field>
+
+            <Field label="Quantità venduta *" htmlFor="ext-qty">
+              <Input
+                id="ext-qty"
+                type="number"
+                min="1"
+                max={selectedProduct?.quantity ?? undefined}
+                value={ext.quantity}
+                onChange={(e) => setExt({ ...ext, quantity: e.target.value })}
+              />
+            </Field>
 
             <Field label="Prezzo effettivo incassato (€) *" htmlFor="ext-price">
               <Input
@@ -336,6 +355,26 @@ export function OrdersSection() {
                 min="0"
                 value={ext.salePrice}
                 onChange={(e) => setExt({ ...ext, salePrice: e.target.value })}
+              />
+            </Field>
+
+            <Field label="Email cliente" htmlFor="ext-email">
+              <Input
+                id="ext-email"
+                type="email"
+                value={ext.email}
+                onChange={(e) => setExt({ ...ext, email: e.target.value })}
+                placeholder="nome@esempio.com (opzionale)"
+              />
+            </Field>
+
+            <Field label="Username cliente" htmlFor="ext-username">
+              <Input
+                id="ext-username"
+                type="text"
+                value={ext.username}
+                onChange={(e) => setExt({ ...ext, username: e.target.value })}
+                placeholder="es. @utente (opzionale)"
               />
             </Field>
           </div>

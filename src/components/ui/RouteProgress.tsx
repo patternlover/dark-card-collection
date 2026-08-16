@@ -100,11 +100,14 @@ export function RouteProgress() {
 
   if (!visible) return null
 
+  const isDashboard = pathname.startsWith('/dashboard')
+  const accentVar = isDashboard ? 'var(--ui-accent)' : 'var(--accent)'
+
   return (
     <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-1">
       <div
         className="h-full bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]"
-        style={{ width: `${progress}%` }}
+        style={{ width: `${progress}%`, backgroundColor: accentVar, boxShadow: `0 0 10px ${accentVar}` }}
       />
     </div>
   )

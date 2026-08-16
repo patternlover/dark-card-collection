@@ -18,6 +18,7 @@ import * as migration_20260814_remove_status_preorder from './20260814_remove_st
 import * as migration_20260815_item_category_2_hasmany from './20260815_item_category_2_hasmany';
 import * as migration_20260815_cleanup_product_attrs from './20260815_cleanup_product_attrs';
 import * as migration_20260815_lot_receipt_category_kind_drop_rarity from './20260815_lot_receipt_category_kind_drop_rarity';
+import * as migration_20260816_drop_image_link_add_customer_username from './20260816_drop_image_link_add_customer_username';
 
 export const migrations = [
   {
@@ -119,5 +120,10 @@ export const migrations = [
     up: migration_20260815_lot_receipt_category_kind_drop_rarity.up,
     down: migration_20260815_lot_receipt_category_kind_drop_rarity.down,
     name: '20260815_lot_receipt_category_kind_drop_rarity'
+  },
+  {
+    up: migration_20260816_drop_image_link_add_customer_username.up,
+    down: migration_20260816_drop_image_link_add_customer_username.down,
+    name: '20260816_drop_image_link_add_customer_username'
   },
 ];

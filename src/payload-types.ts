@@ -219,10 +219,6 @@ export interface Product {
   card_number?: string | null;
   quantity?: number | null;
   /**
-   * URL immagine principale (Merchant image_link, es. da Cardmarket)
-   */
-  image_link?: string | null;
-  /**
    * Immagini aggiuntive (upload via dashboard)
    */
   images?:
@@ -343,6 +339,10 @@ export interface Order {
   tax?: number | null;
   stripe_session_id?: string | null;
   email: string;
+  /**
+   * Username del cliente (vendite manuali/esterne)
+   */
+  customer_username?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -571,7 +571,6 @@ export interface ProductsSelect<T extends boolean = true> {
   language?: T;
   card_number?: T;
   quantity?: T;
-  image_link?: T;
   images?:
     | T
     | {
@@ -632,6 +631,7 @@ export interface OrdersSelect<T extends boolean = true> {
   tax?: T;
   stripe_session_id?: T;
   email?: T;
+  customer_username?: T;
   updatedAt?: T;
   createdAt?: T;
 }

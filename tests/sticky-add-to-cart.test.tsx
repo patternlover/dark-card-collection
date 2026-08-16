@@ -12,7 +12,6 @@ const product = {
   price: 100,
   image: null,
   images: null,
-  image_link: null,
   status: 'listed',
 }
 

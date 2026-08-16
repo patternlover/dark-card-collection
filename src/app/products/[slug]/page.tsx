@@ -75,7 +75,7 @@ export async function generateMetadata({
 
     const firstImage = product.images?.[0]?.image
     const imageUrl = absoluteUrl(
-      product.image_link || (firstImage && typeof firstImage === 'object' ? firstImage.url : null),
+      firstImage && typeof firstImage === 'object' ? firstImage.url : null,
     )
 
     return {

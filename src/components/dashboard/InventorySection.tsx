@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 import { ChevronDown, ChevronLeft, ChevronRight, Search, Trash2 } from 'lucide-react'
 import {
   deleteProduct,
@@ -20,7 +21,6 @@ import {
   Td,
   Th,
   THead,
-  Toolbar,
   Tr,
   useSort,
 } from './ui'
@@ -123,17 +123,23 @@ export function InventorySection() {
         description={`${total} prodotti · stock, costo medio e storico acquisti`}
       />
 
-      <Toolbar className="justify-end">
+      <div className="flex justify-end">
         <div className="relative w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setAppliedQuery(query.trim())
+                setPage(1)
+              }
+            }}
             placeholder="Cerca per titolo..."
             className="pl-9"
           />
         </div>
-      </Toolbar>
+      </div>
 
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
 
@@ -210,7 +216,16 @@ export function InventorySection() {
                                     {h.purchaseDate ? new Date(h.purchaseDate).toLocaleDateString('it-IT') : '—'}
                                   </span>
                                   <span className="min-w-0 flex-1 truncate text-[var(--ui-text-muted)]">
-                                    {h.sourceName || h.sourceType || 'Lotto #' + h.purchaseId}
+                                    {h.sourceName ? (
+                                      <Link
+                                        href={`/dashboard/purchases?search=${encodeURIComponent(h.sourceName)}`}
+                                        className="text-[var(--ui-accent)] hover:underline"
+                                      >
+                                        {h.sourceName}
+                                      </Link>
+                                    ) : (
+                                      h.sourceType || 'Lotto #' + h.purchaseId
+                                    )}
                                   </span>
                                   <span className="text-xs text-[var(--ui-text-muted)]">qty {h.quantity}</span>
                                   <span className="text-xs text-[var(--ui-text-faint)]">costo eff. {euro.format(h.effectiveUnitCost)}</span>

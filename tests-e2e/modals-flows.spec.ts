@@ -59,7 +59,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
 
   test('Vendita Esterna scala lo stock in Magazzino', async ({ page }) => {
     await page.goto('/dashboard/orders')
-    await page.getByRole('button', { name: 'Registra Vendita Esterna' }).click()
+    await page.getByRole('button', { name: 'Registra Vendita' }).click()
     const opt = page.locator('#ext-product option', { hasText: 'Test ETB' }).first()
     await page.locator('#ext-product').selectOption(await opt.getAttribute('value'))
     await page.locator('#ext-qty').fill('1')
@@ -78,7 +78,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
 
     // vendita totale → stock 0
     await page.goto('/dashboard/orders')
-    await page.getByRole('button', { name: 'Registra Vendita Esterna' }).click()
+    await page.getByRole('button', { name: 'Registra Vendita' }).click()
     const opt = page.locator('#ext-product option', { hasText: name }).first()
     await page.locator('#ext-product').selectOption(await opt.getAttribute('value'))
     await page.locator('#ext-qty').fill('2')

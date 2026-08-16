@@ -34,7 +34,6 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
 
   async function openEditInListati(page: any, name: string) {
     await page.goto('/dashboard/listings')
-    await page.getByRole('button', { name: 'Prodotti' }).click()
     const row = page.locator('tr', { hasText: name }).first()
     await row.locator('button[title="Modifica"]').click()
     await expect(page.getByText('Modifica Prodotto')).toBeVisible()

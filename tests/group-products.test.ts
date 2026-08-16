@@ -39,10 +39,10 @@ describe('groupProducts', () => {
     expect(groups[0]!.totalQuantity).toBe(7)
   })
 
-  it('picks the first image_link', () => {
+  it('picks the first product with a media image', () => {
     const groups = groupProducts([
-      { ...base, title: 'Box', price: 10, image_link: null },
-      { ...base, title: 'Box', price: 10, image_link: 'img2' },
+      { ...base, title: 'Box', price: 10, images: null },
+      { ...base, title: 'Box', price: 10, images: [{ image: { url: 'img2' } }] },
     ])
     expect(groups[0]!.image).toBe('img2')
   })

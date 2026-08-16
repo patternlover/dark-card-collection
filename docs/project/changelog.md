@@ -1,7 +1,22 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Modale lotto slim + scontrino Google Drive, categorie per tipo, via rarità, fix stock/residuo**.
+Ultima sessione: **Fix batch dashboard: upload Drive, immagini Blob, vendita unificata, Listati solo Gruppi, via image_link**.
+
+---
+
+## Sessione recente 34 — Fix batch dashboard (16 task)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-16-dashboard-fixes-batch.md`). Su `main`.
+
+- **Bug upload scontrino risolto**: `drive.ts` usava un Buffer come `media.body` → `Readable.from(buffer)`; PDF/immagini ora caricano su Google Drive.
+- **Immagini Blob**: `scripts/upload-images-to-blob.ts` carica `images/<slug>.webp` su Vercel Blob e aggancia `products.images[]` (media). Eseguito live: 4/6 caricate (2 slug futuri).
+- **Vendita unificata in /orders**: nuovo campo `Orders.customer_username`; action `recordDashboardSale` (canale Sito/Vinted/eBay/Cardmarket/Altro + email + username); modale "Registra Vendita" slim; via la vendita da /listings.
+- **Listati solo Gruppi**: rimossa vista Prodotti, TogglePills e `searchListingProducts`; una sola tabella.
+- **Modale Lotti**: data text GG/MM/AAAA (fix formato + errore 07/08/2026), riga con header "Riga N" + X sobria in alto a destra, Note/Scontrino stessa altezza, via Image link, search con Invio, via "Tipo di fonte" in tabella, ricerca da `?search=` (link da Magazzino).
+- **Rimozione `image_link` dal dominio** (Products, DTO, modali, riga lotto, frontend → solo media con placeholder); migration drop colonna + add `customer_username` applicata al live.
+- **Altro**: "Mint" al posto di "Mint / Sigillato"; colonna "Tipo" in Categorie; RouteProgress indaco in dashboard; searchbar senza toolbar grigia (Purchases/Inventory); link fornitore nello storico acquisti.
+- **Verifica**: `pnpm lint` 0 errori (Playwright ora dependency diretta) · `pnpm test` 78/78 ✓ · `next build` ✓ · migration live ✓ · immagini Blob caricate ✓.
 
 ---
 

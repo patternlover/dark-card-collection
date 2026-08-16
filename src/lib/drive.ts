@@ -1,4 +1,5 @@
 import { google } from 'googleapis'
+import { Readable } from 'stream'
 
 export interface DriveReceipt {
   fileId: string
@@ -45,7 +46,7 @@ export async function uploadReceiptToDrive(file: File): Promise<DriveReceipt> {
     },
     media: {
       mimeType,
-      body: buffer,
+      body: Readable.from(buffer),
     },
     fields: 'id,name,webViewLink',
   })

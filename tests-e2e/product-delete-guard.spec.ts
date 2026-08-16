@@ -38,7 +38,7 @@ test.describe('Delete prodotto: guardie integrità (nessun 500/#441)', () => {
 
   async function registerSale(page: any, name: string, qty: string) {
     await page.goto('/dashboard/orders')
-    await page.getByRole('button', { name: 'Registra Vendita Esterna' }).click()
+    await page.getByRole('button', { name: 'Registra Vendita' }).click()
     const optVal = await page.locator('#ext-product option', { hasText: name }).getAttribute('value')
     await page.locator('#ext-product').selectOption(optVal || '')
     await page.locator('#ext-qty').fill(qty)

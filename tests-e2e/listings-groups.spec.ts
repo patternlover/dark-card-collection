@@ -8,7 +8,7 @@ const title = (name: string) => `${name} ${stamp}-${++n}`
 
 test.beforeAll(resetDb)
 
-test.describe('Listati: viste Gruppi prodotto / Prodotti', () => {
+test.describe('Listati: vista Gruppi prodotto / vendite da Ordini', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page)
   })
@@ -19,7 +19,7 @@ test.describe('Listati: viste Gruppi prodotto / Prodotti', () => {
 
   async function sellAll(page: any, name: string) {
     await page.goto('/dashboard/orders')
-    await page.getByRole('button', { name: 'Registra Vendita Esterna' }).click()
+    await page.getByRole('button', { name: 'Registra Vendita' }).click()
     const opt = page.locator('#ext-product option', { hasText: name }).first()
     await page.locator('#ext-product').selectOption(await opt.getAttribute('value'))
     await page.locator('#ext-qty').fill('1')
@@ -80,7 +80,7 @@ test.describe('Listati: viste Gruppi prodotto / Prodotti', () => {
     await createProduct(page, sold, '2', '60')
 
     await page.goto('/dashboard/orders')
-    await page.getByRole('button', { name: 'Registra Vendita Esterna' }).click()
+    await page.getByRole('button', { name: 'Registra Vendita' }).click()
     const opt = page.locator('#ext-product option', { hasText: sold }).first()
     await page.locator('#ext-product').selectOption(await opt.getAttribute('value'))
     await page.locator('#ext-platform').selectOption({ label: 'Vinted' })
@@ -94,65 +94,25 @@ test.describe('Listati: viste Gruppi prodotto / Prodotti', () => {
     await expect(row).toContainText('×1')
   })
 
-  test('products view: shows one row per item and hides a single item', async ({ page }) => {
-    const name = title('Nascondi Singolo')
-    await createProduct(page, name, '2', '50')
-
-    await page.goto('/dashboard/listings')
-    await page.getByRole('button', { name: 'Prodotti' }).click()
-    const row = page.locator('tr', { hasText: name }).first()
-    await expect(row).toBeVisible()
-    await row.locator('button[title="Nascondi singolo prodotto"]').click()
-    await expect(page.getByText('Prodotto nascosto dallo shop')).toBeVisible()
-    await expect(row.locator('button[title="Mostra singolo prodotto"]')).toBeVisible()
-
-    await page.reload()
-    await page.getByRole('button', { name: 'Prodotti' }).click()
-    await expect(page.locator('tr', { hasText: name }).first().locator('button[title="Mostra singolo prodotto"]')).toBeVisible()
-  })
-
-  test('products view: Vendi records a manual website sale and scales stock', async ({ page }) => {
+  test('orders view: manual website sale via Registra Vendita records and scales stock', async ({ page }) => {
     const name = title('Vendita Manuale')
     await createProduct(page, name, '2', '60')
 
-    await page.goto('/dashboard/listings')
-    await page.getByRole('button', { name: 'Prodotti' }).click()
-    const row = page.locator('tr', { hasText: name }).first()
-    await row.locator('button[title="Vendi"]').click()
-    await page.locator('#sale-qty').fill('1')
-    await page.locator('#sale-price').fill('55')
-    await page.locator('#sale-email').fill('cliente@example.com')
+    await page.goto('/dashboard/orders')
     await page.getByRole('button', { name: 'Registra Vendita' }).click()
-    await expect(page.getByText('Vendita registrata')).toBeVisible()
+    const opt = page.locator('#ext-product option', { hasText: name }).first()
+    await page.locator('#ext-product').selectOption(await opt.getAttribute('value'))
+    await page.locator('#ext-qty').fill('1')
+    await page.locator('#ext-price').fill('55')
+    await page.locator('#ext-email').fill('cliente@example.com')
+    await page.locator('#ext-username').fill('@cliente')
+    await page.getByRole('button', { name: 'Registra Vendita', exact: true }).click()
+    await expect(page.locator('#ext-product')).not.toBeVisible()
 
-    await page.getByRole('button', { name: 'Gruppi prodotto' }).click()
+    await page.goto('/dashboard/listings')
     const group = page.locator('tr', { hasText: name }).first()
     await expect(group).toContainText('×1')
     await expect(group).toContainText('1')
-  })
-
-  test('products view: hiding then showing a product persists and shows on the shop', async ({ page }) => {
-    const name = title('Mostra Di Nuovo')
-    await createProduct(page, name, '2', '40')
-
-    await page.goto('/dashboard/listings')
-    await page.getByRole('button', { name: 'Prodotti' }).click()
-    const row = page.locator('tr', { hasText: name }).first()
-
-    await row.locator('button[title="Nascondi singolo prodotto"]').click()
-    await expect(page.getByText('Prodotto nascosto dallo shop')).toBeVisible()
-    await expect(row.locator('button[title="Mostra singolo prodotto"]')).toBeVisible()
-
-    await row.locator('button[title="Mostra singolo prodotto"]').click()
-    await expect(page.getByText('Prodotto visibile nello shop')).toBeVisible()
-    await expect(row.locator('button[title="Nascondi singolo prodotto"]')).toBeVisible()
-
-    await page.reload()
-    await page.getByRole('button', { name: 'Prodotti' }).click()
-    await expect(page.locator('tr', { hasText: name }).first().locator('button[title="Nascondi singolo prodotto"]')).toBeVisible()
-
-    await page.goto('/shop')
-    await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
   })
 
   test('featured slots: counter n/4 and star locked when full, homepage shows featured', async ({ page }) => {

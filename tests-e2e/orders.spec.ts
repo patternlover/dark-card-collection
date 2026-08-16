@@ -28,9 +28,12 @@ test.describe('Ordini', () => {
 
   test('registers an external sale (order + stock)', async ({ page }) => {
     await page.goto('/dashboard/orders')
-    await page.getByRole('button', { name: 'Registra Vendita Esterna' }).click()
+    await page.getByRole('button', { name: 'Registra Vendita' }).click()
     const option = page.locator('#ext-product option', { hasText: 'Test ETB' }).first()
     await page.locator('#ext-product').selectOption(await option.getAttribute('value'))
+    await page.locator('#ext-platform').selectOption({ label: 'Vinted' })
+    await page.locator('#ext-qty').fill('1')
+    await page.locator('#ext-price').fill('50')
     await page.getByRole('button', { name: 'Registra Vendita', exact: true }).click()
     await expect(page.locator('tr', { hasText: 'Vinted' })).toBeVisible()
   })

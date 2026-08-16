@@ -6,7 +6,7 @@ import { updateProduct } from '@/app/dashboard/actions'
 import { Button, Field, Input, Modal, Select, Textarea } from './ui'
 
 const GRADE_OPTIONS = [
-  { value: 'mint', label: 'Mint / Sigillato' },
+  { value: 'mint', label: 'Mint' },
   { value: 'near-mint', label: 'Near Mint' },
   { value: 'lightly-played', label: 'Lightly Played' },
   { value: 'moderately-played', label: 'Moderately Played' },
@@ -50,7 +50,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
     googleProductCategory: product.googleProductCategory || '',
     language: product.language || 'italian',
     cardNumber: product.cardNumber || '',
-    imageLink: product.imageLink || '',
     itemGroupId: product.itemGroupId || '',
     showGoogle: Boolean(
       product.itemGroupId || product.productType || product.googleProductCategory,
@@ -79,7 +78,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
           : null,
         language: form.language,
         cardNumber: isCard ? (form.cardNumber.trim() || null) : null,
-        imageLink: form.imageLink.trim() || null,
       }
       const res = await updateProduct(product.id, patch)
       if (!res.ok) {
@@ -194,16 +192,6 @@ export function EditProductModal({ product, onClose, onSaved, onError }: EditPro
             </Field>
           </div>
         ) : null}
-
-        <Field label="Image Link" htmlFor="ep-image-link">
-          <Input
-            id="ep-image-link"
-            type="url"
-            value={form.imageLink}
-            onChange={(e) => handleChange('imageLink', e.target.value)}
-            placeholder="https://..."
-          />
-        </Field>
 
         <Field label="Descrizione" htmlFor="ep-description">
           <Textarea

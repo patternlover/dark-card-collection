@@ -143,6 +143,7 @@ export function CategoriesSection() {
             <Tr>
               <SortableTh label="Nome" field="name" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
               <SortableTh label="Slug" field="slug" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+              <Th>Tipo</Th>
               <Th>Descrizione</Th>
               <Th className="text-right">Azioni</Th>
             </Tr>
@@ -152,6 +153,9 @@ export function CategoriesSection() {
               <Tr key={c.id}>
                 <Td className="font-medium text-[var(--ui-text)]">{c.name}</Td>
                 <Td className="font-mono text-xs text-[var(--ui-text-muted)]">{c.slug}</Td>
+                <Td className="text-[var(--ui-text-muted)]">
+                  {c.kind === 'product' ? 'Prodotto' : c.kind === 'card' ? 'Carta' : 'Entrambi'}
+                </Td>
                 <Td className="max-w-xs truncate text-[var(--ui-text-muted)]">{c.description || '—'}</Td>
                 <Td>
                   <div className="flex items-center justify-end gap-2">

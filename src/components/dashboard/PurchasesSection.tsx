@@ -36,7 +36,6 @@ import {
   Th,
   THead,
   Textarea,
-  Toolbar,
   Tr,
 } from './ui'
 
@@ -68,7 +67,6 @@ interface LineForm {
   newProductTitle: string
   newProductPrice: string
   newProductExpansions: string[]
-  newProductImageLink: string
   newProductItemCategory1: string
   newProductItemCategory2: string
   newProductLanguage: string
@@ -85,7 +83,6 @@ function emptyLine(): LineForm {
     newProductTitle: '',
     newProductPrice: '',
     newProductExpansions: [],
-    newProductImageLink: '',
     newProductItemCategory1: 'product',
     newProductItemCategory2: '',
     newProductLanguage: 'italian',
@@ -111,15 +108,15 @@ function parseDateInput(value: string): string | null {
   return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0')
 }
 
-export function PurchasesSection() {
+export function PurchasesSection({ initialSearch = '' }: { initialSearch?: string }) {
   const [purchases, setPurchases] = useState<PurchaseDTO[]>([])
   const { sortBy, sortDir, handleSort } = useSort('purchaseDate')
   const onSort = (field: string) => {
     setPage(1)
     handleSort(field)
   }
-  const [query, setQuery] = useState('')
-  const [appliedQuery, setAppliedQuery] = useState('')
+  const [query, setQuery] = useState(initialSearch)
+  const [appliedQuery, setAppliedQuery] = useState(initialSearch)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -284,7 +281,6 @@ export function PurchasesSection() {
             newProductLanguage: 'italian',
             newProductGrade: 'near-mint',
             newProductCardNumber: '',
-            newProductImageLink: '',
             quantity: String(l.quantity),
             unitCost: String(l.unitCost),
           }))
@@ -318,7 +314,6 @@ export function PurchasesSection() {
       newProductTitle: l.newProduct ? l.newProductTitle.trim() || null : null,
       newProductPrice: l.newProduct && l.newProductPrice ? Number(l.newProductPrice) : null,
       newProductExpansions: l.newProduct ? l.newProductExpansions : undefined,
-      newProductImageLink: l.newProduct ? l.newProductImageLink.trim() || null : null,
       newProductItemCategory1: l.newProduct ? l.newProductItemCategory1 || 'product' : undefined,
       newProductItemCategory2: l.newProduct ? l.newProductItemCategory2 || undefined : undefined,
       newProductLanguage: l.newProduct ? l.newProductLanguage || 'italian' : undefined,
@@ -396,17 +391,23 @@ export function PurchasesSection() {
         </Button>
       </PageHeader>
 
-      <Toolbar className="justify-end">
+      <div className="flex justify-end">
         <div className="relative w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                setAppliedQuery(query.trim())
+                setPage(1)
+              }
+            }}
             placeholder="Cerca per fonte o note..."
             className="pl-9"
           />
         </div>
-      </Toolbar>
+      </div>
 
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
 
@@ -438,7 +439,6 @@ export function PurchasesSection() {
                     </Td>
                     <Td>
                       <p className="font-medium text-[var(--ui-text)]">{p.sourceName || '—'}</p>
-                      <p className="text-xs text-[var(--ui-text-faint)]">{p.sourceType || ''}</p>
                     </Td>
                     <Td className="text-[var(--ui-text-muted)]">{rowCount}</Td>
                     <Td className="text-[var(--ui-text-muted)]">{p.extraCosts ? euro.format(p.extraCosts) : '—'}</Td>
@@ -556,9 +556,11 @@ export function PurchasesSection() {
                 <Field label="Data Acquisto *" htmlFor="pc-date">
                   <Input
                     id="pc-date"
-                    type="date"
+                    type="text"
+                    inputMode="numeric"
                     value={form.purchaseDate}
                     onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+                    placeholder="GG/MM/AAAA"
                   />
                 </Field>
 
@@ -602,84 +604,87 @@ export function PurchasesSection() {
                   />
                 </Field>
 
-                <Field label="Scontrino">
-                  <div
-                    data-testid="receipt-dropzone"
-                    onDragOver={(e) => {
-                      e.preventDefault()
-                      setReceiptDrag(true)
-                    }}
-                    onDragLeave={() => setReceiptDrag(false)}
-                    onDrop={(e) => {
-                      e.preventDefault()
-                      setReceiptDrag(false)
-                      handleReceiptFile(e.dataTransfer.files?.[0])
-                    }}
-                    className={`flex items-center justify-center rounded-lg border-2 border-dashed px-4 py-3 transition-colors ${
-                      receiptDrag
-                        ? 'border-[var(--ui-accent)] bg-[var(--ui-accent)]/10'
-                        : 'border-[var(--ui-border-strong)] bg-[var(--ui-bg)]/40'
-                    }`}
-                  >
-                    {receiptBusy ? (
-                      <p className="text-sm text-[var(--ui-text-muted)]">Caricamento su Google Drive...</p>
-                    ) : receipt ? (
-                      <div className="flex w-full items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
-                          <span className="truncate text-sm font-medium text-[var(--ui-text)]">{receipt.name}</span>
-                          {receipt.url ? (
-                            <a
-                              href={receipt.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="shrink-0 text-xs text-[var(--ui-accent)] hover:underline"
-                            >
-                              Apri su Drive
-                            </a>
-                          ) : null}
+                <div className="grid grid-cols-2 items-stretch gap-4">
+                  <Field label="Scontrino">
+                    <div
+                      data-testid="receipt-dropzone"
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        setReceiptDrag(true)
+                      }}
+                      onDragLeave={() => setReceiptDrag(false)}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        setReceiptDrag(false)
+                        handleReceiptFile(e.dataTransfer.files?.[0])
+                      }}
+                      className={`flex h-full items-center justify-center rounded-lg border-2 border-dashed px-4 py-3 transition-colors ${
+                        receiptDrag
+                          ? 'border-[var(--ui-accent)] bg-[var(--ui-accent)]/10'
+                          : 'border-[var(--ui-border-strong)] bg-[var(--ui-bg)]/40'
+                      }`}
+                    >
+                      {receiptBusy ? (
+                        <p className="text-sm text-[var(--ui-text-muted)]">Caricamento su Google Drive...</p>
+                      ) : receipt ? (
+                        <div className="flex w-full items-center justify-between gap-3">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <span className="h-2 w-2 shrink-0 rounded-full bg-green-500" />
+                            <span className="truncate text-sm font-medium text-[var(--ui-text)]">{receipt.name}</span>
+                            {receipt.url ? (
+                              <a
+                                href={receipt.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="shrink-0 text-xs text-[var(--ui-accent)] hover:underline"
+                              >
+                                Apri su Drive
+                              </a>
+                            ) : null}
+                          </div>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setReceipt(null)}
+                            title="Rimuovi scontrino"
+                            className="shrink-0 rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => setReceipt(null)}
-                          title="Rimuovi scontrino"
-                          className="shrink-0 rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <label htmlFor="pc-receipt" className="flex cursor-pointer items-center gap-2 py-1 text-sm text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]">
-                        <Upload className="h-4 w-4" />
-                        Trascina lo scontrino qui o <span className="text-[var(--ui-accent)] underline-offset-2 hover:underline">sfoglia</span>
-                        <input
-                          id="pc-receipt"
-                          type="file"
-                          accept="image/*,application/pdf"
-                          className="hidden"
-                          onChange={(e) => {
-                            handleReceiptFile(e.target.files?.[0])
-                            e.target.value = ''
-                          }}
-                        />
-                      </label>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-[var(--ui-text-faint)]">
-                    Immagine o PDF (max 10 MB) — salvato su Google Drive
-                  </p>
-                </Field>
+                      ) : (
+                        <label htmlFor="pc-receipt" className="flex cursor-pointer items-center gap-2 py-1 text-sm text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]">
+                          <Upload className="h-4 w-4" />
+                          Trascina lo scontrino qui o <span className="text-[var(--ui-accent)] underline-offset-2 hover:underline">sfoglia</span>
+                          <input
+                            id="pc-receipt"
+                            type="file"
+                            accept="image/*,application/pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              handleReceiptFile(e.target.files?.[0])
+                              e.target.value = ''
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--ui-text-faint)]">
+                      Immagine o PDF (max 10 MB) — salvato su Google Drive
+                    </p>
+                  </Field>
 
-                <Field label="Note">
-                  <Textarea
-                    id="pc-notes"
-                    rows={2}
-                    value={form.notes}
-                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    placeholder="Note opzionali..."
-                  />
-                </Field>
+                  <Field label="Note">
+                    <Textarea
+                      id="pc-notes"
+                      rows={2}
+                      className="h-full min-h-[5.5rem]"
+                      value={form.notes}
+                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      placeholder="Note opzionali..."
+                    />
+                  </Field>
+                </div>
               </div>
             </ModalSection>
 
@@ -697,6 +702,21 @@ export function PurchasesSection() {
                     !line.newProduct && line.productId ? groupByProductId.get(line.productId) : undefined
                   return (
                     <div key={index} data-testid="purchase-line" className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
+                          Riga {index + 1}
+                        </p>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => setLines((prev) => prev.filter((_, i) => i !== index))}
+                          disabled={lines.length === 1}
+                          title="Rimuovi riga"
+                          className="rounded-md border border-[var(--ui-border-strong)] p-1 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                       <div className="flex items-start gap-3">
                         <div className="flex-1 space-y-2">
                           <Select
@@ -794,19 +814,13 @@ export function PurchasesSection() {
                               <option value="chinese">Cinese</option>
                               <option value="japanese">Giapponese</option>
                             </Select>
-                            <Input
-                              type="url"
-                              value={line.newProductImageLink}
-                              onChange={(e) => updateLine(index, { newProductImageLink: e.target.value })}
-                              placeholder="Image link (URL)"
-                            />
                             {line.newProductItemCategory1 === 'card' ? (
                               <>
                                 <Select
                                   value={line.newProductGrade}
                                   onChange={(e) => updateLine(index, { newProductGrade: e.target.value })}
                                 >
-                                  <option value="mint">Mint / Sigillato</option>
+                                  <option value="mint">Mint</option>
                                   <option value="near-mint">Near Mint</option>
                                   <option value="lightly-played">Lightly Played</option>
                                   <option value="moderately-played">Moderately Played</option>
@@ -825,15 +839,6 @@ export function PurchasesSection() {
                           </div>
                         ) : null}
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => setLines((prev) => prev.filter((_, i) => i !== index))}
-                        disabled={lines.length === 1}
-                        className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
                     </div>
 
                     <div className="mt-2 grid grid-cols-2 gap-2">

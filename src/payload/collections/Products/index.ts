@@ -193,13 +193,6 @@ export const Products: CollectionConfig = {
       min: 0,
     },
     {
-      name: 'image_link',
-      type: 'text',
-      admin: {
-        description: 'URL immagine principale (Merchant image_link, es. da Cardmarket)',
-      },
-    },
-    {
       name: 'images',
       type: 'array',
       admin: {

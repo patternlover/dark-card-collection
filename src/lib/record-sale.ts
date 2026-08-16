@@ -21,6 +21,7 @@ export interface RecordSaleArgs {
   shipping?: number
   tax?: number
   stripeSessionId?: string
+  customerUsername?: string | null
 }
 
 export interface SaleLine {
@@ -168,6 +169,7 @@ export async function recordSale(payload: Payload, args: RecordSaleArgs): Promis
       tax: args.tax ?? 0,
       email: args.email,
       ...(args.stripeSessionId ? { stripe_session_id: args.stripeSessionId } : {}),
+      ...(args.customerUsername ? { customer_username: args.customerUsername } : {}),
     } as any,
   })
 

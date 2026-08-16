@@ -50,8 +50,7 @@ export function groupProducts(products: any[]): ProductGroup[] {
     const firstWithImage = sorted.find(
       (p: any) =>
         p.images?.[0]?.image?.url ||
-        (typeof p.image === 'object' && p.image?.url) ||
-        p.image_link,
+        (typeof p.image === 'object' && p.image?.url),
     )
     const imageInfo = getProductImageInfo(firstWithImage || {})
 

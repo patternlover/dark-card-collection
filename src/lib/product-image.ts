@@ -2,6 +2,7 @@ export interface ProductImageInfo {
   url: string | null
   cardUrl: string | null
   pdpUrl: string | null
+  hasImage: boolean
 }
 
 function mediaDoc(product: any): any {
@@ -14,15 +15,10 @@ function mediaDoc(product: any): any {
 
 export function getProductImageInfo(product: any): ProductImageInfo {
   const media = mediaDoc(product)
-  const fallback =
-    typeof product?.image_link === 'string' && product.image_link
-      ? product.image_link
-      : null
 
-  const url = media?.url || fallback
-  const cardUrl = media?.sizes?.card?.url || url
-  const pdpUrl = media?.sizes?.pdp?.url || url
+  const url = media?.url ?? null
+  const cardUrl = media?.sizes?.card?.url ?? url
+  const pdpUrl = media?.sizes?.pdp?.url ?? url
 
-  return { url, cardUrl, pdpUrl }
+  return { url, cardUrl, pdpUrl, hasImage: Boolean(url) }
 }
-

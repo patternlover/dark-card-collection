@@ -35,6 +35,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# immagini locali da caricare su Vercel Blob (script upload-images-to-blob)
+/images
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

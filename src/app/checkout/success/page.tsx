@@ -11,7 +11,7 @@ import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
 
 interface OrderItem {
-  product: { title: string; image_link?: string | null; images?: Array<{ image?: { url: string } | null }>; image?: { url: string } | null } | null
+  product: { title: string; images?: Array<{ image?: { url: string } | null }>; image?: { url: string } | null } | null
   quantity: number
   price: number
 }
@@ -116,8 +116,8 @@ function SuccessContent() {
             <div className="space-y-2 text-sm">
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  {proxyImageUrl(item.product?.image_link || item.product?.images?.[0]?.image?.url || item.product?.image?.url) ? (
-                    <img src={proxyImageUrl(item.product?.image_link || item.product?.images?.[0]?.image?.url || item.product?.image?.url)!} alt={item.product?.title || ''} width={40} height={40} className="h-10 w-10 rounded object-cover" />
+                  {proxyImageUrl(item.product?.images?.[0]?.image?.url || item.product?.image?.url) ? (
+                    <img src={proxyImageUrl(item.product?.images?.[0]?.image?.url || item.product?.image?.url)!} alt={item.product?.title || ''} width={40} height={40} className="h-10 w-10 rounded object-cover" />
                   ) : (
                     <div className="h-10 w-10 rounded bg-zinc-800" />
                   )}

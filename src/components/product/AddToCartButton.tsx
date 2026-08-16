@@ -16,7 +16,6 @@ interface AddToCartButtonProps {
     price: number
     image?: { url: string; alt: string } | null
     images?: Array<{ image?: { url: string; alt: string } | null }> | null
-    image_link?: string | null
     status: string
   }
   maxQuantity?: number

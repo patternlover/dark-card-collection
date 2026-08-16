@@ -71,7 +71,6 @@ export interface ProductDTO {
   language?: string | null
   cardNumber?: string | null
   quantity: number
-  imageLink?: string | null
   images?: Array<{ image?: { id: string; url?: string } | string | null }> | null
   averageSalePrice?: number | null
   lastPriceUpdate?: string | null
@@ -93,6 +92,7 @@ export interface OrderDTO {
   id: string
   transactionId?: string | null
   email?: string | null
+  customerUsername?: string | null
   status: string
   value?: number | null
   salesChannel?: string | null
@@ -159,7 +159,6 @@ function toProductDTO(doc: any): ProductDTO {
     language: doc.language ?? null,
     cardNumber: doc.card_number ?? null,
     quantity: Number.isFinite(Number(doc.quantity)) ? Number(doc.quantity) : 0,
-    imageLink: doc.image_link ?? null,
     images: doc.images ?? null,
     averageSalePrice: doc.average_sale_price ?? null,
     lastPriceUpdate: doc.last_price_update ?? null,
@@ -195,6 +194,7 @@ function toOrderDTO(doc: any): OrderDTO {
     id: doc.id,
     transactionId: doc.transaction_id ?? null,
     email: doc.email ?? null,
+    customerUsername: doc.customer_username ?? null,
     status: doc.status || 'pending',
     value: doc.value ?? null,
     salesChannel: doc.sales_channel ?? null,
@@ -320,7 +320,6 @@ export async function getOverview(): Promise<OverviewData> {
 export interface ProductFilters {
   search?: string
   expansion?: string
-  withImage?: string
   sortBy?: string
   sortDir?: 'asc' | 'desc'
   limit?: number
@@ -345,8 +344,6 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
     })
   }
   if (filters.expansion) where.push({ expansion: { equals: Number(filters.expansion) } })
-  if (filters.withImage === 'yes') where.push({ image_link: { exists: true } })
-  if (filters.withImage === 'no') where.push({ image_link: { exists: false } })
 
   const sortField: Record<string, string> = {
     title: 'title',
@@ -400,7 +397,6 @@ export interface UpdateProductPatch {
   language?: string | null
   cardNumber?: string | null
   quantity?: number
-  imageLink?: string | null
   featured?: boolean
   isVisible?: boolean
 }
@@ -412,7 +408,6 @@ const PATCH_FIELD_MAP: Record<string, string> = {
   salePrice: 'sale_price',
   costOfGoodsSold: 'cost_of_goods_sold',
   cardNumber: 'card_number',
-  imageLink: 'image_link',
   isVisible: 'is_visible',
   productType: 'product_type',
   itemCategory1: 'item_category_1',
@@ -446,7 +441,6 @@ export async function updateProduct(id: string, patch: UpdateProductPatch): Prom
     'language',
     'cardNumber',
     'quantity',
-    'imageLink',
     'featured',
     'isVisible',
   ]
@@ -523,7 +517,6 @@ export async function createProduct(data: CreateProductData): Promise<ActionResu
       language: data.language || 'italian',
       card_number: data.cardNumber || undefined,
       quantity: data.quantity ?? 1,
-      image_link: data.imageLink || undefined,
       featured: data.featured ?? false,
       is_visible: data.isVisible ?? true,
     } as any,
@@ -999,13 +992,19 @@ export interface ManualSaleResult {
   message?: string
 }
 
-export async function recordManualWebsiteSale(data: {
+export interface RecordDashboardSaleInput {
   productId: string
   quantity: number
   price: number
+  channel?: SalesChannel
   email?: string
-}): Promise<ManualSaleResult> {
-  await requireAuth()
+  username?: string
+}
+
+/** Unica pipeline vendita manuale (dashboard Ordini): canale Sito o esterno + email/username cliente. */
+export async function recordDashboardSale(data: RecordDashboardSaleInput): Promise<ManualSaleResult> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
 
   try {
@@ -1018,6 +1017,8 @@ export async function recordManualWebsiteSale(data: {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return { ok: false, message: 'Inserisci un\'email valida' }
     }
+    const username = (data.username || '').trim()
+    const channel = data.channel || 'website'
     const prodRes = await payload.findByID({ overrideAccess: true,  collection: 'products', id: data.productId, draft: false })
     if (!prodRes) return { ok: false, message: 'Prodotto non trovato in inventario' }
     const stock = Number((prodRes as { quantity?: number }).quantity ?? 0)
@@ -1025,12 +1026,22 @@ export async function recordManualWebsiteSale(data: {
       return { ok: false, message: 'Quantità superiore allo stock disponibile' }
     }
 
-    const transactionId = `WEB-MANUAL-${Date.now()}`
-    logAudit('sale.manual', { productId: data.productId, quantity: qty, channel: 'website', value: price * qty, hasEmail: Boolean(email) })
+    const transactionId = channel === 'website'
+      ? `WEB-MANUAL-${Date.now()}`
+      : `EXT-${channel.toUpperCase()}-${Date.now()}`
+    logAudit('sale.manual', {
+      productId: data.productId,
+      quantity: qty,
+      channel,
+      value: price * qty,
+      hasEmail: Boolean(email),
+      hasUsername: Boolean(username),
+    })
     await recordSale(payload, {
       transactionId,
-      channel: 'website',
-      email: email || 'manual@darkcardcollection.com',
+      channel,
+      email: email || `manual@darkcardcollection.com`,
+      customerUsername: username || null,
       items: [{ productId: Number(data.productId), quantity: qty, price }],
       value: price * qty,
       currency: 'EUR',
@@ -1384,7 +1395,6 @@ export interface CreatePurchaseLineInput {
   newProductTitle?: string | null
   newProductPrice?: number | null
   newProductExpansion?: string | number | null
-  newProductImageLink?: string | null
   newProductItemCategory1?: string
   newProductItemCategory2?: string
   newProductExpansions?: string[]
@@ -1432,7 +1442,6 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<ActionR
       const created = await createProduct({
         title,
         price: line.newProductPrice ?? undefined,
-        imageLink: line.newProductImageLink || undefined,
         itemCategory1: line.newProductItemCategory1 || 'product',
         itemCategory2: line.newProductExpansions
           ? line.newProductExpansions.map((id: string) => Number(id)).filter((id: number) => Number.isFinite(id) && id > 0)
@@ -1518,7 +1527,6 @@ export async function updatePurchase(id: string, data: CreatePurchaseInput): Pro
       const created = await createProduct({
         title,
         price: line.newProductPrice ?? undefined,
-        imageLink: line.newProductImageLink || undefined,
         itemCategory1: line.newProductItemCategory1 || 'product',
         itemCategory2: line.newProductExpansions
           ? line.newProductExpansions.map((id: string) => Number(id)).filter((id: number) => Number.isFinite(id) && id > 0)
@@ -1643,28 +1651,17 @@ export async function recordExternalSale(data: {
   quantity: number
   platform: string // vinted, ebay, cardmarket, other (wallapop/subito/altro → other)
   salePrice: number
+  email?: string
+  username?: string
 }): Promise<WriteResult> {
-  const auth = await authError()
-  if (auth) return { ok: false, message: auth }
-  const payload = await getPayloadClient()
-
-  const prodRes = await payload.findByID({ overrideAccess: true,  collection: 'products', id: data.productId })
-  if (!prodRes) return { ok: false, message: 'Prodotto non trovato in inventario' }
-
-  const soldQty = Math.max(1, data.quantity)
-  const channel = normalizeChannel(data.platform)
-  const transactionId = `EXT-${channel.toUpperCase()}-${Date.now()}`
-  logAudit('sale.external', { productId: data.productId, quantity: soldQty, channel, value: data.salePrice * soldQty })
-
-  await recordSale(payload, {
-    transactionId,
-    channel,
-    email: `ext-${channel}@darkcardcollection.com`,
-    items: [{ productId: Number(data.productId), quantity: soldQty, price: data.salePrice }],
-    value: data.salePrice * soldQty,
-    currency: 'EUR',
+  return recordDashboardSale({
+    productId: data.productId,
+    quantity: data.quantity,
+    price: data.salePrice,
+    channel: normalizeChannel(data.platform),
+    email: data.email,
+    username: data.username,
   })
-  return { ok: true }
 }
 
 export interface UploadReceiptResult {
