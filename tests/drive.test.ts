@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizePrivateKey } from '@/lib/drive'
+import { normalizePrivateKey, resolveAccountEmail } from '@/lib/drive'
 
 describe('normalizePrivateKey', () => {
   it('parses a full service-account JSON and extracts private_key + client_email', () => {
@@ -35,5 +35,34 @@ describe('normalizePrivateKey', () => {
   it('falls back to raw input when JSON is malformed', () => {
     const res = normalizePrivateKey('{broken json')
     expect(res.key).toBe('{broken json')
+  })
+})
+
+describe('resolveAccountEmail', () => {
+  const CLIENT = 'sa@project.iam.gserviceaccount.com'
+
+  it('prefers client_email from the JSON over the env email', () => {
+    expect(resolveAccountEmail('darkcardcollection@gmail.com', CLIENT)).toBe(CLIENT)
+  })
+
+  it('falls back to the env email when no client_email (PEM key)', () => {
+    expect(resolveAccountEmail(CLIENT, undefined)).toBe(CLIENT)
+  })
+
+  it('uses the env email when both are service accounts', () => {
+    const env = 'other@proj.iam.gserviceaccount.com'
+    expect(resolveAccountEmail(env, CLIENT)).toBe(CLIENT)
+  })
+
+  it('throws when no email is available', () => {
+    expect(() => resolveAccountEmail(undefined, undefined)).toThrow(/non configurato/)
+  })
+
+  it('throws when the email is not a service account', () => {
+    expect(() => resolveAccountEmail('darkcardcollection@gmail.com', undefined)).toThrow(/client_email/)
+  })
+
+  it('trims whitespace', () => {
+    expect(resolveAccountEmail(`  ${CLIENT}  `, undefined)).toBe(CLIENT)
   })
 })

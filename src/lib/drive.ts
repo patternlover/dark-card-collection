@@ -30,7 +30,28 @@ export function normalizePrivateKey(raw: string): { key: string; clientEmail?: s
   return { key, clientEmail }
 }
 
-function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: string } | null {
+/**
+ * Sceglie l'email del service account per il JWT.
+ * Con chiave JSON il `client_email` interno è per costruzione coerente con la
+ * private_key (stesso file scaricato da Google) → ha la precedenza sull'env.
+ * L'env GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL è usato solo come fallback (PEM puro).
+ */
+export function resolveAccountEmail(envEmail: string | undefined, clientEmail: string | undefined): string {
+  const candidate = (clientEmail || envEmail || '').trim()
+  if (!candidate) {
+    throw new Error(
+      'Google Drive non configurato: manca GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL (o client_email nel JSON della chiave)',
+    )
+  }
+  if (!/^[^@\s]+@[^@\s]+\.iam\.gserviceaccount\.com$/.test(candidate)) {
+    throw new Error(
+      'Google Drive: GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL deve essere il client_email del service account (es. nome@progetto.iam.gserviceaccount.com), non un account personale',
+    )
+  }
+  return candidate
+}
+
+export function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: string } | null {
   const email = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL
   const privateKey = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID
@@ -38,14 +59,7 @@ function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: s
   if (!privateKey || !folderId) return null
 
   const { key, clientEmail } = normalizePrivateKey(privateKey)
-  // l'email può venire dall'env oppure dal JSON del service account
-  const accountEmail = (email || clientEmail || '').trim()
-
-  if (!accountEmail) {
-    throw new Error(
-      'Google Drive non configurato: manca GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL (o client_email nel JSON della chiave)',
-    )
-  }
+  const accountEmail = resolveAccountEmail(email, clientEmail)
 
   const auth = new google.auth.JWT({
     email: accountEmail,
@@ -71,27 +85,37 @@ export async function uploadReceiptToDrive(file: File): Promise<DriveReceipt> {
   const buffer = Buffer.from(await file.arrayBuffer())
   const mimeType = file.type || 'application/octet-stream'
 
-  const res = await drive.files.create({
-    requestBody: {
-      name: safeName,
-      parents: [folderId],
-      mimeType,
-    },
-    media: {
-      mimeType,
-      body: Readable.from(buffer),
-    },
-    fields: 'id,name,webViewLink',
-  })
+  try {
+    const res = await drive.files.create({
+      requestBody: {
+        name: safeName,
+        parents: [folderId],
+        mimeType,
+      },
+      media: {
+        mimeType,
+        body: Readable.from(buffer),
+      },
+      fields: 'id,name,webViewLink',
+    })
 
-  const data = res.data
-  if (!data.id) {
-    throw new Error('Upload scontrino fallito: nessun file id')
-  }
+    const data = res.data
+    if (!data.id) {
+      throw new Error('Upload scontrino fallito: nessun file id')
+    }
 
-  return {
-    fileId: data.id,
-    name: data.name || safeName,
-    url: data.webViewLink || '',
+    return {
+      fileId: data.id,
+      name: data.name || safeName,
+      url: data.webViewLink || '',
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('invalid_grant')) {
+      throw new Error(
+        'Google Drive: autenticazione rifiutata. Verifica che GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL (su Vercel) sia il client_email del service account, o lasciala vuota quando la chiave è il JSON completo (il client_email viene estratto da lì)',
+      )
+    }
+    throw err
   }
 }
