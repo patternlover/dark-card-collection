@@ -7,6 +7,23 @@ export interface DriveReceipt {
   url: string
 }
 
+export interface DriveClient {
+  drive: ReturnType<typeof google.drive>
+  folderId: string
+}
+
+/**
+ * Estrae l'ID di una cartella/shared drive da un valore grezzo:
+ * accetta l'ID puro o un URL completo (https://drive.google.com/drive/folders/<id>,
+ * anche con /u/1/ o /d/). Rimuove virgolette e spazi.
+ */
+export function normalizeFolderId(raw: string): string {
+  let value = raw.trim().replace(/^"+|"+$/g, '')
+  const match = value.match(/\/folders\/([\w-]+)/)
+  if (match) return match[1]!
+  return value
+}
+
 /**
  * Normalizza la private key del service account nei formati accettabili:
  * - JSON del service account (chiave `private_key`, `client_email`)
@@ -51,27 +68,42 @@ export function resolveAccountEmail(envEmail: string | undefined, clientEmail: s
   return candidate
 }
 
-export function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: string } | null {
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
+
+/**
+ * Costruisce il client Drive.
+ * Priorità: OAuth2 personale (GOOGLE_DRIVE_CLIENT_ID + SECRET + REFRESH_TOKEN),
+ * fallback: service account (GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY).
+ */
+export function getDriveClient(): DriveClient | null {
+  const folderIdRaw = process.env.GOOGLE_DRIVE_FOLDER_ID
+  if (!folderIdRaw) return null
+  const folderId = normalizeFolderId(folderIdRaw)
+
+  const oauthClientId = process.env.GOOGLE_DRIVE_CLIENT_ID
+  const oauthClientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET
+  const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN
+
+  if (oauthClientId && oauthClientSecret && refreshToken) {
+    const auth = new google.auth.OAuth2(oauthClientId, oauthClientSecret)
+    auth.setCredentials({ refresh_token: refreshToken })
+    return { drive: google.drive({ version: 'v3', auth }), folderId }
+  }
+
   const email = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL
   const privateKey = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY
-  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID
+  if (privateKey) {
+    const { key, clientEmail } = normalizePrivateKey(privateKey)
+    const accountEmail = resolveAccountEmail(email, clientEmail)
+    const auth = new google.auth.JWT({ email: accountEmail, key, scopes: [DRIVE_SCOPE] })
+    return { drive: google.drive({ version: 'v3', auth }), folderId }
+  }
 
-  if (!privateKey || !folderId) return null
-
-  const { key, clientEmail } = normalizePrivateKey(privateKey)
-  const accountEmail = resolveAccountEmail(email, clientEmail)
-
-  const auth = new google.auth.JWT({
-    email: accountEmail,
-    key,
-    scopes: ['https://www.googleapis.com/auth/drive.file'],
-  })
-
-  return { drive: google.drive({ version: 'v3', auth }), folderId }
+  return null
 }
 
 /**
- * Upload a receipt file (image or PDF) to the shared Google Drive folder.
+ * Upload a receipt file (image or PDF) to the Google Drive folder.
  * Returns the file id, original name and web view link.
  */
 export async function uploadReceiptToDrive(file: File): Promise<DriveReceipt> {
@@ -97,6 +129,7 @@ export async function uploadReceiptToDrive(file: File): Promise<DriveReceipt> {
         body: Readable.from(buffer),
       },
       fields: 'id,name,webViewLink',
+      supportsAllDrives: true,
     })
 
     const data = res.data
@@ -113,7 +146,7 @@ export async function uploadReceiptToDrive(file: File): Promise<DriveReceipt> {
     const msg = err instanceof Error ? err.message : String(err)
     if (msg.includes('invalid_grant')) {
       throw new Error(
-        'Google Drive: autenticazione rifiutata. Verifica che GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL (su Vercel) sia il client_email del service account, o lasciala vuota quando la chiave è il JSON completo (il client_email viene estratto da lì)',
+        'Google Drive: autenticazione rifiutata. Verifica GOOGLE_DRIVE_REFRESH_TOKEN (o le env del service account).',
       )
     }
     throw err

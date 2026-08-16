@@ -1,5 +1,35 @@
 import { describe, it, expect } from 'vitest'
-import { normalizePrivateKey, resolveAccountEmail } from '@/lib/drive'
+import { normalizeFolderId, normalizePrivateKey, resolveAccountEmail } from '@/lib/drive'
+
+describe('normalizeFolderId', () => {
+  it('keeps a pure id unchanged', () => {
+    expect(normalizeFolderId('1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC')).toBe(
+      '1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC',
+    )
+  })
+
+  it('extracts the id from a full folders URL', () => {
+    expect(
+      normalizeFolderId('https://drive.google.com/drive/folders/1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC'),
+    ).toBe('1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC')
+  })
+
+  it('extracts the id from a URL with /u/1/', () => {
+    expect(
+      normalizeFolderId('https://drive.google.com/drive/u/1/folders/1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC'),
+    ).toBe('1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC')
+  })
+
+  it('strips surrounding quotes and whitespace', () => {
+    expect(normalizeFolderId('  "1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC"  ')).toBe(
+      '1_NzkvN8teWiAKp8oZ0mQlrUHIGNBIRdC',
+    )
+  })
+
+  it('returns the input as-is when it is not a folders URL', () => {
+    expect(normalizeFolderId('some-other-id')).toBe('some-other-id')
+  })
+})
 
 describe('normalizePrivateKey', () => {
   it('parses a full service-account JSON and extracts private_key + client_email', () => {
