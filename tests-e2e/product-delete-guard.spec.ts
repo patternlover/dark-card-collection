@@ -32,8 +32,8 @@ test.describe('Delete prodotto: guardie integrità (nessun 500/#441)', () => {
     await line.getByTestId('line-product').selectOption({ label: name })
     await line.getByTestId('line-quantity').fill('2')
     await line.getByTestId('line-cost').fill('20')
-    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
-    await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+    await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
+    await expect(page.getByText('Lotto registrato e magazzino aggiornato con successo')).toBeVisible()
   }
 
   async function registerSale(page: any, name: string, qty: string) {

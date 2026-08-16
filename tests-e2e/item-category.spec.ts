@@ -28,8 +28,8 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await line.locator('select').filter({ has: page.locator('option:has-text("Inglese")') }).selectOption({ label: 'Inglese' })
     await line.getByTestId('line-quantity').fill('1')
     await line.getByTestId('line-cost').fill('15')
-    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
-    await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+    await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
+    await expect(page.getByText('Lotto registrato e magazzino aggiornato con successo')).toBeVisible()
   }
 
   async function openEditInListati(page: any, name: string) {
@@ -106,8 +106,8 @@ test.describe('item_category (macro/espansione/micro) + modale Listati + redirec
     await expect(line.locator('select').filter({ has: page.locator('option:has-text("Near Mint")') })).toHaveCount(0)
     await line.getByTestId('line-quantity').fill('1')
     await line.getByTestId('line-cost').fill('20')
-    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
-    await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+    await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
+    await expect(page.getByText('Lotto registrato e magazzino aggiornato con successo')).toBeVisible()
 
     await page.goto('/shop')
     const el = page.locator('.group', { hasText: name }).first()

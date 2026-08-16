@@ -33,8 +33,8 @@ test.describe('Lotti (purchases)', () => {
     await line2.getByTestId('line-quantity').fill('3')
     await line2.getByTestId('line-cost').fill('15')
 
-    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
-    await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+    await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
+    await expect(page.getByText('Lotto registrato e magazzino aggiornato con successo')).toBeVisible()
     await expect(page.locator('tr', { hasText: SHOP })).toBeVisible()
   })
 
@@ -58,7 +58,7 @@ test.describe('Lotti (purchases)', () => {
     const line1 = page.getByTestId('purchase-line').nth(0)
     await line1.getByTestId('line-quantity').fill('3')
     await page.getByRole('button', { name: 'Salva Modifiche' }).click()
-    await expect(page.getByText('Lotto aggiornato e inventario riconciliato')).toBeVisible()
+    await expect(page.getByText('Lotto aggiornato e magazzino riconciliato')).toBeVisible()
 
     await page.goto('/dashboard/inventory')
     const etb = page.locator('tr', { hasText: 'Test ETB' })
@@ -100,8 +100,8 @@ test.describe('Lotti (purchases)', () => {
     await line2.getByTestId('line-quantity').fill('1')
     await line2.getByTestId('line-cost').fill('12')
 
-    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
-    await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+    await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
+    await expect(page.getByText('Lotto registrato e magazzino aggiornato con successo')).toBeVisible()
 
     // riaperto il modal: il dropdown mostra UNA riga per il gruppo
     await page.getByRole('button', { name: 'Registra Lotto' }).click()

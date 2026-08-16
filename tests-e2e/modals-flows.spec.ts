@@ -50,7 +50,7 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await page.goto('/dashboard/purchases')
     await page.getByRole('button', { name: 'Registra Lotto' }).click()
     await page.locator('#pc-date').fill('')
-    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
+    await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
 
     const dialog = page.locator('[role="dialog"]')
     await expect(dialog.getByText('Data non valida: usa il formato GG/MM/AAAA')).toBeVisible()
@@ -101,8 +101,8 @@ test.describe('Flussi modali tra pagine (dashboard)', () => {
     await line.getByTestId('line-product').selectOption({ label: name })
     await line.getByTestId('line-quantity').fill('1')
     await line.getByTestId('line-cost').fill('20')
-    await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
-    await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+    await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
+    await expect(page.getByText('Lotto registrato e magazzino aggiornato con successo')).toBeVisible()
 
     await page.goto('/dashboard/inventory')
     const row1 = page.locator('tr', { hasText: name }).first()

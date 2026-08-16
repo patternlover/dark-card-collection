@@ -9,22 +9,25 @@ export interface DriveReceipt {
 
 /**
  * Normalizza la private key del service account nei formati accettabili:
- * - JSON del service account (chiave `private_key`)
+ * - JSON del service account (chiave `private_key`, `client_email`)
  * - PEM con `\n` escaped (formato env standard)
  * - PEM con newline reali o virgolette ai bordi
+ * Ritorna anche `client_email` quando disponibile (JSON).
  */
-function normalizePrivateKey(raw: string): string {
+function normalizePrivateKey(raw: string): { key: string; clientEmail?: string } {
   let key = raw.trim()
+  let clientEmail: string | undefined
   if (key.startsWith('{')) {
     try {
       const parsed = JSON.parse(key)
       if (typeof parsed.private_key === 'string') key = parsed.private_key
+      if (typeof parsed.client_email === 'string') clientEmail = parsed.client_email
     } catch {
       // lascia il valore così com'è
     }
   }
   key = key.replace(/^"+|"+$/g, '').replace(/\\n/g, '\n').trim()
-  return key
+  return { key, clientEmail }
 }
 
 function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: string } | null {
@@ -32,11 +35,21 @@ function getDriveClient(): { drive: ReturnType<typeof google.drive>; folderId: s
   const privateKey = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_PRIVATE_KEY
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID
 
-  if (!email || !privateKey || !folderId) return null
+  if (!privateKey || !folderId) return null
+
+  const { key, clientEmail } = normalizePrivateKey(privateKey)
+  // l'email può venire dall'env oppure dal JSON del service account
+  const accountEmail = (email || clientEmail || '').trim()
+
+  if (!accountEmail) {
+    throw new Error(
+      'Google Drive non configurato: manca GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL (o client_email nel JSON della chiave)',
+    )
+  }
 
   const auth = new google.auth.JWT({
-    email,
-    key: normalizePrivateKey(privateKey),
+    email: accountEmail,
+    key,
     scopes: ['https://www.googleapis.com/auth/drive.file'],
   })
 

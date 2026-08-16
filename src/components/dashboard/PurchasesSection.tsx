@@ -348,14 +348,14 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
           setModalError(res.message)
           return
         }
-        notify('Lotto aggiornato e inventario riconciliato')
+        notify('Lotto aggiornato e magazzino riconciliato')
       } else {
         const res = await createPurchase(data)
         if (!res.ok) {
           setModalError(res.message)
           return
         }
-        notify('Lotto registrato e inventario aggiornato con successo')
+        notify('Lotto registrato e magazzino aggiornato con successo')
       }
       resetForm()
       load()
@@ -543,7 +543,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                 Annulla
               </Button>
               <Button onClick={handleSubmit} disabled={busy}>
-                {busy ? 'Salvataggio...' : editing ? 'Salva Modifiche' : 'Registra e Carica in Inventario'}
+                {busy ? 'Salvataggio...' : editing ? 'Salva Modifiche' : 'Registra e Carica in Magazzino'}
               </Button>
             </>
           }
@@ -604,7 +604,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                   />
                 </Field>
 
-                <div className="space-y-3">
+                <div className="grid grid-cols-2 items-stretch gap-4">
                   <Field label="Scontrino">
                     <div
                       data-testid="receipt-dropzone"
@@ -618,7 +618,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                         setReceiptDrag(false)
                         handleReceiptFile(e.dataTransfer.files?.[0])
                       }}
-                      className={`flex min-h-[3rem] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed px-3 py-2 transition-colors ${
+                      className={`flex h-full min-h-[3.5rem] w-full items-center justify-center overflow-hidden rounded-lg border-2 border-dashed px-3 py-2 transition-colors ${
                         receiptDrag
                           ? 'border-[var(--ui-accent)] bg-[var(--ui-accent)]/10'
                           : 'border-[var(--ui-border-strong)] bg-[var(--ui-bg)]/40'
@@ -677,6 +677,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     <Textarea
                       id="pc-notes"
                       rows={1}
+                      className="h-full min-h-[3.5rem]"
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
                       placeholder="Note opzionali..."

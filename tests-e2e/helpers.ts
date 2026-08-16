@@ -43,6 +43,6 @@ export async function createProductViaLot(page: Page, opts: CreateProductViaLotO
   }
   await line.getByTestId('line-quantity').fill(opts.quantity)
   await line.getByTestId('line-cost').fill(opts.cost ?? '20')
-  await page.getByRole('button', { name: 'Registra e Carica in Inventario' }).click()
-  await expect(page.getByText('Lotto registrato e inventario aggiornato con successo')).toBeVisible()
+  await page.getByRole('button', { name: 'Registra e Carica in Magazzino' }).click()
+  await expect(page.getByText('Lotto registrato e magazzino aggiornato con successo')).toBeVisible()
 }
