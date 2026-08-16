@@ -38,3 +38,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-15 — Modale lotto slim + scontrino Google Drive, categorie per tipo, via rarità, fix stock](2026-08-15-lot-modal-receipt-category-fixes.md)
 - [2026-08-16 — Fix batch dashboard: upload Drive, immagini Blob, vendita unificata, Listati solo Gruppi, via image_link](2026-08-16-dashboard-fixes-batch.md)
 - [2026-08-16 — Fix upload Drive (chiave/limite), riga lotto verticale, ricerca lotti, modale edit senza lingua](2026-08-16-upload-fix-lot-row-vertical-search.md)
+- [2026-08-16 — Fix batch 2: Scontrino/Note verticali, env Drive, rimozione ridondanze, test DB, restyle CMS](2026-08-16-fixes-restyle-tests-repo.md)

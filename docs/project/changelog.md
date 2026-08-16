@@ -1,7 +1,25 @@
 # CHANGELOG — Dark Card Collection
 
-Documentazione operativa delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix upload Drive + UX riga lotto + ricerca lotti + tema dashboard luminous neon**.
+Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
+Ultima sessione: **Fix batch 2: Scontrino/Note verticali, env Drive, rimozione ridondanze, test DB, restyle CMS pulito**.
+
+---
+
+## Sessione recente 37 — Fix batch 2 + test completi + restyle CMS
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-16-fixes-restyle-tests-repo.md`). Su `main`. Due commit: fixes/test, poi restyle.
+
+**Commit 1 — fixes:**
+- **Scontrino e Note verticali** nel modale lotto (colonna, compatti).
+- **Env Drive** aggiunte a `.env.local` (JSON completo del service account; email = client_email esatto). Nota: service account ≠ login dashboard — il JWT è indipendente dall'OAuth.
+- **Ridondanze rimosse**: `CreateProductModal`, `TogglePills`, `Toolbar`, `productShared`, `recordExternalSale` (+ mappa/normalize), `WriteResult`.
+- **`src/lib/labels.ts`** condiviso (STATUS/SALES_CHANNEL/GRADE/CONDITION/LANGUAGE); consumer aggiornati.
+- **Test**: `tests/drive.test.ts`, `tests/labels.test.ts`, **`tests-db/integration.test.ts`** (product→purchase→stock→sale→FIFO/snapshot/margine/username) + `pnpm test:db` + step in CI (gira con Postgres del workflow).
+
+**Commit 2 — restyle CMS pulito:**
+- Via glow/neon di ieri: token sobri (bg #0f0f13, accent #6366f1), componenti UI netti senza glow/gradienti, righe tabella `py-2.5`, nav compatta.
+
+**Verifica**: `pnpm lint` 0 errori · `pnpm test` 89/89 ✓ · `next build` ✓ · CI #89 success (con test:db) ✓ · deploy Vercel ok.
 
 ---
 
