@@ -8,7 +8,7 @@ export function Card({
   return (
     <div
       onClick={onClick}
-      className={`ui-glow-hover rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)] ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`rounded-lg border border-[var(--ui-border)] bg-[var(--ui-surface)] ${onClick ? 'cursor-pointer transition-colors hover:border-[var(--ui-border-strong)]' : ''} ${className}`}
       {...props}
     />
   )

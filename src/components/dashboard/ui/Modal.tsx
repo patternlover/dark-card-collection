@@ -35,9 +35,9 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative flex max-h-[90vh] w-full ${maxWidth} flex-col rounded-lg border border-[var(--ui-accent)]/30 bg-[var(--ui-surface)] shadow-[0_0_40px_rgba(129,140,248,0.15)]`}
+        className={`relative flex max-h-[90vh] w-full ${maxWidth} flex-col rounded-lg border border-[var(--ui-border-strong)] bg-[var(--ui-surface)] shadow-2xl`}
       >
-        <div className="flex items-center justify-between border-b border-[var(--ui-border)] bg-gradient-to-b from-[var(--ui-surface-alt)]/70 to-transparent px-5 py-4">
+        <div className="flex items-center justify-between border-b border-[var(--ui-border)] px-5 py-3.5">
           <h2 className="text-base font-semibold text-[var(--ui-text)]">{title}</h2>
           <button
             type="button"

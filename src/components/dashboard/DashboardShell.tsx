@@ -86,9 +86,9 @@ export function DashboardShell({ children, sqlEnabled }: { children: React.React
                     <Link
                       href={item.href}
                       onClick={() => setOpen(false)}
-                      className={`flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-all duration-150 ${
+                      className={`flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition ${
                         active
-                          ? 'ui-glow-sm bg-[var(--ui-accent-soft)] text-[var(--ui-accent-hover)] shadow-[inset_2px_0_0_var(--ui-accent)]'
+                          ? 'bg-[var(--ui-accent-soft)] text-[var(--ui-accent-hover)]'
                           : 'text-[var(--ui-text-muted)] hover:bg-[var(--ui-surface-alt)] hover:text-[var(--ui-text)]'
                       }`}
                     >
