@@ -578,6 +578,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
         <Modal
           title={editing ? 'Modifica Lotto' : 'Registra Lotto'}
           onClose={confirmClose}
+          onCloseX={resetForm}
           maxWidth="max-w-3xl"
           footer={
             <>

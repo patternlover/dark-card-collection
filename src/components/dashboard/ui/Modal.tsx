@@ -7,12 +7,14 @@ import type { ReactNode } from 'react'
 export function Modal({
   title,
   onClose,
+  onCloseX,
   children,
   footer,
   maxWidth = 'max-w-2xl',
 }: {
   title: string
   onClose: () => void
+  onCloseX?: () => void
   children: ReactNode
   footer?: ReactNode
   maxWidth?: string
@@ -24,6 +26,8 @@ export function Modal({
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
+
+  const handleCloseX = onCloseX ?? onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -41,7 +45,7 @@ export function Modal({
           <h2 className="text-base font-semibold text-[var(--ui-text)]">{title}</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCloseX}
             aria-label="Chiudi"
             className="rounded-md p-1 text-[var(--ui-text-muted)] transition-colors hover:bg-[var(--ui-surface-alt)] hover:text-[var(--ui-text)]"
           >
