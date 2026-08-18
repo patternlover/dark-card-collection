@@ -61,6 +61,7 @@ export function ListatiSection() {
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [editing, setEditing] = useState<ProductDTO | null>(null)
   const [busy, setBusy] = useState(false)
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'product' | 'card'>('all')
 
   const load = useCallback(
     async (opts: { page?: number } = {}) => {
@@ -70,24 +71,30 @@ export function ListatiSection() {
         const res = await searchListings({
           sortBy,
           sortDir,
-          limit: PAGE_SIZE,
+          limit: 200,
           page: pageNum,
         })
         if (res.error) {
           setMessage({ text: res.error, type: 'error' })
           return
         }
-        setGroups(res.groups)
+        let filtered = res.groups
+        if (categoryFilter !== 'all') {
+          filtered = filtered.filter((g) =>
+            g.variants.some((v) => (v.itemCategory1 ?? 'product') === categoryFilter),
+          )
+        }
+        setGroups(filtered)
         setFeaturedCount(res.featuredCount)
-        setTotal(res.total)
-        setTotalPages(Math.max(1, res.totalPages))
+        setTotal(categoryFilter !== 'all' ? filtered.length : res.total)
+        setTotalPages(Math.max(1, categoryFilter !== 'all' ? 1 : res.totalPages))
       } catch {
         setMessage({ text: 'Errore nel caricamento dei listati', type: 'error' })
       } finally {
         setLoading(false)
       }
     },
-    [sortBy, sortDir, page],
+    [sortBy, sortDir, page, categoryFilter],
   )
 
   useEffect(() => {
@@ -182,6 +189,24 @@ export function ListatiSection() {
         title="Listati"
         description={`${total} gruppi (per nome prodotto) · In evidenza ${featuredCount}/4 · prezzo, costo medio, quantità e disponibilità`}
       />
+
+      <div className="flex justify-end">
+        <div className="flex items-center overflow-hidden rounded-md border border-[var(--ui-border)]">
+          {(['all', 'product', 'card'] as const).map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { setCategoryFilter(opt); setPage(1) }}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                categoryFilter === opt
+                  ? 'bg-[var(--ui-accent)] text-[var(--ui-accent-foreground)]'
+                  : 'text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]'
+              }`}
+            >
+              {opt === 'all' ? 'Tutti' : opt === 'product' ? 'Prodotti' : 'Carte'}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
 

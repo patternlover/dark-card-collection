@@ -342,6 +342,7 @@ export async function searchProducts(filters: ProductFilters = {}): Promise<Prod
   const sortField: Record<string, string> = {
     title: 'title',
     quantity: 'quantity',
+    availability: 'availability',
     cost: 'cost_of_goods_sold',
     price: 'price',
   }

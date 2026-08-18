@@ -13,7 +13,7 @@ describe('buildSaleOptions', () => {
 
   it('groups variants under an optgroup labelled by the differing attribute', () => {
     const entries = buildSaleOptions([
-      { id: '1', title: 'Charizard 9', ...base, grade: 'mint' },
+      { id: '1', title: 'Charizard 9', ...base, grade: 'excellent' },
       { id: '2', title: 'Charizard 9', ...base, grade: 'near-mint' },
     ])
     expect(entries).toHaveLength(1)
@@ -22,7 +22,7 @@ describe('buildSaleOptions', () => {
     if (group.kind === 'optgroup') {
       expect(group.label).toBe('Charizard 9')
       expect(group.options).toEqual([
-        { value: '1', label: 'Charizard 9 · Mint (stock 1)' },
+        { value: '1', label: 'Charizard 9 · Excellent (stock 1)' },
         { value: '2', label: 'Charizard 9 · Near Mint (stock 1)' },
       ])
     }
@@ -30,8 +30,8 @@ describe('buildSaleOptions', () => {
 
   it('falls back to condition when grade does not differ', () => {
     const entries = buildSaleOptions([
-      { id: '1', title: 'Carta', ...base, grade: 'mint', condition: 'new' },
-      { id: '2', title: 'Carta', ...base, grade: 'mint', condition: 'used' },
+      { id: '1', title: 'Carta', ...base, grade: 'near-mint', condition: 'new' },
+      { id: '2', title: 'Carta', ...base, grade: 'near-mint', condition: 'used' },
     ])
     const group = entries[0]
     if (group.kind === 'optgroup') {
@@ -88,11 +88,11 @@ describe('buildVariantOptions', () => {
 
   it('labels options by the differing attribute', () => {
     const options = buildVariantOptions([
-      { id: '1', title: 'Charizard 9', ...base, grade: 'mint' },
+      { id: '1', title: 'Charizard 9', ...base, grade: 'excellent' },
       { id: '2', title: 'Charizard 9', ...base, grade: 'near-mint', quantity: 2 },
     ])
     expect(options).toEqual([
-      { value: '1', label: 'Charizard 9 · Mint (stock 1)' },
+      { value: '1', label: 'Charizard 9 · Excellent (stock 1)' },
       { value: '2', label: 'Charizard 9 · Near Mint (stock 2)' },
     ])
   })

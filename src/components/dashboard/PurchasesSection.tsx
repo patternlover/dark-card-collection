@@ -212,6 +212,16 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
     load()
   }, [load])
 
+  useEffect(() => {
+    const modalOpen = showCreate || editing
+    if (!modalOpen) return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [showCreate, editing])
+
   const notify = (text: string, type: 'success' | 'error' = 'success') => setMessage({ text, type })
 
   const updateLine = (index: number, patch: Partial<LineForm>) => {
@@ -336,6 +346,19 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
     if (lineInputs.every((l) => l.quantity <= 0)) {
       setModalError('Aggiungi almeno una riga con quantità maggiore di 0')
       return
+    }
+    for (let i = 0; i < lineInputs.length; i++) {
+      const l = lineInputs[i]
+      if (l.productId || l.newProductTitle) {
+        if (l.quantity <= 0) {
+          setModalError(`Riga ${i + 1}: la quantità deve essere maggiore di 0`)
+          return
+        }
+        if (l.unitCost < 0) {
+          setModalError(`Riga ${i + 1}: il costo unitario non può essere negativo`)
+          return
+        }
+      }
     }
     setBusy(true)
     setModalError(null)
@@ -823,7 +846,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                                 {categories
                                   .filter((c) => c.kind === 'both' || c.kind === line.newProductItemCategory1)
                                   .map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                    <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>
                                   ))}
                               </Select>
                             </Field>
@@ -845,13 +868,12 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                                     value={line.newProductGrade}
                                     onChange={(e) => updateLine(index, { newProductGrade: e.target.value })}
                                   >
-                                    <option value="mint">Mint</option>
                                     <option value="near-mint">Near Mint</option>
-                                    <option value="lightly-played">Lightly Played</option>
-                                    <option value="moderately-played">Moderately Played</option>
-                                    <option value="heavily-played">Heavily Played</option>
-                                    <option value="damaged">Damaged</option>
-                                    <option value="graded">Graded</option>
+                                    <option value="excellent">Excellent</option>
+                                    <option value="good">Good</option>
+                                    <option value="light-played">Light Played</option>
+                                    <option value="played">Played</option>
+                                    <option value="poor">Poor</option>
                                   </Select>
                                 </Field>
                                 <Field label="Card Number">

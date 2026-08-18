@@ -32,8 +32,8 @@ describe('labels', () => {
   it('GRADE_OPTIONS has a unique set of values', () => {
     const values = GRADE_OPTIONS.map((o) => o.value)
     expect(new Set(values).size).toBe(values.length)
-    expect(values).toContain('mint')
-    expect(values).toContain('graded')
+    expect(values).toContain('near-mint')
+    expect(values).toContain('poor')
   })
 
   it('CONDITION_OPTIONS covers used/new/refurbished', () => {

@@ -18,13 +18,12 @@ export const SALES_CHANNEL_LABELS: Record<string, string> = {
 }
 
 export const GRADE_LABELS: Record<string, string> = {
-  mint: 'Mint',
   'near-mint': 'Near Mint',
-  'lightly-played': 'Lightly Played',
-  'moderately-played': 'Moderately Played',
-  'heavily-played': 'Heavily Played',
-  damaged: 'Damaged',
-  graded: 'Graded',
+  excellent: 'Excellent',
+  good: 'Good',
+  'light-played': 'Light Played',
+  played: 'Played',
+  poor: 'Poor',
 }
 
 export const GRADE_OPTIONS = Object.entries(GRADE_LABELS).map(([value, label]) => ({ value, label }))

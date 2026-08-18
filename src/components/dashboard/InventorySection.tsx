@@ -12,6 +12,7 @@ import {
 } from '@/app/dashboard/actions'
 import {
   Alert,
+  Badge,
   Button,
   Input,
   PageHeader,
@@ -28,6 +29,12 @@ import {
 const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
 
 const PAGE_SIZE = 25
+
+function AvailabilityBadge({ availability }: { availability: string }) {
+  if (availability === 'in_stock') return <Badge tone="success">In stock</Badge>
+  if (availability === 'out_of_stock') return <Badge tone="danger">Esaurito</Badge>
+  return <Badge tone="warning">Preordine</Badge>
+}
 
 export function InventorySection() {
   const [products, setProducts] = useState<ProductDTO[]>([])
@@ -46,6 +53,7 @@ export function InventorySection() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [history, setHistory] = useState<Record<string, PurchaseHistoryEntry[]>>({})
   const [busy, setBusy] = useState(false)
+  const [categoryFilter, setCategoryFilter] = useState<'all' | 'product' | 'card'>('all')
 
   const load = useCallback(
     async (opts: { page?: number; search?: string } = {}) => {
@@ -55,19 +63,23 @@ export function InventorySection() {
           search: appliedQuery,
           sortBy,
           sortDir,
-          limit: PAGE_SIZE,
+          limit: 200,
           page: opts.page ?? page,
         })
-        setProducts(res.docs)
-        setTotal(res.total)
-        setTotalPages(Math.max(1, res.totalPages))
+        let filtered = res.docs
+        if (categoryFilter !== 'all') {
+          filtered = filtered.filter((p) => (p.itemCategory1 ?? 'product') === categoryFilter)
+        }
+        setProducts(filtered)
+        setTotal(categoryFilter !== 'all' ? filtered.length : res.total)
+        setTotalPages(Math.max(1, categoryFilter !== 'all' ? 1 : res.totalPages))
       } catch {
         setMessage({ text: 'Errore nel caricamento inventario', type: 'error' })
       } finally {
         setLoading(false)
       }
     },
-    [appliedQuery, sortBy, sortDir, page],
+    [appliedQuery, sortBy, sortDir, page, categoryFilter],
   )
 
   useEffect(() => {
@@ -123,7 +135,22 @@ export function InventorySection() {
         description={`${total} prodotti · stock, costo medio e storico acquisti`}
       />
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center overflow-hidden rounded-md border border-[var(--ui-border)]">
+          {(['all', 'product', 'card'] as const).map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { setCategoryFilter(opt); setPage(1) }}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                categoryFilter === opt
+                  ? 'bg-[var(--ui-accent)] text-[var(--ui-accent-foreground)]'
+                  : 'text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]'
+              }`}
+            >
+              {opt === 'all' ? 'Tutti' : opt === 'product' ? 'Prodotti' : 'Carte'}
+            </button>
+          ))}
+        </div>
         <div className="relative w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
           <Input
@@ -153,6 +180,7 @@ export function InventorySection() {
             <Tr>
               <SortableTh label="Prodotto" field="title" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Stock" field="quantity" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              <SortableTh label="Disponibilità" field="availability" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Costo medio" field="cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <SortableTh label="Prezzo" field="price" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               <Th className="text-right">Azioni</Th>
@@ -176,6 +204,7 @@ export function InventorySection() {
                       </button>
                     </Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.quantity ?? 0}</Td>
+                    <Td><AvailabilityBadge availability={p.availability ?? (p.quantity > 0 ? 'in_stock' : 'out_of_stock')} /></Td>
                     <Td className="text-[var(--ui-text-muted)]">{p.costOfGoodsSold != null && p.costOfGoodsSold > 0 ? euro.format(p.costOfGoodsSold) : '—'}</Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.price != null ? euro.format(p.price) : '—'}</Td>
                     <Td>

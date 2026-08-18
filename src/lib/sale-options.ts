@@ -18,13 +18,12 @@ export type SaleSelectEntry =
   | { kind: 'optgroup'; label: string; options: SaleOption[] }
 
 const GRADE_LABELS: Record<string, string> = {
-  mint: 'Mint',
   'near-mint': 'Near Mint',
-  'lightly-played': 'Lightly Played',
-  'moderately-played': 'Moderately Played',
-  'heavily-played': 'Heavily Played',
-  damaged: 'Damaged',
-  graded: 'Graded',
+  excellent: 'Excellent',
+  good: 'Good',
+  'light-played': 'Light Played',
+  played: 'Played',
+  poor: 'Poor',
 }
 
 const CONDITION_LABELS: Record<string, string> = {

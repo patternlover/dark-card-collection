@@ -22,6 +22,7 @@ export interface VariantSaleSummary {
 export interface ListingVariant {
   id: string
   title: string
+  itemCategory1?: string | null
   set?: string | null
   grade?: string | null
   condition?: string | null
@@ -122,6 +123,7 @@ export function buildListingGroups(products: ProductDTO[], sales: ListingSale[])
       return {
         id: p.id,
         title: p.title || '',
+        itemCategory1: p.itemCategory1 ?? null,
         set: p.itemCategory2 && p.itemCategory2.length > 0 ? p.itemCategory2.map((x) => x.name).join(', ') : null,
         grade: p.grade ?? null,
         condition: p.condition ?? null,
