@@ -138,6 +138,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
   const [editing, setEditing] = useState<PurchaseDTO | null>(null)
   const [modalError, setModalError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [dirty, setDirty] = useState(false)
 
   const [form, setForm] = useState({
     purchaseDate: new Date().toLocaleDateString('it-IT'),
@@ -225,6 +226,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
   const notify = (text: string, type: 'success' | 'error' = 'success') => setMessage({ text, type })
 
   const updateLine = (index: number, patch: Partial<LineForm>) => {
+    markDirty()
     setLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
   }
 
@@ -257,6 +259,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
   const openCreate = () => {
     setEditing(null)
     setModalError(null)
+    setDirty(false)
     getPurchaseSourceNames().then(setSourceOptions).catch(() => {})
     refreshProductOptions()
     setForm({
@@ -275,6 +278,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
     setShowCreate(false)
     setExpandedId(null)
     setModalError(null)
+    setDirty(false)
     setEditing(p)
     refreshProductOptions()
     setForm({
@@ -305,10 +309,18 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
     )
   }
 
+  const markDirty = () => { if (!dirty) setDirty(true) }
+
+  const confirmClose = () => {
+    if (dirty && !confirm('Hai modifiche non salvate. Vuoi davvero chiudere?')) return
+    resetForm()
+  }
+
   const resetForm = () => {
     setEditing(null)
     setShowCreate(false)
     setModalError(null)
+    setDirty(false)
     setForm({
       purchaseDate: new Date().toLocaleDateString('it-IT'),
       sourceType: '',
@@ -565,7 +577,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
       {editing || showCreate ? (
         <Modal
           title={editing ? 'Modifica Lotto' : 'Registra Lotto'}
-          onClose={resetForm}
+          onClose={confirmClose}
           maxWidth="max-w-3xl"
           footer={
             <>
@@ -589,7 +601,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     type="text"
                     inputMode="numeric"
                     value={form.purchaseDate}
-                    onChange={(e) => setForm({ ...form, purchaseDate: formatDateInput(e.target.value) })}
+                    onChange={(e) => { markDirty(); setForm({ ...form, purchaseDate: formatDateInput(e.target.value) }) }}
                     placeholder="GG/MM/AAAA"
                   />
                 </Field>
@@ -598,7 +610,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                   <Select
                     id="pc-source-type"
                     value={form.sourceType}
-                    onChange={(e) => setForm({ ...form, sourceType: e.target.value })}
+                    onChange={(e) => { markDirty(); setForm({ ...form, sourceType: e.target.value }) }}
                   >
                     {SOURCE_TYPE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -612,7 +624,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     type="text"
                     list="pc-source-list"
                     value={form.sourceName}
-                    onChange={(e) => setForm({ ...form, sourceName: e.target.value })}
+                    onChange={(e) => { markDirty(); setForm({ ...form, sourceName: e.target.value }) }}
                     placeholder="es. Esselunga Viale X"
                   />
                   <datalist id="pc-source-list">
@@ -629,7 +641,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     step="0.01"
                     min="0"
                     value={form.extraCosts}
-                    onChange={(e) => setForm({ ...form, extraCosts: e.target.value })}
+                    onChange={(e) => { markDirty(); setForm({ ...form, extraCosts: e.target.value }) }}
                     placeholder="spedizione / commissioni"
                   />
                 </Field>
@@ -708,7 +720,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                       id="pc-notes"
                       rows={1}
                       value={form.notes}
-                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                      onChange={(e) => { markDirty(); setForm({ ...form, notes: e.target.value }) }}
                       placeholder="Note opzionali..."
                       className="min-h-[3rem]"
                     />
@@ -845,9 +857,10 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                                 <option value="">— Categoria —</option>
                                 {categories
                                   .filter((c) => c.kind === 'both' || c.kind === line.newProductItemCategory1)
-                                  .map((c) => (
-                                    <option key={c.id} value={c.id}>{c.name.toUpperCase()}</option>
-                                  ))}
+                                  .map((c) => {
+                                    const name = c.name === 'Spc' ? 'SPC' : c.name === 'Etb' ? 'ETB' : c.name
+                                    return <option key={c.id} value={c.id}>{name}</option>
+                                  })}
                               </Select>
                             </Field>
                             <Field label="Lingua">
