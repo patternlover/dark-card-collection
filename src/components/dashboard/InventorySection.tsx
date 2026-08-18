@@ -165,9 +165,15 @@ export function InventorySection() {
                 <Fragment key={p.id}>
                   <Tr>
                     <Td>
-                      <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => toggleHistory(p)}
+                        className="flex items-center gap-3 text-left transition-colors hover:text-[var(--ui-accent-hover)]"
+                      >
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 text-[var(--ui-text-faint)] transition-transform ${expanded ? 'rotate-180' : ''}`}
+                        />
                         <span className="min-w-0 break-words font-medium text-[var(--ui-text)]">{p.title}</span>
-                      </div>
+                      </button>
                     </Td>
                     <Td className="font-semibold text-[var(--ui-text)]">{p.quantity ?? 0}</Td>
                     <Td className="text-[var(--ui-text-muted)]">{p.costOfGoodsSold != null && p.costOfGoodsSold > 0 ? euro.format(p.costOfGoodsSold) : '—'}</Td>
@@ -177,17 +183,8 @@ export function InventorySection() {
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => toggleHistory(p)}
-                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
-                          title="Storico acquisti"
-                        >
-                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
                           onClick={() => removeProduct(p)}
-                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                          className="p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
                           title="Elimina prodotto"
                         >
                           <Trash2 className="h-3.5 w-3.5" />

@@ -108,6 +108,13 @@ function parseDateInput(value: string): string | null {
   return year + '-' + String(month).padStart(2, '0') + '-' + String(day).padStart(2, '0')
 }
 
+function formatDateInput(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 4) return digits.slice(0, 2) + '/' + digits.slice(2)
+  return digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4)
+}
+
 export function PurchasesSection({ initialSearch = '' }: { initialSearch?: string }) {
   const [purchases, setPurchases] = useState<PurchaseDTO[]>([])
   const { sortBy, sortDir, handleSort } = useSort('purchaseDate')
@@ -434,8 +441,16 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
               return (
                 <Fragment key={p.id}>
                   <Tr>
-                    <Td className="text-xs text-[var(--ui-text-muted)]">
-                      {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString('it-IT') : '—'}
+                    <Td>
+                      <button
+                        onClick={() => setExpandedId(expanded ? null : p.id)}
+                        className="flex items-center gap-2 text-xs text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]"
+                      >
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 text-[var(--ui-text-faint)] transition-transform ${expanded ? 'rotate-180' : ''}`}
+                        />
+                        {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString('it-IT') : '—'}
+                      </button>
                     </Td>
                     <Td>
                       <p className="font-medium text-[var(--ui-text)]">{p.sourceName || '—'}</p>
@@ -448,18 +463,10 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={() => setExpandedId(expanded ? null : p.id)}
-                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
-                        >
-                          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
                           onClick={() => openEdit(p)}
                           disabled={busy}
                           title="Modifica lotto"
-                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
+                          className="p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
@@ -469,7 +476,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                           onClick={() => handleDelete(p.id)}
                           disabled={busy}
                           title="Elimina lotto"
-                          className="rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                          className="p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -559,7 +566,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     type="text"
                     inputMode="numeric"
                     value={form.purchaseDate}
-                    onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+                    onChange={(e) => setForm({ ...form, purchaseDate: formatDateInput(e.target.value) })}
                     placeholder="GG/MM/AAAA"
                   />
                 </Field>
@@ -680,6 +687,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                       value={form.notes}
                       onChange={(e) => setForm({ ...form, notes: e.target.value })}
                       placeholder="Note opzionali..."
+                      className="min-h-[3rem]"
                     />
                   </Field>
                 </div>

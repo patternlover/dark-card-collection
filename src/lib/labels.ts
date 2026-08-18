@@ -4,8 +4,7 @@ export const STATUS_LABELS: Record<string, string> = {
   pending: 'In Attesa pagamento',
   paid: 'Pagato',
   shipped: 'Spedito',
-  delivered: 'Consegnato',
-  cancelled: 'Annullato',
+  cancelled: 'Reso',
 }
 
 export const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([value, label]) => ({ value, label }))

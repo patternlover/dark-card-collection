@@ -29,7 +29,7 @@ export function Textarea({
   className = '',
   ...props
 }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={`${fieldBase} min-h-[96px] ${className}`} {...props} />
+  return <textarea className={`${fieldBase} ${className}`} {...props} />
 }
 
 export function Select({

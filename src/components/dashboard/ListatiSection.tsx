@@ -37,7 +37,7 @@ const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR'
 const PAGE_SIZE = 25
 
 function iconButtonClass() {
-  return 'rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]'
+  return 'p-1.5 text-[var(--ui-text-muted)] transition-colors hover:text-[var(--ui-text)]'
 }
 
 function AvailabilityBadge({ availability }: { availability: string }) {
@@ -212,7 +212,7 @@ export function ListatiSection() {
                 </Td>
                 <Td className="font-semibold text-[var(--ui-text)]">{g.totalQuantity}</Td>
                 <Td className="text-[var(--ui-text-muted)]">
-                  {g.totalSold > 0 ? <span className="font-medium text-[var(--ui-text)]">×{g.totalSold}</span> : '—'}
+                  <span className="font-medium text-[var(--ui-text)]">{g.totalSold}</span>
                 </Td>
                 <Td><AvailabilityBadge availability={g.availability} /></Td>
                 <Td className="whitespace-nowrap text-[var(--ui-text-muted)]">{g.cost != null ? euro.format(g.cost) : '—'}</Td>

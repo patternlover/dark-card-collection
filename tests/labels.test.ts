@@ -11,7 +11,7 @@ import {
 describe('labels', () => {
   it('STATUS_LABELS covers all statuses', () => {
     expect(Object.keys(STATUS_LABELS).sort()).toEqual(
-      ['pending', 'paid', 'shipped', 'delivered', 'cancelled'].sort(),
+      ['pending', 'paid', 'shipped', 'cancelled'].sort(),
     )
   })
 
