@@ -549,6 +549,19 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
   return { ok: true, data: toOrderDTO(res) }
 }
 
+export async function deleteOrder(id: string): Promise<{ ok: boolean; message?: string }> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('order.delete', { id })
+  const payload = await getPayloadClient()
+  try {
+    await payload.delete({ overrideAccess: true, collection: 'orders', id })
+    return { ok: true }
+  } catch {
+    return { ok: false, message: 'Errore durante l\'eliminazione dell\'ordine' }
+  }
+}
+
 export async function runQuery(sql: string): Promise<QueryOutcome> {
   await requireAuth()
   if (!isDashSqlEnabled()) {
@@ -987,13 +1000,18 @@ export interface ManualSaleResult {
   message?: string
 }
 
-export interface RecordDashboardSaleInput {
+export interface RecordDashboardSaleItemInput {
   productId: string
   quantity: number
   price: number
+}
+
+export interface RecordDashboardSaleInput {
+  items: RecordDashboardSaleItemInput[]
   channel?: SalesChannel
   email?: string
   username?: string
+  saleDate?: string
 }
 
 /** Unica pipeline vendita manuale (dashboard Ordini): canale Sito o esterno + email/username cliente. */
@@ -1003,32 +1021,44 @@ export async function recordDashboardSale(data: RecordDashboardSaleInput): Promi
   const payload = await getPayloadClient()
 
   try {
-    const qty = Math.max(1, Number(data.quantity) || 0)
-    const price = Number(data.price)
-    if (!Number.isFinite(price) || price <= 0) {
-      return { ok: false, message: 'Inserisci un prezzo di vendita valido' }
-    }
     const email = (data.email || '').trim()
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return { ok: false, message: 'Inserisci un\'email valida' }
     }
     const username = (data.username || '').trim()
     const channel = data.channel || 'website'
-    const prodRes = await payload.findByID({ overrideAccess: true,  collection: 'products', id: data.productId, draft: false })
-    if (!prodRes) return { ok: false, message: 'Prodotto non trovato in inventario' }
-    const stock = Number((prodRes as { quantity?: number }).quantity ?? 0)
-    if (qty > stock) {
-      return { ok: false, message: 'Quantità superiore allo stock disponibile' }
+
+    if (!data.items || data.items.length === 0) {
+      return { ok: false, message: 'Aggiungi almeno un prodotto' }
+    }
+
+    const saleItems: { productId: number; quantity: number; price: number }[] = []
+    let totalValue = 0
+
+    for (const item of data.items) {
+      const qty = Math.max(1, Number(item.quantity) || 0)
+      const price = Number(item.price)
+      if (!Number.isFinite(price) || price < 0) {
+        return { ok: false, message: 'Inserisci un prezzo di vendita valido per ogni prodotto' }
+      }
+      const prodRes = await payload.findByID({ overrideAccess: true, collection: 'products', id: item.productId, draft: false })
+      if (!prodRes) return { ok: false, message: `Prodotto non trovato: ${item.productId}` }
+      const stock = Number((prodRes as { quantity?: number }).quantity ?? 0)
+      if (qty > stock) {
+        const title = (prodRes as { title?: string }).title || item.productId
+        return { ok: false, message: `${title}: quantità ${qty} superiore allo stock ${stock}` }
+      }
+      saleItems.push({ productId: Number(item.productId), quantity: qty, price })
+      totalValue += price * qty
     }
 
     const transactionId = channel === 'website'
       ? `WEB-MANUAL-${Date.now()}`
       : `EXT-${channel.toUpperCase()}-${Date.now()}`
     logAudit('sale.manual', {
-      productId: data.productId,
-      quantity: qty,
+      itemCount: saleItems.length,
       channel,
-      value: price * qty,
+      value: totalValue,
       hasEmail: Boolean(email),
       hasUsername: Boolean(username),
     })
@@ -1037,8 +1067,8 @@ export async function recordDashboardSale(data: RecordDashboardSaleInput): Promi
       channel,
       email: email || `manual@darkcardcollection.com`,
       customerUsername: username || null,
-      items: [{ productId: Number(data.productId), quantity: qty, price }],
-      value: price * qty,
+      items: saleItems,
+      value: totalValue,
       currency: 'EUR',
     })
     return { ok: true }

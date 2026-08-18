@@ -1,8 +1,9 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronDown, Plus } from 'lucide-react'
+import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react'
 import {
+  deleteOrder,
   getOrders,
   recordDashboardSale,
   searchProducts,
@@ -17,6 +18,7 @@ import {
   Field,
   Input,
   Modal,
+  ModalSection,
   PageHeader,
   Select,
   Table,
@@ -39,6 +41,23 @@ const PLATFORM_OPTIONS = [
   { value: 'cardmarket', label: 'Cardmarket' },
   { value: 'other', label: 'Altro' },
 ]
+
+interface SaleLineForm {
+  productId: string
+  quantity: string
+  salePrice: string
+}
+
+function emptySaleLine(): SaleLineForm {
+  return { productId: '', quantity: '1', salePrice: '' }
+}
+
+function formatDateInput(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 8)
+  if (digits.length <= 2) return digits
+  if (digits.length <= 4) return digits.slice(0, 2) + '/' + digits.slice(2)
+  return digits.slice(0, 2) + '/' + digits.slice(2, 4) + '/' + digits.slice(4)
+}
 
 function OrderDetail({ order }: { order: OrderDTO }) {
   return (
@@ -107,14 +126,11 @@ export function OrdersSection() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showExternal, setShowExternal] = useState(false)
   const [productOptions, setProductOptions] = useState<SaleProductOption[]>([])
-  const [ext, setExt] = useState({
-    productId: '',
-    channel: 'website',
-    quantity: '1',
-    salePrice: '',
-    email: '',
-    username: '',
-  })
+  const [saleLines, setSaleLines] = useState<SaleLineForm[]>([emptySaleLine()])
+  const [extChannel, setExtChannel] = useState('website')
+  const [extEmail, setExtEmail] = useState('')
+  const [extUsername, setExtUsername] = useState('')
+  const [saleDate, setSaleDate] = useState(new Date().toLocaleDateString('it-IT'))
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
@@ -136,7 +152,7 @@ export function OrdersSection() {
     try {
       const res = await updateOrderStatus(id, status)
       if (!res.ok) {
-        setError(res.message)
+        setError(res.message || 'Errore durante l\'aggiornamento')
         return
       }
       setOrders((prev) => prev.map((o) => (o.id === id ? res.data : o)))
@@ -145,61 +161,101 @@ export function OrdersSection() {
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Eliminare questo ordine?')) return
+    setBusy(true)
+    try {
+      const res = await deleteOrder(id)
+      if (!res.ok) {
+        setError(res.message || 'Errore durante l\'eliminazione')
+        return
+      }
+      setOrders((prev) => prev.filter((o) => o.id !== id))
+    } catch {
+      setError('Errore durante l\'eliminazione')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const openExternal = async () => {
     setShowExternal(true)
+    setSaleLines([emptySaleLine()])
+    setExtChannel('website')
+    setExtEmail('')
+    setExtUsername('')
+    setSaleDate(new Date().toLocaleDateString('it-IT'))
     try {
       const res = await searchProducts({ limit: 200 })
       setProductOptions(
-        res.docs.map((p) => ({
-          id: p.id,
-          title: p.title,
-          quantity: p.quantity ?? 0,
-          price: p.price ?? null,
-          grade: p.grade ?? null,
-          condition: p.condition ?? null,
-          language: p.language ?? null,
-        })),
+        res.docs
+          .filter((p) => (p.quantity ?? 0) > 0)
+          .map((p) => ({
+            id: p.id,
+            title: p.title,
+            quantity: p.quantity ?? 0,
+            price: p.price ?? null,
+            grade: p.grade ?? null,
+            condition: p.condition ?? null,
+            language: p.language ?? null,
+          })),
       )
     } catch {
       setProductOptions([])
     }
   }
 
-  const selectedProduct = productOptions.find((p) => p.id === ext.productId) || null
+  const updateSaleLine = (index: number, patch: Partial<SaleLineForm>) => {
+    setSaleLines((prev) => prev.map((l, i) => (i === index ? { ...l, ...patch } : l)))
+  }
+
   const saleEntries = buildSaleOptions(productOptions)
 
+  const totalValue = saleLines.reduce((sum, l) => {
+    const qty = Number(l.quantity) || 0
+    const price = Number(l.salePrice) || 0
+    return sum + qty * price
+  }, 0)
+
+  const totalMargin = saleLines.reduce((sum, l) => {
+    const qty = Number(l.quantity) || 0
+    const price = Number(l.salePrice) || 0
+    const product = productOptions.find((p) => p.id === l.productId)
+    const cost = product && product.price != null ? product.price : 0
+    return sum + (price - cost) * qty
+  }, 0)
+
   const handleExternal = async () => {
-    const qty = Number(ext.quantity) || 0
-    const price = Number(ext.salePrice)
-    if (!ext.productId) {
-      setError('Seleziona un prodotto')
+    const validLines = saleLines.filter((l) => l.productId && (Number(l.quantity) || 0) > 0)
+    if (validLines.length === 0) {
+      setError('Aggiungi almeno un prodotto con quantità maggiore di 0')
       return
     }
-    if (qty <= 0) {
-      setError('La quantità deve essere maggiore di 0')
-      return
-    }
-    if (isNaN(price) || price < 0) {
-      setError('Inserisci un prezzo di vendita valido')
-      return
+    for (let i = 0; i < validLines.length; i++) {
+      const price = Number(validLines[i].salePrice)
+      if (isNaN(price) || price < 0) {
+        setError(`Riga ${i + 1}: prezzo non valido`)
+        return
+      }
     }
     setBusy(true)
     setError(null)
     try {
       const res = await recordDashboardSale({
-        productId: ext.productId,
-        quantity: qty,
-        price,
-        channel: ext.channel as 'website' | 'vinted' | 'ebay' | 'cardmarket' | 'other',
-        email: ext.email.trim() || undefined,
-        username: ext.username.trim() || undefined,
+        items: validLines.map((l) => ({
+          productId: l.productId,
+          quantity: Number(l.quantity) || 1,
+          price: Number(l.salePrice) || 0,
+        })),
+        channel: extChannel as 'website' | 'vinted' | 'ebay' | 'cardmarket' | 'other',
+        email: extEmail.trim() || undefined,
+        username: extUsername.trim() || undefined,
       })
       if (!res.ok) {
         setError(res.message ?? 'Errore durante la registrazione della vendita')
         return
       }
       setShowExternal(false)
-      setExt({ productId: '', channel: 'website', quantity: '1', salePrice: '', email: '', username: '' })
       load()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -228,18 +284,19 @@ export function OrdersSection() {
             <SortableTh label="Totale" field="value" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
             <SortableTh label="Margine" field="margin" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
             <SortableTh label="Stato" field="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
+            <Th className="text-right">Azioni</Th>
           </tr>
         </THead>
         <TBody>
           {loading ? (
             <Tr>
-              <Td colSpan={7} className="py-10 text-center text-[var(--ui-text-muted)]">
+              <Td colSpan={8} className="py-10 text-center text-[var(--ui-text-muted)]">
                 Caricamento...
               </Td>
             </Tr>
           ) : orders.length === 0 ? (
             <Tr>
-              <Td colSpan={7} className="py-10 text-center text-[var(--ui-text-muted)]">
+              <Td colSpan={8} className="py-10 text-center text-[var(--ui-text-muted)]">
                 Nessun ordine
               </Td>
             </Tr>
@@ -253,6 +310,8 @@ export function OrdersSection() {
                   expanded={expanded}
                   onToggle={() => setExpandedId(expanded ? null : o.id)}
                   onStatusChange={(status) => handleStatus(o.id, status)}
+                  onDelete={() => handleDelete(o.id)}
+                  busy={busy}
                 />
               )
             })
@@ -264,6 +323,7 @@ export function OrdersSection() {
         <Modal
           title="Registra Vendita"
           onClose={() => setShowExternal(false)}
+          maxWidth="max-w-3xl"
           footer={
             <>
               <Button variant="secondary" onClick={() => setShowExternal(false)}>
@@ -276,92 +336,167 @@ export function OrdersSection() {
           }
         >
           <div className="space-y-4">
-            <Field label="Prodotto *" htmlFor="ext-product">
-              <Select
-                id="ext-product"
-                value={ext.productId}
-                onChange={(e) => {
-                  const p = productOptions.find((x) => x.id === e.target.value)
-                  setExt({
-                    ...ext,
-                    productId: e.target.value,
-                    quantity: '1',
-                    salePrice: p?.price != null ? String(p.price) : '',
-                  })
-                }}
-              >
-                <option value="">— Seleziona prodotto —</option>
-                {saleEntries.map((entry) =>
-                  entry.kind === 'option' ? (
-                    <option key={entry.value} value={entry.value}>
-                      {entry.label}
-                    </option>
-                  ) : (
-                    <optgroup key={entry.label} label={entry.label}>
-                      {entry.options.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ),
-                )}
-              </Select>
-            </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Data vendita" htmlFor="ext-date">
+                <Input
+                  id="ext-date"
+                  type="text"
+                  inputMode="numeric"
+                  value={saleDate}
+                  onChange={(e) => setSaleDate(formatDateInput(e.target.value))}
+                  placeholder="GG/MM/AAAA"
+                />
+              </Field>
+              <Field label="Canale *" htmlFor="ext-platform">
+                <Select
+                  id="ext-platform"
+                  value={extChannel}
+                  onChange={(e) => setExtChannel(e.target.value)}
+                >
+                  {PLATFORM_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
 
-            <Field label="Canale *" htmlFor="ext-platform">
-              <Select
-                id="ext-platform"
-                value={ext.channel}
-                onChange={(e) => setExt({ ...ext, channel: e.target.value })}
-              >
-                {PLATFORM_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </Select>
-            </Field>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Email cliente" htmlFor="ext-email">
+                <Input
+                  id="ext-email"
+                  type="email"
+                  value={extEmail}
+                  onChange={(e) => setExtEmail(e.target.value)}
+                  placeholder="nome@esempio.com (opzionale)"
+                />
+              </Field>
+              <Field label="Username cliente" htmlFor="ext-username">
+                <Input
+                  id="ext-username"
+                  type="text"
+                  value={extUsername}
+                  onChange={(e) => setExtUsername(e.target.value)}
+                  placeholder="es. @utente (opzionale)"
+                />
+              </Field>
+            </div>
 
-            <Field label="Quantità venduta *" htmlFor="ext-qty">
-              <Input
-                id="ext-qty"
-                type="number"
-                min="1"
-                max={selectedProduct?.quantity ?? undefined}
-                value={ext.quantity}
-                onChange={(e) => setExt({ ...ext, quantity: e.target.value })}
-              />
-            </Field>
+            <ModalSection
+              title="Articoli"
+              action={
+                <Button variant="ghost" size="sm" onClick={() => setSaleLines((prev) => [...prev, emptySaleLine()])}>
+                  <Plus className="h-3.5 w-3.5" /> Aggiungi
+                </Button>
+              }
+            >
+              <div className="space-y-3">
+                {saleLines.map((line, index) => {
+                  const product = productOptions.find((p) => p.id === line.productId)
+                  const cost = product?.price ?? 0
+                  const price = Number(line.salePrice) || 0
+                  const qty = Number(line.quantity) || 0
+                  const profit = (price - cost) * qty
+                  const markup = cost > 0 ? ((price - cost) / cost) * 100 : 0
 
-            <Field label="Prezzo effettivo incassato (€) *" htmlFor="ext-price">
-              <Input
-                id="ext-price"
-                type="number"
-                step="0.01"
-                min="0"
-                value={ext.salePrice}
-                onChange={(e) => setExt({ ...ext, salePrice: e.target.value })}
-              />
-            </Field>
+                  return (
+                    <div key={index} className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
+                          Articolo {index + 1}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSaleLines((prev) => prev.filter((_, i) => i !== index))}
+                          disabled={saleLines.length === 1}
+                          title="Rimuovi articolo"
+                          className="p-1 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <Field label="Prodotto *">
+                          <Select
+                            value={line.productId}
+                            onChange={(e) => {
+                              const p = productOptions.find((x) => x.id === e.target.value)
+                              updateSaleLine(index, {
+                                productId: e.target.value,
+                                salePrice: p?.price != null ? String(p.price) : line.salePrice,
+                              })
+                            }}
+                          >
+                            <option value="">— Seleziona prodotto —</option>
+                            {saleEntries.map((entry) =>
+                              entry.kind === 'option' ? (
+                                <option key={entry.value} value={entry.value}>
+                                  {entry.label}
+                                </option>
+                              ) : (
+                                <optgroup key={entry.label} label={entry.label}>
+                                  {entry.options.map((o) => (
+                                    <option key={o.value} value={o.value}>
+                                      {o.label}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              ),
+                            )}
+                          </Select>
+                        </Field>
+                        <div className="grid grid-cols-3 gap-2">
+                          <Field label="Quantità *">
+                            <Input
+                              type="number"
+                              min="1"
+                              max={product?.quantity ?? undefined}
+                              value={line.quantity}
+                              onChange={(e) => updateSaleLine(index, { quantity: e.target.value })}
+                            />
+                          </Field>
+                          <Field label="Prezzo unitario (€) *">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={line.salePrice}
+                              onChange={(e) => updateSaleLine(index, { salePrice: e.target.value })}
+                              placeholder="0.00"
+                            />
+                          </Field>
+                          <Field label="Ricavo">
+                            <div className="flex h-[38px] items-center text-sm font-semibold text-[var(--ui-text)]">
+                              {euro.format(price * qty)}
+                            </div>
+                          </Field>
+                        </div>
+                        {cost > 0 && price > 0 ? (
+                          <div className="flex gap-3 text-xs text-[var(--ui-text-muted)]">
+                            <span>Costo: {euro.format(cost)}</span>
+                            <span>Profitto: <span className={profit >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}>{euro.format(profit)}</span></span>
+                            <span>Markup: <span className={markup >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}>{markup.toFixed(1)}%</span></span>
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </ModalSection>
 
-            <Field label="Email cliente" htmlFor="ext-email">
-              <Input
-                id="ext-email"
-                type="email"
-                value={ext.email}
-                onChange={(e) => setExt({ ...ext, email: e.target.value })}
-                placeholder="nome@esempio.com (opzionale)"
-              />
-            </Field>
-
-            <Field label="Username cliente" htmlFor="ext-username">
-              <Input
-                id="ext-username"
-                type="text"
-                value={ext.username}
-                onChange={(e) => setExt({ ...ext, username: e.target.value })}
-                placeholder="es. @utente (opzionale)"
-              />
-            </Field>
+            <div className="flex items-center justify-between rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 px-4 py-3">
+              <span className="text-sm font-medium text-[var(--ui-text-muted)]">Totale</span>
+              <span className="text-lg font-bold text-[var(--ui-text)]">{euro.format(totalValue)}</span>
+            </div>
+            {totalMargin !== 0 ? (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--ui-text-muted)]">Margine complessivo</span>
+                <span className={`font-semibold ${totalMargin >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}`}>
+                  {euro.format(totalMargin)}
+                </span>
+              </div>
+            ) : null}
           </div>
         </Modal>
       ) : null}
@@ -374,11 +509,15 @@ function OrderRow({
   expanded,
   onToggle,
   onStatusChange,
+  onDelete,
+  busy,
 }: {
   order: OrderDTO
   expanded: boolean
   onToggle: () => void
   onStatusChange: (status: string) => void
+  onDelete: () => void
+  busy: boolean
 }) {
   return (
     <>
@@ -422,10 +561,24 @@ function OrderRow({
             ))}
           </Select>
         </Td>
+        <Td>
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              disabled={busy}
+              title="Elimina ordine"
+              className="p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </Td>
       </Tr>
       {expanded ? (
         <Tr>
-          <Td colSpan={7} className="p-0">
+          <Td colSpan={8} className="p-0">
             <OrderDetail order={order} />
           </Td>
         </Tr>
