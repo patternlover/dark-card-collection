@@ -133,24 +133,27 @@ export function InventorySection() {
       <PageHeader
         title="Magazzino"
         description={`${total} prodotti · stock, costo medio e storico acquisti`}
-      />
-
-      <div className="flex items-center justify-end gap-3">
-        <div className="flex items-center overflow-hidden rounded-md border border-[var(--ui-border)]">
-          {(['all', 'product', 'card'] as const).map((opt) => (
-            <button
-              key={opt}
-              onClick={() => { setCategoryFilter(opt); setPage(1) }}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
-                categoryFilter === opt
-                  ? 'bg-[var(--ui-accent)] text-[var(--ui-accent-foreground)]'
-                  : 'text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]'
-              }`}
-            >
-              {opt === 'all' ? 'Tutti' : opt === 'product' ? 'Prodotti' : 'Carte'}
-            </button>
-          ))}
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex items-center overflow-hidden rounded-md border border-[var(--ui-border)]">
+            {(['all', 'product', 'card'] as const).map((opt) => (
+              <button
+                key={opt}
+                onClick={() => { setCategoryFilter(opt); setPage(1) }}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                  categoryFilter === opt
+                    ? 'bg-[var(--ui-accent)] text-[var(--ui-accent-foreground)]'
+                    : 'text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]'
+                }`}
+              >
+                {opt === 'all' ? 'Tutti' : opt === 'product' ? 'Prodotti' : 'Carte'}
+              </button>
+            ))}
+          </div>
         </div>
+      </PageHeader>
+
+      <div className="flex justify-end">
         <div className="relative w-72">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ui-text-faint)]" />
           <Input

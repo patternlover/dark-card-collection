@@ -188,9 +188,7 @@ export function ListatiSection() {
       <PageHeader
         title="Listati"
         description={`${total} gruppi (per nome prodotto) · In evidenza ${featuredCount}/4 · prezzo, costo medio, quantità e disponibilità`}
-      />
-
-      <div className="flex justify-end">
+      >
         <div className="flex items-center overflow-hidden rounded-md border border-[var(--ui-border)]">
           {(['all', 'product', 'card'] as const).map((opt) => (
             <button
@@ -206,7 +204,7 @@ export function ListatiSection() {
             </button>
           ))}
         </div>
-      </div>
+      </PageHeader>
 
       {message ? <Alert tone={message.type === 'error' ? 'danger' : 'success'}>{message.text}</Alert> : null}
 
