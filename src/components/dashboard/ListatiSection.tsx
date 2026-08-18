@@ -220,7 +220,7 @@ export function ListatiSection() {
                 <Td>
                   <div className="flex items-center justify-end gap-1.5">
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={() => toggleFeatured(g)}
                       disabled={busy || (!g.featured && featuredCount >= 4)}
@@ -236,7 +236,7 @@ export function ListatiSection() {
                       <Star className={`h-3.5 w-3.5 ${g.featured ? 'fill-[var(--ui-accent)] text-[var(--ui-accent)]' : ''}`} />
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={() => toggleVisibility(g)}
                       disabled={busy}
@@ -246,7 +246,7 @@ export function ListatiSection() {
                       {g.visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={() => openEdit(g.variants[0].id)}
                       disabled={busy}

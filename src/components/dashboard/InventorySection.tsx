@@ -181,7 +181,7 @@ export function InventorySection() {
                     <Td>
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
-                          variant="secondary"
+                          variant="ghost"
                           size="sm"
                           onClick={() => removeProduct(p)}
                           className="p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"

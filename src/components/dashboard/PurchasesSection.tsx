@@ -461,7 +461,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     <Td>
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
-                          variant="secondary"
+                          variant="ghost"
                           size="sm"
                           onClick={() => openEdit(p)}
                           disabled={busy}
@@ -471,7 +471,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <Button
-                          variant="secondary"
+                          variant="ghost"
                           size="sm"
                           onClick={() => handleDelete(p.id)}
                           disabled={busy}
@@ -650,11 +650,11 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                             ) : null}
                           </div>
                           <Button
-                            variant="secondary"
+                            variant="ghost"
                             size="sm"
                             onClick={() => setReceipt(null)}
                             title="Rimuovi scontrino"
-                            className="shrink-0 rounded-md border border-[var(--ui-border-strong)] p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                            className="shrink-0 p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
                           >
                             <X className="h-3.5 w-3.5" />
                           </Button>
@@ -713,12 +713,12 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                           Riga {index + 1}
                         </p>
                         <Button
-                          variant="secondary"
+                          variant="ghost"
                           size="sm"
                           onClick={() => setLines((prev) => prev.filter((_, i) => i !== index))}
                           disabled={lines.length === 1}
                           title="Rimuovi riga"
-                          className="rounded-md border border-[var(--ui-border-strong)] p-1 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                          className="p-1 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
                         >
                           <X className="h-3.5 w-3.5" />
                         </Button>
