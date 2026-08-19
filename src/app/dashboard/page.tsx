@@ -1,7 +1,7 @@
-import { OverviewSection } from '@/components/dashboard/OverviewSection'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
 export default function DashboardOverviewPage() {
-  return <OverviewSection />
+  redirect('/dashboard/orders')
 }

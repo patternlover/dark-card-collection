@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ShoppingBag, Package, Tag, Layers, Receipt, MessageSquare, Settings, Terminal, LogOut, Menu, X, Tags } from 'lucide-react'
+import { ShoppingBag, Package, Tag, Layers, Receipt, MessageSquare, Settings, Terminal, LogOut, Menu, X, Tags } from 'lucide-react'
 import { logout } from '@/app/dashboard/actions'
 
 interface NavItem {
@@ -14,29 +14,30 @@ interface NavItem {
 
 const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
-    title: 'Vendite',
+    title: 'Ordini',
     items: [
-      { href: '/dashboard', label: 'Panoramica', icon: LayoutDashboard },
       { href: '/dashboard/orders', label: 'Ordini', icon: ShoppingBag },
     ],
   },
   {
-    title: 'Catalogo',
+    title: 'Magazzino',
     items: [
       { href: '/dashboard/purchases', label: 'Lotti', icon: Receipt },
       { href: '/dashboard/inventory', label: 'Magazzino', icon: Package },
       { href: '/dashboard/listings', label: 'Listati', icon: Tags },
+    ],
+  },
+  {
+    title: 'Categorie',
+    items: [
       { href: '/dashboard/categories', label: 'Categorie', icon: Tag },
       { href: '/dashboard/expansions', label: 'Espansioni', icon: Layers },
     ],
   },
   {
-    title: 'Comunicazione',
-    items: [{ href: '/dashboard/messages', label: 'Messaggi', icon: MessageSquare }],
-  },
-  {
     title: 'Sistema',
     items: [
+      { href: '/dashboard/messages', label: 'Messaggi', icon: MessageSquare },
       { href: '/dashboard/settings', label: 'Impostazioni', icon: Settings },
     ],
   },
