@@ -46,11 +46,10 @@ const PLATFORM_OPTIONS = [
 interface SaleLineForm {
   productId: string
   quantity: string
-  salePrice: string
 }
 
 function emptySaleLine(): SaleLineForm {
-  return { productId: '', quantity: '1', salePrice: '' }
+  return { productId: '', quantity: '1' }
 }
 
 function formatDateInput(value: string): string {
@@ -134,6 +133,7 @@ export function OrdersSection() {
   const [extChannel, setExtChannel] = useState('website')
   const [extEmail, setExtEmail] = useState('')
   const [extUsername, setExtUsername] = useState('')
+  const [extSalePrice, setExtSalePrice] = useState('')
   const [saleDate, setSaleDate] = useState(new Date().toLocaleDateString('it-IT'))
   const [busy, setBusy] = useState(false)
 
@@ -216,32 +216,16 @@ export function OrdersSection() {
 
   const saleEntries = buildSaleOptions(productOptions)
 
-  const totalValue = saleLines.reduce((sum, l) => {
-    const qty = Number(l.quantity) || 0
-    const price = Number(l.salePrice) || 0
-    return sum + qty * price
-  }, 0)
-
-  const totalMargin = saleLines.reduce((sum, l) => {
-    const qty = Number(l.quantity) || 0
-    const price = Number(l.salePrice) || 0
-    const product = productOptions.find((p) => p.id === l.productId)
-    const cost = product?.costOfGoodsSold ?? 0
-    return sum + (price - cost) * qty
-  }, 0)
-
   const handleExternal = async () => {
     const validLines = saleLines.filter((l) => l.productId && (Number(l.quantity) || 0) > 0)
     if (validLines.length === 0) {
       setError('Aggiungi almeno un prodotto con quantità maggiore di 0')
       return
     }
-    for (let i = 0; i < validLines.length; i++) {
-      const price = Number(validLines[i].salePrice)
-      if (isNaN(price) || price < 0) {
-        setError(`Riga ${i + 1}: prezzo non valido`)
-        return
-      }
+    const totalSalePrice = Number(extSalePrice)
+    if (!totalSalePrice || totalSalePrice <= 0) {
+      setError('Inserisci un prezzo di vendita totale valido')
+      return
     }
     setBusy(true)
     setError(null)
@@ -250,8 +234,9 @@ export function OrdersSection() {
         items: validLines.map((l) => ({
           productId: l.productId,
           quantity: Number(l.quantity) || 1,
-          price: Number(l.salePrice) || 0,
+          price: 0,
         })),
+        totalSalePrice,
         channel: extChannel as 'website' | 'vinted' | 'ebay' | 'cardmarket' | 'other',
         email: extEmail.trim() || undefined,
         username: extUsername.trim() || undefined,
@@ -398,10 +383,6 @@ export function OrdersSection() {
                 {saleLines.map((line, index) => {
                   const product = productOptions.find((p) => p.id === line.productId)
                   const cost = product?.costOfGoodsSold ?? 0
-                  const price = Number(line.salePrice) || 0
-                  const qty = Number(line.quantity) || 0
-                  const profit = (price - cost) * qty
-                  const markup = cost > 0 ? ((price - cost) / cost) * 100 : 0
 
                   return (
                     <div key={index} className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
@@ -420,88 +401,133 @@ export function OrdersSection() {
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                      <div className="space-y-2">
-                        <Field label="Prodotto *">
-                          <Select
-                            value={line.productId}
-                            onChange={(e) => {
-                              const p = productOptions.find((x) => x.id === e.target.value)
-                              updateSaleLine(index, {
-                                productId: e.target.value,
-                                salePrice: p?.price != null ? String(p.price) : line.salePrice,
-                              })
-                            }}
-                          >
-                            <option value="">— Seleziona prodotto —</option>
-                            {saleEntries.map((entry) =>
-                              entry.kind === 'option' ? (
-                                <option key={entry.value} value={entry.value}>
-                                  {entry.label}
-                                </option>
-                              ) : (
-                                <optgroup key={entry.label} label={entry.label}>
-                                  {entry.options.map((o) => (
-                                    <option key={o.value} value={o.value}>
-                                      {o.label}
-                                    </option>
-                                  ))}
-                                </optgroup>
-                              ),
-                            )}
-                          </Select>
-                        </Field>
-                        <div className="grid grid-cols-3 gap-2">
-                          <Field label="Quantità *">
-                            <Input
-                              type="number"
-                              min="1"
-                              max={product?.quantity ?? undefined}
-                              value={line.quantity}
-                              onChange={(e) => updateSaleLine(index, { quantity: e.target.value })}
-                            />
-                          </Field>
-                          <Field label="Prezzo unitario (€) *">
-                            <Input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              value={line.salePrice}
-                              onChange={(e) => updateSaleLine(index, { salePrice: e.target.value })}
-                              placeholder="0.00"
-                            />
-                          </Field>
-                          <Field label="Ricavo">
-                            <div className="flex h-[38px] items-center text-sm font-semibold text-[var(--ui-text)]">
-                              {euro.format(price * qty)}
-                            </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="col-span-2">
+                          <Field label="Prodotto *">
+                            <Select
+                              value={line.productId}
+                              onChange={(e) => updateSaleLine(index, { productId: e.target.value })}
+                            >
+                              <option value="">— Seleziona prodotto —</option>
+                              {saleEntries.map((entry) =>
+                                entry.kind === 'option' ? (
+                                  <option key={entry.value} value={entry.value}>
+                                    {entry.label}
+                                  </option>
+                                ) : (
+                                  <optgroup key={entry.label} label={entry.label}>
+                                    {entry.options.map((o) => (
+                                      <option key={o.value} value={o.value}>
+                                        {o.label}
+                                      </option>
+                                    ))}
+                                  </optgroup>
+                                ),
+                              )}
+                            </Select>
                           </Field>
                         </div>
-                        {cost > 0 && price > 0 ? (
-                          <div className="flex gap-3 text-xs text-[var(--ui-text-muted)]">
-                            <span>Costo: {euro.format(cost)}</span>
-                            <span>Profitto: <span className={profit >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}>{euro.format(profit)}</span></span>
-                            <span>Markup: <span className={markup >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}>{markup.toFixed(1)}%</span></span>
-                          </div>
-                        ) : null}
+                        <Field label="Quantità *">
+                          <Input
+                            type="number"
+                            min="1"
+                            max={product?.quantity ?? undefined}
+                            value={line.quantity}
+                            onChange={(e) => updateSaleLine(index, { quantity: e.target.value })}
+                          />
+                        </Field>
                       </div>
+                      {cost > 0 ? (
+                        <div className="mt-1 text-xs text-[var(--ui-text-muted)]">
+                          Costo unitario: {euro.format(cost)}
+                        </div>
+                      ) : null}
                     </div>
                   )
                 })}
               </div>
             </ModalSection>
 
-            <div className="flex items-center justify-between rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 px-4 py-3">
-              <span className="text-sm font-medium text-[var(--ui-text-muted)]">Totale</span>
-              <span className="text-lg font-bold text-[var(--ui-text)]">{euro.format(totalValue)}</span>
-            </div>
-            {totalMargin !== 0 ? (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--ui-text-muted)]">Margine complessivo</span>
-                <span className={`font-semibold ${totalMargin >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}`}>
-                  {euro.format(totalMargin)}
-                </span>
-              </div>
-            ) : null}
+            {(() => {
+              const totalCost = saleLines.reduce((sum, l) => {
+                const qty = Number(l.quantity) || 0
+                const product = productOptions.find((p) => p.id === l.productId)
+                return sum + (product?.costOfGoodsSold ?? 0) * qty
+              }, 0)
+              const inputPrice = Number(extSalePrice) || 0
+              const markupPercent = totalCost > 0 ? ((inputPrice - totalCost) / totalCost) * 100 : 0
+              const computedItems = saleLines
+                .filter((l) => l.productId && (Number(l.quantity) || 0) > 0)
+                .map((l) => {
+                  const product = productOptions.find((p) => p.id === l.productId)
+                  const cost = product?.costOfGoodsSold ?? 0
+                  const qty = Number(l.quantity) || 0
+                  const unitPrice = Math.round(cost * (1 + markupPercent / 100) * 100) / 100
+                  const profit = (unitPrice - cost) * qty
+                  return { title: product?.title || 'Prodotto', qty, cost, unitPrice, profit }
+                })
+              const computedTotal = computedItems.reduce((sum, item) => sum + item.unitPrice * item.qty, 0)
+              const computedMargin = computedTotal - totalCost
+
+              return (
+                <>
+                  <Field label="Prezzo di vendita totale (€) *" htmlFor="ext-total-price">
+                    <Input
+                      id="ext-total-price"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={extSalePrice}
+                      onChange={(e) => setExtSalePrice(e.target.value)}
+                      placeholder="0.00"
+                    />
+                  </Field>
+
+                  {totalCost > 0 && inputPrice > 0 ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 gap-2 rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 px-4 py-3 text-sm">
+                        <div>
+                          <p className="text-xs text-[var(--ui-text-muted)]">Costo investito</p>
+                          <p className="font-semibold text-[var(--ui-text)]">{euro.format(totalCost)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[var(--ui-text-muted)]">Margine</p>
+                          <p className={`font-semibold ${computedMargin >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}`}>{euro.format(computedMargin)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-[var(--ui-text-muted)]">Markup</p>
+                          <p className={`font-semibold ${markupPercent >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}`}>{markupPercent.toFixed(1)}%</p>
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 px-4 py-3">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">Dettaglio per prodotto</p>
+                        <div className="divide-y divide-[var(--ui-border)]/80">
+                          {computedItems.map((item, i) => (
+                            <div key={i} className="flex items-center justify-between gap-3 py-2 text-sm">
+                              <span className="min-w-0 truncate text-[var(--ui-text-muted)]">
+                                <span className="font-semibold text-[var(--ui-text)]">{item.title}</span>
+                                <span className="text-[var(--ui-text-faint)]"> × {item.qty}</span>
+                              </span>
+                              <span className="shrink-0 text-[var(--ui-text-muted)]">
+                                {euro.format(item.unitPrice)}/uno
+                                <span className={`ml-2 ${item.profit >= 0 ? 'text-[var(--ui-text)]' : 'text-[var(--ui-danger)]'}`}>
+                                  ({item.profit >= 0 ? '+' : ''}{euro.format(item.profit)})
+                                </span>
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-2 flex items-center justify-between border-t border-[var(--ui-border)] pt-2 text-sm font-semibold">
+                          <span className="text-[var(--ui-text-muted)]">Totale calcolato</span>
+                          <span className="text-[var(--ui-text)]">{euro.format(computedTotal)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              )
+            })()}
           </div>
         </Modal>
       ) : null}

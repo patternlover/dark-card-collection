@@ -1042,6 +1042,7 @@ export interface RecordDashboardSaleItemInput {
 
 export interface RecordDashboardSaleInput {
   items: RecordDashboardSaleItemInput[]
+  totalSalePrice?: number
   channel?: SalesChannel
   email?: string
   username?: string
@@ -1067,14 +1068,10 @@ export async function recordDashboardSale(data: RecordDashboardSaleInput): Promi
     }
 
     const saleItems: { productId: number; quantity: number; price: number }[] = []
-    let totalValue = 0
+    let totalCost = 0
 
     for (const item of data.items) {
       const qty = Math.max(1, Number(item.quantity) || 0)
-      const price = Number(item.price)
-      if (!Number.isFinite(price) || price < 0) {
-        return { ok: false, message: 'Inserisci un prezzo di vendita valido per ogni prodotto' }
-      }
       const prodRes = await payload.findByID({ overrideAccess: true, collection: 'products', id: item.productId, draft: false })
       if (!prodRes) return { ok: false, message: `Prodotto non trovato: ${item.productId}` }
       const stock = Number((prodRes as { quantity?: number }).quantity ?? 0)
@@ -1082,8 +1079,26 @@ export async function recordDashboardSale(data: RecordDashboardSaleInput): Promi
         const title = (prodRes as { title?: string }).title || item.productId
         return { ok: false, message: `${title}: quantità ${qty} superiore allo stock ${stock}` }
       }
-      saleItems.push({ productId: Number(item.productId), quantity: qty, price })
-      totalValue += price * qty
+      const cost = Number((prodRes as { cost_of_goods_sold?: number }).cost_of_goods_sold ?? 0)
+      totalCost += cost * qty
+      saleItems.push({ productId: Number(item.productId), quantity: qty, price: 0 })
+    }
+
+    const inputPrice = Number(data.totalSalePrice) || 0
+    if (inputPrice <= 0) {
+      return { ok: false, message: 'Inserisci un prezzo di vendita totale valido' }
+    }
+
+    const markupPercent = totalCost > 0 ? ((inputPrice - totalCost) / totalCost) * 100 : 0
+    let computedTotal = 0
+
+    for (let i = 0; i < saleItems.length; i++) {
+      const item = saleItems[i]
+      const prodRes = await payload.findByID({ overrideAccess: true, collection: 'products', id: item.productId, depth: 0 })
+      const cost = Number((prodRes as { cost_of_goods_sold?: number }).cost_of_goods_sold ?? 0)
+      const unitPrice = Math.round(cost * (1 + markupPercent / 100) * 100) / 100
+      saleItems[i] = { ...item, price: unitPrice }
+      computedTotal += unitPrice * item.quantity
     }
 
     const transactionId = channel === 'website'
@@ -1092,7 +1107,7 @@ export async function recordDashboardSale(data: RecordDashboardSaleInput): Promi
     logAudit('sale.manual', {
       itemCount: saleItems.length,
       channel,
-      value: totalValue,
+      value: computedTotal,
       hasEmail: Boolean(email),
       hasUsername: Boolean(username),
     })
@@ -1102,7 +1117,7 @@ export async function recordDashboardSale(data: RecordDashboardSaleInput): Promi
       email: email || `manual@darkcardcollection.com`,
       customerUsername: username || null,
       items: saleItems,
-      value: totalValue,
+      value: computedTotal,
       currency: 'EUR',
     })
 
