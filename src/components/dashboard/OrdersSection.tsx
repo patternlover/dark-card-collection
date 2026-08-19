@@ -195,6 +195,7 @@ export function OrdersSection() {
             title: p.title,
             quantity: p.quantity ?? 0,
             price: p.price ?? null,
+            costOfGoodsSold: p.costOfGoodsSold ?? null,
             grade: p.grade ?? null,
             condition: p.condition ?? null,
             language: p.language ?? null,
@@ -221,7 +222,7 @@ export function OrdersSection() {
     const qty = Number(l.quantity) || 0
     const price = Number(l.salePrice) || 0
     const product = productOptions.find((p) => p.id === l.productId)
-    const cost = product && product.price != null ? product.price : 0
+    const cost = product?.costOfGoodsSold ?? 0
     return sum + (price - cost) * qty
   }, 0)
 
@@ -250,6 +251,7 @@ export function OrdersSection() {
         channel: extChannel as 'website' | 'vinted' | 'ebay' | 'cardmarket' | 'other',
         email: extEmail.trim() || undefined,
         username: extUsername.trim() || undefined,
+        saleDate: saleDate.trim() || undefined,
       })
       if (!res.ok) {
         setError(res.message ?? 'Errore durante la registrazione della vendita')
@@ -392,7 +394,7 @@ export function OrdersSection() {
               <div className="space-y-3">
                 {saleLines.map((line, index) => {
                   const product = productOptions.find((p) => p.id === line.productId)
-                  const cost = product?.price ?? 0
+                  const cost = product?.costOfGoodsSold ?? 0
                   const price = Number(line.salePrice) || 0
                   const qty = Number(line.quantity) || 0
                   const profit = (price - cost) * qty
@@ -534,13 +536,7 @@ function OrderRow({
           </button>
         </Td>
         <Td className="text-[var(--ui-text-muted)]">
-          {new Date(order.createdAt).toLocaleDateString('it-IT', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
+          {(order.saleDate || new Date(order.createdAt).toLocaleDateString('it-IT'))}
         </Td>
         <Td className="text-[var(--ui-text-muted)]">{SALES_CHANNEL_LABELS[order.salesChannel || ''] || order.salesChannel || '—'}</Td>
         <Td className="text-[var(--ui-text-muted)]">{order.itemCount}</Td>

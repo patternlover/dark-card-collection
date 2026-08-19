@@ -92,6 +92,7 @@ export interface OrderDTO {
   salesChannel?: string | null
   margin?: number | null
   createdAt: string
+  saleDate?: string | null
   itemCount: number
   stripeSessionId?: string | null
   items: OrderItemDTO[]
@@ -194,6 +195,7 @@ function toOrderDTO(doc: any): OrderDTO {
     salesChannel: doc.sales_channel ?? null,
     margin: hasSnapshot ? (Number(doc.value) || 0) - totalCost : null,
     createdAt: doc.createdAt ?? new Date().toISOString(),
+    saleDate: doc.sale_date ?? null,
     itemCount: orderItems.reduce((acc: number, item) => acc + item.quantity, 0),
     stripeSessionId: doc.stripe_session_id ?? null,
     items: orderItems,
@@ -1071,6 +1073,26 @@ export async function recordDashboardSale(data: RecordDashboardSaleInput): Promi
       value: totalValue,
       currency: 'EUR',
     })
+
+    if (data.saleDate) {
+      const orderRes = await payload.find({
+        overrideAccess: true,
+        collection: 'orders',
+        where: { transaction_id: { equals: transactionId } },
+        limit: 1,
+        depth: 0,
+      })
+      if (orderRes.docs.length > 0) {
+        await payload.update({
+          overrideAccess: true,
+          collection: 'orders',
+          id: orderRes.docs[0].id,
+          data: { sale_date: data.saleDate } as any,
+          draft: false,
+        })
+      }
+    }
+
     return { ok: true }
   } catch {
     return { ok: false, message: 'Errore durante la registrazione della vendita' }

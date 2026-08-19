@@ -113,5 +113,12 @@ export const Orders: CollectionConfig = {
         description: 'Username del cliente (vendite manuali/esterne)',
       },
     },
+    {
+      name: 'sale_date',
+      type: 'text',
+      admin: {
+        description: 'Data di vendita reale (GG/MM/AAAA), inserita manualmente nel modale',
+      },
+    },
   ],
 }

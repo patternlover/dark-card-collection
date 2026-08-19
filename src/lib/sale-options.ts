@@ -3,6 +3,7 @@ export interface SaleProductOption {
   title: string
   quantity: number
   price?: number | null
+  costOfGoodsSold?: number | null
   grade?: string | null
   condition?: string | null
   language?: string | null

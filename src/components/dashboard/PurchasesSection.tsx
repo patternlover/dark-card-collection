@@ -731,10 +731,10 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
             </ModalSection>
 
             <ModalSection
-              title="Righe del lotto"
+              title="Articoli"
               action={
-                <Button variant="secondary" size="sm" onClick={() => setLines((prev) => [...prev, emptyLine()])}>
-                  <Plus className="h-3.5 w-3.5" /> Aggiungi riga
+                <Button variant="ghost" size="sm" onClick={() => setLines((prev) => [...prev, emptyLine()])}>
+                  <Plus className="h-3.5 w-3.5" /> Aggiungi
                 </Button>
               }
             >
@@ -746,77 +746,91 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                     <div key={index} data-testid="purchase-line" className="rounded-lg border border-[var(--ui-border)] bg-[var(--ui-bg)]/40 p-3">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <p className="text-xs font-semibold uppercase tracking-widest text-[var(--ui-text-faint)]">
-                          Riga {index + 1}
+                          Articolo {index + 1}
                         </p>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => setLines((prev) => prev.filter((_, i) => i !== index))}
                           disabled={lines.length === 1}
-                          title="Rimuovi riga"
+                          title="Rimuovi articolo"
                           className="p-1 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
                         >
                           <X className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1 space-y-2">
-                          <Select
-                            data-testid="line-product"
-                            value={
-                              line.newProduct
-                                ? line.newProductItemCategory1 === 'card'
-                                  ? '__new_card__'
-                                  : '__new__'
-                                : (lineGroup?.title ?? '')
-                            }
-                            onChange={(e) => {
-                              const isNew = e.target.value === '__new__' || e.target.value === '__new_card__'
-                              if (isNew) {
-                                const isCard = e.target.value === '__new_card__'
-                                updateLine(index, {
-                                  newProduct: true,
-                                  productId: '',
-                                  newProductItemCategory1: isCard ? 'card' : 'product',
-                                  newProductItemCategory2: '',
-                                  newProductGrade: 'near-mint',
-                                  newProductCardNumber: '',
-                                })
-                                return
-                              }
-                              const group = groups.find((g) => g.title === e.target.value)
-                              updateLine(index, {
-                                newProduct: false,
-                                productId: group ? String(group.products[0].id) : '',
-                              })
-                            }}
-                          >
-                            <option value="">— Seleziona prodotto esistente —</option>
-                            {groups.map((g) => (
-                              <option key={g.title} value={g.title}>{g.title}</option>
-                            ))}
-                            <optgroup label="Nuovo articolo">
-                              <option value="__new__">➕ Nuovo prodotto</option>
-                              <option value="__new_card__">➕ Nuova carta</option>
-                            </optgroup>
-                          </Select>
-
-                          {lineGroup && lineGroup.products.length > 1 ? (
-                            <Field label="Variante">
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="col-span-2">
+                            <Field label="Prodotto *">
                               <Select
-                                data-testid="line-variant"
-                                value={line.productId}
-                                onChange={(e) => updateLine(index, { productId: e.target.value })}
+                                data-testid="line-product"
+                                value={
+                                  line.newProduct
+                                    ? line.newProductItemCategory1 === 'card'
+                                      ? '__new_card__'
+                                      : '__new__'
+                                    : (lineGroup?.title ?? '')
+                                }
+                                onChange={(e) => {
+                                  const isNew = e.target.value === '__new__' || e.target.value === '__new_card__'
+                                  if (isNew) {
+                                    const isCard = e.target.value === '__new_card__'
+                                    updateLine(index, {
+                                      newProduct: true,
+                                      productId: '',
+                                      newProductItemCategory1: isCard ? 'card' : 'product',
+                                      newProductItemCategory2: '',
+                                      newProductGrade: 'near-mint',
+                                      newProductCardNumber: '',
+                                    })
+                                    return
+                                  }
+                                  const group = groups.find((g) => g.title === e.target.value)
+                                  updateLine(index, {
+                                    newProduct: false,
+                                    productId: group ? String(group.products[0].id) : '',
+                                  })
+                                }}
                               >
-                                {buildVariantOptions(lineGroup.products).map((o) => (
-                                  <option key={o.value} value={o.value}>{o.label}</option>
+                                <option value="">— Seleziona prodotto —</option>
+                                {groups.map((g) => (
+                                  <option key={g.title} value={g.title}>{g.title}</option>
                                 ))}
+                                <optgroup label="Nuovo articolo">
+                                  <option value="__new__">➕ Nuovo prodotto</option>
+                                  <option value="__new_card__">➕ Nuova carta</option>
+                                </optgroup>
                               </Select>
                             </Field>
-                          ) : null}
+                          </div>
+                          <Field label="Quantità *">
+                            <Input
+                              data-testid="line-quantity"
+                              type="number"
+                              min="1"
+                              value={line.quantity}
+                              onChange={(e) => updateLine(index, { quantity: e.target.value })}
+                            />
+                          </Field>
+                        </div>
+
+                        {lineGroup && lineGroup.products.length > 1 ? (
+                          <Field label="Variante">
+                            <Select
+                              data-testid="line-variant"
+                              value={line.productId}
+                              onChange={(e) => updateLine(index, { productId: e.target.value })}
+                            >
+                              {buildVariantOptions(lineGroup.products).map((o) => (
+                                <option key={o.value} value={o.value}>{o.label}</option>
+                              ))}
+                            </Select>
+                          </Field>
+                        ) : null}
 
                         {line.newProduct ? (
-                          <div className="space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
                             <Field label="Titolo *">
                               <Input
                                 type="text"
@@ -902,32 +916,22 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
                             ) : null}
                           </div>
                         ) : null}
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <Field label="Costo unitario (€) *">
+                            <Input
+                              data-testid="line-cost"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={line.unitCost}
+                              onChange={(e) => updateLine(index, { unitCost: e.target.value })}
+                              placeholder="0.00"
+                            />
+                          </Field>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <Field label="Quantità *">
-                        <Input
-                          data-testid="line-quantity"
-                          type="number"
-                          min="1"
-                          value={line.quantity}
-                          onChange={(e) => updateLine(index, { quantity: e.target.value })}
-                        />
-                      </Field>
-                      <Field label="Costo unitario (€) *">
-                        <Input
-                          data-testid="line-cost"
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={line.unitCost}
-                          onChange={(e) => updateLine(index, { unitCost: e.target.value })}
-                          placeholder="0.00"
-                        />
-                      </Field>
-                    </div>
-                  </div>
                   )
                 })}
               </div>

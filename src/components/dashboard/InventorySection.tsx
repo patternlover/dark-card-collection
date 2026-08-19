@@ -38,7 +38,7 @@ function AvailabilityBadge({ availability }: { availability: string }) {
 
 export function InventorySection() {
   const [products, setProducts] = useState<ProductDTO[]>([])
-  const { sortBy, sortDir, handleSort } = useSort('title')
+  const { sortBy, sortDir, handleSort } = useSort('quantity', 'desc')
   const onSort = (field: string) => {
     setPage(1)
     handleSort(field)

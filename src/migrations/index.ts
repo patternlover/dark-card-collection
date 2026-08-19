@@ -20,6 +20,7 @@ import * as migration_20260815_cleanup_product_attrs from './20260815_cleanup_pr
 import * as migration_20260815_lot_receipt_category_kind_drop_rarity from './20260815_lot_receipt_category_kind_drop_rarity';
 import * as migration_20260816_drop_image_link_add_customer_username from './20260816_drop_image_link_add_customer_username';
 import * as migration_20260818_seed_collezione_category from './20260818_seed_collezione_category';
+import * as migration_20260818_add_order_sale_date from './20260818_add_order_sale_date';
 
 export const migrations = [
   {
@@ -131,5 +132,10 @@ export const migrations = [
     up: migration_20260818_seed_collezione_category.up,
     down: migration_20260818_seed_collezione_category.down,
     name: '20260818_seed_collezione_category'
+  },
+  {
+    up: migration_20260818_add_order_sale_date.up,
+    down: migration_20260818_add_order_sale_date.down,
+    name: '20260818_add_order_sale_date'
   },
 ];
