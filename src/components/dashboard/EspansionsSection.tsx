@@ -170,7 +170,7 @@ export function EspansionsSection() {
                 <Td>
                   <div className="flex items-center justify-end gap-2">
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={() => openEdit(c)}
                       aria-label={`Modifica ${c.name}`}
@@ -179,11 +179,11 @@ export function EspansionsSection() {
                       <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={() => remove(c)}
                       aria-label={`Elimina ${c.name}`}
-                      className="p-1.5 text-[var(--ui-text-muted)] hover:border-[var(--ui-danger)] hover:text-[var(--ui-danger)]"
+                      className="p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-danger)]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

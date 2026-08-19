@@ -7,6 +7,7 @@ import {
   getOrders,
   recordDashboardSale,
   searchProducts,
+  updateOrder,
   updateOrderStatus,
   type OrderDTO,
 } from '@/app/dashboard/actions'
@@ -75,6 +76,9 @@ function OrderDetail({ order }: { order: OrderDTO }) {
           ) : null}
           <p className="text-[var(--ui-text-muted)]">
             Totale: <span className="font-semibold text-[var(--ui-text)]">{euro.format(order.value || 0)}</span>
+          </p>
+          <p className="text-[var(--ui-text-muted)]">
+            Stato: <span className="font-semibold text-[var(--ui-text)]">{STATUS_OPTIONS.find((s) => s.value === order.status)?.label || order.status}</span>
           </p>
           <p className="text-[var(--ui-text-muted)]">
             Margine: <span className="font-semibold text-[var(--ui-text)]">{order.margin != null ? euro.format(order.margin) : 'N/D'}</span>
@@ -285,20 +289,19 @@ export function OrdersSection() {
             <SortableTh label="Articoli" field="itemCount" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
             <SortableTh label="Totale" field="value" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
             <SortableTh label="Margine" field="margin" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-            <SortableTh label="Stato" field="status" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
             <Th className="text-right">Azioni</Th>
           </tr>
         </THead>
         <TBody>
           {loading ? (
             <Tr>
-              <Td colSpan={8} className="py-10 text-center text-[var(--ui-text-muted)]">
+              <Td colSpan={7} className="py-10 text-center text-[var(--ui-text-muted)]">
                 Caricamento...
               </Td>
             </Tr>
           ) : orders.length === 0 ? (
             <Tr>
-              <Td colSpan={8} className="py-10 text-center text-[var(--ui-text-muted)]">
+              <Td colSpan={7} className="py-10 text-center text-[var(--ui-text-muted)]">
                 Nessun ordine
               </Td>
             </Tr>
@@ -545,20 +548,17 @@ function OrderRow({
           {order.margin != null ? euro.format(order.margin) : '—'}
         </Td>
         <Td>
-          <Select
-            value={order.status}
-            onChange={(e) => onStatusChange(e.target.value)}
-            className="w-auto py-1.5 text-xs font-medium"
-          >
-            {STATUS_OPTIONS.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </Select>
-        </Td>
-        <Td>
           <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onToggle()}
+              disabled={busy}
+              title="Modifica ordine"
+              className="p-1.5 text-[var(--ui-text-muted)] hover:text-[var(--ui-text)]"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -574,7 +574,7 @@ function OrderRow({
       </Tr>
       {expanded ? (
         <Tr>
-          <Td colSpan={8} className="p-0">
+          <Td colSpan={7} className="p-0">
             <OrderDetail order={order} />
           </Td>
         </Tr>

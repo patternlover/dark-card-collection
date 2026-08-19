@@ -564,6 +564,38 @@ export async function deleteOrder(id: string): Promise<{ ok: boolean; message?: 
   }
 }
 
+export interface UpdateOrderInput {
+  status?: string
+  salesChannel?: string
+  email?: string
+  customerUsername?: string
+}
+
+export async function updateOrder(id: string, data: UpdateOrderInput): Promise<ActionResult<OrderDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('order.update', { id, keys: Object.keys(data) })
+  const payload = await getPayloadClient()
+  try {
+    const updateData: Record<string, any> = {}
+    if (data.status !== undefined) updateData.status = data.status
+    if (data.salesChannel !== undefined) updateData.sales_channel = data.salesChannel
+    if (data.email !== undefined) updateData.email = data.email
+    if (data.customerUsername !== undefined) updateData.customer_username = data.customerUsername
+    const res = await payload.update({
+      overrideAccess: true,
+      collection: 'orders',
+      id,
+      data: updateData as any,
+      depth: 1,
+      draft: false,
+    })
+    return { ok: true, data: toOrderDTO(res) }
+  } catch {
+    return { ok: false, message: 'Errore durante l\'aggiornamento dell\'ordine' }
+  }
+}
+
 export async function runQuery(sql: string): Promise<QueryOutcome> {
   await requireAuth()
   if (!isDashSqlEnabled()) {
