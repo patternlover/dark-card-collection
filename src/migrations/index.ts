@@ -21,6 +21,7 @@ import * as migration_20260815_lot_receipt_category_kind_drop_rarity from './202
 import * as migration_20260816_drop_image_link_add_customer_username from './20260816_drop_image_link_add_customer_username';
 import * as migration_20260818_seed_collezione_category from './20260818_seed_collezione_category';
 import * as migration_20260818_add_order_sale_date from './20260818_add_order_sale_date';
+import * as migration_20260818_create_operating_costs from './20260818_create_operating_costs';
 
 export const migrations = [
   {
@@ -137,5 +138,10 @@ export const migrations = [
     up: migration_20260818_add_order_sale_date.up,
     down: migration_20260818_add_order_sale_date.down,
     name: '20260818_add_order_sale_date'
+  },
+  {
+    up: migration_20260818_create_operating_costs.up,
+    down: migration_20260818_create_operating_costs.down,
+    name: '20260818_create_operating_costs'
   },
 ];

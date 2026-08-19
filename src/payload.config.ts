@@ -15,6 +15,7 @@ import { Orders } from './payload/collections/Orders'
 import { Media } from './payload/collections/Media'
 import { Messages } from './payload/collections/Messages'
 import { Purchases } from './payload/collections/Purchases'
+import { OperatingCosts } from './payload/collections/OperatingCosts'
 import { SiteSettings } from './payload/globals/SiteSettings'
 import { Header } from './payload/globals/Header'
 
@@ -25,7 +26,7 @@ export default buildConfig({
   admin: {
     disable: true,
   },
-  collections: [Users, Products, Categories, Espansioni, Orders, Media, Messages, Purchases],
+  collections: [Users, Products, Categories, Espansioni, Orders, Media, Messages, Purchases, OperatingCosts],
   globals: [SiteSettings, Header],
   editor: lexicalEditor(),
   sharp,

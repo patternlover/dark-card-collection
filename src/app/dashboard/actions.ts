@@ -1750,3 +1750,124 @@ export async function uploadReceipt(file: File): Promise<UploadReceiptResult> {
     return { ok: false, message: err instanceof Error ? err.message : 'Errore durante l\'upload dello scontrino' }
   }
 }
+
+// ─── OperatingCosts ──────────────────────────────────────────────
+
+export interface OperatingCostDTO {
+  id: string
+  description: string
+  amount: number
+  frequency: string
+  category: string
+  isActive: boolean
+  notes: string | null
+  createdAt: string
+}
+
+function toOperatingCostDTO(doc: any): OperatingCostDTO {
+  return {
+    id: String(doc.id),
+    description: doc.description || '',
+    amount: Number(doc.amount) || 0,
+    frequency: doc.frequency || 'monthly',
+    category: doc.category || 'other',
+    isActive: doc.is_active !== false,
+    notes: doc.notes ?? null,
+    createdAt: doc.createdAt ?? new Date().toISOString(),
+  }
+}
+
+export async function getOperatingCosts(): Promise<OperatingCostDTO[]> {
+  await requireAuth()
+  const payload = await getPayloadClient()
+  const res = await payload.find({
+    overrideAccess: true,
+    collection: 'operating-costs' as any,
+    limit: 200,
+    sort: 'description',
+    depth: 0,
+    draft: false,
+  })
+  return res.docs.map(toOperatingCostDTO)
+}
+
+export async function createOperatingCost(data: {
+  description: string
+  amount: number
+  frequency?: string
+  category?: string
+  isActive?: boolean
+  notes?: string
+}): Promise<ActionResult<OperatingCostDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('operating-cost.create', { description: data.description })
+  const payload = await getPayloadClient()
+  try {
+    const doc = await payload.create({
+      overrideAccess: true,
+      collection: 'operating-costs' as any,
+      data: {
+        description: data.description,
+        amount: data.amount,
+        frequency: data.frequency || 'monthly',
+        category: data.category || 'other',
+        is_active: data.isActive !== false,
+        notes: data.notes || undefined,
+      } as any,
+      draft: false,
+    })
+    return { ok: true, data: toOperatingCostDTO(doc) }
+  } catch {
+    return { ok: false, message: 'Errore durante la creazione del costo' }
+  }
+}
+
+export async function updateOperatingCost(
+  id: string,
+  data: {
+    description?: string
+    amount?: number
+    frequency?: string
+    category?: string
+    isActive?: boolean
+    notes?: string
+  },
+): Promise<ActionResult<OperatingCostDTO>> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('operating-cost.update', { id })
+  const payload = await getPayloadClient()
+  try {
+    const updateData: Record<string, any> = {}
+    if (data.description !== undefined) updateData.description = data.description
+    if (data.amount !== undefined) updateData.amount = data.amount
+    if (data.frequency !== undefined) updateData.frequency = data.frequency
+    if (data.category !== undefined) updateData.category = data.category
+    if (data.isActive !== undefined) updateData.is_active = data.isActive
+    if (data.notes !== undefined) updateData.notes = data.notes
+    const doc = await payload.update({
+      overrideAccess: true,
+      collection: 'operating-costs' as any,
+      id,
+      data: updateData as any,
+      draft: false,
+    })
+    return { ok: true, data: toOperatingCostDTO(doc) }
+  } catch {
+    return { ok: false, message: 'Errore durante l\'aggiornamento del costo' }
+  }
+}
+
+export async function deleteOperatingCost(id: string): Promise<{ ok: boolean; message?: string }> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('operating-cost.delete', { id })
+  const payload = await getPayloadClient()
+  try {
+    await payload.delete({ overrideAccess: true, collection: 'operating-costs' as any, id })
+    return { ok: true }
+  } catch {
+    return { ok: false, message: 'Errore durante l\'eliminazione del costo' }
+  }
+}
