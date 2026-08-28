@@ -4,28 +4,34 @@ loadEnv(process.env.NODE_ENV || "development", process.cwd())
 
 type ModulesConfig = NonNullable<Parameters<typeof defineConfig>[0]>["modules"]
 
+// Modulo custom "procurement" (lotti, FIFO, costo medio) — core bespoke del dominio.
 // Stripe payment provider: registrato SOLO se STRIPE_SECRET_KEY è presente
 // (in dev senza chiave il checkout non è disponibile, il core payment resta attivo
 // con il provider di sistema). Da F2 verrà attivato in modo permanente.
-const modules = (process.env.STRIPE_SECRET_KEY
-  ? {
-      payment: {
-        resolve: "@medusajs/medusa/payment",
-        options: {
-          providers: [
-            {
-              resolve: "@medusajs/payment-stripe",
-              id: "stripe",
-              options: {
-                apiKey: process.env.STRIPE_SECRET_KEY,
-                webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+const modules = {
+  procurement: {
+    resolve: "./src/modules/procurement",
+  },
+  ...(process.env.STRIPE_SECRET_KEY
+    ? {
+        payment: {
+          resolve: "@medusajs/medusa/payment",
+          options: {
+            providers: [
+              {
+                resolve: "@medusajs/payment-stripe",
+                id: "stripe",
+                options: {
+                  apiKey: process.env.STRIPE_SECRET_KEY,
+                  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+                },
               },
-            },
-          ],
+            ],
+          },
         },
-      },
-    }
-  : {}) as ModulesConfig
+      }
+    : {}),
+} as ModulesConfig
 
 module.exports = defineConfig({
   projectConfig: {

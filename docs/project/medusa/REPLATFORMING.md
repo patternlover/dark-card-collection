@@ -1,6 +1,6 @@
 # REPLATFORMING — Dark Card Collection su Medusa.js
 
-> **Stato**: **F0 completato** (2026-08-28, verifica: DB migrato+seed, Admin `:9000/app` 200, `/store/products` ok). Prossimo: **F1** (modulo `procurement`).
+> **Stato**: **F0 ✅** (scaffold) e **F1 ✅** (modulo `procurement` + API + Admin UI, verificato end-to-end, 2026-08-29). Prossimo: **F2** (storefront su Medusa).
 > Branch dedicato: `feat/medusa-replatform`.
 > Questo documento è il **piano maestro** della migrazione del commerce su Medusa v2.
 > Decisione utente 2026-08-28: **Full su Medusa** — Medusa Admin diventa l'unica UI
@@ -108,7 +108,7 @@ feat/medusa-replatform
 | Fase | Deliverable | Verifica |
 |------|-------------|----------|
 | **F0** ✅ | Scaffold Medusa in `apps/backend`, docker-compose, config moduli+Stripe+CORS, seed (region EUR, 5 sales channel, location, admin, demo product), Admin su `:9000/app` | **done** (2026-08-28): migrate+seed ✓, `tsc` ✓, boot ✓, Admin 200 ✓, `/store/products` ✓ |
-| **F1** | Modulo `procurement` (entity/service/workflow/links) + Admin routes/widgets + test | create lot→stock↑; record sale→FIFO+margine in Admin |
+| **F1** ✅ | Modulo `procurement` (entity/service/workflow/links) + Admin routes/widgets + test | **done** (2026-08-29): tsc ✓, test 13/13 ✓, lot→stock↑+avg cost 27 ✓, vendita esterna→ordine completed+FIFO 5→3+snapshot 54+margin 66 ✓, `medusa build` ✓ |
 | **F2** | `src/lib/medusa/*`, storefront su store API (shop/PDP/home/collections), cart→Medusa, checkout Stripe, success page, analytics, account cliente, contenuti statici | E2E list→cart→checkout→order + console-clean (bundle prod) |
 | **F3** | Deploy Railway (backend+worker, Neon, Upstash), env storefront→prod, **rimozione Payload** (src/payload, migrations, /admin, OAuth dashboard, deps), feed Merchant, sitemap/JSON-LD | E2E su prod, CI, feed, SEO |
 | **F4** | Promotions, returns/exchanges, backup, monitoring | — |

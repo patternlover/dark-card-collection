@@ -1,7 +1,31 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Replatform Medusa F0 — scaffold backend Medusa v2 (branch `feat/medusa-replatform`)**.
+Ultima sessione: **Replatform Medusa F1 — modulo custom `procurement` (lotti/FIFO/costo medio/margini)**.
+
+---
+
+## Sessione 2026-08-29 — Replatform Medusa F1
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-29-medusa-replatforming-f1.md`). Branch **`feat/medusa-replatform`**. Piano maestro: `docs/project/medusa/REPLATFORMING.md`.
+
+**Modulo custom `procurement`** (in `apps/backend`):
+- Models `purchase_lot`/`purchase_line` (DML, campi denaro `float`), migration applicata.
+- `utils/cost.ts`: porting di `purchase-math`/`record-sale` (effective_unit_cost pro-quota, FIFO oldest-first, weighted average, roundMoney).
+- Service: `consumeFifo`/`restoreFifo`/`getAverageCost`.
+- Workflow `create-purchase-lot`: lotto+righe → stock↑ (`inventory.adjustInventory`) → costo medio su `variant.metadata.cost_of_goods_sold`.
+- Workflow `record-external-sale`: FIFO (compensazione) → `createOrderWorkflow` (ordine `completed`, `metadata.dcc_cost_snapshots`) → stock↓ (compensazione) → costo medio.
+- API admin: `GET/POST /admin/lots`, `POST /admin/external-sales`, `GET /admin/variants/:id/lots` (protette di default, 401 senza auth).
+- Admin UI: route `/app/lots` (Lotti) + widget margine su `order.details`.
+- Test: `cost.unit.spec.ts` **13/13**.
+
+**Verifica**: `tsc` ✓ · test 13/13 ✓ · `db:migrate` ✓ · lotto → `average_cost=27` ✓ · vendita esterna (Vinted qty 2) → ordine completed, snapshot 54, margine €66, FIFO 5→3 ✓ · `medusa build` ✓ (backend + admin frontend).
+
+**Note**: `createOrderWorkflow` NON scala stock (decremento manuale); OrderStatus usa `completed`; update generati accettano l'oggetto con `id`; usare `transform` nel body dei workflow.
+
+---
+
+Ultima sessione precedente: **Replatform Medusa F0 — scaffold backend Medusa v2** (branch `feat/medusa-replatform`).
 
 ---
 
