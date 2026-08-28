@@ -134,7 +134,7 @@ export function OrdersSection() {
   const [extEmail, setExtEmail] = useState('')
   const [extUsername, setExtUsername] = useState('')
   const [extSalePrice, setExtSalePrice] = useState('')
-  const [saleDate, setSaleDate] = useState(new Date().toLocaleDateString('it-IT'))
+  const [saleDate, setSaleDate] = useState('')
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
@@ -146,6 +146,10 @@ export function OrdersSection() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  useEffect(() => {
+    setSaleDate(new Date().toLocaleDateString('it-IT'))
   }, [])
 
   useEffect(() => {
@@ -166,8 +170,9 @@ export function OrdersSection() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Eliminare questo ordine?')) return
+    if (!confirm('Eliminare questo ordine? Lo stock verrà ripristinato (FIFO).')) return
     setBusy(true)
+    setError(null)
     try {
       const res = await deleteOrder(id)
       if (!res.ok) {
@@ -175,8 +180,8 @@ export function OrdersSection() {
         return
       }
       setOrders((prev) => prev.filter((o) => o.id !== id))
-    } catch {
-      setError('Errore durante l\'eliminazione')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore durante l\'eliminazione')
     } finally {
       setBusy(false)
     }

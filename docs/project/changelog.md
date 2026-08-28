@@ -1,7 +1,26 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix batch 2: Scontrino/Note verticali, env Drive, rimozione ridondanze, test DB, restyle CMS pulito**.
+Ultima sessione: **Fix delete dashboard (orders/purchases/categorie/espansioni) con ripristino FIFO + guardie safe**.
+
+---
+
+## Sessione 2026-08-24 — Fix delete dashboard (4 aree)
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-24-fix-dashboard-deletes.md`). Su `main`.
+
+**Backend:**
+- `src/lib/inventory.ts` — `restoreRemainingForProduct` + `applyOrderDeletion` (ripristino `quantity` + `remaining_quantity` FIFO su delete ordine).
+- `src/app/dashboard/actions.ts` — `deleteOrder` con ripristino + dettaglio errore (404/500 con `${msg}`); `deletePurchase`/`deleteCategory`/`deleteEspansione`/`deleteProduct` migrati a `authError()`+`{ok,message}` (fix #441), guardie safe per categorie/espansioni (blocco se `item_category_3`/`item_category_2` in uso), `create/updateCategory/Espansione` e `updateOrderStatus` con catch dettagliato.
+
+**Frontend:**
+- `CategoriesSection`, `EspansionsSection`, `PurchasesSection`, `OrdersSection` — consumo `res.ok`/`res.message`, niente più catch generico #441; `OrdersSection` confirm "Lo stock verrà ripristinato (FIFO)"; fix hydration `new Date()` → `useEffect` (purchases saleDate/purchaseDate).
+
+**Verifica:** `tsc --noEmit` ✓ · `pnpm test` 100/100 ✓ · nessuna migration (solo logica).
+
+---
+
+Ultima sessione precedente: **Fix batch 2: Scontrino/Note verticali, env Drive, rimozione ridondanze, test DB, restyle CMS pulito**.
 
 ---
 

@@ -141,7 +141,7 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
   const [dirty, setDirty] = useState(false)
 
   const [form, setForm] = useState({
-    purchaseDate: new Date().toLocaleDateString('it-IT'),
+    purchaseDate: '',
     sourceType: '',
     sourceName: '',
     extraCosts: '',
@@ -200,6 +200,10 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
         ),
       )
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    setForm((prev) => (prev.purchaseDate ? prev : { ...prev, purchaseDate: new Date().toLocaleDateString('it-IT') }))
   }, [])
 
   useEffect(() => {
@@ -412,7 +416,11 @@ export function PurchasesSection({ initialSearch = '' }: { initialSearch?: strin
     if (!confirm('Eliminare il lotto? Lo stock ancora in giacenza verrà rimosso.')) return
     setBusy(true)
     try {
-      await deletePurchase(id)
+      const res = await deletePurchase(id)
+      if (!res.ok) {
+        notify(res.message || 'Errore durante l\'eliminazione del lotto', 'error')
+        return
+      }
       notify('Lotto eliminato')
       load()
     } catch (err) {

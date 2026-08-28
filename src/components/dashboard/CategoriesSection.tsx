@@ -112,11 +112,15 @@ export function CategoriesSection() {
     setBusy(true)
     setError(null)
     try {
-      await deleteCategory(c.id)
+      const res = await deleteCategory(c.id)
+      if (!res.ok) {
+        setError(res.message || 'Errore durante l\'eliminazione')
+        return
+      }
       setCategories((prev) => prev.filter((x) => x.id !== c.id))
       setNotice('Categoria eliminata')
-    } catch {
-      setError('Errore durante l\'eliminazione')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore durante l\'eliminazione')
     } finally {
       setBusy(false)
     }

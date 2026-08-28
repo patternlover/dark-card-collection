@@ -86,3 +86,86 @@ export async function applyPurchaseDeletion(payload: Payload, purchaseDoc: { lin
   }
   await applyStockDelta(payload, delta)
 }
+
+export interface OrderItemLike {
+  product?: unknown
+  quantity?: number | null
+}
+
+/**
+ * Ripristina `remaining_quantity` delle righe lotto per un prodotto.
+ * Distribuisce `quantity` da ripristinare sulle righe esistenti fino a
+ * `quantity` per riga, in ordine FIFO (purchase_date ASC) — euristica
+ * di inversione FIFO: totale ripristinato = sum(qty ordine) garantito,
+ * distribuzione per lotto approssimata se storico ordini interleavato.
+ */
+export async function restoreRemainingForProduct(
+  payload: Payload,
+  productId: number,
+  quantityToRestore: number,
+): Promise<void> {
+  let remaining = safeNumber(quantityToRestore)
+  if (remaining <= 0) return
+
+  // Carica tutti i purchases che contengono il prodotto, ordinati per purchase_date ASC (FIFO)
+  const purchases: Array<{ id: number; purchase_date?: string | null; lines: Array<{ id?: string | null; product?: unknown; quantity?: number | null; remaining_quantity?: number | null; unit_cost?: number | null; effective_unit_cost?: number | null }> }> = []
+  let page = 1
+  const pageSize = 100
+  for (;;) {
+    const res = await payload.find({ overrideAccess: true, collection: 'purchases', page, limit: pageSize, depth: 0, sort: 'purchase_date' })
+    for (const doc of res.docs as Array<{ id: number | string; purchase_date?: string | null; lines?: Array<{ id?: string | null; product?: unknown; quantity?: number | null; remaining_quantity?: number | null }> }>) {
+      const hasProduct = (doc.lines ?? []).some((l) => productIdFrom(l.product) === productId)
+      if (!hasProduct) continue
+      purchases.push({ id: Number(doc.id), purchase_date: (doc as { purchase_date?: string | null }).purchase_date ?? null, lines: (doc.lines ?? []) as Array<{ id?: string | null; product?: unknown; quantity?: number | null; remaining_quantity?: number | null }> })
+    }
+    if (page >= res.totalPages) break
+    page += 1
+  }
+
+  for (const purchase of purchases) {
+    if (remaining <= 0) break
+    let updated = false
+    const newLines = purchase.lines.map((line) => {
+      if (remaining <= 0) return line
+      if (productIdFrom(line.product) !== productId) return line
+      const qty = safeNumber(line.quantity ?? 0)
+      const rem = safeNumber(line.remaining_quantity ?? qty)
+      if (rem >= qty) return line
+      const canRestore = Math.min(remaining, qty - rem)
+      if (canRestore <= 0) return line
+      remaining -= canRestore
+      updated = true
+      return { ...line, remaining_quantity: rem + canRestore }
+    })
+    if (updated) {
+      await payload.update({ overrideAccess: true, collection: 'purchases', id: purchase.id, data: { lines: newLines as unknown as never[] } as never, depth: 0 })
+    }
+  }
+}
+
+export async function applyOrderDeletion(
+  payload: Payload,
+  orderDoc: { items?: OrderItemLike[] },
+): Promise<void> {
+  const items = orderDoc?.items ?? []
+  // Raggruppa per productId (ordini possono avere più righe stesso prodotto)
+  const byProduct = new Map<number, number>()
+  for (const item of items) {
+    const pid = productIdFrom(item.product)
+    if (!pid) continue
+    const qty = safeNumber(item.quantity ?? 0)
+    if (qty <= 0) continue
+    byProduct.set(pid, (byProduct.get(pid) ?? 0) + qty)
+  }
+  if (byProduct.size === 0) return
+
+  // 1) Ripristina quantity su products (inverso di recordSale)
+  const delta = new Map<number, number>()
+  for (const [pid, qty] of byProduct) delta.set(pid, qty)
+  await applyStockDelta(payload, delta)
+
+  // 2) Ripristina remaining_quantity FIFO
+  for (const [pid, qty] of byProduct) {
+    await restoreRemainingForProduct(payload, pid, qty)
+  }
+}

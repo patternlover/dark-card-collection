@@ -6,7 +6,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { isAuthed, clearDashSession } from '@/lib/dash-auth'
 import { slugify } from '@/lib/slug'
 import { recordSale, type SalesChannel } from '@/lib/record-sale'
-import { applyPurchaseDeletion, applyStockDelta, productIdFrom, purchaseStockDelta } from '@/lib/inventory'
+import { applyOrderDeletion, applyPurchaseDeletion, applyStockDelta, productIdFrom, purchaseStockDelta } from '@/lib/inventory'
 import {
   buildListingGroups,
   countFeaturedGroups,
@@ -541,14 +541,19 @@ export async function updateOrderStatus(id: string, status: string): Promise<Act
   if (auth) return { ok: false, message: auth }
   logAudit('order.status', { id, status })
   const payload = await getPayloadClient()
-  const res = await payload.update({ overrideAccess: true, 
-    collection: 'orders',
-    id,
-    data: { status } as any,
-    depth: 1,
-    draft: false,
-  })
-  return { ok: true, data: toOrderDTO(res) }
+  try {
+    const res = await payload.update({ overrideAccess: true, 
+      collection: 'orders',
+      id,
+      data: { status } as any,
+      depth: 1,
+      draft: false,
+    })
+    return { ok: true, data: toOrderDTO(res) }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { ok: false, message: `Errore durante l'aggiornamento: ${msg}` }
+  }
 }
 
 export async function deleteOrder(id: string): Promise<{ ok: boolean; message?: string }> {
@@ -557,10 +562,16 @@ export async function deleteOrder(id: string): Promise<{ ok: boolean; message?: 
   logAudit('order.delete', { id })
   const payload = await getPayloadClient()
   try {
+    const order = await payload.findByID({ overrideAccess: true, collection: 'orders', id, depth: 0 }).catch(() => null)
+    if (!order) return { ok: false, message: 'Ordine non trovato' }
+    const items = Array.isArray((order as { items?: unknown[] }).items) ? ((order as { items: Array<{ product?: unknown; quantity?: number }> }).items) : []
+    await applyOrderDeletion(payload, { items } as never)
     await payload.delete({ overrideAccess: true, collection: 'orders', id })
     return { ok: true }
-  } catch {
-    return { ok: false, message: 'Errore durante l\'eliminazione dell\'ordine' }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (/not found/i.test(msg)) return { ok: false, message: 'Ordine non trovato' }
+    return { ok: false, message: `Errore durante l'eliminazione dell'ordine: ${msg}` }
   }
 }
 
@@ -641,7 +652,8 @@ export interface DeleteProductResult {
 }
 
 export async function deleteProduct(id: string): Promise<DeleteProductResult> {
-  await requireAuth()
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
   const payload = await getPayloadClient()
   const pid = Number(id)
 
@@ -711,8 +723,9 @@ export async function deleteProduct(id: string): Promise<DeleteProductResult> {
 
     await payload.delete({ overrideAccess: true, collection: 'products', id })
     return { ok: true }
-  } catch {
-    return { ok: false, message: 'Errore durante l\'eliminazione del prodotto' }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { ok: false, message: `Errore durante l'eliminazione del prodotto: ${msg}` }
   }
 }
 
@@ -754,19 +767,24 @@ export async function createCategory(data: { name: string; slug?: string; descri
     candidate = `${slug}-${i++}`
   }
 
-  const res = await payload.create({ overrideAccess: true, 
-    collection: 'categories',
-    data: { name, slug: candidate, kind: data.kind || 'both', description: data.description || undefined } as any,
-  })
-  return {
-    ok: true,
-    data: {
-      id: String(res.id),
-      name: res.name as string,
-      slug: res.slug as string,
-      kind: (res.kind ?? 'both') as 'product' | 'card' | 'both',
-      description: (res.description ?? null) as string | null,
-    },
+  try {
+    const res = await payload.create({ overrideAccess: true, 
+      collection: 'categories',
+      data: { name, slug: candidate, kind: data.kind || 'both', description: data.description || undefined } as any,
+    })
+    return {
+      ok: true,
+      data: {
+        id: String(res.id),
+        name: res.name as string,
+        slug: res.slug as string,
+        kind: (res.kind ?? 'both') as 'product' | 'card' | 'both',
+        description: (res.description ?? null) as string | null,
+      },
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { ok: false, message: `Errore durante la creazione: ${msg}` }
   }
 }
 
@@ -782,23 +800,55 @@ export async function updateCategory(
   if (data.slug !== undefined) patch.slug = data.slug
   if (data.description !== undefined) patch.description = data.description ?? undefined
   if (data.kind !== undefined) patch.kind = data.kind
-  const res = await payload.update({ overrideAccess: true,  collection: 'categories', id, data: patch as any })
-  return {
-    ok: true,
-    data: {
-      id: String(res.id),
-      name: res.name as string,
-      slug: res.slug as string,
-      kind: (res.kind ?? 'both') as 'product' | 'card' | 'both',
-      description: (res.description ?? null) as string | null,
-    },
+  try {
+    const res = await payload.update({ overrideAccess: true,  collection: 'categories', id, data: patch as any })
+    return {
+      ok: true,
+      data: {
+        id: String(res.id),
+        name: res.name as string,
+        slug: res.slug as string,
+        kind: (res.kind ?? 'both') as 'product' | 'card' | 'both',
+        description: (res.description ?? null) as string | null,
+      },
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { ok: false, message: `Errore durante l'aggiornamento: ${msg}` }
   }
 }
 
-export async function deleteCategory(id: string): Promise<void> {
-  await requireAuth()
+export async function deleteCategory(id: string): Promise<{ ok: boolean; message?: string }> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('category.delete', { id })
   const payload = await getPayloadClient()
-  await payload.delete({ overrideAccess: true,  collection: 'categories', id })
+  const cid = Number(id)
+  try {
+    const ref = await payload.find({
+      overrideAccess: true,
+      collection: 'products',
+      where: { item_category_3: { equals: cid } } as never,
+      limit: 1,
+      depth: 0,
+    })
+    if (ref.totalDocs > 0) {
+      const precise = await payload.find({
+        overrideAccess: true,
+        collection: 'products',
+        where: { item_category_3: { equals: cid } } as never,
+        limit: 0,
+      })
+      const total = precise.totalDocs
+      return { ok: false, message: `Categoria in uso su ${total} prodott${total === 1 ? 'o' : 'i'}: rimuovi l'assegnazione prima di eliminarla` }
+    }
+    await payload.delete({ overrideAccess: true, collection: 'categories', id })
+    return { ok: true }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (/not found/i.test(msg)) return { ok: false, message: 'Categoria non trovata' }
+    return { ok: false, message: `Errore durante l'eliminazione: ${msg}` }
+  }
 }
 
 export interface ListingSearchFilters {
@@ -1189,24 +1239,29 @@ export async function createEspansione(data: {
     candidate = `${slug}-${i++}`
   }
 
-  const res = await payload.create({ overrideAccess: true, 
-    collection: 'espansioni',
-    data: {
-      name,
-      slug: candidate,
-      description: data.description || undefined,
-      releaseDate: data.releaseDate || undefined,
-    } as any,
-  })
-  return {
-    ok: true,
-    data: {
-      id: String(res.id),
-      name: res.name as string,
-      slug: res.slug as string,
-      description: (res.description ?? null) as string | null,
-      releaseDate: (res.releaseDate ?? null) as string | null,
-    },
+  try {
+    const res = await payload.create({ overrideAccess: true, 
+      collection: 'espansioni',
+      data: {
+        name,
+        slug: candidate,
+        description: data.description || undefined,
+        releaseDate: data.releaseDate || undefined,
+      } as any,
+    })
+    return {
+      ok: true,
+      data: {
+        id: String(res.id),
+        name: res.name as string,
+        slug: res.slug as string,
+        description: (res.description ?? null) as string | null,
+        releaseDate: (res.releaseDate ?? null) as string | null,
+      },
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { ok: false, message: `Errore durante la creazione: ${msg}` }
   }
 }
 
@@ -1222,23 +1277,56 @@ export async function updateEspansione(
   if (data.slug !== undefined) patch.slug = data.slug
   if (data.description !== undefined) patch.description = data.description ?? undefined
   if (data.releaseDate !== undefined) patch.releaseDate = data.releaseDate || undefined
-  const res = await payload.update({ overrideAccess: true,  collection: 'espansioni', id, data: patch as any })
-  return {
-    ok: true,
-    data: {
-      id: String(res.id),
-      name: res.name as string,
-      slug: res.slug as string,
-      description: (res.description ?? null) as string | null,
-      releaseDate: (res.releaseDate ?? null) as string | null,
-    },
+  try {
+    const res = await payload.update({ overrideAccess: true,  collection: 'espansioni', id, data: patch as any })
+    return {
+      ok: true,
+      data: {
+        id: String(res.id),
+        name: res.name as string,
+        slug: res.slug as string,
+        description: (res.description ?? null) as string | null,
+        releaseDate: (res.releaseDate ?? null) as string | null,
+      },
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return { ok: false, message: `Errore durante l'aggiornamento: ${msg}` }
   }
 }
 
-export async function deleteEspansione(id: string): Promise<void> {
-  await requireAuth()
+export async function deleteEspansione(id: string): Promise<{ ok: boolean; message?: string }> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('espansione.delete', { id })
   const payload = await getPayloadClient()
-  await payload.delete({ overrideAccess: true,  collection: 'espansioni', id })
+  const eid = Number(id)
+  try {
+    // hasMany via products_rels: query products where item_category_2 contains eid
+    const ref = await payload.find({
+      overrideAccess: true,
+      collection: 'products',
+      where: { 'item_category_2': { equals: eid } } as never,
+      limit: 1,
+      depth: 0,
+    })
+    if (ref.totalDocs > 0) {
+      const precise = await payload.find({
+        overrideAccess: true,
+        collection: 'products',
+        where: { 'item_category_2': { equals: eid } } as never,
+        limit: 0,
+      })
+      const total = precise.totalDocs
+      return { ok: false, message: `Espansione in uso su ${total} prodott${total === 1 ? 'o' : 'i'}: rimuovi l'assegnazione prima di eliminarla` }
+    }
+    await payload.delete({ overrideAccess: true, collection: 'espansioni', id })
+    return { ok: true }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (/not found/i.test(msg)) return { ok: false, message: 'Espansione non trovata' }
+    return { ok: false, message: `Errore durante l'eliminazione: ${msg}` }
+  }
 }
 
 export interface MessageDTO {
@@ -1574,11 +1662,20 @@ export async function createPurchase(data: CreatePurchaseInput): Promise<ActionR
   return { ok: true, data: toPurchaseDTO(res) }
 }
 
-export async function deletePurchase(id: string): Promise<void> {
-  await requireAuth()
+export async function deletePurchase(id: string): Promise<{ ok: boolean; message?: string }> {
+  const auth = await authError()
+  if (auth) return { ok: false, message: auth }
+  logAudit('purchase.delete', { id })
   const payload = await getPayloadClient()
-  const deleted = await payload.delete({ overrideAccess: true,  collection: 'purchases', id })
-  await applyPurchaseDeletion(payload, deleted as { lines?: { product?: unknown; quantity?: number; remaining_quantity?: number }[] })
+  try {
+    const deleted = await payload.delete({ overrideAccess: true, collection: 'purchases', id })
+    await applyPurchaseDeletion(payload, deleted as { lines?: { product?: unknown; quantity?: number; remaining_quantity?: number }[] })
+    return { ok: true }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (/not found/i.test(msg)) return { ok: false, message: 'Lotto non trovato' }
+    return { ok: false, message: `Errore durante l'eliminazione del lotto: ${msg}` }
+  }
 }
 
 export async function updatePurchase(id: string, data: CreatePurchaseInput): Promise<ActionResult<PurchaseDTO>> {

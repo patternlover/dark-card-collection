@@ -117,11 +117,15 @@ export function EspansionsSection() {
     setBusy(true)
     setError(null)
     try {
-      await deleteEspansione(c.id)
+      const res = await deleteEspansione(c.id)
+      if (!res.ok) {
+        setError(res.message || 'Errore durante l\'eliminazione')
+        return
+      }
       setEspansioni((prev) => prev.filter((x) => x.id !== c.id))
       setNotice('Espansione eliminata')
-    } catch {
-      setError('Errore durante l\'eliminazione')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Errore durante l\'eliminazione')
     } finally {
       setBusy(false)
     }
