@@ -1,0 +1,34 @@
+# Dev locale per il backend Medusa (Postgres 16 + Redis 7).
+# Su questa macchina i servizi girano in WSL Ubuntu (niente Docker) — vedi
+# docs/project/medusa/REPLATFORMING.md §8. Questo compose è per chi ha Docker.
+services:
+  postgres:
+    image: postgres:16
+    container_name: medusa-postgres
+    environment:
+      POSTGRES_USER: medusa
+      POSTGRES_PASSWORD: medusa
+      POSTGRES_DB: medusa_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - medusa_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medusa -d medusa_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: medusa-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  medusa_pgdata:

@@ -1,7 +1,31 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Fix delete dashboard (orders/purchases/categorie/espansioni) con ripristino FIFO + guardie safe**.
+Ultima sessione: **Replatform Medusa F0 — scaffold backend Medusa v2 (branch `feat/medusa-replatform`)**.
+
+---
+
+## Sessione 2026-08-29 — Replatform Medusa F0
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-28-medusa-replatforming-f0.md`). Branch **`feat/medusa-replatform`** (da `main b25eaab`). Piano maestro: `docs/project/medusa/REPLATFORMING.md`.
+
+**Decisioni** (confermate in chat): Full su Medusa · deploy scelto da me (Railway + Neon + Upstash in F3) · Payload rimosso del tutto · account cliente abilitati · fresh start (nessun import 1:1).
+
+**Infra locale**: Postgres 18 + Redis installati in WSL Ubuntu; systemd abilitato; `.wslconfig` `vmIdleTimeout=-1`. Nota: la VM WSL va in idle-shutdown con job Windows-only → i job long-running (migrate) si eseguono foreground dentro WSL (interop `node.exe`).
+
+**Backend `apps/backend`** (Medusa 2.19.0, pacchetto indipendente con proprio lockfile):
+- `medusa-config.ts`: CORS + `payment-stripe` gated su `STRIPE_SECRET_KEY`.
+- `docker-compose.yml` (Postgres 16 + Redis 7), `.env.example` committato, `.env` dev gitignored.
+- Seed DCC in `src/migration-scripts/initial-data-seed.ts`: 5 sales channel, publishable API key, store EUR, region Italia (IT), tax IT, "Magazzino IT", shipping Standard €9,99 + Gratuita €0, categoria Sealed, demo product "Bundle Paldea Evolved" (published, €120, stock 6, metadata GA4-ready).
+- `@medusajs/payment-stripe@2.19.0`.
+
+**Verifica**: `pnpm install` ✓ · `tsc --noEmit` 0 errori ✓ · `medusa db:migrate` + seed ✓ (dati verificati via SQL) · server boot ✓ ("Server is ready on port: 9000", ~24s) · Admin `http://localhost:9000/app` 200 ✓ · `GET /store/products` (pk `pk_e31b…`) → 1 prodotto ✓. Test unit: infra jest pronta, nessun test ancora (F1).
+
+**Note**: Admin user da creare via onboarding UI; `redisUrl not found` in dev (fake redis, non bloccante); CI non verificata (`gh` non autenticato, W6).
+
+---
+
+Ultima sessione precedente: **Fix delete dashboard (orders/purchases/categorie/espansioni) con ripristino FIFO + guardie safe** (main `b25eaab`).
 
 ---
 
