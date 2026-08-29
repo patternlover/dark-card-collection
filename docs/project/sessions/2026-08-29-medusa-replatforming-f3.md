@@ -49,3 +49,25 @@ deploy/rimozione Payload). Il **deploy reale richiede l'infrastruttura dell'uten
 
 ### Verifica code-prep
 - Storefront `pnpm lint` ✓ · backend tsc ✓ · test 104/104 ✓ (F2).
+
+## Aggiunta — target deploy cambiato: Oracle Cloud Free Tier
+
+**Decisione utente**: niente Railway (costo), niente home server (progetto futuro).
+Backend in produzione su **Oracle Cloud Free Tier** (ARM VM, €0/mese) con Docker Compose.
+
+**Nuovi artifact (committati):**
+- `apps/backend/docker-compose.prod.yml` — api + worker + redis (self-hosted) + **caddy**
+  (HTTPS automatico). Porta 9000 bindata su 127.0.0.1 (solo Caddy).
+- `apps/backend/Caddyfile` — `medusa.darkcardcollection.com` → `api:9000`.
+- `apps/backend/scripts/backup-medusa.sh` — pg_dump DB Neon + retention (cron).
+- **Email conferma ordine (Resend)**: `apps/backend/src/lib/order-email.ts` (porting
+  `order-email.ts` Payload, invio via Resend HTTP API) + subscriber `order-placed-email.ts`.
+- `docs/project/medusa/DEPLOYMENT.md` — guida Oracle completa (VM, Docker, env, `db:migrate`,
+  admin, Stripe region+webhook, Vercel, backup, checklist cutover).
+
+**Default assunti (modificabili):** Postgres su **Neon free** (nuovo DB) · Redis self-hosted ·
+subdomain `medusa.darkcardcollection.com` · Stripe **test → poi live**.
+
+**Rimane** (passi F3 esecuzione, richiede l'infrastruttura utente): creare la VM Oracle,
+DNS, `.env.prod`, `up -d`, `db:migrate`, admin, enable stripe region, webhook Stripe,
+env Vercel, cutover, remove Payload, feed in Merchant — tutti documentati in `DEPLOYMENT.md`.

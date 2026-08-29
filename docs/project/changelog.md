@@ -1,30 +1,29 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Replatform Medusa F3 code-prep — deploy config + feed Google Merchant**.
+Ultima sessione: **Replatform Medusa F3 code-prep — target Oracle Cloud Free Tier (Docker) + email Resend**.
 
 ---
 
-## Sessione 2026-08-29 — Replatform Medusa F3 code-prep
+## Sessione 2026-08-29 — Replatform Medusa F3 code-prep (Oracle)
 
 Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-29-medusa-replatforming-f3.md`). Branch **`feat/medusa-replatform`**.
 
-**Code-prep F3 (il deploy reale richiede l'infrastruttura utente):**
-- `apps/backend/Dockerfile` (node:22-slim, multi-stage, `medusa start`) + `apps/backend/railway.json`.
-- `apps/backend/.env.example` → sezione PRODUZIONE (Neon/Upstash/Stripe/CORS/webhook).
-- **Feed Google Merchant** (XML `g:`): `src/lib/feed/merchant-feed.ts` + route `GET /api/feed/products`
-  (id/item_group_id, price, availability, condition, product_type, google_product_category,
-  custom_label_0=set_name, **cost_of_goods_sold** da `variant.metadata`).
-- Adapter Medusa esteso (`cost_of_goods_sold`, `google_product_category`, `set_name`).
-- Doc passi F3: deploy Railway (api + **worker** obbligatorio), Neon separato, Upstash, migration,
-  admin, webhook Stripe, enable stripe su region, Resend subscriber (TODO), env Vercel, cutover,
-  rimozione Payload, feed in Merchant.
+**Decisione deploy (utente):** **Oracle Cloud Free Tier** (ARM VM, €0/mese) al posto di Railway — VPS più economico e personalizzabile; home server rimandato (progetto futuro).
 
-**Verifica**: storefront `pnpm lint` ✓ · backend tsc ✓ · test 104/104 ✓.
+**Code-prep F3:**
+- `apps/backend/docker-compose.prod.yml` — api (`pnpm start`) + worker (`npx medusa worker`) + redis (self-hosted) + **caddy** (HTTPS automatico); porta 9000 solo su 127.0.0.1.
+- `apps/backend/Caddyfile` — reverse proxy per `medusa.darkcardcollection.com`.
+- `apps/backend/scripts/backup-medusa.sh` — `pg_dump` del DB Neon con retention (cron).
+- **Email conferma ordine (Resend)** — `apps/backend/src/lib/order-email.ts` (porting del template Payload, invio via HTTP API, nessuna dipendenza) + subscriber `order-placed-email.ts`.
+- `docs/project/medusa/DEPLOYMENT.md` — guida completa Oracle: VM, Docker, env, `db:migrate`, admin, Stripe region, webhook, Vercel, backup, checklist cutover.
+- REPLATFORMING.md aggiornato (target Oracle; Redis self-hosted).
+
+**Verifica:** backend tsc ✓ · storefront `pnpm lint` ✓ · test 104/104 ✓.
 
 ---
 
-Ultima sessione precedente: **Replatform Medusa F2 — storefront completo su Medusa (catalogo + cart + checkout + account cliente)**.
+Ultima sessione precedente: **Replatform Medusa F3 code-prep — Dockerfile/Railway, env prod, feed Google Merchant**.
 
 ---
 

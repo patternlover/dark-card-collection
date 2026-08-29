@@ -1,0 +1,58 @@
+# Produzione su Oracle Cloud Free Tier (ARM) — Docker Compose.
+# Stack: api + worker + redis + caddy (HTTPS automatico).
+# Postgres: NEON gestito (nuovo DB, esterno) — vedi .env.prod / DEPLOYMENT.md.
+#
+# Uso:
+#   cp .env.example .env.prod   # compila con i valori reali (sezione PRODUZIONE)
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml run --rm api npx medusa db:migrate
+#   docker compose -f docker-compose.prod.yml logs -f api
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env.prod
+    ports:
+      # NON esporre 9000 in pubblico: Caddy fa da proxy.
+      - "127.0.0.1:9000:9000"
+    depends_on:
+      - redis
+    command: ["pnpm", "start"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file: .env.prod
+    depends_on:
+      - redis
+    command: ["npx", "medusa", "worker"]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  redis_data:
+  caddy_data:
+  caddy_config:

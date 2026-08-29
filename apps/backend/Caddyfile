@@ -1,0 +1,6 @@
+# Caddy — reverse proxy con HTTPS automatico per il backend Medusa.
+# Sostituire il dominio con quello reale (e creare il DNS A/AAAA verso il VPS).
+medusa.darkcardcollection.com {
+	reverse_proxy api:9000
+	encode gzip
+}

@@ -1,6 +1,6 @@
 # REPLATFORMING — Dark Card Collection su Medusa.js
 
-> **Stato**: **F0 ✅ · F1 ✅ · F2 ✅** · **F3 🔶 code-prep fatto** (Dockerfile, railway.json, env prod, feed Merchant; deploy/cutover richiede l'infrastruttura utente — vedi sessione F3). Prossimo: eseguire i passi F3 e il cutover.
+> **Stato**: **F0 ✅ · F1 ✅ · F2 ✅** · **F3 🔶 code-prep fatto** (Dockerfile, `docker-compose.prod.yml`, Caddyfile, backup, env prod, feed Merchant, email Resend; deploy/cutover richiede l'infrastruttura utente — guida `DEPLOYMENT.md`). Prossimo: eseguire i passi F3 e il cutover.
 > Branch dedicato: `feat/medusa-replatform`.
 > Questo documento è il **piano maestro** della migrazione del commerce su Medusa v2.
 > Decisione utente 2026-08-28: **Full su Medusa** — Medusa Admin diventa l'unica UI
@@ -23,7 +23,7 @@ come **modulo custom Medusa** + estensioni Admin.
 | # | Decisione | Scelta |
 |---|-----------|--------|
 | D1 | Architettura | **Full su Medusa**: Medusa Admin unica UI operativa |
-| D2 | Deploy backend | **Railway** (2 servizi: backend + worker); Postgres su **Neon** (nuovo DB); Redis su **Upstash**. Storefront resta su Vercel |
+| D2 | Deploy backend | **Oracle Cloud Free Tier** (ARM VM, Docker Compose: api + worker + redis + Caddy); Postgres su **Neon** (nuovo DB); Redis self-hosted sul VM. Storefront resta su Vercel. Costo €0/mese |
 | D3 | Payload | **Rimosso del tutto** (commerce + CMS). Contenuti → pagine statiche in Next.js; `SiteSettings`/`Header` → `src/config.ts` |
 | D4 | Account cliente | **Abilitati** (login/register/My Account) — supera il non-goal N1 legacy |
 | D5 | Migrazione dati | **Fresh start**: seed in Medusa, niente import 1:1; storico ordini Payload resta legacy read-only |
@@ -35,7 +35,7 @@ come **modulo custom Medusa** + estensioni Admin.
 Browser (storefront Next.js su Vercel)
    │  store API (publishable key) / admin API (secret key)
    ▼
-Medusa backend (Node long-running su Railway: API + worker)
+Medusa backend (Node long-running su Oracle Cloud Free Tier: API + worker)
    ├── moduli core: product, pricing, cart, order, customer, sales-channel,
    │                inventory, stock-location, fulfillment, payment, promotion, auth, notification
    ├── plugin payment-stripe
@@ -44,7 +44,7 @@ Medusa backend (Node long-running su Railway: API + worker)
    └── estensioni Admin (routes Lotti/Vendite esterne/Magazzino + widgets margine/costing)
    │
    ├── PostgreSQL (Neon)
-   └── Redis (Upstash)  — event bus + workflow engine
+   └── Redis (self-hosted sul VM)  — event bus + workflow engine
 ```
 
 ## 4. Repo layout (basso rischio)
@@ -110,7 +110,7 @@ feat/medusa-replatform
 | **F0** ✅ | Scaffold Medusa in `apps/backend`, docker-compose, config moduli+Stripe+CORS, seed (region EUR, 5 sales channel, location, admin, demo product), Admin su `:9000/app` | **done** (2026-08-28): migrate+seed ✓, `tsc` ✓, boot ✓, Admin 200 ✓, `/store/products` ✓ |
 | **F1** ✅ | Modulo `procurement` (entity/service/workflow/links) + Admin routes/widgets + test | **done** (2026-08-29): tsc ✓, test 13/13 ✓, lot→stock↑+avg cost 27 ✓, vendita esterna→ordine completed+FIFO 5→3+snapshot 54+margin 66 ✓, `medusa build` ✓ |
 | **F2** ✅ | `src/lib/medusa/*`, storefront su store API (shop/PDP/home/collections), cart→Medusa, checkout Stripe, success page, analytics, account cliente, contenuti statici | **done** (2026-08-29): tsc ✓ · test 104/104 ✓ · smoke `/shop`+PDP+account flow ✓ |
-| **F3** 🔶 | Deploy Railway (backend+worker, Neon, Upstash), env storefront→prod, **rimozione Payload** (src/payload, migrations, /admin, OAuth dashboard, deps), feed Merchant, sitemap/JSON-LD | code-prep done (2026-08-29: Dockerfile, railway.json, env prod, feed `/api/feed/products`); deploy/cutover = passi sessione F3 (richiede infra utente) |
+| **F3** 🔶 | Deploy Oracle Cloud Free Tier (Docker: api+worker+redis+Caddy), Neon, env storefront→prod, **rimozione Payload** (src/payload, migrations, /admin, OAuth dashboard, deps), feed Merchant, sitemap/JSON-LD | code-prep done (2026-08-29: Dockerfile, `docker-compose.prod.yml`, Caddyfile, backup, env prod, feed `/api/feed/products`, email Resend; guida `DEPLOYMENT.md`); deploy/cutover = passi guida (richiede infra utente) |
 | **F4** | Promotions, returns/exchanges, backup, monitoring | — |
 
 ## 8. Ambiente
