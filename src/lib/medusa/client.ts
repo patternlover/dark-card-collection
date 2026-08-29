@@ -22,6 +22,8 @@ interface FetchOptions {
   headers?: Record<string, string>
   /** Cache mode; default no-store (SSR). */
   cache?: RequestInit["cache"]
+  /** Bearer token (auth customer/admin) da passare nell'header Authorization. */
+  token?: string
 }
 
 export async function medusaFetch<T>(
@@ -36,6 +38,7 @@ export async function medusaFetch<T>(
     headers: {
       "x-publishable-api-key": PUBLISHABLE_KEY,
       "Content-Type": "application/json",
+      ...(opts.token ? { Authorization: `Bearer ${opts.token}` } : {}),
       ...opts.headers,
     },
     body: opts.body ? JSON.stringify(opts.body) : undefined,

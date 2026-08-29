@@ -3,6 +3,7 @@ import { Suspense } from 'react'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/hooks/useCart'
+import { AuthProvider } from '@/hooks/useAuth'
 import { ConsentProvider } from '@/hooks/useConsent'
 import { AnalyticsProvider } from '@/components/layout/AnalyticsProvider'
 import { ConsentModeScript } from '@/components/layout/ConsentModeScript'
@@ -113,9 +114,11 @@ export default function RootLayout({
         </noscript>
         <ConsentProvider>
           <AnalyticsProvider>
-            <CartProvider>
-              <LayoutShell>{children}</LayoutShell>
-            </CartProvider>
+            <AuthProvider>
+              <CartProvider>
+                <LayoutShell>{children}</LayoutShell>
+              </CartProvider>
+            </AuthProvider>
           </AnalyticsProvider>
         </ConsentProvider>
       </body>

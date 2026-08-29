@@ -1,6 +1,6 @@
 # REPLATFORMING — Dark Card Collection su Medusa.js
 
-> **Stato**: **F0 ✅** (scaffold) · **F1 ✅** (modulo `procurement`, verificato) · **F2 step 1 ✅** (storefront: catalogo+cart+checkout su Medusa, smoke ✓, 2026-08-29). Prossimo: **F2 step 2** (account cliente) poi **F3** (cutover).
+> **Stato**: **F0 ✅** · **F1 ✅** · **F2 ✅** (storefront su Medusa: catalogo+cart+checkout+**account cliente**, smoke ✓, 2026-08-29). Prossimo: **F3** (cutover, codice di prep disponibile; deploy richiede l'infrastruttura utente).
 > Branch dedicato: `feat/medusa-replatform`.
 > Questo documento è il **piano maestro** della migrazione del commerce su Medusa v2.
 > Decisione utente 2026-08-28: **Full su Medusa** — Medusa Admin diventa l'unica UI
@@ -109,7 +109,7 @@ feat/medusa-replatform
 |------|-------------|----------|
 | **F0** ✅ | Scaffold Medusa in `apps/backend`, docker-compose, config moduli+Stripe+CORS, seed (region EUR, 5 sales channel, location, admin, demo product), Admin su `:9000/app` | **done** (2026-08-28): migrate+seed ✓, `tsc` ✓, boot ✓, Admin 200 ✓, `/store/products` ✓ |
 | **F1** ✅ | Modulo `procurement` (entity/service/workflow/links) + Admin routes/widgets + test | **done** (2026-08-29): tsc ✓, test 13/13 ✓, lot→stock↑+avg cost 27 ✓, vendita esterna→ordine completed+FIFO 5→3+snapshot 54+margin 66 ✓, `medusa build` ✓ |
-| **F2** 🔶 | `src/lib/medusa/*`, storefront su store API (shop/PDP/home/collections), cart→Medusa, checkout Stripe, success page, analytics, account cliente, contenuti statici | **step 1 done** (2026-08-29): tsc ✓ · test 104/104 ✓ · smoke `/shop`+PDP da Medusa ✓ — step 2 (account cliente) pending |
+| **F2** ✅ | `src/lib/medusa/*`, storefront su store API (shop/PDP/home/collections), cart→Medusa, checkout Stripe, success page, analytics, account cliente, contenuti statici | **done** (2026-08-29): tsc ✓ · test 104/104 ✓ · smoke `/shop`+PDP+account flow ✓ |
 | **F3** | Deploy Railway (backend+worker, Neon, Upstash), env storefront→prod, **rimozione Payload** (src/payload, migrations, /admin, OAuth dashboard, deps), feed Merchant, sitemap/JSON-LD | E2E su prod, CI, feed, SEO |
 | **F4** | Promotions, returns/exchanges, backup, monitoring | — |
 

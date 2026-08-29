@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Search, ShoppingBag, Menu, X } from 'lucide-react'
+import { Search, ShoppingBag, Menu, X, User } from 'lucide-react'
 import { MobileMenu } from './MobileMenu'
 import { useCart } from '@/hooks/useCart'
+import { useAuth } from '@/hooks/useAuth'
 
 const navItems = [
   { label: 'Shop', href: '/shop' },
@@ -17,6 +18,7 @@ const navItems = [
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { itemCount } = useCart()
+  const { customer } = useAuth()
 
   return (
     <header className="sticky top-[var(--banner-h)] z-[130] border-b-2 border-zinc-700 bg-black">
@@ -61,6 +63,15 @@ export function Header() {
                   {itemCount}
                 </span>
               )}
+            </Link>
+
+            <Link
+              href={customer ? '/account' : '/account/login'}
+              className="hidden sm:flex items-center justify-center h-10 w-10 border-2 border-zinc-700 text-zinc-400 transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              aria-label={customer ? 'Il mio account' : 'Accedi'}
+              title={customer ? 'Il mio account' : 'Accedi'}
+            >
+              <User className="h-5 w-5" />
             </Link>
 
             <button

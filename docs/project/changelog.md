@@ -1,27 +1,28 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Replatform Medusa F2 step 1 — storefront su Medusa (catalogo + cart + checkout + analytics)**.
+Ultima sessione: **Replatform Medusa F2 — storefront su Medusa completo (catalogo + cart + checkout + account cliente)**.
 
 ---
 
-## Sessione 2026-08-29 — Replatform Medusa F2 step 1
+## Sessione 2026-08-29 — Replatform Medusa F2 (completa)
 
 Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-29-medusa-replatforming-f2.md`). Branch **`feat/medusa-replatform`**.
 
-**Storefront → Medusa**:
-- Nuovo layer `src/lib/medusa/` (client fetch tipato con publishable key, **nessuna nuova dipendenza**): `client.ts`, `products.ts` (adapter `toStorefrontProduct` + catalog/collections/categories), `cart.ts` (Medusa cart ops).
-- Pagine catalogo re-punted: `/shop`, `/shop/bestsellers`, `/shop/new-arrivals`, `/shop/espansioni`, `/shop/espansioni/[slug]`, `/products/[slug]`, `sitemap`, `FeaturedProducts`, `EspansionsShowcase` — niente più `getPayloadClient`.
-- **Cart → Medusa cart**: `CartProvider` riscritto (crea cart su primo add, line items dalla store API, stessa interfaccia `useCart`); pure funzioni `computeTotals`/`toCartItem`.
-- **Checkout**: route `/api/medusa/checkout` (shipping Standard/Gratuita, payment collection, sessione Stripe; provider "system" per test) + pagina con **Stripe Payment Element**; success page → `/api/medusa/order`.
+**Storefront → Medusa (F2 completo):**
+- Layer `src/lib/medusa/` (client fetch tipato, adapter `toStorefrontProduct`, catalog/collections/categories, cart ops, **customer auth**).
+- Catalogo re-punted: `/shop`, `/shop/bestsellers`, `/shop/new-arrivals`, `/shop/espansioni`, `/shop/espansioni/[slug]`, `/products/[slug]`, sitemap, `FeaturedProducts`, `EspansionsShowcase`.
+- **Cart → Medusa cart** (CartProvider con cart server-side, stessa interfaccia `useCart`).
+- **Checkout**: `/api/medusa/checkout` (shipping + payment collection + sessione Stripe) + Payment Element; success via `/api/medusa/order`.
+- **Account cliente**: `/account/login`, `/account/register`, `/account` (My Account con storico ordini via `/store/orders`); `AuthProvider` nel layout; link account in Header. Fix: token di register "actorless" → re-login dopo la creazione profilo.
+- **Backend**: subscriber `order.placed` → snapshot costo FIFO (`metadata.dcc_cost_snapshots`).
 - **Analytics**: begin_checkout/purchase su dati Medusa.
-- **Backend**: subscriber `order.placed` → snapshot costo FIFO (`metadata.dcc_cost_snapshots`) + ricalcolo costo medio per gli ordini website (guardia anti-doppio-consumo).
 
-**Fix ambientali**: `tsconfig.json` root esclude `apps/backend`; `pnpm-workspace.yaml` `allowBuilds esbuild: true` (sblocca `pnpm install` pnpm 11).
+**Fix ambientali**: `tsconfig.json` root esclude `apps/backend`; `pnpm-workspace.yaml` `allowBuilds esbuild: true`.
 
-**Verifica**: `pnpm lint` ✓ · backend tsc ✓ · test storefront **104/104** ✓ · smoke con Medusa reale: store API (prezzo 12000, `inventory_quantity` 9 — fix: serve `variants.manage_inventory` nei fields) · `/shop` e PDP renderizzano "Bundle Paldea Evolved" da Medusa ✓.
+**Verifica**: `pnpm lint` ✓ · backend tsc ✓ · test **104/104** ✓ · smoke con Medusa reale: `/shop`+PDP da Medusa ✓ · account flow (register→customer→login→`/me`→`/orders`) ✓.
 
-**Note**: account cliente rimandato a F2 step 2; checkout Stripe reale serve chiavi + provider `stripe` sulla region (F3).
+**Note**: checkout Stripe reale + deploy → **F3** (serve infra utente).
 
 ---
 

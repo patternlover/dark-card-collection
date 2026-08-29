@@ -57,8 +57,21 @@ reale (`/shop` e PDP renderizzano "Bundle Paldea Evolved" da Medusa).
 - Medusa boot con subscriber `order.placed` ok.
 
 ### Note per step 2
-- **Account cliente** (login/register/My Account): da implementare (auth Medusa emailpass).
+- **Account cliente**: ✅ implementato (step 2) — vedi sotto.
 - Checkout reale Stripe: servono `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` + provider `stripe`
   abilitato sulla region (F3 o chiavi dev).
 - Il demo product non ha collection → "Espansioni" vuote finché i prodotti non hanno collection.
 - Payload resta usato da dashboard/API/llms (rimozione in F3).
+
+## Changelog F2 step 2 — Account cliente
+
+- **`src/lib/medusa/customer.ts`**: login (`/auth/customer/emailpass`), register
+  (`/auth/customer/emailpass/register` + `POST /store/customers`), `getCustomer`
+  (`/store/customers/me`), `getCustomerOrders` (`/store/orders`). Token JWT in localStorage.
+- **Fix importante**: il token di register è "actorless" → dopo la creazione del profilo
+  serve un **re-login** per ottenere il token con l'actor (altrimenti `/me` → 401).
+- **`src/hooks/useAuth.tsx`**: `AuthProvider` (customer, token, login, register, logout,
+  orders, refreshOrders) montato nel root layout.
+- **Pagine**: `/account/login`, `/account/register`, `/account` (My Account: dati + storico
+  ordini, guardia redirect se non loggato). Link account nell'Header (client, `useAuth`).
+- **Verifica**: tsc ✓ · test 104/104 ✓ · smoke API: register→customer→login→`/me` (email+name)→`/orders` (0) ✓.
