@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getPayloadClient } from '@/lib/payload'
+import { listCatalogCollections, toCollectionRef } from '@/lib/medusa/products'
 import { formatCollectionName } from '@/lib/collections'
 import { Reveal } from '@/components/ui/Reveal'
 
@@ -7,15 +7,10 @@ export async function EspansionsShowcase() {
   let espansioni: any[] = []
 
   try {
-    const payload = await getPayloadClient()
-    const result = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      limit: 4,
-      sort: 'name',
-    })
-    espansioni = result.docs
+    const collections = await listCatalogCollections()
+    espansioni = collections.slice(0, 4).map(toCollectionRef)
   } catch {
-    // DB might not be connected during build
+    // Medusa non raggiungibile
   }
 
   if (espansioni.length === 0) return null
@@ -43,11 +38,6 @@ export async function EspansionsShowcase() {
                 className="flex h-full flex-col border-2 border-zinc-700 bg-zinc-900 p-4 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
               >
                 <h3 className="font-semibold text-white line-clamp-2">{formatCollectionName(col.name)}</h3>
-                {col.releaseDate && (
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Uscita: {new Date(col.releaseDate).toLocaleDateString('it-IT')}
-                  </p>
-                )}
                 <p className="mt-auto pt-3 text-xs text-[var(--accent)]">Vedi prodotti →</p>
               </Link>
             </Reveal>

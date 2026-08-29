@@ -1,4 +1,4 @@
-import { getPayloadClient } from '@/lib/payload'
+import { listCatalogProducts } from '@/lib/medusa/products'
 import { ProductCard } from '@/components/product/ProductCard'
 import { groupProducts } from '@/lib/group-products'
 import { Reveal } from '@/components/ui/Reveal'
@@ -7,28 +7,13 @@ export async function FeaturedProducts() {
   let products: any[] = []
 
   try {
-    const payload = await getPayloadClient()
-    const baseWhere: any = {}
-    const featuredResult = await payload.find({
-      overrideAccess: true,
-      collection: 'products',
-      where: { AND: [{ ...baseWhere }, { is_visible: { equals: true } }, { featured: { equals: true } }] },
-      limit: 100,
-      sort: '-createdAt',
-    })
-    products = featuredResult.docs
+    const all = await listCatalogProducts({ limit: 100 })
+    products = all.filter((p) => p.featured)
     if (products.length === 0) {
-      const fallback = await payload.find({
-        overrideAccess: true,
-        collection: 'products',
-        where: { AND: [{ ...baseWhere }, { is_visible: { equals: true } }] },
-        limit: 100,
-        sort: '-createdAt',
-      })
-      products = fallback.docs
+      products = all
     }
   } catch {
-    // DB might not be connected during build
+    // Medusa non raggiungibile
   }
 
   const groups = groupProducts(products).slice(0, 4)

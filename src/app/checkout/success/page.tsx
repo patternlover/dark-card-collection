@@ -21,7 +21,7 @@ const TRACKED_KEY = 'dcc-purchase-tracked'
 function SuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const sessionId = searchParams.get('session_id')
+  const orderId = searchParams.get('order_id')
   const { clearCart } = useCart()
   const clearedRef = useRef(false)
   const [order, setOrder] = useState<{
@@ -38,19 +38,19 @@ function SuccessContent() {
       clearCart()
     }
 
-    if (!sessionId) {
+    if (!orderId) {
       setLoading(false)
       return
     }
 
-    fetch(`/api/stripe/order?session_id=${sessionId}`)
+    fetch(`/api/medusa/order?order_id=${orderId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.order) {
           setOrder(data.order)
-          const alreadyTracked = typeof window !== 'undefined' && sessionStorage.getItem(TRACKED_KEY) === sessionId
+          const alreadyTracked = typeof window !== 'undefined' && sessionStorage.getItem(TRACKED_KEY) === orderId
           if (!alreadyTracked) {
-            sessionStorage.setItem(TRACKED_KEY, sessionId)
+            sessionStorage.setItem(TRACKED_KEY, orderId)
             trackPurchase(
               data.order.transactionId,
               data.order.items.map((item: OrderItem) => ({
@@ -67,7 +67,7 @@ function SuccessContent() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [sessionId, clearCart])
+  }, [orderId, clearCart])
 
   useEffect(() => {
     if (loading || !order) return

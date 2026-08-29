@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPayloadClient } from '@/lib/payload'
+import {
+  getCatalogCollectionByHandle,
+  listCatalogCollections,
+  listCatalogProducts,
+  toCollectionRef,
+} from '@/lib/medusa/products'
 import { groupProducts } from '@/lib/group-products'
 import { ProductCard } from '@/components/product/ProductCard'
 import { JsonLd } from '@/components/seo/JsonLd'
@@ -20,19 +25,11 @@ export async function generateMetadata({
   const { slug } = await params
   const url = `${SITE_URL}/shop/espansioni/${slug}`
   try {
-    const payload = await getPayloadClient()
-    const result = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      where: { slug: { equals: slug } },
-      limit: 1,
-    })
-    const col = result.docs[0]
+    const col = await getCatalogCollectionByHandle(slug)
     if (!col) return { title: 'Espansione non trovata' }
     return {
-      title: `${col.name} | Booster Box, ETB e Collection Box`,
-      description: col.description
-        ? `${col.description} Scopri booster box, ETB e collection box di ${col.name}: originali e sigillati, spedizione gratuita in Italia dagli 80 €.`
-        : `Booster Box, ETB e Collection Box dell'espansione ${col.name}: originali e sigillati, spedizione gratuita in Italia dagli 80 €.`,
+      title: `${col.title} | Booster Box, ETB e Collection Box`,
+      description: `Booster Box, ETB e Collection Box dell'espansione ${col.title}: originali e sigillati, spedizione gratuita in Italia dagli 80 €.`,
       alternates: { canonical: url },
     }
   } catch {
@@ -52,34 +49,17 @@ export default async function EspansionePage({
   let otherEspansioni: any[] = []
 
   try {
-    const payload = await getPayloadClient()
-    const colResult = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      where: { slug: { equals: slug } },
-      limit: 1,
-    })
-    espansione = colResult.docs[0]
+    const collection = await getCatalogCollectionByHandle(slug)
+    if (!collection) notFound()
+    espansione = toCollectionRef(collection)
 
-    if (!espansione) notFound()
+    products = await listCatalogProducts({ collectionId: collection.id, limit: 100 })
 
-    const colId = typeof espansione === 'object' ? espansione.id : espansione
-    const prodResult = await payload.find({ overrideAccess: true, 
-      collection: 'products',
-      where: {
-        AND: [{ expansion: { equals: colId } }, { is_visible: { equals: true } }],
-      },
-      limit: 100,
-      sort: '-createdAt',
-    })
-    products = prodResult.docs
-
-    const otherResult = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      where: { id: { not_equals: colId } },
-      limit: 8,
-      sort: 'name',
-    })
-    otherEspansioni = otherResult.docs
+    const all = await listCatalogCollections()
+    otherEspansioni = all
+      .filter((c) => c.id !== collection.id)
+      .slice(0, 8)
+      .map(toCollectionRef)
   } catch {
     notFound()
   }

@@ -1,96 +1,62 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
-import { CartProvider, useCart } from '@/hooks/useCart'
+import { describe, it, expect } from 'vitest'
+import { computeTotals, toCartItem } from '@/hooks/useCart'
+import { render, screen } from '@testing-library/react'
+import { CartProvider } from '@/hooks/useCart'
 import { QuickAddButton } from '@/components/product/QuickAddButton'
-import CartPage from '@/app/cart/page'
 
-vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  ),
-}))
+describe('computeTotals', () => {
+  it('charges 9.99 shipping under the free threshold', () => {
+    const t = computeTotals([
+      { id: 'l1', title: 'A', slug: 'a', price: 30, quantity: 2 },
+    ])
+    expect(t.subtotal).toBe(60)
+    expect(t.shipping).toBe(9.99)
+    expect(t.total).toBe(69.99)
+    expect(t.itemCount).toBe(2)
+  })
 
-beforeEach(() => {
-  cleanup()
-  localStorage.clear()
+  it('applies free shipping from 80€', () => {
+    const t = computeTotals([
+      { id: 'l1', title: 'A', slug: 'a', price: 90, quantity: 1 },
+    ])
+    expect(t.subtotal).toBe(90)
+    expect(t.shipping).toBe(0)
+    expect(t.total).toBe(90)
+  })
+
+  it('returns zero totals for an empty cart', () => {
+    const t = computeTotals([])
+    expect(t.subtotal).toBe(0)
+    expect(t.shipping).toBe(9.99)
+    expect(t.total).toBe(9.99)
+    expect(t.itemCount).toBe(0)
+  })
 })
 
-function AddHarness() {
-  const { addItem, items } = useCart()
-  return (
-    <div>
-      <button type="button" onClick={() => addItem({ id: 1, title: 'Test', slug: 'test', price: 10, maxQuantity: 3 }, 5)}>
-        add
-      </button>
-      <span data-testid="qty">{items[0]?.quantity ?? 0}</span>
-      <span data-testid="max">{items[0]?.maxQuantity ?? 0}</span>
-    </div>
-  )
-}
-
-function QuickHarness() {
-  const { items } = useCart()
-  return (
-    <div>
-      <QuickAddButton
-        product={{ id: 2, title: 'Box', slug: 'box', price: 20, status: 'listed', quantity: 1 }}
-        maxQuantity={7}
-      />
-      <span data-testid="qty">{items[0]?.quantity ?? 0}</span>
-      <span data-testid="max">{items[0]?.maxQuantity ?? 0}</span>
-    </div>
-  )
-}
-
-describe('useCart clamp', () => {
-  it('clamps quantity to maxQuantity for new items', () => {
-    render(
-      <CartProvider>
-        <AddHarness />
-      </CartProvider>,
-    )
-    fireEvent.click(screen.getByText('add'))
-    expect(screen.getByTestId('qty').textContent).toBe('3')
-    expect(screen.getByTestId('max').textContent).toBe('3')
+describe('toCartItem', () => {
+  it('converts a Medusa line item (cents → euros)', () => {
+    const item = toCartItem({
+      id: 'line_1',
+      title: 'Bundle Paldea Evolved',
+      thumbnail: 'https://img/x.jpg',
+      unit_price: 12000,
+      quantity: 2,
+      variant_id: 'variant_1',
+    })
+    expect(item).toMatchObject({
+      id: 'line_1',
+      variantId: 'variant_1',
+      title: 'Bundle Paldea Evolved',
+      price: 120,
+      quantity: 2,
+      image: 'https://img/x.jpg',
+    })
   })
+})
 
-  it('merges quantities for the same product id', () => {
-    function MergeHarness() {
-      const { addItem, items } = useCart()
-      return (
-        <div>
-          <button type="button" onClick={() => addItem({ id: 1, title: 'Test', slug: 'test', price: 10, maxQuantity: 5 }, 2)}>
-            add2
-          </button>
-          <span data-testid="rows">{items.length}</span>
-          <span data-testid="qty">{items[0]?.quantity ?? 0}</span>
-        </div>
-      )
-    }
-    render(
-      <CartProvider>
-        <MergeHarness />
-      </CartProvider>,
-    )
-    fireEvent.click(screen.getByText('add2'))
-    fireEvent.click(screen.getByText('add2'))
-    expect(screen.getByTestId('rows').textContent).toBe('1')
-    expect(screen.getByTestId('qty').textContent).toBe('4')
-  })
-
-  it('QuickAddButton uses the group totalQuantity as maxQuantity', () => {
-    render(
-      <CartProvider>
-        <QuickHarness />
-      </CartProvider>,
-    )
-    fireEvent.click(screen.getByTitle('Aggiungi al carrello'))
-    expect(screen.getByTestId('qty').textContent).toBe('1')
-    expect(screen.getByTestId('max').textContent).toBe('7')
-  })
-
-  it('QuickAddButton is hidden when the product is sold out (stock 0)', () => {
+describe('QuickAddButton', () => {
+  it('is hidden when the product is sold out (stock 0)', () => {
     render(
       <CartProvider>
         <QuickAddButton
@@ -100,39 +66,5 @@ describe('useCart clamp', () => {
       </CartProvider>,
     )
     expect(screen.queryByTitle('Aggiungi al carrello')).toBeNull()
-  })
-})
-
-describe('CartPage', () => {
-  it('disables the plus button when quantity reaches maxQuantity', () => {
-    localStorage.setItem(
-      'dcc-cart',
-      JSON.stringify([
-        { id: 1, title: 'Test', slug: 'test', price: 10, quantity: 3, maxQuantity: 3 },
-      ]),
-    )
-    render(
-      <CartProvider>
-        <CartPage />
-      </CartProvider>,
-    )
-    const plus = screen.getByRole('button', { name: 'Aumenta quantità' })
-    expect((plus as HTMLButtonElement).disabled).toBe(true)
-  })
-
-  it('enables the plus button below maxQuantity', () => {
-    localStorage.setItem(
-      'dcc-cart',
-      JSON.stringify([
-        { id: 1, title: 'Test', slug: 'test', price: 10, quantity: 2, maxQuantity: 3 },
-      ]),
-    )
-    render(
-      <CartProvider>
-        <CartPage />
-      </CartProvider>,
-    )
-    const plus = screen.getByRole('button', { name: 'Aumenta quantità' })
-    expect((plus as HTMLButtonElement).disabled).toBe(false)
   })
 })

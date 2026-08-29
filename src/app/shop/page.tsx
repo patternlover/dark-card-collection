@@ -1,4 +1,10 @@
-import { getPayloadClient } from '@/lib/payload'
+import {
+  listCatalogCategories,
+  listCatalogCollections,
+  listCatalogProducts,
+  toCategoryRef,
+  toCollectionRef,
+} from '@/lib/medusa/products'
 import { ListingShell } from '@/components/sections/ListingShell'
 import type { Metadata } from 'next'
 
@@ -19,32 +25,13 @@ export default async function ShopPage() {
   let espansioni: any[] = []
 
   try {
-    const payload = await getPayloadClient()
-
-    const result = await payload.find({ overrideAccess: true, 
-      collection: 'products',
-      where: { is_visible: { equals: true } },
-      limit: 50,
-      sort: '-createdAt',
-    })
-    products = result.docs
-
-
-    const catResult = await payload.find({ overrideAccess: true, 
-      collection: 'categories',
-      limit: 50,
-      sort: 'name',
-    })
-    categories = catResult.docs
-
-    const colResult = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      limit: 50,
-      sort: 'name',
-    })
-    espansioni = colResult.docs
+    products = await listCatalogProducts({ limit: 50 })
+    const collections = await listCatalogCollections()
+    espansioni = collections.slice(0, 50).map(toCollectionRef)
+    const cats = await listCatalogCategories()
+    categories = cats.slice(0, 50).map(toCategoryRef)
   } catch {
-    // DB might not be connected during build
+    // Medusa non raggiungibile
   }
 
   return (

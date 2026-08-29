@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getPayloadClient } from '@/lib/payload'
+import { getCatalogProduct, listCatalogProducts } from '@/lib/medusa/products'
 import { groupProducts } from '@/lib/group-products'
 import { Badge } from '@/components/ui/Badge'
 import { JsonLd } from '@/components/seo/JsonLd'
@@ -40,23 +40,10 @@ export async function generateMetadata({
   const { slug } = await params
   const url = `${SITE_URL}/products/${slug}`
   try {
-    const payload = await getPayloadClient()
-    const result = await payload.find({ overrideAccess: true, 
-      collection: 'products',
-      where: {
-        and: [
-          { slug: { equals: slug } },
-          { is_visible: { equals: true } },
-                  ],
-      },
-      limit: 1,
-      depth: 1,
-    })
-    const product = result.docs[0]
+    const product = await getCatalogProduct(slug)
     if (!product) return { title: 'Prodotto non trovato' }
 
-    const price =
-      product.price && product.price > 0 ? `€${product.price.toFixed(2)}` : ''
+    const price = product.price > 0 ? `€${product.price.toFixed(2)}` : ''
     const expList = (Array.isArray(product.item_category_2)
       ? product.item_category_2
       : product.item_category_2
@@ -73,10 +60,7 @@ export async function generateMetadata({
         ? `${product.description.slice(0, 130)}. Spedizione gratuita in Italia dagli 80 €.`
         : `${product.title} in vendita presso Dark Card Collection: originale e sigillato, spedizione gratuita in Italia dagli 80 €.`
 
-    const firstImage = product.images?.[0]?.image
-    const imageUrl = absoluteUrl(
-      firstImage && typeof firstImage === 'object' ? firstImage.url : null,
-    )
+    const imageUrl = absoluteUrl(product.images?.[0]?.image?.url ?? null)
 
     return {
       title,
@@ -138,39 +122,12 @@ export default async function ProductPage({
   let group: any = null
   let relatedGroups: any[] = []
 
-  const payload = await getPayloadClient()
-
-  const result = await payload.find({ overrideAccess: true, 
-    collection: 'products',
-    where: {
-      and: [
-        { slug: { equals: slug } },
-        { is_visible: { equals: true } },
-              ],
-    },
-    limit: 1,
-    depth: 1,
-  })
-
-  if (result.docs.length === 0) {
+  product = await getCatalogProduct(slug)
+  if (!product) {
     notFound()
   }
 
-  product = result.docs[0]
-
-  const allVariants = await payload.find({ overrideAccess: true, 
-    collection: 'products',
-    where: {
-      and: [
-        { title: { equals: product.title } },
-        { is_visible: { equals: true } },
-              ],
-    },
-    limit: 100,
-    depth: 1,
-  })
-
-  const groups = groupProducts(allVariants.docs)
+  const groups = groupProducts([product])
   group = groups[0] || null
 
   const expList = (Array.isArray(product.item_category_2)
@@ -179,20 +136,12 @@ export default async function ProductPage({
       ? [product.item_category_2]
       : []) as any[]
 
-  if (expList.length > 0) {
-    const colId = expList[0]?.id
-    const related = await payload.find({ overrideAccess: true, 
-      collection: 'products',
-      where: {
-        and: [
-          { expansion: { equals: colId } },
-          { id: { not_equals: product.id } },
-                    { is_visible: { equals: true } },
-        ],
-      },
-      limit: 50,
-    })
-    relatedGroups = groupProducts(related.docs)
+  if (expList.length > 0 && expList[0]?.id) {
+    const colId = expList[0].id
+    const related = await listCatalogProducts({ collectionId: colId, limit: 50 })
+    relatedGroups = groupProducts(
+      related.filter((p: any) => p.productId !== product.productId),
+    )
   }
 
   if (!product || !group) notFound()

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { getPayloadClient } from '@/lib/payload'
+import { listCatalogCollections, listCatalogProducts } from '@/lib/medusa/products'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com'
 
@@ -32,52 +32,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
 
   try {
-    const payload = await getPayloadClient()
-
-    const collections = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      limit: 500,
-      sort: 'name',
-    })
-    for (const col of collections.docs) {
-      if (!col.slug) continue
+    const collections = await listCatalogCollections()
+    for (const col of collections) {
+      if (!col.handle) continue
       entries.push({
-        url: `${SITE_URL}/shop/espansioni/${col.slug}`,
-        lastModified: new Date(col.updatedAt || Date.now()),
+        url: `${SITE_URL}/shop/espansioni/${col.handle}`,
+        lastModified: new Date(),
         changeFrequency: 'daily' as const,
         priority: 0.8,
       })
     }
 
-    let page = 1
-    while (page <= 20) {
-      const products = await payload.find({ overrideAccess: true, 
-        collection: 'products',
-        where: {
-          and: [
-            { is_visible: { equals: true } },
-          ],
-        },
-        limit: 100,
-        page,
-        sort: 'updatedAt',
+    const products = await listCatalogProducts({ limit: 2000 })
+    for (const product of products) {
+      if (!product.slug) continue
+      entries.push({
+        url: `${SITE_URL}/products/${product.slug}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: 0.7,
       })
-
-      for (const product of products.docs) {
-        if (!product.slug) continue
-        entries.push({
-          url: `${SITE_URL}/products/${product.slug}`,
-          lastModified: new Date(product.updatedAt || Date.now()),
-          changeFrequency: 'daily' as const,
-          priority: 0.7,
-        })
-      }
-
-      if (page >= products.totalPages || products.docs.length === 0) break
-      page += 1
     }
   } catch {
-    // DB non disponibile durante il build: restituisci solo le rotte statiche
+    // Medusa non raggiungibile durante il build: restituisci solo le rotte statiche
   }
 
   return entries

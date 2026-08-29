@@ -1,4 +1,10 @@
-import { getPayloadClient } from '@/lib/payload'
+import {
+  listCatalogCategories,
+  listCatalogCollections,
+  listCatalogProducts,
+  toCategoryRef,
+  toCollectionRef,
+} from '@/lib/medusa/products'
 import { ListingShell } from '@/components/sections/ListingShell'
 import type { Metadata } from 'next'
 
@@ -19,49 +25,16 @@ export default async function BestsellersPage() {
   let espansioni: any[] = []
 
   try {
-    const payload = await getPayloadClient()
+    const all = await listCatalogProducts({ limit: 50 })
+    products = all.filter((p) => p.featured)
+    if (products.length === 0) products = all
 
-    const result = await payload.find({ overrideAccess: true, 
-      collection: 'products',
-      where: {
-        and: [
-          { is_visible: { equals: true } },
-          { featured: { equals: true } },
-        ],
-      },
-      limit: 50,
-      sort: '-createdAt',
-    })
-    products = result.docs
-
-    if (products.length === 0) {
-      const fallback = await payload.find({ overrideAccess: true, 
-        collection: 'products',
-        where: {
-          and: [{ is_visible: { equals: true } }],
-        },
-        limit: 50,
-        sort: '-createdAt',
-      })
-      products = fallback.docs
-    }
-
-
-    const catResult = await payload.find({ overrideAccess: true, 
-      collection: 'categories',
-      limit: 50,
-      sort: 'name',
-    })
-    categories = catResult.docs
-
-    const colResult = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      limit: 50,
-      sort: 'name',
-    })
-    espansioni = colResult.docs
+    const collections = await listCatalogCollections()
+    espansioni = collections.slice(0, 50).map(toCollectionRef)
+    const cats = await listCatalogCategories()
+    categories = cats.slice(0, 50).map(toCategoryRef)
   } catch {
-    // DB might not be connected during build
+    // Medusa non raggiungibile
   }
 
   return (

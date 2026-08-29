@@ -1,7 +1,27 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Replatform Medusa F1 — modulo custom `procurement` (lotti/FIFO/costo medio/margini)**.
+Ultima sessione: **Replatform Medusa F2 step 1 — storefront su Medusa (catalogo + cart + checkout + analytics)**.
+
+---
+
+## Sessione 2026-08-29 — Replatform Medusa F2 step 1
+
+Sessione OpenCode (dettagli: `docs/project/sessions/2026-08-29-medusa-replatforming-f2.md`). Branch **`feat/medusa-replatform`**.
+
+**Storefront → Medusa**:
+- Nuovo layer `src/lib/medusa/` (client fetch tipato con publishable key, **nessuna nuova dipendenza**): `client.ts`, `products.ts` (adapter `toStorefrontProduct` + catalog/collections/categories), `cart.ts` (Medusa cart ops).
+- Pagine catalogo re-punted: `/shop`, `/shop/bestsellers`, `/shop/new-arrivals`, `/shop/espansioni`, `/shop/espansioni/[slug]`, `/products/[slug]`, `sitemap`, `FeaturedProducts`, `EspansionsShowcase` — niente più `getPayloadClient`.
+- **Cart → Medusa cart**: `CartProvider` riscritto (crea cart su primo add, line items dalla store API, stessa interfaccia `useCart`); pure funzioni `computeTotals`/`toCartItem`.
+- **Checkout**: route `/api/medusa/checkout` (shipping Standard/Gratuita, payment collection, sessione Stripe; provider "system" per test) + pagina con **Stripe Payment Element**; success page → `/api/medusa/order`.
+- **Analytics**: begin_checkout/purchase su dati Medusa.
+- **Backend**: subscriber `order.placed` → snapshot costo FIFO (`metadata.dcc_cost_snapshots`) + ricalcolo costo medio per gli ordini website (guardia anti-doppio-consumo).
+
+**Fix ambientali**: `tsconfig.json` root esclude `apps/backend`; `pnpm-workspace.yaml` `allowBuilds esbuild: true` (sblocca `pnpm install` pnpm 11).
+
+**Verifica**: `pnpm lint` ✓ · backend tsc ✓ · test storefront **104/104** ✓ · smoke con Medusa reale: store API (prezzo 12000, `inventory_quantity` 9 — fix: serve `variants.manage_inventory` nei fields) · `/shop` e PDP renderizzano "Bundle Paldea Evolved" da Medusa ✓.
+
+**Note**: account cliente rimandato a F2 step 2; checkout Stripe reale serve chiavi + provider `stripe` sulla region (F3).
 
 ---
 

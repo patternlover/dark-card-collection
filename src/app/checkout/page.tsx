@@ -1,93 +1,121 @@
-'use client'
+"use client"
 
-import { useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { Lock } from 'lucide-react'
-import { loadStripe } from '@stripe/stripe-js'
-import { useCart } from '@/hooks/useCart'
-import { trackBeginCheckout } from '@/lib/analytics'
-import { LoadingFallback } from '@/components/ui/LoadingFallback'
-import { Reveal } from '@/components/ui/Reveal'
-import { Breadcrumb } from '@/components/ui/Breadcrumb'
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { Lock } from "lucide-react"
+import { loadStripe, Stripe, StripeElements } from "@stripe/stripe-js"
+import { useCart } from "@/hooks/useCart"
+import { trackBeginCheckout } from "@/lib/analytics"
+import { medusaFetch } from "@/lib/medusa/client"
+import { LoadingFallback } from "@/components/ui/LoadingFallback"
+import { Reveal } from "@/components/ui/Reveal"
+import { Breadcrumb } from "@/components/ui/Breadcrumb"
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '',
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 )
 
+async function pollForOrderId(cartId: string): Promise<string> {
+  for (let i = 0; i < 40; i++) {
+    const cart = await medusaFetch<{ order_id?: string | null; completed_at?: string | null }>(
+      `/carts/${cartId}`,
+    )
+    if (cart.order_id) return cart.order_id
+    await new Promise((r) => setTimeout(r, 1500))
+  }
+  throw new Error("Ordine non ancora confermato")
+}
+
 export default function CheckoutPage() {
-  const { items, shipping, total } = useCart()
-  const [loading, setLoading] = useState<boolean>(() => (items.length === 0 ? false : true))
-  const [error, setError] = useState('')
-  const startedRef = useRef(false)
+  const { items, cartId, shipping, total, loading } = useCart()
+  const [state, setState] = useState<"init" | "ready" | "processing" | "error">("init")
+  const [error, setError] = useState("")
+  const stripeRef = useRef<Stripe | null>(null)
+  const elementsRef = useRef<StripeElements | null>(null)
 
   useEffect(() => {
-    if (startedRef.current) return
-    startedRef.current = true
+    if (loading) return
+    if (items.length === 0) {
+      setState("init")
+      return
+    }
+    if (!cartId) {
+      setError("Carrello non inizializzato")
+      setState("error")
+      return
+    }
+
     let cancelled = false
 
-    async function initCheckout() {
+    async function init() {
       try {
-        if (items.length === 0) {
-          setLoading(false)
-          return
-        }
-
         trackBeginCheckout(
           items.map((item) => ({
-            item_id: String(item.id),
+            item_id: String(item.variantId ?? item.id),
             item_name: item.title,
             price: item.price,
-            currency: 'EUR',
+            currency: "EUR",
             quantity: item.quantity,
           })),
           total,
         )
 
-        const res = await fetch('/api/stripe/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items: items.map((item) => ({
-              id: item.id,
-              quantity: item.quantity,
-            })),
-          }),
+        const res = await fetch("/api/medusa/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cart_id: cartId }),
         })
-
         const data = await res.json()
         if (!data.client_secret) {
-          throw new Error(data.error || 'Errore nel checkout')
-        }
-
-        if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-          throw new Error('Configurazione Stripe mancante')
+          throw new Error(data.error || "Errore nel checkout")
         }
 
         const stripe = await stripePromise
-        if (!stripe) throw new Error('Impossibile caricare Stripe')
-
-        const checkout = await stripe.createEmbeddedCheckoutPage({
-          clientSecret: data.client_secret,
-        })
-
+        if (!stripe) throw new Error("Impossibile caricare Stripe")
+        const elements = stripe.elements({ clientSecret: data.client_secret })
+        const paymentElement = elements.create("payment")
+        paymentElement.mount("#payment-element")
+        stripeRef.current = stripe
+        elementsRef.current = elements
         if (cancelled) return
-        const el = document.getElementById('embedded-checkout')
-        if (el) checkout.mount(el)
-        setLoading(false)
+        setState("ready")
       } catch (err) {
         if (cancelled) return
-        setError(err instanceof Error ? err.message : 'Errore nel checkout')
-        setLoading(false)
+        setError(err instanceof Error ? err.message : "Errore nel checkout")
+        setState("error")
       }
     }
 
-    initCheckout()
+    init()
     return () => {
       cancelled = true
     }
-  }, [items, shipping, total])
+  }, [items, cartId, total, loading])
 
-  if (items.length === 0 && !loading) {
+  async function handleSubmit() {
+    const stripe = stripeRef.current
+    const elements = elementsRef.current
+    if (!stripe || !elements || !cartId) return
+    setState("processing")
+    try {
+      const { error: confirmError } = await stripe.confirmPayment({
+        elements,
+        redirect: "if_required",
+      })
+      if (confirmError) {
+        setError(confirmError.message || "Errore di pagamento")
+        setState("ready")
+        return
+      }
+      const orderId = await pollForOrderId(cartId)
+      window.location.href = `/checkout/success?order_id=${orderId}`
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Errore di pagamento")
+      setState("ready")
+    }
+  }
+
+  if (!loading && items.length === 0) {
     return (
       <div className="bg-black">
         <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
@@ -108,7 +136,7 @@ export default function CheckoutPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumb
           className="mb-4"
-          items={[{ label: 'Home', href: '/' }, { label: 'Carrello', href: '/cart' }, { label: 'Checkout' }]}
+          items={[{ label: "Home", href: "/" }, { label: "Carrello", href: "/cart" }, { label: "Checkout" }]}
         />
         <Reveal>
           <h1 className="mb-8 text-3xl font-black uppercase tracking-tight text-white">Checkout</h1>
@@ -116,7 +144,7 @@ export default function CheckoutPage() {
 
         {error && (
           <div className="mb-6 rounded-lg border border-red-800 bg-red-900/20 p-4 text-sm text-red-400">
-            {error}{' '}
+            {error}{" "}
             <Link href="/cart" className="underline underline-offset-2 hover:text-red-300">
               Torna al carrello
             </Link>
@@ -159,7 +187,7 @@ export default function CheckoutPage() {
                 <div className="border-t border-zinc-800 pt-3 flex justify-between text-sm">
                   <span className="text-zinc-400">Spedizione</span>
                   <span className="text-white">
-                    {shipping === 0 ? 'Gratuita' : `€${shipping.toFixed(2)}`}
+                    {shipping === 0 ? "Gratuita" : `€${shipping.toFixed(2)}`}
                   </span>
                 </div>
                 <div className="border-t border-zinc-800 pt-3 flex justify-between text-base font-bold">
@@ -175,12 +203,21 @@ export default function CheckoutPage() {
           </div>
 
           <div className="lg:col-span-3">
-            <div className="relative border-2 border-zinc-700 bg-zinc-900 shadow-[4px_4px_0px_0px_#27272a]">
-              <div id="embedded-checkout" className="min-h-[540px]" />
-              {loading && !error && (
-                <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+            <div className="relative border-2 border-zinc-700 bg-zinc-900 p-6 shadow-[4px_4px_0px_0px_#27272a]">
+              {state === "init" || state === "processing" ? (
+                <div className="flex min-h-[300px] items-center justify-center">
                   <LoadingFallback label="Preparazione del pagamento..." />
                 </div>
+              ) : null}
+              <div id="payment-element" className={state === "ready" ? "" : "hidden"} />
+              {state === "ready" && (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="mt-4 w-full rounded-lg bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-zinc-200"
+                >
+                  Paga €{total.toFixed(2)}
+                </button>
               )}
             </div>
           </div>

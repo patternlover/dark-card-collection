@@ -1,4 +1,4 @@
-import { getPayloadClient } from '@/lib/payload'
+import { listCatalogCollections, toCollectionRef } from '@/lib/medusa/products'
 import Link from 'next/link'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Reveal } from '@/components/ui/Reveal'
@@ -22,15 +22,10 @@ export default async function EspansioniPage() {
   let espansioni: any[] = []
 
   try {
-    const payload = await getPayloadClient()
-    const result = await payload.find({ overrideAccess: true, 
-      collection: 'espansioni',
-      limit: 50,
-      sort: 'name',
-    })
-    espansioni = result.docs
+    const collections = await listCatalogCollections()
+    espansioni = collections.slice(0, 50).map(toCollectionRef)
   } catch {
-    // DB might not be connected during build
+    // Medusa non raggiungibile
   }
 
   const breadcrumbJsonLd = {
