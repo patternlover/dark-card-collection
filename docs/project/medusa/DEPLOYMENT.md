@@ -21,6 +21,12 @@ Postgres su **Neon free** (nuovo DB, separato da quello Payload).
 
 ## 2. VM: installazione base (una tantum)
 
+> **Modo rapido (consigliato):** copia `apps/backend/scripts/setup-vps.sh` sul VPS e lancialo
+> con `sudo bash setup-vps.sh`. Fa tutto: aggiorna, installa Docker, clona il repo, avvia lo
+> stack e lancia `db:migrate`. Deve esistere solo `.env.prod` (vedi sezione 3).
+
+Modo manuale (alternativa):
+
 ```bash
 # aggiorna il sistema
 sudo apt update && sudo apt upgrade -y
@@ -40,14 +46,15 @@ cd /opt/dcc/apps/backend
 ## 3. Configurazione env
 
 ```bash
-cp .env.example .env.prod
-# compila .env.prod con:
-#   DATABASE_URL (Neon, nuovo DB) · REDIS_URL=redis://redis:6379
-#   JWT_SECRET / COOKIE_SECRET / AUTH_MFA_ENCRYPTION_KEY (64 hex)
+# 1) Genera .env.prod con i secret JWT/COOKIE/MFA già pronti (locale, gitignored):
+node apps/backend/scripts/gen-prod-env.js
+
+# 2) Crea il DB Neon e ottieni la DATABASE_URL:
+NEON_API_KEY=neon_... bash apps/backend/scripts/create-neon-db.sh
+
+# 3) Compila .env.prod con:
+#   DATABASE_URL (dal passo 2) · REDIS_URL=redis://redis:6379
 #   STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET
-#   STORE_CORS=https://darkcardcollection.com
-#   ADMIN_CORS=https://medusa.darkcardcollection.com,https://darkcardcollection.com
-#   AUTH_CORS=https://medusa.darkcardcollection.com,https://darkcardcollection.com
 #   RESEND_API_KEY / EMAIL_FROM=noreply@darkcardcollection.com
 ```
 
