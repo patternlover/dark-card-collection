@@ -94,6 +94,10 @@ export interface StorefrontProduct {
   image_link?: string | null
   featured?: boolean
   average_sale_price?: number
+  /** Costo medio (FIFO) calcolato dal modulo procurement — metadata variant. */
+  cost_of_goods_sold?: number
+  google_product_category?: string
+  set_name?: string
 }
 
 export const CATALOG_FIELDS = [
@@ -164,6 +168,10 @@ export function toStorefrontProduct(p: MedusaProduct): StorefrontProduct | null 
     typeof meta.average_sale_price === "number" && meta.average_sale_price > 0
       ? meta.average_sale_price
       : undefined
+  const costOfGoodsSold =
+    typeof meta.cost_of_goods_sold === "number" && meta.cost_of_goods_sold >= 0
+      ? meta.cost_of_goods_sold
+      : undefined
 
   return {
     id: variant.id,
@@ -190,6 +198,11 @@ export function toStorefrontProduct(p: MedusaProduct): StorefrontProduct | null 
     image_link: p.thumbnail ?? null,
     featured: meta.featured === true,
     ...(averageSalePrice !== undefined ? { average_sale_price: averageSalePrice } : {}),
+    ...(costOfGoodsSold !== undefined ? { cost_of_goods_sold: costOfGoodsSold } : {}),
+    ...(typeof meta.google_product_category === "string"
+      ? { google_product_category: meta.google_product_category }
+      : {}),
+    ...(typeof meta.set_name === "string" ? { set_name: meta.set_name } : {}),
   }
 }
 

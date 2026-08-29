@@ -1,6 +1,6 @@
 # REPLATFORMING — Dark Card Collection su Medusa.js
 
-> **Stato**: **F0 ✅** · **F1 ✅** · **F2 ✅** (storefront su Medusa: catalogo+cart+checkout+**account cliente**, smoke ✓, 2026-08-29). Prossimo: **F3** (cutover, codice di prep disponibile; deploy richiede l'infrastruttura utente).
+> **Stato**: **F0 ✅ · F1 ✅ · F2 ✅** · **F3 🔶 code-prep fatto** (Dockerfile, railway.json, env prod, feed Merchant; deploy/cutover richiede l'infrastruttura utente — vedi sessione F3). Prossimo: eseguire i passi F3 e il cutover.
 > Branch dedicato: `feat/medusa-replatform`.
 > Questo documento è il **piano maestro** della migrazione del commerce su Medusa v2.
 > Decisione utente 2026-08-28: **Full su Medusa** — Medusa Admin diventa l'unica UI
@@ -110,7 +110,7 @@ feat/medusa-replatform
 | **F0** ✅ | Scaffold Medusa in `apps/backend`, docker-compose, config moduli+Stripe+CORS, seed (region EUR, 5 sales channel, location, admin, demo product), Admin su `:9000/app` | **done** (2026-08-28): migrate+seed ✓, `tsc` ✓, boot ✓, Admin 200 ✓, `/store/products` ✓ |
 | **F1** ✅ | Modulo `procurement` (entity/service/workflow/links) + Admin routes/widgets + test | **done** (2026-08-29): tsc ✓, test 13/13 ✓, lot→stock↑+avg cost 27 ✓, vendita esterna→ordine completed+FIFO 5→3+snapshot 54+margin 66 ✓, `medusa build` ✓ |
 | **F2** ✅ | `src/lib/medusa/*`, storefront su store API (shop/PDP/home/collections), cart→Medusa, checkout Stripe, success page, analytics, account cliente, contenuti statici | **done** (2026-08-29): tsc ✓ · test 104/104 ✓ · smoke `/shop`+PDP+account flow ✓ |
-| **F3** | Deploy Railway (backend+worker, Neon, Upstash), env storefront→prod, **rimozione Payload** (src/payload, migrations, /admin, OAuth dashboard, deps), feed Merchant, sitemap/JSON-LD | E2E su prod, CI, feed, SEO |
+| **F3** 🔶 | Deploy Railway (backend+worker, Neon, Upstash), env storefront→prod, **rimozione Payload** (src/payload, migrations, /admin, OAuth dashboard, deps), feed Merchant, sitemap/JSON-LD | code-prep done (2026-08-29: Dockerfile, railway.json, env prod, feed `/api/feed/products`); deploy/cutover = passi sessione F3 (richiede infra utente) |
 | **F4** | Promotions, returns/exchanges, backup, monitoring | — |
 
 ## 8. Ambiente
