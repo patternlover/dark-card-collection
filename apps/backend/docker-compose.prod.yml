@@ -28,9 +28,11 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file: .env.prod
+    environment:
+      - MEDUSA_WORKER_MODE=worker
     depends_on:
       - redis
-    command: ["npx", "medusa", "worker"]
+    command: ["npx", "medusa", "start"]
 
   redis:
     image: redis:7-alpine
