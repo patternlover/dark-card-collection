@@ -1,0 +1,11 @@
+node_modules
+.medusa
+dist
+build
+.env
+.env.prod
+.env.*
+!.env.example
+.git
+*.log
+uploads
