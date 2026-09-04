@@ -4,35 +4,35 @@ loadEnv(process.env.NODE_ENV || "development", process.cwd())
 
 type ModulesConfig = NonNullable<Parameters<typeof defineConfig>[0]>["modules"]
 
-// Modulo custom "procurement" (lotti, FIFO, costo medio) — core bespoke del dominio.
-// Stripe payment provider: registrato SOLO se STRIPE_SECRET_KEY è presente
-// (in dev senza chiave il checkout non è disponibile, il core payment resta attivo
-// con il provider di sistema). Da F2 verrà attivato in modo permanente.
-const modules = {
-  procurement: {
+// Moduli in forma ARRAY (come da docs Medusa v2 per i moduli custom/redis).
+const modules = [
+  {
     resolve: "./src/modules/procurement",
   },
   // Moduli Redis espliciti quando REDIS_URL è presente (produzione):
   // event bus + workflow engine + cache reali (in dev senza REDIS_URL resta il fallback in-memory).
   ...(process.env.REDIS_URL
-    ? {
-        eventBus: {
+    ? [
+        {
           resolve: "@medusajs/medusa/event-bus-redis",
           options: { redisUrl: process.env.REDIS_URL },
         },
-        workflowEngine: {
+        {
           resolve: "@medusajs/medusa/workflow-engine-redis",
-          options: { redis: { url: process.env.REDIS_URL } },
+          options: { redis: { redisUrl: process.env.REDIS_URL } },
         },
-        cache: {
+        {
           resolve: "@medusajs/medusa/cache-redis",
           options: { redisUrl: process.env.REDIS_URL },
         },
-      }
-    : {}),
+      ]
+    : []),
+  // Stripe payment provider: registrato SOLO se STRIPE_SECRET_KEY è presente
+  // (in dev senza chiave il checkout non è disponibile, il core payment resta attivo
+  // con il provider di sistema). Da F2 verrà attivato in modo permanente.
   ...(process.env.STRIPE_SECRET_KEY
-    ? {
-        payment: {
+    ? [
+        {
           resolve: "@medusajs/medusa/payment",
           options: {
             providers: [
@@ -47,9 +47,9 @@ const modules = {
             ],
           },
         },
-      }
-    : {}),
-} as ModulesConfig
+      ]
+    : []),
+]
 
 module.exports = defineConfig({
   projectConfig: {
