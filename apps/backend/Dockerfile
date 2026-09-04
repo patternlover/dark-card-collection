@@ -21,8 +21,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=build /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
 COPY --from=build /app/node_modules ./node_modules
-# Il build di Medusa v2 scrive in .medusa (server + client + types); la config
-# compilata sta in .medusa/server/medusa-config.js. `medusa start` la usa direttamente.
+# Il build di Medusa v2 scrive in .medusa (server + client + types).
+# `medusa start` carica la config da /app/medusa-config (root): la copiamo
+# dalla versione compilata in .medusa/server/medusa-config.js.
 COPY --from=build /app/.medusa ./.medusa
+COPY --from=build /app/.medusa/server/medusa-config.js ./medusa-config.js
 EXPOSE 9000
 CMD ["pnpm", "start"]
