@@ -26,5 +26,7 @@ COPY --from=build /app/node_modules ./node_modules
 # dalla versione compilata in .medusa/server/medusa-config.js.
 COPY --from=build /app/.medusa ./.medusa
 COPY --from=build /app/.medusa/server/medusa-config.js ./medusa-config.js
+# La config risolve i moduli custom via ./src/... : copiamo la versione compilata.
+COPY --from=build /app/.medusa/server/src ./src
 EXPOSE 9000
 CMD ["pnpm", "start"]
