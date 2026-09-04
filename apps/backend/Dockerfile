@@ -28,5 +28,7 @@ COPY --from=build /app/.medusa ./.medusa
 COPY --from=build /app/.medusa/server/medusa-config.js ./medusa-config.js
 # La config risolve i moduli custom via ./src/... : copiamo la versione compilata.
 COPY --from=build /app/.medusa/server/src ./src
+# medusa start serve l'admin da ./public/admin (ADMIN_RELATIVE_OUTPUT_DIR).
+COPY --from=build /app/.medusa/server/public ./public
 EXPOSE 9000
 CMD ["pnpm", "start"]
