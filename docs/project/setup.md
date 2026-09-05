@@ -1,59 +1,40 @@
-# Setup Instructions
+# Setup
 
-## Prerequisiti
+Guida rapida. Approfondimenti: [`README.md`](../../README.md) e [`docs/project/medusa/DEPLOYMENT.md`](../medusa/DEPLOYMENT.md).
 
-- Node.js 20+ installato
-- pnpm
-
-> Per installare le dipendenze, configurare le variabili d'ambiente, avviare il server di sviluppo e buildare, segui la sezione [Getting Started di README.md](../../README.md).
-
-## 1. Crea gli account necessari
-
-### Database (Neon.io)
-
-- Vai su https://neon.tech
-- Crea un account gratuito
-- Crea un database PostgreSQL
-- Copia la connection string (necessaria per `DATABASE_URI`)
-
-### Pagamenti (Stripe)
-
-- Vai su https://stripe.com
-- Crea un account gratuito
-- Vai su Developers > API keys
-- Copia le chiavi di test (`sk_test_` / `pk_test_`) o live (`sk_live_` / `pk_live_`)
-- Vai su Developers > Webhooks, aggiungi l'endpoint `http://localhost:3000/api/stripe/webhook`, seleziona l'evento `checkout.session.completed` e copia il webhook secret
-
-### Storage (Vercel Blob)
-
-- Vai su Vercel Dashboard > Storage > Blob
-- Crea un nuovo bucket
-- Copia il token (`BLOB_READ_WRITE_TOKEN`)
-
-> I nomi ufficiali delle variabili d'ambiente sono in [`.env.example`](../../.env.example). Copia `.env.example` in `.env.local` e compila i valori seguendo le istruzioni di [README.md](../../README.md).
-
-## 2. Accedi all'Admin Panel
-
-Vai su http://localhost:3000/admin
-
-Al primo accesso ti verrà chiesto di creare un account admin. Oppure crealo in anticipo:
+## Storefront (Next.js)
 
 ```bash
-ADMIN_EMAIL=your@email.com ADMIN_PASSWORD=your-password pnpm create-admin
+pnpm install
+# .env.local — vedi .env.example:
+#   NEXT_PUBLIC_MEDUSA_BACKEND_URL · NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+#   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY · NEXT_PUBLIC_SITE_URL
+pnpm dev          # http://localhost:3000
+pnpm build        # next build
 ```
 
-## 3. Aggiungi i primi dati
+## Backend (Medusa, `apps/backend/`)
 
-1. Vai su Admin > Categories
-2. Crea le categorie: "Booster Box", "ETB", "Collection Box", "SPC", "Tin", "Bundle"
-3. Vai su Admin > Collections
-4. Crea le collezioni: "Scarlet & Violet", "Paldea Evolved", "Obsidian Flames", ecc.
-5. Vai su Admin > Products
-6. Aggiungi i primi prodotti
+```bash
+# Postgres + Redis locali (questa macchina: WSL; alternativa docker compose)
+wsl -d Ubuntu -u root -- bash -lc "service postgresql start; service redis-server start"
 
-## 4. Deploy su Vercel
+cd apps/backend
+pnpm install
+cp .env.example .env        # DATABASE_URL / REDIS_URL / secret (64 hex)
+pnpm exec medusa db:migrate # crea tabelle + seed (region, sales channels, location, api key)
+pnpm dev                    # API + Admin http://localhost:9000/app
+```
 
-1. Crea un account su https://vercel.com
-2. Connetti il repository GitHub
-3. Aggiungi le variabili d'ambiente nel dashboard Vercel
-4. Deploy automatico ad ogni push
+- **Admin**: `http://localhost:9000/app` (in prod: `https://medusa.darkcardcollection.com/app`). L'ops vive qui (ordini, lotti, magazzino, listino, clienti).
+- **Publishable key**: da Admin → Settings → API Keys (serve allo storefront).
+
+## Deploy di produzione
+
+- **Backend** su Oracle Cloud Free Tier (Docker): `docs/project/medusa/DEPLOYMENT.md`.
+- **Storefront** su Vercel (auto-deploy da `main`). Env in Vercel (scope Production + Preview):
+  `NEXT_PUBLIC_MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
+
+## Nota
+
+Il **checkout Stripe è PAUSATO** (vedi `docs/project/PENDING.md` → R3). Il backend è live e l'ordine è verificato via API; il flusso browser non è ancora completabile.

@@ -1,7 +1,7 @@
 # REPLATFORMING — Dark Card Collection su Medusa.js
 
-> **Stato**: **F0 ✅ · F1 ✅ · F2 ✅** · **F3 🔶 code-prep fatto** (Dockerfile, `docker-compose.prod.yml`, Caddyfile, backup, env prod, feed Merchant, email Resend; deploy/cutover richiede l'infrastruttura utente — guida `DEPLOYMENT.md`). Prossimo: eseguire i passi F3 e il cutover.
-> Branch dedicato: `feat/medusa-replatform`.
+> **Stato**: **COMPLETATO** (F0–F3 + cutover 2026-09-05): backend Medusa live su Oracle, storefront su Medusa, **Payload rimosso**. ⚠️ Unico task aperto: **checkout Stripe** (PENDING R3).
+> Branch di migrazione `feat/medusa-replatform` mergiato in `main`.
 > Questo documento è il **piano maestro** della migrazione del commerce su Medusa v2.
 > Decisione utente 2026-08-28: **Full su Medusa** — Medusa Admin diventa l'unica UI
 > operativa; Payload CMS viene **rimosso del tutto**; **account cliente abilitati**;

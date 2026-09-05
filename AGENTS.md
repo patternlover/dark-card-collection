@@ -1,89 +1,89 @@
 # AGENTS.md — Dark Card Collection
 
 ## Identità
-- E-commerce Pokémon TCG (sealed products, carte singole, slab) su **darkcardcollection.com**.
-- Stesso dominio, due anime: **storefront pubblico** (shop, PDP, cart, checkout) e **`/dashboard`**, gestionale interno (acquisti merce, magazzino, annunci, vendite, messaggi dal contact form).
-- Repo: `github.com/patternlover/dark-card-collection` · branch `main` · git identity: `patternlover` (edocavalcanti@gmail.com).
-- Contesto completo: [`docs/project/overview.md`](docs/project/overview.md) (architettura, schema, decisioni) · `README.md` (setup, deploy) · [`docs/database/schema-and-flows.md`](docs/database/schema-and-flows.md) (schema DB) · [`docs/project/changelog.md`](docs/project/changelog.md) (storico) · [`docs/project/sessions/`](docs/project/sessions/README.md) (storico per sessione OpenCode: plan + changelog).
+- E-commerce Pokémon TCG (prodotti sigillati, carte singole, slab) su **darkcardcollection.com**.
+- **Storefront** headless: Next.js (App Router) in questa repo (root) → `src/`.
+- **Commerce backend**: **Medusa v2** in `apps/backend/` (headless engine + Admin). L'ops vive in **Medusa Admin** (`https://medusa.darkcardcollection.com/app`), NON in questa repo.
+- Repo: `github.com/patternlover/dark-card-collection` · branch principale `main` · git identity: `patternlover` (edocavalcanti@gmail.com).
+- Contesto completo: `docs/project/overview.md` · `docs/database/schema-and-flows.md` · `docs/project/medusa/REPLATFORMING.md` · `docs/project/PENDING.md` · `docs/project/sessions/`.
+
+> **⚠️ CHECKOUT STRIPE PAUSATO** (PENDING → R3): il flusso browser (Payment Element) non è ancora funzionante. Il backend Medusa è live e l'ordine è verificato via API (provider di sistema). **NON dare per scontato che un acquisto dal sito funzioni.**
 
 ## Stack
-- Next.js (App Router) + TypeScript strict
-- Payload CMS 3.87 (collections + globals)
-- PostgreSQL su Neon.io
-- Stripe (Checkout embedded + webhooks) — **chiavi live**
-- Vercel Blob Storage (immagini)
-- Resend (`@payloadcms/email-resend`) per email conferma ordine
-- Tailwind CSS 4 — stile neobrutalism, accent giallo `#FACC15`, footer tutto nero
-- Vitest (unit test) + GitHub Actions (CI)
+- Storefront: Next.js 16 (App Router) + React + Tailwind 4 + TypeScript strict.
+- Backend: Medusa 2.19 (`apps/backend/`), PostgreSQL su Neon (DB `dcc_medusa`), Redis self-hosted, Stripe (provider Medusa), Resend.
+- Deploy: storefront su **Vercel** (auto-deploy da `main`); backend su **Oracle Cloud Free Tier** (Docker Compose, guida `docs/project/medusa/DEPLOYMENT.md`).
+- Test: Vitest (storefront `tests/`) + jest unit (backend `apps/backend/src/**/__tests__`).
 
 ## Comandi (verifica SEMPRE prima di chiudere)
-- Dev: `pnpm dev`
-- Lint/typecheck: `pnpm lint` (= `tsc --noEmit`)
-- Test: `pnpm test` (unit test in `tests/`)
-- Build: `NODE_OPTIONS="--max-old-space-size=6144" pnpm build`
-- E2E (`tests-e2e/`, Playwright su porta 3100, DB `dcc_test`): il webServer usa `next start` sul bundle di produzione — PRIMA serve `pnpm exec next build` (con `DATABASE_URI=...dcc_test PAYLOAD_SECRET=local-test-secret-dashboard-e2e-0001`), POI `pnpm test:e2e`. NON usare `pnpm dev` come server E2E: il dev server sotto carico fa cadere richieste di scrittura (toggle/flaky "aborted"). Nota: `payload migrate` si blocca su DB pushato non migrato (dcc_test) → per la build E2E usare `next build` diretto, non `pnpm build`.
+
+### Storefront (root)
+```bash
+pnpm lint          # tsc --noEmit
+pnpm test          # Vitest
+pnpm build         # next build
+pnpm dev           # http://localhost:3000
+```
+
+### Backend (`apps/backend/` — pacchetto indipendente, lockfile proprio)
+```bash
+pnpm install
+pnpm exec tsc --noEmit
+pnpm exec jest --silent --runInBand --forceExit     # con TEST_TYPE=unit
+pnpm dev                                            # API+Admin http://localhost:9000/app
+# migrazioni Medusa (solo se tocchi le collection/moduli):
+npx medusa db:generate <module>   # genera migration da DML
+npx medusa db:migrate             # applica (crea tabelle + seed)
+```
+> In produzione il backend gira in Docker: `docker compose -f docker-compose.prod.yml up -d` sul VPS Oracle (vedi `DEPLOYMENT.md`).
 
 ## Regole
-- Usa SEMPRE `pnpm`, mai npm.
-- Non toccare né committare mai `.env*` (contengono chiavi live Stripe/DB/Resend). Riferirsi a `.env.example` per i nomi delle variabili.
-- Non cambiare mai git user.name/user.email.
-- Modifiche a collections Payload richiedono: `payload generate:types` + nuova migration (`payload migrate:create`) prima di buildare.
-- I prodotti vengono raggruppati per `title` (variants) — la logica è in `src/lib/group-products.ts`. Non esporre i variants nel frontend: shop e PDP mostrano solo il "parent product".
-- Filtro visibilità storefront: `AND: [{ status: { in: ['listed', 'hold', 'sold'] } }, { is_visible: { equals: true } }]` — `sold` si mostra come "Esaurito" (non acquistabile); per nascondere un prodotto l'unico interruttore è `is_visible: false`.
-- Il checkout crea `price_data` ad-hoc (niente Stripe Products); il webhook usa `product.metadata.payloadProductId` per creare l'order.
-- Payload `id` è `string | number`: castare SEMPRE con `as number` quando si creano ordini.
-- Test: se tocchi `group-products.ts`, `slug.ts` o la logica sticky ATC, aggiorna i test in `tests/`.
-- Build process: `payload generate:db-schema && payload migrate && next build` — la schema DB è sempre in sync con il config Payload.
-- Ogni sessione OpenCode deve avere un file plan+changelog in `docs/project/sessions/` (vedi README lì) e aggiornare `docs/project/changelog.md`. Creare il plan PRIMA di iniziare, compilare il changelog a fine sessione.
-- Non inventare API di Payload/Stripe/Next: in caso di dubbio leggere PRIMA il codice esistente in `src/lib/` e `src/payload/`.
-- Lingua: TUTTO il codice in inglese (identificatori, campi DB, collections, route nuove, commenti, commit). Risposte in chat, piani e changelog di sessione in italiano. Testi visibili ai clienti sullo storefront in italiano; anche le etichette UI della dashboard restano in italiano (com'è oggi, es. "Accedi con Google").
-- REGOLA VARIANTS: un secondo Product con lo stesso `title` esiste SOLO se differisce per un attributo che il cliente vede o sceglie (grade, condition, language…). MAI creare Product/variant per differenze di acquisto (costo, luogo, data, lotto): quei dati vivono in Purchases. Sigillati identici = 1 solo Product con stock in `quantity`.
+- **Lingua**: codice in inglese; chat/piani/changelog in italiano; testi storefront in italiano (dashboard Medusa può restare in inglese).
+- **Mai toccare/committare `.env*`** (chiavi live Stripe/Neon/Resend). Riferirsi a `.env.example`.
+- **Modifiche a collection/moduli Medusa** richiedono `medusa db:generate` + `db:migrate` prima del build.
+- **Variants**: un secondo Product con lo stesso `title` esiste SOLO per differenze visibili al cliente (grade/condition/language). Differenze di acquisto (costo/luogo/data/lotto) → mai Product: vivono in **PurchaseLot/PurchaseLine** (modulo `procurement`).
+- **Visibilità storefront**: prodotti `published` in Medusa + stock (inventory). Stock 0 → "Esaurito" (frontend, ATC disabilitato). Nascondere = `draft` in Medusa.
+- **Analytics**: ogni evento ecommerce GA4 va preceduto da `dataLayer.push({ ecommerce: null })` (pattern già in `src/lib/analytics.ts`). Vendite esterne (`sales_channel ≠ website`) MAI in GA4.
+- **Cart**: Medusa cart (server-side); `cart_id` in localStorage; id valido inizia con `cart_`.
+- **Non inventare API Medusa/Stripe/Next**: leggere prima `src/lib/medusa/`, `apps/backend/src/`, e i package installati in `apps/backend/node_modules`.
+- **Deploy/commit**: push su `main` → CI GitHub Actions → auto-deploy Vercel. Verificare la rotta live (`https://darkcardcollection.com/...`) dopo ogni deploy.
 
-## Dashboard (gestionale interno)
-- Sezioni (etichetta UI italiana ↔ nome nel codice inglese): **Lotti** ↔ `purchases` (inserimento acquisti/lotti, route `/dashboard/purchases`) · **Magazzino** ↔ `inventory` (creazione prodotti, stock, costo medio — vista su `products`) · **Listino** ↔ `listings` (gestione annunci: `price`, `status`, `is_visible`, `featured` — vista su `products`) · **Ordini** ↔ `orders` (+ margine, `sales_channel`, registrazione vendite esterne) · **Messaggi** ↔ `messages` (contact form). Magazzino e Listino sono due viste sulla stessa collection `products`: mai duplicare i dati per separarle.
-- Accesso SOLO via Google OAuth con whitelist `DASHBOARD_GOOGLE_EMAILS` (logica in `src/lib/dash-auth`): nessuna pagina o API della dashboard deve essere raggiungibile senza auth.
-- UI in `src/components/dashboard/`; accesso dati in `src/lib/db-query` e `src/lib/payload`.
-- La dashboard scrive sugli stessi dati usati dallo storefront (Products, Orders, Messages): valutare sempre gli effetti collaterali lato sito pubblico (status, visibilità, grouping variants).
-- Flusso merce (fonte di verità: overview.md § "Domain Model & Inventory Flow" — LEGGERLA prima di toccare Products/Purchases/dashboard): **Lotti** (`/dashboard/purchases`; oggi `/dashboard/acquisti`, da rinominare) con righe {prodotto, qty, costo unitario, luogo} → le righe incrementano lo stock in **Magazzino** (`Products.quantity` + costo medio) → **Listino** (`price` + `status` + `is_visible`) → **Ordini** (webhook: scala stock, consuma FIFO `remaining_quantity` delle righe d'acquisto, snapshot dell'`effective_unit_cost` sull'ordine → margine).
-- Decisioni fissate: la vendita (webhook Stripe O vendita esterna) scala stock e consuma FIFO; quando lo stock arriva a 0 il sistema imposta `status: sold` + `availability: out_of_stock` in AUTOMATICO e il prodotto resta visibile come "Esaurito" (ATC disabilitato, il checkout valida qty ≤ stock lato server); un nuovo lotto che riporta stock > 0 ripristina automaticamente `status: listed` + `in_stock`. Nascondere = solo `is_visible: false`. Vendite esterne (Vinted ecc.): registrate a mano dalla sezione Ordini con `sales_channel`, stessa pipeline `recordSale` del webhook (ordine + stock + FIFO + snapshot costo). Costi extra del lotto ripartiti pro-quota sul valore delle righe: `effective_unit_cost = unit_cost × (1 + extra_costs/subtotale)` — TUTTA la matematica dei costi usa `effective_unit_cost` (dettagli in overview.md § "Extra costs allocation").
-- Eco della regola variants: le differenze di acquisto NON creano mai variants né Product duplicati (vedi Regole).
+## Dominio e flusso merce (fonte di verità: `docs/project/overview.md` § "Domain Model")
+- **Lotti** (`purchase_lot` + `purchase_line`) → righe con `effective_unit_cost` (allocazione extra pro-quota) e `remaining_quantity` (FIFO).
+- Un lotto incrementa lo **stock** (inventory module) e ricalcola il **costo medio** su `variant.metadata.cost_of_goods_sold`.
+- Una vendita (checkout website o **vendita esterna**) consuma FIFO, decrementa stock e salva lo **snapshot costo** su `order.metadata.dcc_cost_snapshots` → **margine** per vendita (widget in Admin).
+- Backend bespoke in `apps/backend/src/modules/procurement/` + `workflows/` + `subscribers/` (order.placed → snapshot FIFO + email Resend).
 
-## Tracking & Analytics (base presente — completamento rimandato)
-- Obiettivo: quando si completerà il tracciamento (dataLayer → GTM → GA4 → BigQuery), il mapping deve essere quasi 1:1. Quindi il modello dati nasce già allineato allo schema ecommerce di Google: recommended events (`view_item_list`, `view_item`, `add_to_cart`, `view_cart`, `begin_checkout`, `add_payment_info`, `purchase`, `refund`…) + parametri `items`. Riferimento: https://developers.google.com/analytics/devguides/collection/ga4/ecommerce
-- Già esistente: eventi ecommerce base in `src/lib/analytics.ts` + Consent Mode v2 — estendere quel modulo, non duplicarlo.
-- Le vendite esterne (`sales_channel` ≠ `website`) NON si spingono mai in GA4: l'analytics di sito misura solo il canale website; il fatturato completo di tutti i canali vive negli Ordini.
-- Naming: dove non c'è un motivo contrario, usare i nomi Google o campi da cui derivano banalmente: `item_id`, `item_name`, `item_brand`, `item_category`…`item_category5`, `item_variant`, `price`, `quantity`, `currency`, `value`, `coupon`, `discount`. Non creare campi con questi nomi ma semantica diversa.
-- Unità di tracking = il Product venduto: `item_id` = id/slug del Product, `quantity` = pezzi (per i sigillati anche > 1). Quando arriveranno i veri variants (singole gradate): `item_name` = `title` del parent, `item_variant` = attributo distintivo (es. grade), slab → `quantity` = 1.
-- `transaction_id` = identificativo stabile e univoco dell'Order creato dal webhook Stripe (GA4 deduplica i purchase su questo campo).
-- Campi custom TCG → item-scoped custom dimensions GA4 (max ~10 su proprietà standard, scegliere con criterio): es. `product_type` (sealed|single|slab), `set_name`, `language`, `condition`, `grading_company`, `grade`. TODO (owner): lista definitiva.
-- Regola valida DA SUBITO: quando si creano/modificano campi su Products/Orders/Categories, verificare compatibilità con questa sezione; non rinominare/rimuovere campi rilevanti per il tracking senza aggiornarla. Niente dataLayer/GTM per ora.
-- All'implementazione: mapping centralizzato in un unico modulo (es. `src/lib/analytics/`) che converte Product/Order → eventi GA4; GTM resta un pass-through del dataLayer.
+## Operatività (Medusa Admin, NON nella repo)
+- Lotti, Magazzino (stock/costo medio), Listino (prezzo/status/visibilità), Ordini (+ vendite esterne, margini), Clienti.
+- Admin locale: `http://localhost:9000/app` · Prod: `https://medusa.darkcardcollection.com/app`.
+
+## Nota ambiente (Windows + WSL)
+- Postgres/Redis locali in WSL (Ubuntu), servizi systemd. La VM WSL va in idle-shutdown con job Windows-only → per job lunghi (migrate/build medusa) eseguirli **foreground dentro WSL** (interop `node.exe`). Pattern documentato nella sessione F0.
+
+## Flusso di sessione (obbligatorio)
+1. Leggere **`docs/project/PENDING.md`** all'inizio (task open/blocked che impattano l'ambito → gestirli o dichiararli).
+2. Scrivere il **plan** di sessione in `docs/project/sessions/YYYY-MM-DD-titolo.md` PRIMA di iniziare.
+3. A fine sessione: compilare il **changelog** di sessione + `docs/project/changelog.md` + aggiornare `PENDING.md` (mai task `done` senza verifica: `pnpm lint`, `pnpm test`, build/E2E dove applicabile).
+4. Commit + push + verifica CI e deploy live.
 
 ## Struttura chiave
-- `src/app/` → route (shop, products/[slug], cart, checkout, dashboard, api/*)
-- `src/components/` → layout/, product/, sections/, ui/, dashboard/
-- `src/lib/` → logica pura e client: payload, stripe, group-products, slug, dash-auth, db-query, order-email
-- `src/payload/collections/` → Products, Categories, Collections, Orders, Media, Messages
-- `src/payload/globals/` → SiteSettings, Header
-- `src/migrations/` → migration Payload (genera da build)
-- `tests/` → unit test Vitest
-
-## Workflow AI
-- Modello di default: **DeepSeek V4 Lite** su OpenCode. Modello "lite": dare istruzioni esplicite, task piccoli e ben delimitati, uno alla volta. Niente refactor multi-file speculativi.
-- Flusso standard per ogni sessione: **Plan mode** → il piano prodotto diventa il file di sessione in `docs/project/sessions/` → conferma umana → **Build mode** per implementare il piano step per step, senza deviare.
-- **All'inizio di ogni sessione/fase**: leggere `docs/project/PENDING.md` (tracker dei task in sospeso) e verificare i task `open`/`blocked` che impattano l'ambito — gestirli o dichiararli esplicitamente prima di buildare. Aggiornare il tracker a fine fase/sessione (un task si chiude solo con verifica fatta).
-- In Build mode: leggere i file per intero prima di modificarli; dopo ogni blocco di modifiche lanciare `pnpm lint` (+ test toccati), non solo a fine sessione.
-- OpenCode free tier = ~200 richieste modello / 5h (condivise tra i modelli free): meglio poche richieste con spec dense che tanti botta-e-risposta.
-- **Post-commit (obbligatorio dopo OGNI commit)**: `git push origin main` → verificare CI (`gh run watch <run-id> --exit-status`, attende l'esito) → verificare l'auto-deploy Vercel sulla live `https://darkcardcollection.com` (es. una rotta nuova risponde 200) → aggiornare changelog/tracker SOLO se push + CI + deploy sono andati a buon fine. Se qualcosa fallisce: correggere, ricommit, re-push, ri-verificare.
-- Checklist di chiusura sessione: `pnpm lint` ✓ · `pnpm test` ✓ · se collections toccate → `payload generate:types` + migration ✓ · `docs/project/PENDING.md` aggiornato ✓ · plan/changelog di sessione + `docs/project/changelog.md` aggiornati ✓ · push + CI + deploy verificati ✓.
-
-## Note operative
-- WSL: `tsc --noEmit` e `pnpm build` possono andare in OOM — usare la build con heap aumentata. `pnpm generate:types` può andare in timeout.
-- Footer: dati business (BUSINESS in `Footer.tsx`) e `CONTACT_EMAIL` ancora placeholder.
-- **`postgresAdapter` usa `push: false` in produzione** (`src/payload.config.ts`): la schema si applica con `payload migrate` nel build. NON riattivare `push: true`: causerebbe una sync schema a ogni cold-start serverless su Vercel → server actions lente/timeout → sintomo noto: la dashboard (es. Listino) non aggiorna i dati / dà errori. In dev (`NODE_ENV !== production`) il push resta attivo.
-- **Idratazione (errore React #441)**: i componenti client NON devono leggere `window`/`localStorage`/`Date.now()` nel render (solo in `useEffect` + stato `mounted`). Qualsiasi attributo SSR che differisce dal client genera `Minified React error #441`. Regressione coperta da `tests-e2e/console-clean.spec.ts` (fallisce su errori di hydration nelle pagine chiave).
-- **Migration obbligatorie anche per le tabelle di sistema Payload**: aggiungere/rimuovere una collection richiede di aggiornare anche le tabelle join gestite da Payload (`payload_locked_documents_rels`, `payload_preferences_rels`, ecc.) — ogni collection vi aggiunge una colonna `<collection>_id`. La mancanza (es. `purchases_id`) fa fallire con 500 OGNI write della dashboard ("column ... does not exist", vedi `20260812_fix_locked_documents_rels.ts`). Verifica drift: `SCHEMA_DRIFT_URI=<db> SCHEMA_DRIFT_REF_URI=<riferimento> pnpm exec tsx scripts/check-schema-drift.ts`.
-- **Dev server vs prod**: `next dev` può mostrare remount dei componenti client durante l'interazione (artefatto HMR) e un doppio render transitorio su `/shop` durante il caricamento (hydration/streaming) — **assenti sul bundle di produzione** (verificato). Per test stabili usare `next build && next start`; i test E2E tollerano il transitorio (`.first()`).
+```
+src/app/                    # Storefront: shop, products/[slug], cart, checkout, account, api/*
+src/components/             # layout, product, sections, seo, ui
+src/lib/medusa/             # Client store API Medusa (products.ts, cart.ts, customer.ts, client.ts)
+src/lib/feed/               # Feed Google Merchant (XML)
+src/lib/analytics.ts        # GA4 ecommerce (con clear dataLayer)
+tests/                      # Vitest storefront
+apps/backend/
+  medusa-config.ts          # moduli (procurement, redis, payment-stripe) + CORS
+  docker-compose.prod.yml   # api+worker+redis+caddy (produzione Oracle)
+  src/modules/procurement/  # modulo custom (lotti/FIFO/costo medio)
+  src/workflows/            # create-purchase-lot, record-external-sale
+  src/subscribers/          # order-placed (snapshot FIFO + email Resend)
+  src/migration-scripts/    # seed (region IT/EUR, sales channel, location, api key)
+docs/                       # overview, DB, medusa (REPLATFORMING/DEPLOYMENT), sessioni
+```
 
 <!-- BEGIN:nextjs-agent-rules -->
 
