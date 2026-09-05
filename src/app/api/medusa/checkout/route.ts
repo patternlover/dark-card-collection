@@ -16,7 +16,9 @@ interface PaymentCollectionResponse {
 }
 
 interface PaymentSessionResponse {
-  payment_session: { data?: { client_secret?: string }; id?: string }
+  payment_collection?: {
+    payment_sessions?: Array<{ data?: { client_secret?: string }; id?: string }>
+  }
 }
 
 interface CompleteResponse {
@@ -25,6 +27,30 @@ interface CompleteResponse {
 }
 
 const FREE_SHIPPING_THRESHOLD_CENTS = 80_00
+
+interface RegionWithProviders {
+  id: string
+  payment_providers?: Array<{ id: string }>
+}
+
+/**
+ * Risolve il provider di pagamento attivo della region. Lo store API espone i
+ * payment_providers via fields. Il provider carte Stripe è `pp_stripe_stripe`.
+ */
+async function resolvePaymentProviderId(regionId: string): Promise<string> {
+  const data = await medusaFetch<{ regions?: RegionWithProviders[] }>(
+    `/regions?fields=id,payment_providers.id&limit=20`,
+  )
+  const region = data.regions?.find((r) => r.id === regionId)
+  const ids = (region?.payment_providers ?? []).map((p) => p.id)
+  return (
+    ids.find((id) => id === "pp_stripe_stripe") ??
+    ids.find((id) => id.includes("_stripe")) ??
+    ids.find((id) => id === "pp_system_default") ??
+    ids[0] ??
+    "pp_stripe_stripe"
+  )
+}
 
 /**
  * Costruisce il checkout Medusa per il carrello corrente:
@@ -46,10 +72,11 @@ export async function POST(req: NextRequest) {
 
     const payProvider = provider ?? "stripe"
 
-    const cartData = await medusaFetch<{ cart: { id: string; subtotal?: number } }>(
-      `/carts/${cart_id}`,
-    )
+    const cartData = await medusaFetch<{
+      cart: { id: string; region_id?: string; subtotal?: number }
+    }>(`/carts/${cart_id}`)
     const cart = cartData.cart
+    const providerId = await resolvePaymentProviderId(cart.region_id ?? "")
 
     const { shipping_options } = await medusaFetch<ShippingMethodsResponse>(
       `/shipping-options?cart_id=${cart_id}`,
@@ -81,11 +108,10 @@ export async function POST(req: NextRequest) {
     )
 
     if (payProvider === "system") {
-      const { payment_session } = await medusaFetch<PaymentSessionResponse>(
+      await medusaFetch<PaymentSessionResponse>(
         `/payment-collections/${payment_collection.id}/payment-sessions`,
-        { method: "POST", body: { provider_id: "system" } },
+        { method: "POST", body: { provider_id: "pp_system_default" } },
       )
-      void payment_session
       const completed = await medusaFetch<CompleteResponse>(`/carts/${cart_id}/complete`, {
         method: "POST",
       })
@@ -95,12 +121,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Checkout non completato" }, { status: 400 })
     }
 
-    const { payment_session } = await medusaFetch<PaymentSessionResponse>(
+    const sessionData = await medusaFetch<PaymentSessionResponse>(
       `/payment-collections/${payment_collection.id}/payment-sessions`,
-      { method: "POST", body: { provider_id: "stripe" } },
+      { method: "POST", body: { provider_id: providerId } },
     )
-
-    const clientSecret = payment_session.data?.client_secret
+    const clientSecret = sessionData.payment_collection?.payment_sessions?.[0]?.data
+      ?.client_secret
     if (!clientSecret) {
       return NextResponse.json(
         { error: "Sessione di pagamento Stripe non disponibile" },
