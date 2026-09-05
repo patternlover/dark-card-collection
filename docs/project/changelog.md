@@ -1,7 +1,26 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Replatform Medusa F3 code-prep — target Oracle Cloud Free Tier (Docker) + email Resend**.
+Ultima sessione: **CUTOVER — storefront live su Medusa, Payload rimosso**.
+
+---
+
+## Sessione 2026-09-05 — Cutover Medusa (merge + rimozione Payload)
+
+Branch `feat/medusa-replatform` mergiato su `main` (`56fcc44`) e pushato → **sito live su Medusa**.
+
+**Fatto:**
+- **Payload rimosso completamente**: `src/payload`, `src/migrations`, route `(payload)`/`/admin`, `/dashboard` + OAuth Google, `/api/stripe/*`, components dashboard/admin, lib Payload (record-sale/inventory/order-email/audit/rate-limit/drive/dash-auth/db-query/purchase-math…), file generati, test e script Payload, deps (`payload`, `@payloadcms/*`, `googleapis`, `pg`) + lockfile.
+- `build` = `next build` (niente più payload migrate); `next.config` senza `withPayload`; `tsconfig` senza `@payload-config`.
+- **Contact form** → invio via **email Resend** (senza DB). **`llms-full.txt`** → catalogo da Medusa.
+- **Analytics**: `dataLayer.push({ ecommerce: null })` prima di ogni evento ecommerce GA4 (fix eventi accumulati tipo begin_checkout ×10).
+- **Verifica**: tsc 0 · test 32/32 · `next build` ok · **prod live**: `/shop` 200 (prodotto Medusa), home 200, checkout 200, account 200, feed XML 200, sitemap 200, **`/admin` e `/dashboard` → 404**.
+
+**⚠️ Nota critica**: il **checkout Stripe è PAUSATO** (Payment Element ancora da sistemare — ordine verificato via API/provider di sistema, manca il flusso browser completo). Il sito è live ma **non si può ancora completare un acquisto** finché non si chiude il checkout. Prossimo passo obbligato: fix checkout Stripe + webhook + feed in Merchant.
+
+---
+
+Ultima sessione precedente: **Replatform Medusa F3 code-prep — target Oracle Cloud Free Tier (Docker) + email Resend**.
 
 ---
 
