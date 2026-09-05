@@ -46,9 +46,10 @@ export async function POST(req: NextRequest) {
 
     const payProvider = provider ?? "stripe"
 
-    const cart = await medusaFetch<{ id: string; subtotal?: number }>(
+    const cartData = await medusaFetch<{ cart: { id: string; subtotal?: number } }>(
       `/carts/${cart_id}`,
     )
+    const cart = cartData.cart
 
     const { shipping_options } = await medusaFetch<ShippingMethodsResponse>(
       `/shipping-options?cart_id=${cart_id}`,

@@ -17,10 +17,10 @@ const stripePromise = loadStripe(
 
 async function pollForOrderId(cartId: string): Promise<string> {
   for (let i = 0; i < 40; i++) {
-    const cart = await medusaFetch<{ order_id?: string | null; completed_at?: string | null }>(
-      `/carts/${cartId}`,
-    )
-    if (cart.order_id) return cart.order_id
+    const data = await medusaFetch<{
+      cart?: { order_id?: string | null; completed_at?: string | null }
+    }>(`/carts/${cartId}`)
+    if (data.cart?.order_id) return data.cart.order_id
     await new Promise((r) => setTimeout(r, 1500))
   }
   throw new Error("Ordine non ancora confermato")

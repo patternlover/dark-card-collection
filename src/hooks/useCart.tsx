@@ -50,6 +50,11 @@ const CartContext = createContext<CartContextType | null>(null)
 const CART_KEY = "dcc-medusa-cart"
 const FREE_SHIPPING_THRESHOLD = 80
 
+/** Un cart id Medusa valido inizia con "cart_". */
+function isValidCartId(id: string | null | undefined): id is string {
+  return typeof id === "string" && id.startsWith("cart_")
+}
+
 export function toCartItem(line: MedusaLineItem): CartItem {
   return {
     id: line.id,
@@ -80,13 +85,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem(CART_KEY) : null
-    if (stored) {
+    if (stored && isValidCartId(stored)) {
       setCartId(stored)
       getMedusaCart(stored)
         .then((cart) => setItems((cart.items ?? []).map(toCartItem)))
         .catch(() => setItems([]))
         .finally(() => setLoading(false))
     } else {
+      if (stored) localStorage.removeItem(CART_KEY)
       setLoading(false)
     }
   }, [])
@@ -105,7 +111,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const ensureCart = useCallback(async (): Promise<string> => {
-    if (cartId) return cartId
+    if (isValidCartId(cartId)) return cartId
     const regionId = await getMedusaRegionId()
     const cart = await createMedusaCart(regionId)
     persistCartId(cart.id)

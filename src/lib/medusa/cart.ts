@@ -1,6 +1,7 @@
 /**
  * Helpers cart Medusa (store API) — usati dal CartProvider e dal checkout.
  * Gli importi Medusa sono in centesimi (minor unit).
+ * Nota: le risposte cart della store API sono incapsulate in `{ cart: {...} }`.
  */
 import { medusaFetch } from "./client"
 
@@ -39,14 +40,16 @@ export async function getMedusaRegionId(): Promise<string> {
 }
 
 export async function createMedusaCart(regionId: string): Promise<MedusaCart> {
-  return medusaFetch<MedusaCart>(`/carts`, {
+  const data = await medusaFetch<{ cart: MedusaCart }>(`/carts`, {
     method: "POST",
     body: { region_id: regionId, currency_code: "eur" },
   })
+  return data.cart
 }
 
 export async function getMedusaCart(cartId: string): Promise<MedusaCart> {
-  return medusaFetch<MedusaCart>(`/carts/${cartId}`)
+  const data = await medusaFetch<{ cart: MedusaCart }>(`/carts/${cartId}`)
+  return data.cart
 }
 
 export async function addMedusaLineItem(
@@ -54,10 +57,11 @@ export async function addMedusaLineItem(
   variantId: string,
   quantity: number,
 ): Promise<MedusaCart> {
-  return medusaFetch<MedusaCart>(`/carts/${cartId}/line-items`, {
+  const data = await medusaFetch<{ cart: MedusaCart }>(`/carts/${cartId}/line-items`, {
     method: "POST",
     body: { variant_id: variantId, quantity },
   })
+  return data.cart
 }
 
 export async function updateMedusaLineItem(
@@ -65,17 +69,20 @@ export async function updateMedusaLineItem(
   lineItemId: string,
   quantity: number,
 ): Promise<MedusaCart> {
-  return medusaFetch<MedusaCart>(`/carts/${cartId}/line-items/${lineItemId}`, {
-    method: "POST",
-    body: { quantity },
-  })
+  const data = await medusaFetch<{ cart: MedusaCart }>(
+    `/carts/${cartId}/line-items/${lineItemId}`,
+    { method: "POST", body: { quantity } },
+  )
+  return data.cart
 }
 
 export async function removeMedusaLineItem(
   cartId: string,
   lineItemId: string,
 ): Promise<MedusaCart> {
-  return medusaFetch<MedusaCart>(`/carts/${cartId}/line-items/${lineItemId}`, {
-    method: "DELETE",
-  })
+  const data = await medusaFetch<{ cart: MedusaCart }>(
+    `/carts/${cartId}/line-items/${lineItemId}`,
+    { method: "DELETE" },
+  )
+  return data.cart
 }
