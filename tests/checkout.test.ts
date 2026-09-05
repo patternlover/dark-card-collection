@@ -4,6 +4,7 @@ import {
   clearOrderSnapshot,
   isRetryableCompleteError,
   loadOrderSnapshot,
+  pickPaymentSession,
   saveOrderSnapshot,
   toOrderSummary,
   validateCheckoutForm,
@@ -80,6 +81,26 @@ describe("order snapshot", () => {
     saveOrderSnapshot(ORDER)
     clearOrderSnapshot()
     expect(loadOrderSnapshot("order_123")).toBeNull()
+  })
+})
+
+describe("pickPaymentSession", () => {
+  const sessions = [
+    { id: "old", provider_id: "pp_stripe_stripe", data: { client_secret: "old_secret" } },
+    { id: "new", provider_id: "pp_stripe_stripe", data: { client_secret: "new_secret" } },
+  ]
+
+  it("preferisce l'ultima sessione del provider attivo", () => {
+    expect(pickPaymentSession(sessions, "pp_stripe_stripe")?.id).toBe("new")
+  })
+
+  it("prende l'ultima quando il provider non matcha", () => {
+    expect(pickPaymentSession(sessions, "pp_altro")?.id).toBe("new")
+  })
+
+  it("torna undefined senza sessioni", () => {
+    expect(pickPaymentSession([], "pp_stripe_stripe")).toBeUndefined()
+    expect(pickPaymentSession(undefined, "pp_stripe_stripe")).toBeUndefined()
   })
 })
 

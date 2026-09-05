@@ -35,6 +35,7 @@ interface PrepareResponse {
   client_secret?: string
   order_id?: string
   order?: OrderSummary
+  ok?: boolean
   error?: string
 }
 
@@ -57,6 +58,7 @@ async function prepareCheckout(payload: {
   provider: "stripe" | "system"
   email?: string
   shipping_address?: CheckoutAddress
+  sync_only?: boolean
 }): Promise<PrepareResponse> {
   const res = await fetch("/api/medusa/checkout", {
     method: "POST",
@@ -100,6 +102,7 @@ export default function CheckoutPage() {
   const stripeRef = useRef<Stripe | null>(null)
   const elementsRef = useRef<StripeElements | null>(null)
   const paymentElementRef = useRef<StripePaymentElement | null>(null)
+  const clientSecretRef = useRef<string | null>(null)
   const initializedRef = useRef<string | null>(null)
 
   useEffect(() => {
@@ -161,6 +164,7 @@ export default function CheckoutPage() {
         stripeRef.current = stripe
         elementsRef.current = elements
         paymentElementRef.current = paymentElement
+        clientSecretRef.current = data.client_secret
         if (cancelled) return
         console.log("[checkout] Payment Element montato")
         setError("")
@@ -196,6 +200,7 @@ export default function CheckoutPage() {
     paymentElementRef.current?.unmount()
     paymentElementRef.current = null
     elementsRef.current = null
+    clientSecretRef.current = null
     setMethod(next)
     setError("")
     setState(next === "card" ? "init" : "ready")
@@ -205,7 +210,11 @@ export default function CheckoutPage() {
   async function handleCardSubmit() {
     const stripe = stripeRef.current
     const elements = elementsRef.current
-    if (!stripe || !elements || !cartId) return
+    const clientSecret = clientSecretRef.current
+    if (!stripe || !elements || !cartId || !clientSecret) {
+      setError("Sessione di pagamento non pronta. Riprova.")
+      return
+    }
     const formErrors = validateCheckoutForm(email, address)
     if (formErrors.length > 0) {
       setError(formErrors[0])
@@ -214,13 +223,30 @@ export default function CheckoutPage() {
     setState("processing")
     setError("")
     try {
-      // Sincronizza email + indirizzi sul carrello (riusa la collection esistente).
+      // Solo sync di email + indirizzi: NON ricreare la sessione, altrimenti
+      // l'intent montato nell'Element diventa obsoleto (unexpected_state).
       await prepareCheckout({
         cart_id: cartId,
         provider: "stripe",
         email: email.trim(),
         shipping_address: { ...address, country_code: "it" },
+        sync_only: true,
       })
+
+      // Se l'intent è già confermato (es. retry dopo un pagamento riuscito ma
+      // con ordine non completato), si salta la conferma e si completa l'ordine.
+      const current = await stripe.retrievePaymentIntent(clientSecret)
+      if (
+        current.paymentIntent?.status === "succeeded" ||
+        current.paymentIntent?.status === "requires_capture"
+      ) {
+        console.log("[checkout] intent già confermato, completo l'ordine...")
+        const order = await completeWithRetry(cartId)
+        saveOrderSnapshot(order)
+        window.location.href = `/checkout/success?order_id=${order.orderId}`
+        return
+      }
+
       console.log("[checkout] confirmPayment...")
       const { error: confirmError } = await stripe.confirmPayment({
         elements,
@@ -228,6 +254,21 @@ export default function CheckoutPage() {
       })
       if (confirmError) {
         console.error("[checkout] confirmPayment error:", confirmError)
+        // L'intent potrebbe essere andato a buon fine comunque (doppio click,
+        // retry): prima di mostrare l'errore si ricontrolla lo stato reale.
+        if (confirmError.code === "payment_intent_unexpected_state") {
+          const retry = await stripe.retrievePaymentIntent(clientSecret)
+          if (
+            retry.paymentIntent?.status === "succeeded" ||
+            retry.paymentIntent?.status === "requires_capture"
+          ) {
+            console.log("[checkout] pagamento già riuscito, completo l'ordine...")
+            const order = await completeWithRetry(cartId)
+            saveOrderSnapshot(order)
+            window.location.href = `/checkout/success?order_id=${order.orderId}`
+            return
+          }
+        }
         const detail = confirmError.code
           ? `${confirmError.message} (${confirmError.code})`
           : confirmError.message || "Errore di pagamento"
@@ -276,6 +317,7 @@ export default function CheckoutPage() {
     initializedRef.current = null
     paymentElementRef.current?.unmount()
     paymentElementRef.current = null
+    clientSecretRef.current = null
     setError("")
     if (method === "transfer") {
       setState("ready")

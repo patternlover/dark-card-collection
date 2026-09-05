@@ -132,6 +132,28 @@ export function toOrderSummary(order: MedusaOrderLike, fallbackId: string): Orde
   }
 }
 
+export interface PaymentSessionLike {
+  id?: string
+  provider_id?: string
+  data?: { client_secret?: string }
+}
+
+/**
+ * Sceglie la sessione di pagamento da usare: l'ultima del provider attivo, altrimenti
+ * l'ultima in assoluto. Mai la prima in elenco: riusando una collection esistente,
+ * `[0]` può essere una sessione/intent obsoleta (confermarla dà
+ * `payment_intent_unexpected_state`).
+ */
+export function pickPaymentSession(
+  sessions: PaymentSessionLike[] | undefined,
+  providerId: string,
+): PaymentSessionLike | undefined {
+  if (!sessions || sessions.length === 0) return undefined
+  const matching = sessions.filter((s) => s.provider_id === providerId)
+  const pool = matching.length > 0 ? matching : sessions
+  return pool[pool.length - 1]
+}
+
 /** Tema dark del Payment Element (accent giallo del sito, resta hosted da Stripe). */
 export const STRIPE_APPEARANCE: Appearance = {
   theme: "night",

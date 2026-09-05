@@ -63,3 +63,14 @@ impostati · success 404 per i guest.
 · `next build` ok (31 pagine).
 **Resta:** E2E su preview/live (carta test + bonifico + webhook R3b) — richiede env Vercel,
 non eseguibile da qui (`.env.local` è legacy pre-Medusa, senza publishable key).
+
+### Fix 2026-09-06 (sera) — `payment_intent_unexpected_state` live
+- Causa: l'intent confermato non era quello attivo — il submit ricreava la sessione
+  (ruotando l'intent montato) e veniva presa `payment_sessions[0]` (stale su collection
+  riusata); retry dopo pagamento riuscito riconfermava un intent già `succeeded`.
+- `POST /api/medusa/checkout` con `sync_only: true` (sync cart/spedizione senza toccare
+  le sessioni) · `pickPaymentSession` (ultima sessione del provider) in `src/lib/checkout.ts`.
+- `src/app/checkout/page.tsx`: `clientSecretRef`, `retrievePaymentIntent` prima di
+  `confirmPayment` (se già `succeeded`/`requires_capture` → diretto a `complete`) e recovery
+  sullo stesso errore dopo `confirmPayment`.
+- **Verifica:** tsc 0 · test **46/46** · `next build` ok.

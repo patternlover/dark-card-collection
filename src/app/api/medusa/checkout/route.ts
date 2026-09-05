@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { medusaFetch } from "@/lib/medusa/client"
-import { toOrderSummary, type CheckoutAddress } from "@/lib/checkout"
+import {
+  pickPaymentSession,
+  toOrderSummary,
+  type CheckoutAddress,
+} from "@/lib/checkout"
 
 interface ShippingOption {
   id: string
@@ -18,7 +22,11 @@ interface PaymentCollectionResponse {
 
 interface PaymentSessionResponse {
   payment_collection?: {
-    payment_sessions?: Array<{ data?: { client_secret?: string }; id?: string }>
+    payment_sessions?: Array<{
+      id?: string
+      provider_id?: string
+      data?: { client_secret?: string }
+    }>
   }
 }
 
@@ -97,15 +105,20 @@ async function ensurePaymentCollection(cartId: string): Promise<string> {
  *  - crea la payment session:
  *      provider "stripe" → restituisce il `client_secret` per il Payment Element;
  *      provider "system" (bonifico) → completa il carrello e restituisce l'ordine.
+ *  - `sync_only` → aggiorna solo cart/spedizione senza toccare le sessioni:
+ *    da usare al submit, per non ruotare l'intent già montato nell'Element
+ *    (ruotarlo causa `payment_intent_unexpected_state`).
  */
 export async function POST(req: NextRequest) {
   try {
-    const { cart_id, provider, email, shipping_address } = (await req.json()) as {
-      cart_id?: string
-      provider?: "stripe" | "system"
-      email?: string
-      shipping_address?: CheckoutAddress
-    }
+    const { cart_id, provider, email, shipping_address, sync_only } =
+      (await req.json()) as {
+        cart_id?: string
+        provider?: "stripe" | "system"
+        email?: string
+        shipping_address?: CheckoutAddress
+        sync_only?: boolean
+      }
     if (!cart_id) {
       return NextResponse.json({ error: "Cart non specificato" }, { status: 400 })
     }
@@ -153,6 +166,10 @@ export async function POST(req: NextRequest) {
       body: { option_id: option.id },
     })
 
+    if (sync_only) {
+      return NextResponse.json({ ok: true })
+    }
+
     const paymentCollectionId = await ensurePaymentCollection(cart_id)
 
     if (payProvider === "system") {
@@ -177,8 +194,11 @@ export async function POST(req: NextRequest) {
       `/payment-collections/${paymentCollectionId}/payment-sessions`,
       { method: "POST", body: { provider_id: providerId } },
     )
-    const clientSecret = sessionData.payment_collection?.payment_sessions?.[0]?.data
-      ?.client_secret
+    const session = pickPaymentSession(
+      sessionData.payment_collection?.payment_sessions,
+      providerId,
+    )
+    const clientSecret = session?.data?.client_secret
     if (!clientSecret) {
       return NextResponse.json(
         { error: "Sessione di pagamento Stripe non disponibile" },
