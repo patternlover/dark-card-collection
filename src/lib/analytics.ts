@@ -25,30 +25,36 @@ function pushEvent(event: string, data?: Record<string, unknown>) {
   window.dataLayer.push({ event, ...data })
 }
 
+/**
+ * Push ecommerce conforme a GA4: PRIMA ripulisce l'evento precedente con
+ * `{ ecommerce: null }` (pattern Google), altrimenti i begin_checkout/purchase
+ * si accumulano nel dataLayer e GA4 riceve eventi duplicati.
+ */
+function pushEcommerce(event: string, ecommerce: Record<string, unknown>) {
+  if (typeof window === 'undefined') return
+  window.dataLayer = window.dataLayer || []
+  window.dataLayer.push({ ecommerce: null })
+  window.dataLayer.push({ event, ecommerce })
+}
+
 export function trackAddToCart(item: EcommerceItem) {
-  pushEvent('add_to_cart', {
-    ecommerce: { items: [item] },
-  })
+  pushEcommerce('add_to_cart', { items: [item] })
 }
 
 export function trackBeginCheckout(items: EcommerceItem[], value: number) {
-  pushEvent('begin_checkout', {
-    ecommerce: {
-      items,
-      value,
-      currency: 'EUR',
-    },
+  pushEcommerce('begin_checkout', {
+    items,
+    value,
+    currency: 'EUR',
   })
 }
 
 export function trackPurchase(transactionId: string, items: EcommerceItem[], value: number) {
-  pushEvent('purchase', {
-    ecommerce: {
-      transaction_id: transactionId,
-      items,
-      value,
-      currency: 'EUR',
-    },
+  pushEcommerce('purchase', {
+    transaction_id: transactionId,
+    items,
+    value,
+    currency: 'EUR',
   })
 }
 
