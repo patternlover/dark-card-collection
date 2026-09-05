@@ -62,9 +62,10 @@ async function resolvePaymentProviderId(regionId: string): Promise<string> {
  */
 export async function POST(req: NextRequest) {
   try {
-    const { cart_id, provider } = (await req.json()) as {
+    const { cart_id, provider, email } = (await req.json()) as {
       cart_id?: string
       provider?: "stripe" | "system"
+      email?: string
     }
     if (!cart_id) {
       return NextResponse.json({ error: "Cart non specificato" }, { status: 400 })
@@ -77,6 +78,11 @@ export async function POST(req: NextRequest) {
     }>(`/carts/${cart_id}`)
     const cart = cartData.cart
     const providerId = await resolvePaymentProviderId(cart.region_id ?? "")
+
+    // Email per l'ordine (conferma + link cliente).
+    if (email) {
+      await medusaFetch(`/carts/${cart_id}`, { method: "POST", body: { email } })
+    }
 
     const { shipping_options } = await medusaFetch<ShippingMethodsResponse>(
       `/shipping-options?cart_id=${cart_id}`,
