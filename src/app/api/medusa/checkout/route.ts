@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { medusaFetch } from "@/lib/medusa/client"
 import {
+  computeTotals,
   pickPaymentSession,
+  selectShippingOption,
   toOrderSummary,
   type CheckoutAddress,
 } from "@/lib/checkout"
@@ -50,30 +52,9 @@ interface CartWithCollection {
   }
 }
 
-const FREE_SHIPPING_THRESHOLD_CENTS = 80_00
-
 interface RegionWithProviders {
   id: string
   payment_providers?: Array<{ id: string }>
-}
-
-/**
- * Risolve il provider di pagamento attivo della region. Lo store API espone i
- * payment_providers via fields. Il provider carte Stripe è `pp_stripe_stripe`.
- */
-async function resolvePaymentProviderId(regionId: string): Promise<string> {
-  const data = await medusaFetch<{ regions?: RegionWithProviders[] }>(
-    `/regions?fields=id,payment_providers.id&limit=20`,
-  )
-  const region = data.regions?.find((r) => r.id === regionId)
-  const ids = (region?.payment_providers ?? []).map((p) => p.id)
-  return (
-    ids.find((id) => id === "pp_stripe_stripe") ??
-    ids.find((id) => id.includes("_stripe")) ??
-    ids.find((id) => id === "pp_system_default") ??
-    ids[0] ??
-    "pp_stripe_stripe"
-  )
 }
 
 /**
@@ -98,9 +79,37 @@ async function ensurePaymentCollection(cartId: string): Promise<string> {
 }
 
 /**
+ * Opzioni di spedizione configurate in Medusa Admin (location → fulfillment set →
+ * service zone → shipping options). Lo storefront le mostra e lascia scegliere.
+ */
+export async function GET(req: NextRequest) {
+  const cartId = new URL(req.url).searchParams.get("cart_id")
+  if (!cartId) {
+    return NextResponse.json({ error: "Cart non specificato" }, { status: 400 })
+  }
+  try {
+    const [cartData, shipData] = await Promise.all([
+      medusaFetch<{ cart: { id: string; subtotal?: number } }>(`/carts/${cartId}`),
+      medusaFetch<ShippingMethodsResponse>(`/shipping-options?cart_id=${cartId}`),
+    ])
+    const subtotal = Number(cartData.cart.subtotal ?? 0)
+    const option = selectShippingOption(shipData.shipping_options, subtotal)
+    return NextResponse.json({
+      shipping_options: shipData.shipping_options,
+      shipping_option_id: option?.id ?? null,
+      totals: computeTotals(subtotal, option),
+    })
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Errore spedizioni" },
+      { status: 500 },
+    )
+  }
+}
+/**
  * Costruisce il checkout Medusa per il carrello corrente:
  *  - salva email + indirizzo di spedizione/fatturazione sul carrello;
- *  - calcola la spedizione (Standard €9,99 | Gratuita dagli 80€) e la applica;
+ *  - applica la spedizione scelta (o automatica: gratuita sopra soglia);
  *  - riusa (o crea) la payment collection;
  *  - crea la payment session:
  *      provider "stripe" → restituisce il `client_secret` per il Payment Element;
@@ -108,28 +117,50 @@ async function ensurePaymentCollection(cartId: string): Promise<string> {
  *  - `sync_only` → aggiorna solo cart/spedizione senza toccare le sessioni:
  *    da usare al submit, per non ruotare l'intent già montato nell'Element
  *    (ruotarlo causa `payment_intent_unexpected_state`).
+ * La risposta include sempre opzioni spedizione + totali (per il selettore UI).
  */
 export async function POST(req: NextRequest) {
   try {
-    const { cart_id, provider, email, shipping_address, sync_only } =
-      (await req.json()) as {
-        cart_id?: string
-        provider?: "stripe" | "system"
-        email?: string
-        shipping_address?: CheckoutAddress
-        sync_only?: boolean
-      }
+    const {
+      cart_id,
+      provider,
+      email,
+      shipping_address,
+      sync_only,
+      shipping_option_id,
+    } = (await req.json()) as {
+      cart_id?: string
+      provider?: "stripe" | "system"
+      email?: string
+      shipping_address?: CheckoutAddress
+      sync_only?: boolean
+      shipping_option_id?: string
+    }
     if (!cart_id) {
       return NextResponse.json({ error: "Cart non specificato" }, { status: 400 })
     }
 
     const payProvider = provider ?? "stripe"
 
-    const cartData = await medusaFetch<{
-      cart: { id: string; region_id?: string; subtotal?: number }
-    }>(`/carts/${cart_id}`)
+    // Chiamate indipendenti in parallelo (il cold start del backend è lento).
+    const [cartData, regionsData, shipData] = await Promise.all([
+      medusaFetch<{ cart: { id: string; region_id?: string; subtotal?: number } }>(
+        `/carts/${cart_id}`,
+      ),
+      medusaFetch<{ regions?: RegionWithProviders[] }>(
+        `/regions?fields=id,payment_providers.id&limit=20`,
+      ),
+      medusaFetch<ShippingMethodsResponse>(`/shipping-options?cart_id=${cart_id}`),
+    ])
     const cart = cartData.cart
-    const providerId = await resolvePaymentProviderId(cart.region_id ?? "")
+    const region = regionsData.regions?.find((r) => r.id === cart.region_id)
+    const ids = (region?.payment_providers ?? []).map((p) => p.id)
+    const providerId =
+      ids.find((id) => id === "pp_stripe_stripe") ??
+      ids.find((id) => id.includes("_stripe")) ??
+      ids.find((id) => id === "pp_system_default") ??
+      ids[0] ??
+      "pp_stripe_stripe"
 
     // Email + indirizzi per l'ordine (conferma email + complete Medusa).
     const cartUpdate: Record<string, unknown> = {}
@@ -142,17 +173,12 @@ export async function POST(req: NextRequest) {
       await medusaFetch(`/carts/${cart_id}`, { method: "POST", body: cartUpdate })
     }
 
-    const { shipping_options } = await medusaFetch<ShippingMethodsResponse>(
-      `/shipping-options?cart_id=${cart_id}`,
-    )
-
     const subtotal = Number(cart.subtotal ?? 0)
-    const free = subtotal >= FREE_SHIPPING_THRESHOLD_CENTS
-    const option =
-      (free
-        ? shipping_options.find((o) => (o.amount ?? 0) === 0)
-        : shipping_options.find((o) => (o.amount ?? 0) > 0)) ??
-      shipping_options[0]
+    const option = selectShippingOption(
+      shipData.shipping_options,
+      subtotal,
+      shipping_option_id,
+    )
 
     if (!option) {
       return NextResponse.json(
@@ -166,8 +192,15 @@ export async function POST(req: NextRequest) {
       body: { option_id: option.id },
     })
 
+    const totals = computeTotals(subtotal, option)
+    const shippingPayload = {
+      shipping_options: shipData.shipping_options,
+      shipping_option_id: option.id,
+      totals,
+    }
+
     if (sync_only) {
-      return NextResponse.json({ ok: true })
+      return NextResponse.json({ ok: true, ...shippingPayload })
     }
 
     const paymentCollectionId = await ensurePaymentCollection(cart_id)
@@ -206,7 +239,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({ client_secret: clientSecret, cart_id })
+    return NextResponse.json({ client_secret: clientSecret, cart_id, ...shippingPayload })
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Errore checkout" },

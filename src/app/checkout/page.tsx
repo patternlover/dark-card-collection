@@ -18,6 +18,7 @@ import {
   STRIPE_APPEARANCE,
   saveOrderSnapshot,
   validateCheckoutForm,
+  type CartTotals,
   type CheckoutAddress,
   type OrderSummary,
 } from "@/lib/checkout"
@@ -31,11 +32,20 @@ const stripePromise = loadStripe(
 
 type PayMethod = "card" | "transfer"
 
+interface ShippingOptionUI {
+  id: string
+  name?: string
+  amount?: number
+}
+
 interface PrepareResponse {
   client_secret?: string
   order_id?: string
   order?: OrderSummary
   ok?: boolean
+  shipping_options?: ShippingOptionUI[]
+  shipping_option_id?: string | null
+  totals?: CartTotals
   error?: string
 }
 
@@ -59,6 +69,7 @@ async function prepareCheckout(payload: {
   email?: string
   shipping_address?: CheckoutAddress
   sync_only?: boolean
+  shipping_option_id?: string
 }): Promise<PrepareResponse> {
   const res = await fetch("/api/medusa/checkout", {
     method: "POST",
@@ -92,13 +103,16 @@ const inputClass =
   "border-2 border-zinc-700 bg-black px-3 py-2 text-white focus:border-[var(--accent)] focus:outline-none"
 
 export default function CheckoutPage() {
-  const { items, cartId, shipping, total } = useCart()
+  const { items, cartId, subtotal, shipping, total } = useCart()
   const { customer } = useAuth()
   const [method, setMethod] = useState<PayMethod>("card")
   const [state, setState] = useState<"init" | "ready" | "processing" | "error">("init")
   const [error, setError] = useState("")
   const [email, setEmail] = useState("")
   const [address, setAddress] = useState<CheckoutAddress>(EMPTY_ADDRESS)
+  const [shipOptions, setShipOptions] = useState<ShippingOptionUI[]>([])
+  const [selectedShip, setSelectedShip] = useState<string | null>(null)
+  const [serverTotals, setServerTotals] = useState<CartTotals | null>(null)
   const stripeRef = useRef<Stripe | null>(null)
   const elementsRef = useRef<StripeElements | null>(null)
   const paymentElementRef = useRef<StripePaymentElement | null>(null)
@@ -150,6 +164,9 @@ export default function CheckoutPage() {
           throw new Error(data.error || `Errore nel checkout (${res.status})`)
         }
         console.log("[checkout] client_secret ok")
+        if (data.shipping_options) setShipOptions(data.shipping_options)
+        if (data.shipping_option_id) setSelectedShip(data.shipping_option_id)
+        if (data.totals) setServerTotals(data.totals)
 
         const stripe = await stripePromise
         if (!stripe)
@@ -207,6 +224,37 @@ export default function CheckoutPage() {
     if (next === "card") initializedRef.current = null
   }
 
+  function addressFilled(a: CheckoutAddress): boolean {
+    return Boolean(
+      a.first_name.trim() || a.last_name.trim() || a.address_1.trim() || a.city.trim(),
+    )
+  }
+
+  async function handleShipChange(optionId: string) {
+    if (!cartId || optionId === selectedShip) return
+    const prev = selectedShip
+    setSelectedShip(optionId)
+    try {
+      const data = await prepareCheckout({
+        cart_id: cartId,
+        provider: "stripe",
+        email: email.trim() || undefined,
+        shipping_address: addressFilled(address)
+          ? { ...address, country_code: "it" }
+          : undefined,
+        sync_only: true,
+        shipping_option_id: optionId,
+      })
+      if (data.shipping_options) setShipOptions(data.shipping_options)
+      if (data.shipping_option_id) setSelectedShip(data.shipping_option_id)
+      if (data.totals) setServerTotals(data.totals)
+    } catch (err) {
+      console.error("[checkout] shipping error:", err)
+      setSelectedShip(prev)
+      setError(err instanceof Error ? err.message : "Errore spedizione")
+    }
+  }
+
   async function handleCardSubmit() {
     const stripe = stripeRef.current
     const elements = elementsRef.current
@@ -231,6 +279,7 @@ export default function CheckoutPage() {
         email: email.trim(),
         shipping_address: { ...address, country_code: "it" },
         sync_only: true,
+        shipping_option_id: selectedShip ?? undefined,
       })
 
       // Se l'intent è già confermato (es. retry dopo un pagamento riuscito ma
@@ -302,6 +351,7 @@ export default function CheckoutPage() {
         provider: "system",
         email: email.trim(),
         shipping_address: { ...address, country_code: "it" },
+        shipping_option_id: selectedShip ?? undefined,
       })
       if (!data.order) throw new Error("Ordine non creato, riprova.")
       saveOrderSnapshot(data.order)
@@ -327,6 +377,9 @@ export default function CheckoutPage() {
       initializedRef.current = null
     }
   }
+
+  // Totali dal server (spedizione scelta) con fallback al calcolo locale.
+  const displayed = serverTotals ?? { subtotal, shipping, total }
 
   if (items.length === 0) {
     return (
@@ -384,13 +437,51 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 ))}
-                <div className="flex justify-between border-t border-zinc-800 pt-3 text-sm">
-                  <span className="text-zinc-400">Spedizione</span>
-                  <span className="text-white">{shipping === 0 ? "Gratuita" : `€${shipping.toFixed(2)}`}</span>
+                <div className="border-t border-zinc-800 pt-3 text-sm">
+                  <span className="mb-2 block text-zinc-400">Spedizione</span>
+                  {shipOptions.length > 1 ? (
+                    <div className="space-y-2">
+                      {shipOptions.map((o) => (
+                        <label
+                          key={o.id}
+                          className={`flex cursor-pointer items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 ${
+                            selectedShip === o.id
+                              ? "border-[var(--accent)] bg-black"
+                              : "border-zinc-800 hover:border-zinc-600"
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 text-zinc-300">
+                            <input
+                              type="radio"
+                              name="shipping"
+                              checked={selectedShip === o.id}
+                              onChange={() => void handleShipChange(o.id)}
+                              className="accent-[#FACC15]"
+                            />
+                            {o.name ?? "Spedizione"}
+                          </span>
+                          <span className="shrink-0 text-white">
+                            {(o.amount ?? 0) === 0
+                              ? "Gratuita"
+                              : `€${(Number(o.amount ?? 0) / 100).toFixed(2)}`}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex justify-between">
+                      <span className="text-zinc-400">Standard</span>
+                      <span className="text-white">
+                        {displayed.shipping === 0
+                          ? "Gratuita"
+                          : `€${displayed.shipping.toFixed(2)}`}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-between border-t border-zinc-800 pt-3 text-base font-bold">
                   <span className="text-white">Totale</span>
-                  <span className="text-[var(--accent)]">€{total.toFixed(2)}</span>
+                  <span className="text-[var(--accent)]">€{displayed.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -528,7 +619,7 @@ export default function CheckoutPage() {
                   onClick={() => void handleCardSubmit()}
                   className="mt-4 w-full rounded-lg bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-zinc-200"
                 >
-                  Paga €{total.toFixed(2)}
+                  Paga €{displayed.total.toFixed(2)}
                 </button>
               )}
               {state === "ready" && method === "transfer" && (
@@ -537,7 +628,7 @@ export default function CheckoutPage() {
                   onClick={() => void handleTransferSubmit()}
                   className="mt-4 w-full rounded-lg bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-zinc-200"
                 >
-                  Conferma ordine (€{total.toFixed(2)} con bonifico)
+                  Conferma ordine (€{displayed.total.toFixed(2)} con bonifico)
                 </button>
               )}
               {state === "processing" && method === "transfer" && (

@@ -11,7 +11,7 @@ Ultimo aggiornamento: 2026-09-06 (fix codice checkout R3 + bonifico; da verifica
 
 | # | Task | Stato |
 |---|------|-------|
-| R3 | **Checkout Stripe (Payment Element)**: fix codice pronto (init stabile, riuso payment collection, indirizzi, `cart/complete` con retry, snapshot ordine guest, Appearance dark, CSP wallet). **Da verificare E2E su preview/live** con carta `4242…` + webhook | in-progress (verifica live) |
+| R3 | **Checkout Stripe (Payment Element)**: fix codice pronto (intent stabile, riuso collection, indirizzi, `complete` con retry, shipping UI). **Bloccato su config backend**: associare sales channel → stock location in Medusa Admin (vedi sessione 2026-09-06), poi E2E carta `4242…` su live | in-progress (config backend) |
 | R3b | Dopo il checkout: verificare **webhook Stripe** (`https://medusa.darkcardcollection.com/hooks/payment/stripe`, evento `payment_intent.succeeded`) + cattura ordine + email Resend end-to-end | open |
 | R3c | Registrare il **feed Google Merchant** `/api/feed/products` in Merchant Center | open |
 | R4 | **F4 — Hardening**: promotions, returns/exchanges, backup verificato, monitoring (Uptime Kuma), aggiornamenti regolari VM | open |

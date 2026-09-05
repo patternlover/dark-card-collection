@@ -74,3 +74,15 @@ non eseguibile da qui (`.env.local` è legacy pre-Medusa, senza publishable key)
   `confirmPayment` (se già `succeeded`/`requires_capture` → diretto a `complete`) e recovery
   sullo stesso errore dopo `confirmPayment`.
 - **Verifica:** tsc 0 · test **46/46** · `next build` ok.
+
+### Fix 2026-09-06 (sera 2) — sales channel senza stock location + shipping UI
+- Errore live `Sales channel sc_… is not associated with any stock location`: config
+  backend, si risolve in Medusa Admin (vedi sotto). Il retry post-fix riusa l'intent già
+  pagato (retrieve-before-confirm) senza riaddebitare.
+- `POST /api/medusa/checkout`: fetch paralleli (cart+regions+shipping), accetta
+  `shipping_option_id`, risponde sempre con `shipping_options + shipping_option_id + totals`;
+  nuovo `GET ?cart_id=` con le stesse info. `selectShippingOption`/`computeTotals` in lib + test.
+- Checkout: radio spedizione nel riepilogo (da Medusa Admin), totali dal server con
+  fallback locale, scelta spedizione preservata al submit. Tabs pagamento + form sempre
+  visibili subito (l'init non dipende dai dati digitati).
+- **Verifica:** tsc 0 · test **52/52** · `next build` ok.

@@ -154,6 +154,51 @@ export function pickPaymentSession(
   return pool[pool.length - 1]
 }
 
+export interface ShippingOptionLike {
+  id: string
+  name?: string
+  amount?: number
+}
+
+export interface CartTotals {
+  subtotal: number
+  shipping: number
+  total: number
+}
+
+/**
+ * Sceglie l'opzione di spedizione: quella esplicita se ancora disponibile,
+ * altrimenti automatica (gratuita sopra soglia, Standard a pagamento, fallback prima).
+ * Importi in centesimi.
+ */
+export function selectShippingOption(
+  options: ShippingOptionLike[],
+  subtotalCents: number,
+  explicitId?: string,
+  freeThresholdCents = 80_00,
+): ShippingOptionLike | undefined {
+  if (explicitId) {
+    const explicit = options.find((o) => o.id === explicitId)
+    if (explicit) return explicit
+  }
+  const free = subtotalCents >= freeThresholdCents
+  return (
+    (free
+      ? options.find((o) => (o.amount ?? 0) === 0)
+      : options.find((o) => (o.amount ?? 0) > 0)) ?? options[0]
+  )
+}
+
+/** Totali in euro da subtotale (centesimi) e opzione scelta. */
+export function computeTotals(
+  subtotalCents: number,
+  option: ShippingOptionLike | undefined,
+): CartTotals {
+  const subtotal = subtotalCents / 100
+  const shipping = Number(option?.amount ?? 0) / 100
+  return { subtotal, shipping, total: subtotal + shipping }
+}
+
 /** Tema dark del Payment Element (accent giallo del sito, resta hosted da Stripe). */
 export const STRIPE_APPEARANCE: Appearance = {
   theme: "night",

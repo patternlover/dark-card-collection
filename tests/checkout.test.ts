@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest"
 import {
   EMPTY_ADDRESS,
   clearOrderSnapshot,
+  computeTotals,
   isRetryableCompleteError,
   loadOrderSnapshot,
   pickPaymentSession,
   saveOrderSnapshot,
+  selectShippingOption,
   toOrderSummary,
   validateCheckoutForm,
   type OrderSummary,
@@ -101,6 +103,43 @@ describe("pickPaymentSession", () => {
   it("torna undefined senza sessioni", () => {
     expect(pickPaymentSession([], "pp_stripe_stripe")).toBeUndefined()
     expect(pickPaymentSession(undefined, "pp_stripe_stripe")).toBeUndefined()
+  })
+})
+
+describe("selectShippingOption", () => {
+  const options = [
+    { id: "std", name: "Standard", amount: 999 },
+    { id: "free", name: "Gratuita", amount: 0 },
+    { id: "exp", name: "Express", amount: 1499 },
+  ]
+
+  it("sceglie la gratuita sopra soglia", () => {
+    expect(selectShippingOption(options, 80_00)?.id).toBe("free")
+  })
+
+  it("sceglie la standard sotto soglia", () => {
+    expect(selectShippingOption(options, 7999)?.id).toBe("std")
+  })
+
+  it("rispetta la scelta esplicita", () => {
+    expect(selectShippingOption(options, 80_00, "exp")?.id).toBe("exp")
+  })
+
+  it("ripiega sull'automatica se l'esplicita non esiste", () => {
+    expect(selectShippingOption(options, 100, "xxx")?.id).toBe("std")
+  })
+
+  it("torna undefined senza opzioni", () => {
+    expect(selectShippingOption([], 100)).toBeUndefined()
+  })
+})
+
+describe("computeTotals", () => {
+  it("converte i centesimi in euro", () => {
+    const totals = computeTotals(8000, { id: "std", amount: 999 })
+    expect(totals.subtotal).toBe(80)
+    expect(totals.shipping).toBeCloseTo(9.99)
+    expect(totals.total).toBeCloseTo(89.99)
   })
 })
 
