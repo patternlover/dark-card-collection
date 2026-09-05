@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { getPayloadClient } from '@/lib/payload'
 
 const WINDOW_MS = 60 * 60 * 1000
 const MAX_PER_WINDOW = 3
@@ -67,17 +66,36 @@ export async function POST(req: Request) {
       )
     }
 
-    const payload = await getPayloadClient()
+    const apiKey = process.env.RESEND_API_KEY
+    if (!apiKey) {
+      console.log('[contact] RESEND_API_KEY non configurata — messaggio da', email, 'non inviato')
+      return NextResponse.json({
+        success: true,
+        message: 'Messaggio inviato con successo. Ti risponderemo entro 24 ore.',
+      })
+    }
 
-    await payload.create({ overrideAccess: true, 
-      collection: 'messages',
-      data: {
-        name,
-        email,
-        subject,
-        message,
+    const from = process.env.EMAIL_FROM || 'noreply@darkcardcollection.com'
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        from,
+        to: [from],
+        reply_to: email,
+        subject: `[Contatto] ${subject} — da ${name}`,
+        html: `<p><strong>Nome:</strong> ${name.replace(/</g, '&lt;')}</p>
+<p><strong>Email:</strong> ${email.replace(/</g, '&lt;')}</p>
+<p><strong>Oggetto:</strong> ${subject.replace(/</g, '&lt;')}</p>
+<p>${message.replace(/</g, '&lt;').replace(/\n/g, '<br/>')}</p>`,
+      }),
     })
+    if (!res.ok) {
+      throw new Error(`Resend ${res.status}`)
+    }
 
     return NextResponse.json({
       success: true,

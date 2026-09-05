@@ -1,4 +1,4 @@
-import { getPayloadClient } from '@/lib/payload'
+import { listCatalogProducts } from '@/lib/medusa/products'
 import { groupProducts } from '@/lib/group-products'
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollection.com').replace(/\/+$/, '')
@@ -163,26 +163,7 @@ const FAQ = `
 
 async function getCatalogSection(): Promise<string> {
   try {
-    const payload = await getPayloadClient()
-
-    let docs: any[] = []
-    let page = 1
-    while (page <= 10) {
-      const result = await payload.find({ overrideAccess: true, 
-        collection: 'products',
-        where: {
-          and: [
-            { is_visible: { equals: true } },
-          ],
-        },
-        limit: 500,
-        page,
-        sort: 'title',
-      })
-      docs = docs.concat(result.docs)
-      if (page >= result.totalPages || result.docs.length === 0) break
-      page += 1
-    }
+    const docs = await listCatalogProducts({ limit: 500 })
 
     const groups = groupProducts(docs)
 
@@ -195,7 +176,7 @@ async function getCatalogSection(): Promise<string> {
           : 'prezzo su richiesta'
       const availability = group.products.some((p: any) => p.status === 'listed')
         ? 'Disponibile'
-        : group.products.some((p: any) => p.is_preorder || p.status === 'hold')
+        : group.products.some((p: any) => p.status === 'hold')
           ? 'In attesa (preorder)'
           : 'Venduto'
       return `- [${group.title}](${SITE_URL}/products/${group.slug}) - Prezzo: ${price} - Disponibilità: ${availability}`

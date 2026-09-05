@@ -6,36 +6,21 @@
   "packageManager": "pnpm@11.22.0",
   "scripts": {
     "dev": "next dev",
-    "build": "payload generate:db-schema && payload migrate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:db": "vitest run --config vitest.db.config.ts",
-    "test:e2e": "playwright test",
-    "db:setup": "tsx scripts/test-db-setup.ts",
-    "payload": "payload",
-    "generate:types": "payload generate:types",
-    "generate:importmap": "payload generate:importmap",
-    "backfill:google-schema": "tsx scripts/backfill-google-schema.ts"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@payloadcms/db-postgres": "3.87.1",
-    "@payloadcms/email-resend": "3.87.1",
-    "@payloadcms/next": "3.87.1",
-    "@payloadcms/richtext-lexical": "3.87.1",
-    "@payloadcms/storage-vercel-blob": "3.87.1",
     "@stripe/stripe-js": "9.10.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "26.1.1",
     "@vercel/blob": "2.3.1",
     "clsx": "2.1.1",
-    "googleapis": "^173.0.0",
-    "graphql": "^16.8.1",
     "lucide-react": "1.24.0",
     "next": "16.3.0",
-    "payload": "3.87.1",
-    "pg": "^8.22.0",
     "postcss": "8.5.26",
     "react": "19.2.7",
     "react-dom": "19.2.7",
@@ -47,7 +32,6 @@
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@testing-library/react": "^16.3.2",
-    "@types/pg": "^8.20.3",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "^6.0.5",
@@ -60,15 +44,6 @@
       "sharp",
       "esbuild",
       "unrs-resolver"
-    ],
-    "overrides": {
-      "fast-uri": "^3.1.5",
-      "brace-expansion": "^2.1.4",
-      "js-yaml": "^4.3.1",
-      "monaco-editor>dompurify": "^3.4.13",
-      "@esbuild-kit/core-utils>esbuild": "^0.25.0",
-      "@vercel/blob>undici": "^6.28.0",
-      "nanoid": "^3.3.18"
-    }
+    ]
   }
 }
