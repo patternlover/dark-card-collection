@@ -6,7 +6,8 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   {
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(), payment=()',
+    // payment=(self ...) abilita Payment Request API (Apple Pay / Google Pay via Stripe)
+    value: 'camera=(), microphone=(), geolocation=(), payment=(self "https://js.stripe.com")',
   },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
   {
@@ -45,9 +46,6 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: '/dashboard/espansioni', destination: '/dashboard/expansions', permanent: true },
-      { source: '/dashboard/impostazioni', destination: '/dashboard/settings', permanent: true },
-      { source: '/dashboard/listati', destination: '/dashboard/listings', permanent: true },
       { source: '/shop/collections', destination: '/shop/espansioni', permanent: true },
       { source: '/shop/collections/:slug', destination: '/shop/espansioni/:slug', permanent: true },
     ]

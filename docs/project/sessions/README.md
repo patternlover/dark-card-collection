@@ -45,3 +45,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-08-29 — Replatform Medusa · F2: storefront su Medusa](2026-08-29-medusa-replatforming-f2.md)
 - [2026-08-29 — Replatform Medusa · F3: prep deploy Oracle + cutover](2026-08-29-medusa-replatforming-f3.md)
 - [2026-09-05 — Cutover: live su Medusa + rimozione Payload](2026-09-05-medusa-cutover.md)
+- [2026-09-06 — Checkout Stripe R3 + bonifico manuale](2026-09-06-checkout-provider.md)

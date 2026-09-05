@@ -3,7 +3,7 @@
 > Stati: `open` · `in-progress` · `blocked (motivo)` · `waiting-user` · `done (verifica)`.
 > Un task si chiude SOLO con verifica fatta (`pnpm lint`, `pnpm test`, build/E2E/CI dove applicabile).
 
-Ultimo aggiornamento: 2026-09-05 (cutover Medusa completato — sito live su Medusa, Payload rimosso).
+Ultimo aggiornamento: 2026-09-06 (fix codice checkout R3 + bonifico; da verificare E2E su preview/live).
 
 ---
 
@@ -11,7 +11,7 @@ Ultimo aggiornamento: 2026-09-05 (cutover Medusa completato — sito live su Med
 
 | # | Task | Stato |
 |---|------|-------|
-| R3 | **Checkout Stripe (Payment Element)**: il backend funziona (payment session + ordine verificati via API con provider `pp_stripe_stripe`), ma il flusso browser fallisce ("processing error" / bloccato su preparazione). Diagnostica in corso con log `[checkout]` + codice errore; ipotesi aperta: chiave pubblicabile nel build preview, CSP, stato PaymentIntent. **Bloccante per riaprire le vendite** | open (bloccante) |
+| R3 | **Checkout Stripe (Payment Element)**: fix codice pronto (init stabile, riuso payment collection, indirizzi, `cart/complete` con retry, snapshot ordine guest, Appearance dark, CSP wallet). **Da verificare E2E su preview/live** con carta `4242…` + webhook | in-progress (verifica live) |
 | R3b | Dopo il checkout: verificare **webhook Stripe** (`https://medusa.darkcardcollection.com/hooks/payment/stripe`, evento `payment_intent.succeeded`) + cattura ordine + email Resend end-to-end | open |
 | R3c | Registrare il **feed Google Merchant** `/api/feed/products` in Merchant Center | open |
 | R4 | **F4 — Hardening**: promotions, returns/exchanges, backup verificato, monitoring (Uptime Kuma), aggiornamenti regolari VM | open |

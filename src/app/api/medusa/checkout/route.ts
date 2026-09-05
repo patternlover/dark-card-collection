@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { medusaFetch } from "@/lib/medusa/client"
+import { toOrderSummary, type CheckoutAddress } from "@/lib/checkout"
 
 interface ShippingOption {
   id: string
@@ -23,7 +24,22 @@ interface PaymentSessionResponse {
 
 interface CompleteResponse {
   type?: string
-  order?: { id: string }
+  order?: {
+    id?: string
+    display_id?: number
+    email?: string
+    total?: number
+    items?: Array<{ title?: string; quantity?: number; unit_price?: number }>
+  }
+}
+
+interface CartWithCollection {
+  cart: {
+    id: string
+    region_id?: string
+    subtotal?: number
+    payment_collection?: { id: string } | null
+  }
 }
 
 const FREE_SHIPPING_THRESHOLD_CENTS = 80_00
@@ -53,19 +69,42 @@ async function resolvePaymentProviderId(regionId: string): Promise<string> {
 }
 
 /**
+ * Riusa la payment collection già legata al carrello, se presente; altrimenti ne
+ * crea una nuova. Evita pile-up di collection/intent a ogni apertura del checkout.
+ */
+async function ensurePaymentCollection(cartId: string): Promise<string> {
+  try {
+    const existing = await medusaFetch<CartWithCollection>(
+      `/carts/${cartId}?fields=id,payment_collection.id`,
+    )
+    const id = existing.cart?.payment_collection?.id
+    if (id) return id
+  } catch {
+    // fields non supportato o cart senza collection: si crea sotto
+  }
+  const { payment_collection } = await medusaFetch<PaymentCollectionResponse>(
+    `/payment-collections`,
+    { method: "POST", body: { cart_id: cartId } },
+  )
+  return payment_collection.id
+}
+
+/**
  * Costruisce il checkout Medusa per il carrello corrente:
+ *  - salva email + indirizzo di spedizione/fatturazione sul carrello;
  *  - calcola la spedizione (Standard €9,99 | Gratuita dagli 80€) e la applica;
- *  - crea la payment collection;
+ *  - riusa (o crea) la payment collection;
  *  - crea la payment session:
  *      provider "stripe" → restituisce il `client_secret` per il Payment Element;
- *      provider "system" → completa il carrello e restituisce `order_id` (test/dev).
+ *      provider "system" (bonifico) → completa il carrello e restituisce l'ordine.
  */
 export async function POST(req: NextRequest) {
   try {
-    const { cart_id, provider, email } = (await req.json()) as {
+    const { cart_id, provider, email, shipping_address } = (await req.json()) as {
       cart_id?: string
       provider?: "stripe" | "system"
       email?: string
+      shipping_address?: CheckoutAddress
     }
     if (!cart_id) {
       return NextResponse.json({ error: "Cart non specificato" }, { status: 400 })
@@ -79,9 +118,15 @@ export async function POST(req: NextRequest) {
     const cart = cartData.cart
     const providerId = await resolvePaymentProviderId(cart.region_id ?? "")
 
-    // Email per l'ordine (conferma + link cliente).
-    if (email) {
-      await medusaFetch(`/carts/${cart_id}`, { method: "POST", body: { email } })
+    // Email + indirizzi per l'ordine (conferma email + complete Medusa).
+    const cartUpdate: Record<string, unknown> = {}
+    if (email) cartUpdate.email = email
+    if (shipping_address) {
+      cartUpdate.shipping_address = shipping_address
+      cartUpdate.billing_address = shipping_address
+    }
+    if (Object.keys(cartUpdate).length > 0) {
+      await medusaFetch(`/carts/${cart_id}`, { method: "POST", body: cartUpdate })
     }
 
     const { shipping_options } = await medusaFetch<ShippingMethodsResponse>(
@@ -108,27 +153,28 @@ export async function POST(req: NextRequest) {
       body: { option_id: option.id },
     })
 
-    const { payment_collection } = await medusaFetch<PaymentCollectionResponse>(
-      `/payment-collections`,
-      { method: "POST", body: { cart_id } },
-    )
+    const paymentCollectionId = await ensurePaymentCollection(cart_id)
 
     if (payProvider === "system") {
       await medusaFetch<PaymentSessionResponse>(
-        `/payment-collections/${payment_collection.id}/payment-sessions`,
+        `/payment-collections/${paymentCollectionId}/payment-sessions`,
         { method: "POST", body: { provider_id: "pp_system_default" } },
       )
       const completed = await medusaFetch<CompleteResponse>(`/carts/${cart_id}/complete`, {
         method: "POST",
       })
       if (completed.type === "order" && completed.order) {
-        return NextResponse.json({ order_id: completed.order.id })
+        const summary = toOrderSummary(completed.order, "")
+        if (!summary) {
+          return NextResponse.json({ error: "Checkout non completato" }, { status: 400 })
+        }
+        return NextResponse.json({ order_id: summary.orderId, order: summary })
       }
       return NextResponse.json({ error: "Checkout non completato" }, { status: 400 })
     }
 
     const sessionData = await medusaFetch<PaymentSessionResponse>(
-      `/payment-collections/${payment_collection.id}/payment-sessions`,
+      `/payment-collections/${paymentCollectionId}/payment-sessions`,
       { method: "POST", body: { provider_id: providerId } },
     )
     const clientSecret = sessionData.payment_collection?.payment_sessions?.[0]?.data

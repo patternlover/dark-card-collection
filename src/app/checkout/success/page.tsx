@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle, Loader2 } from 'lucide-react'
 import { useCart } from '@/hooks/useCart'
+import { useAuth } from '@/hooks/useAuth'
 import { trackPurchase } from '@/lib/analytics'
+import { loadOrderSnapshot, type OrderSummary } from '@/lib/checkout'
 import { proxyImageUrl } from '@/lib/proxy-image'
 import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
@@ -18,11 +20,42 @@ interface OrderItem {
 
 const TRACKED_KEY = 'dcc-purchase-tracked'
 
+function trackSnapshotPurchase(snapshot: OrderSummary, orderId: string) {
+  if (typeof window === 'undefined') return
+  if (sessionStorage.getItem(TRACKED_KEY) === orderId) return
+  sessionStorage.setItem(TRACKED_KEY, orderId)
+  trackPurchase(
+    snapshot.transactionId,
+    snapshot.items.map((item) => ({
+      item_id: item.title,
+      item_name: item.title,
+      price: item.price,
+      currency: 'EUR',
+      quantity: item.quantity,
+    })),
+    snapshot.value,
+  )
+}
+
+function toDisplayOrder(order: OrderSummary) {
+  return {
+    transactionId: order.transactionId,
+    value: order.value,
+    email: order.email,
+    items: order.items.map((item) => ({
+      product: { title: item.title },
+      quantity: item.quantity,
+      price: item.price,
+    })),
+  }
+}
+
 function SuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const orderId = searchParams.get('order_id')
   const { clearCart } = useCart()
+  const { token } = useAuth()
   const clearedRef = useRef(false)
   const [order, setOrder] = useState<{
     transactionId: string
@@ -43,7 +76,19 @@ function SuccessContent() {
       return
     }
 
-    fetch(`/api/medusa/order?order_id=${orderId}`)
+    // I guest non possono rileggere l'ordine dalla store API senza token:
+    // si usa prima lo snapshot salvato al checkout.
+    const snapshot = loadOrderSnapshot(orderId)
+    if (snapshot) {
+      setOrder(toDisplayOrder(snapshot))
+      trackSnapshotPurchase(snapshot, orderId)
+      setLoading(false)
+      return
+    }
+
+    fetch(`/api/medusa/order?order_id=${orderId}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data?.order) {
@@ -67,7 +112,7 @@ function SuccessContent() {
       })
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [orderId, clearCart])
+  }, [orderId, clearCart, token])
 
   useEffect(() => {
     if (loading || !order) return

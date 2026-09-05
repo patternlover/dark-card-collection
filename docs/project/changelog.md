@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **CUTOVER — storefront live su Medusa, Payload rimosso**.
+Ultima sessione: **Checkout Stripe R3 (fix codice) + Bonifico manuale**.
+
+---
+
+## Sessione 2026-09-06 — Checkout Stripe R3 + Bonifico manuale
+
+Decisione provider: **si resta su Stripe** (1,5% + 0,25€ SEE, ufficiale Medusa, zero canone).
+Fix flusso browser: init stabile, riuso payment collection, indirizzi, `cart/complete` con
+retry, snapshot ordine guest, Appearance dark, CSP wallet + tabs Carta/Bonifico (0%).
+Dettagli: `docs/project/sessions/2026-09-06-checkout-provider.md`.
+
+**Verifica**: tsc 0 · test 43/43 · `next build` ok. **Resta E2E su preview/live** (R3b webhook incluso).
 
 ---
 
