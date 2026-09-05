@@ -49,3 +49,6 @@ build.log
 # Playwright
 playwright-report/
 test-results/
+
+# Analytics (credenziali read-only Looker Studio)
+scripts/analytics/.env
