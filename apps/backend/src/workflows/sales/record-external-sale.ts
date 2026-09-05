@@ -25,6 +25,8 @@ export interface RecordExternalSaleWorkflowInput {
   shipping?: number
   tax?: number
   customer_username?: string
+  /** Metadata extra unite a quelle standard (es. id/data storici per gli import). */
+  order_metadata?: Record<string, unknown>
   items: {
     variant_id: string
     quantity: number
@@ -102,6 +104,7 @@ const createOrderFromSaleStep = createStep(
       currency_code?: string
       region_id?: string
       customer_username?: string
+      order_metadata?: Record<string, unknown>
       itemsMeta: {
         variant_id: string
         quantity: number
@@ -137,6 +140,7 @@ const createOrderFromSaleStep = createStep(
           ...(input.customer_username
             ? { dcc_customer_username: input.customer_username }
             : {}),
+          ...(input.order_metadata ?? {}),
         },
       },
     })
@@ -218,6 +222,7 @@ export const recordExternalSaleWorkflow = createWorkflow(
       currency_code: input.currency_code,
       region_id: input.region_id,
       customer_username: input.customer_username,
+      order_metadata: input.order_metadata,
       itemsMeta,
     })
     adjustInventoryForSaleStep({ items: input.items })

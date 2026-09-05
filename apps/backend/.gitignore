@@ -3,6 +3,8 @@
 .env.prod
 .env.local
 neon-connection.txt
+# Dati personali di import (CSV Google Sheet) — mai committare
+.import/
 .DS_Store
 /uploads
 /node_modules

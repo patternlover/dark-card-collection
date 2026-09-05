@@ -47,3 +47,4 @@ Storico per sessione di lavoro. Ogni sessione ha un file dedicato in questa cart
 - [2026-09-05 — Cutover: live su Medusa + rimozione Payload](2026-09-05-medusa-cutover.md)
 - [2026-09-06 — Checkout Stripe R3 + bonifico manuale](2026-09-06-checkout-provider.md)
 - [2026-09-06 — Admin italiano: Lotti usabile + dizionario IT](2026-09-06-admin-lotti-italiano.md)
+- [2026-09-06 — Import storico acquisti + vendite](2026-09-06-import-storico.md)

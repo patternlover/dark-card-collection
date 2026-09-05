@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Admin italiano — Lotti usabile (P1) + dizionario IT (P5)**.
+Ultima sessione: **Import storico acquisti + vendite (script pronti, run su VPS)**.
+
+---
+
+## Sessione 2026-09-06 — Import storico acquisti + vendite
+
+Script idempotenti (`apps/backend/src/scripts/import-history/`: parser+test, report,
+runner `medusa exec` dry-run/COMMIT) + tweak `order_metadata` al workflow vendite.
+Report: 14 prodotti draft, 41 lotti, 38 ordini Vinted, residui attesi 125.
+Dettagli + comandi VPS: `docs/project/sessions/2026-09-06-import-storico.md`.
+
+**Verifica**: jest nuovi 10/10 · backend tsc 0. **Run PROD da fare sul VPS**.
 
 ---
 
