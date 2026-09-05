@@ -103,7 +103,13 @@ export default function CheckoutPage() {
         redirect: "if_required",
       })
       if (confirmError) {
-        setError(confirmError.message || "Errore di pagamento")
+        console.error("Stripe confirmPayment error:", confirmError)
+        // Stripe nasconde i dettagli con "processing error" quando le chiavi non
+        // corrispondono o c'è un problema lato integrazione: mostriamo il codice.
+        const detail = confirmError.code
+          ? `${confirmError.message} (${confirmError.code})`
+          : confirmError.message || "Errore di pagamento"
+        setError(detail)
         setState("ready")
         return
       }
