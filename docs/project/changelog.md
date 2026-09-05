@@ -1,7 +1,18 @@
 # CHANGELOG — Dark Card Collection
 
 Documentazione operative delle modifiche fatte al progetto. Aggiorna questo file a ogni nuovo intervento.
-Ultima sessione: **Checkout Stripe R3 (fix codice) + Bonifico manuale**.
+Ultima sessione: **Admin italiano — Lotti usabile (P1) + dizionario IT (P5)**.
+
+---
+
+## Sessione 2026-09-06 — Admin italiano: Lotti usabile + dizionario IT
+
+Dizionario IT centralizzato (`src/admin/i18n`, sempre italiano anche con dashboard EN) +
+pagina Lotti riscritta (selettore prodotti con nomi/stock/ricerca, validazione IT,
+anteprima costi) + endpoint `GET /admin/dcc/variant-options`.
+Dettagli: `docs/project/sessions/2026-09-06-admin-lotti-italiano.md`.
+
+**Verifica**: backend tsc 0 · jest 13/13 · storefront lint/test 52/52 · `next build` ok.
 
 ---
 
