@@ -26,10 +26,9 @@ Crea:
 ## Collegamento a Looker Studio
 
 1. **Looker Studio → Crea → Sorgente dati → PostgreSQL**.
-2. Dalla `DATABASE_URL_RO` in `scripts/analytics/.env` ricava:
-   - **Server/host**: `ep-xxxx.eu-central-1.aws.neon.tech` (parte `@host` della stringa)
-   - **Porta**: `5432`
-   - **Database**: `dcc_medusa`
+2. Ricava i valori esatti dalla `DATABASE_URL_RO` in `scripts/analytics/.env` (es. ora: host `ep-snowy-cloud-b2h0ky0b-pooler.c-6.eu-central-1.aws.neon.tech`, porta `5432`, database `neondb`, utente `medusa_ro`):
+   - **Server/host** e **Porta**: dalla stringa (`@host:port`)
+   - **Database**: il nome dopo l'ultimo `/` (Neon usa `neondb` di default)
    - **Nome utente**: `medusa_ro`
    - **Password**: quella in `scripts/analytics/.env`
    - **SSL**: abilitato (Neon richiede `sslmode=require`)
