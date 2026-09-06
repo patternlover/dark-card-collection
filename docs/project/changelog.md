@@ -23,6 +23,11 @@ CI rossa dal pin pnpm 11 (`version: 10` in conflitto con `packageManager`:
 rimosso con Payload). Fix `ci.yml`: pnpm da packageManager, via postgres di
 servizio e `test:db`. **CI #120 success** · live 200 con stato atteso.
 
+## Sessione 2026-09-06 — Listino sito da inventory.csv (applicato)
+
+Prezzi target o costo×1.5, canale Website solo LISTED, HOLD nascosti, thumbnail.
+7 prodotti live verificati su shop/PDP. Dettagli nella sessione import-storico.
+
 ---
 
 ## Sessione 2026-09-06 — Admin italiano: Lotti usabile + dizionario IT
