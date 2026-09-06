@@ -159,6 +159,59 @@ export function productKeyOf(p: {
     .toLowerCase()
 }
 
+export interface NormalizedIdentity {
+  categoryName: string
+  productType: "product" | "card"
+  language: string
+  condition: string
+  sets: string[]
+  productKey: string
+}
+
+/** Normalizzazione identità prodotto condivisa da acquisti e inventario. */
+export function normalizeIdentity(
+  purchaseId: string,
+  productName: string,
+  categoryRaw: string,
+  setsRaw: string[],
+  languageRaw: string,
+  conditionRaw: string,
+  warnings: string[],
+): NormalizedIdentity {
+  let category = norm(categoryRaw)
+  if (CATEGORY_FIXES[purchaseId] && CATEGORY_FIXES[purchaseId] !== category) {
+    warnings.push(
+      `${purchaseId}: categoria "${category}" normalizzata in "${CATEGORY_FIXES[purchaseId]}"`,
+    )
+    category = CATEGORY_FIXES[purchaseId]
+  }
+  const name = norm(productName)
+  let sets = setsRaw.map((s) => norm(s)).filter((s) => s !== "" && s !== "-")
+  for (const fix of SETS_FIXES) {
+    if (
+      fix.match.test(name) &&
+      sets.join("+").toLowerCase() !== fix.sets.join("+").toLowerCase()
+    ) {
+      warnings.push(`${purchaseId}: set unificati in "${fix.sets.join(" + ")}"`)
+      sets = [...fix.sets]
+    }
+  }
+  const isCard = category.toUpperCase() === "CARD"
+  const language =
+    norm(languageRaw).toUpperCase() === "ITA" ? "italian" : norm(languageRaw).toLowerCase()
+  const condition =
+    norm(conditionRaw).toUpperCase() === "SEALED" ? "new" : norm(conditionRaw).toLowerCase()
+  const categoryName = categoryNameOf(category)
+  return {
+    categoryName,
+    productType: isCard ? "card" : "product",
+    language,
+    condition,
+    sets,
+    productKey: productKeyOf({ product_name: name, categoryName, sets, language, condition }),
+  }
+}
+
 export interface ParseResult<T> {
   rows: T[]
   warnings: string[]
@@ -201,23 +254,10 @@ export function parsePurchases(csvText: string): ParseResult<ParsedPurchase> {
     try {
       const date = parseSheetDate(cells[PURCHASE_COLS.date] ?? "")
       const product_name = norm(cells[PURCHASE_COLS.productName] ?? "")
-      let category = norm(cells[PURCHASE_COLS.category] ?? "")
-      if (CATEGORY_FIXES[id] && CATEGORY_FIXES[id] !== category) {
-        warnings.push(`${id}: categoria "${category}" normalizzata in "${CATEGORY_FIXES[id]}"`)
-        category = CATEGORY_FIXES[id]
-      }
-      const languageRaw = norm(cells[PURCHASE_COLS.language] ?? "").toUpperCase()
-      const conditionRaw = norm(cells[PURCHASE_COLS.condition] ?? "").toUpperCase()
-      let sets = splitSets(cells[PURCHASE_COLS.set] ?? "")
-      for (const fix of SETS_FIXES) {
-        if (
-          fix.match.test(product_name) &&
-          sets.join("+").toLowerCase() !== fix.sets.join("+").toLowerCase()
-        ) {
-          warnings.push(`${id}: set unificati in "${fix.sets.join(" + ")}"`)
-          sets = [...fix.sets]
-        }
-      }
+      const category = norm(cells[PURCHASE_COLS.category] ?? "")
+      const languageRaw = norm(cells[PURCHASE_COLS.language] ?? "")
+      const conditionRaw = norm(cells[PURCHASE_COLS.condition] ?? "")
+      const setsRaw = splitSets(cells[PURCHASE_COLS.set] ?? "")
       const platform = norm(cells[PURCHASE_COLS.platform] ?? "")
       const seller = norm(cells[PURCHASE_COLS.seller] ?? "")
       const quantity = parseInt(norm(cells[PURCHASE_COLS.quantity] ?? ""), 10)
@@ -234,7 +274,8 @@ export function parsePurchases(csvText: string): ParseResult<ParsedPurchase> {
       if (!product_name) throw new Error("nome prodotto mancante")
       if (!Number.isInteger(quantity) || quantity < 1)
         throw new Error(`quantità non valida: "${cells[PURCHASE_COLS.quantity]}"`)
-      if (sets.length === 0) throw new Error("set mancante")
+      if (norm(cells[PURCHASE_COLS.set] ?? "") === "")
+        throw new Error("set mancante")
       if (seen.has(id)) throw new Error(`purchase_id duplicato: ${id}`)
       seen.add(id)
 
@@ -249,17 +290,8 @@ export function parsePurchases(csvText: string): ParseResult<ParsedPurchase> {
         warnings.push(`${id}: net (€${netPrice.toFixed(2)}) ≠ gross (€${grossPrice.toFixed(2)})`)
       }
 
-      const isCard = category.toUpperCase() === "CARD"
-      const language = languageRaw === "ITA" ? "italian" : languageRaw.toLowerCase()
-      const condition = conditionRaw === "SEALED" ? "new" : conditionRaw.toLowerCase()
-      const categoryName = categoryNameOf(category)
-      const key = productKeyOf({
-        product_name,
-        categoryName,
-        sets,
-        language,
-        condition,
-      })
+      const { categoryName, productType, language, condition, sets, productKey } =
+        normalizeIdentity(id, product_name, category, setsRaw, languageRaw, conditionRaw, warnings)
 
       const extra = shippingFee + otherFees
       const noteParts = [`[${id}]`]
@@ -273,7 +305,7 @@ export function parsePurchases(csvText: string): ParseResult<ParsedPurchase> {
         product_name,
         category,
         categoryName,
-        productType: isCard ? "card" : "product",
+        productType,
         language,
         condition,
         sets,
@@ -285,7 +317,7 @@ export function parsePurchases(csvText: string): ParseResult<ParsedPurchase> {
         payment_method,
         location,
         notes: noteParts.join(" · "),
-        productKey: key,
+        productKey,
       })
     } catch (e) {
       errors.push(`${id || "(riga senza id)"}: ${e instanceof Error ? e.message : e}`)
@@ -419,4 +451,102 @@ export function groupProducts(purchases: ParsedPurchase[]): ProductGroup[] {
     }
   }
   return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, "it"))
+}
+
+// ---------------------------------------------------------------------------
+// Inventario per-unità (listino: stati, target price, immagini)
+// ---------------------------------------------------------------------------
+
+export type InventoryState = "SOLD" | "LISTED" | "HOLD"
+
+export interface InventoryRow {
+  item_id: string
+  purchase_id: string
+  unit_index: number
+  product_name: string
+  productKey: string
+  state: InventoryState
+  target_price: number | null
+  image_url: string
+  hold_end_date: string | null
+  unit_cost: number
+}
+
+const INV_COLS = {
+  itemId: 0,
+  productName: 1,
+  category: 2,
+  language: 3,
+  set: 4,
+  condition: 5,
+  purchaseId: 6,
+  purchaseDate: 7,
+  unitaryNet: 8,
+  unitaryGross: 9,
+  state: 10,
+  holdDays: 11,
+  holdEnd: 12,
+  targetPrice: 13,
+  imageUrl: 17,
+} as const
+
+function emptyish(s: string): boolean {
+  const v = s.trim().toLowerCase()
+  return v === "" || v === "-" || v.startsWith("enter")
+}
+
+export function parseInventory(csvText: string): ParseResult<InventoryRow> {
+  const warnings: string[] = []
+  const errors: string[] = []
+  const rows: InventoryRow[] = []
+  const seen = new Set<string>()
+
+  for (const cells of parseCsv(csvText).slice(1)) {
+    const itemId = norm(cells[INV_COLS.itemId] ?? "")
+    if (itemId === "" || /^enter\b/i.test(itemId)) continue
+    try {
+      const m = itemId.match(/^(PUR-\d+)-(\d+)$/)
+      if (!m) throw new Error(`item_id non valido: "${itemId}"`)
+      const [, purchaseId, unitStr] = m
+      if (seen.has(itemId)) throw new Error(`item_id duplicato: ${itemId}`)
+      seen.add(itemId)
+
+      const productName = norm(cells[INV_COLS.productName] ?? "")
+      if (!productName) throw new Error("nome prodotto mancante")
+      const { productKey } = normalizeIdentity(
+        purchaseId,
+        productName,
+        norm(cells[INV_COLS.category] ?? ""),
+        splitSets(cells[INV_COLS.set] ?? ""),
+        norm(cells[INV_COLS.language] ?? ""),
+        norm(cells[INV_COLS.condition] ?? ""),
+        warnings,
+      )
+
+      const stateRaw = norm(cells[INV_COLS.state] ?? "").toUpperCase()
+      if (stateRaw !== "SOLD" && stateRaw !== "LISTED" && stateRaw !== "HOLD") {
+        throw new Error(`stato non valido: "${cells[INV_COLS.state]}"`)
+      }
+      const targetRaw = norm(cells[INV_COLS.targetPrice] ?? "")
+      const holdRaw = norm(cells[INV_COLS.holdEnd] ?? "")
+      const imageRaw = norm(cells[INV_COLS.imageUrl] ?? "")
+
+      rows.push({
+        item_id: itemId,
+        purchase_id: purchaseId,
+        unit_index: parseInt(unitStr, 10),
+        product_name: productName,
+        productKey,
+        state: stateRaw,
+        target_price: emptyish(targetRaw) ? null : parseEuro(targetRaw),
+        image_url: imageRaw === "-" ? "" : imageRaw,
+        hold_end_date: emptyish(holdRaw) ? null : parseSheetDate(holdRaw),
+        unit_cost: parseEuro(cells[INV_COLS.unitaryGross] ?? ""),
+      })
+    } catch (e) {
+      errors.push(`${itemId}: ${e instanceof Error ? e.message : e}`)
+    }
+  }
+
+  return { rows, warnings, errors }
 }

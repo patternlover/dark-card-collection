@@ -2,6 +2,7 @@ import {
   groupProducts,
   mapSourceType,
   parseEuro,
+  parseInventory,
   parsePurchases,
   parseSales,
   parseSheetDate,
@@ -137,5 +138,38 @@ describe("parseSales", () => {
     expect(errors.join("\n")).toMatch("fuori range")
     expect(skipped.join("\n")).toMatch("ORD-0004")
     expect(warnings).toEqual([])
+  })
+})
+
+describe("parseInventory", () => {
+  const csv = [
+    "item_id,product_name,category,language,set,condition,purchase_id,purchase_date,unitary_net_price,unitary_gross_price,product_state,hold_days,hold_end_date,target_price,expected_ROI,market_price,volatile_ROI,image_url,notes",
+    'PUR-0001-01,Set ETB,ETB,ITA,TWM - Set,SEALED,PUR-0001,03/07/2026,"€ 54,90","€ 54,90",LISTED,90,15/10/2026,"€ 69,90","27,3",,,https://img/x.jpg,',
+    'PUR-0002-01,Set ETB,ETB,ITA,TWM - Set,SEALED,PUR-0002,04/07/2026,"€ 54,90","€ 54,90",HOLD,90,,enter hold period,,,,,',
+    'PUR-0003-01,X,ETB,ITA,TWM - Set,SEALED,PUR-0003,07/07/2026,"€ 1,00","€ 1,00",SOLD,,,,,,,,',
+  ].join("\n")
+
+  it("mappa stati, target e immagini", () => {
+    const { rows, errors } = parseInventory(csv)
+    expect(errors).toEqual([])
+    expect(rows).toHaveLength(3)
+    expect(rows[0]).toMatchObject({
+      item_id: "PUR-0001-01",
+      purchase_id: "PUR-0001",
+      unit_index: 1,
+      state: "LISTED",
+      target_price: 69.9,
+      image_url: "https://img/x.jpg",
+      hold_end_date: "2026-10-15T00:00:00.000Z",
+    })
+    expect(rows[1].target_price).toBeNull()
+    expect(rows[1].hold_end_date).toBeNull()
+    expect(rows[2].state).toBe("SOLD")
+  })
+
+  it("condivide il formato chiave con gli acquisti", () => {
+    const { rows } = parseInventory(csv)
+    expect(rows[0].productKey).toContain("etb")
+    expect(rows[0].productKey).toContain("set etb")
   })
 })

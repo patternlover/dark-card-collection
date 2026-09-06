@@ -79,6 +79,24 @@ branch nel workflow) — quadratura 125/125, **margini = foglio**
 Stato finale prod: 14 prodotti published/invisibili · 41 lotti · 38 ordini Vinted
 completed con snapshot per-lotto · 125 pezzi residui · costo €4727,39.
 
+## Listino sito da inventory.csv — APPLICATO SU PROD
+
+`inventory.csv` (165 righe unità: stato SOLD/LISTED/HOLD, target_price, image_url).
+Script `src/scripts/import-history/listino.ts` (dry-run/COMMIT):
+- prezzo = `target_price` più recente, altrimenti costo_max × 1.5 (margine ≥50%);
+- canale Website solo con unità LISTED residue (HOLD nascosti + `metadata.hold_until`);
+- thumbnail Cardmarket dove presente; idempotente via `metadata.listino_applied`.
+- Prezzi via pricing `createPriceSets` + link SQL `product_variant_price_set`
+  (`link.create` ambiguo) · canale via `linkProductsToSalesChannelWorkflow`.
+
+**Applicato:** 7 visibili (Serie 2 €26,90 · Serie 3 €32,85 · Fascio €46,43 ·
+Victini €35,90 · Gengar €29,90 · Crepuscolo €69,90 · Feraligatr €30,26),
+4 nascosti con prezzo (SPC/Poster/Emboar/Meganium, hold), 3 esauriti saltati
+(Palkia/Fiamme/Vaporeon). Verificato su shop live + PDP.
+Note: stock pooled per variante (HOLD delle listed vendibili); 2 unità fantasma
+in stock (PUR-0001-01, PUR-0027-01: foglio SOLD senza prezzo) da sistemare
+quando il foglio avrà i prezzi; Vaporeon LISTED ma esaurito (foglio stale).
+
 ## Epilogo shop vuoto (2026-09-06) — NESSUN BUG
 
 Segnalazione "non vedo gli item sul sito": diagnosi (feed vuoto + filtri popolati
