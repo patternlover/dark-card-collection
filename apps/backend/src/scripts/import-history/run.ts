@@ -70,7 +70,7 @@ interface ProductServiceLike {
     title: string
     handle: string
   }): Promise<NamedNode>
-  updateProducts(d: unknown): Promise<unknown>
+  updateProducts(selector: unknown, data: unknown): Promise<unknown>
   listAndCountProductVariants: (
     f: Record<string, unknown>,
     c?: Record<string, unknown>,
@@ -474,7 +474,7 @@ export default async ({ container }: { container: MedusaContainer }) => {
   // assegna prezzi + canale Website.
   const productIds = [...new Set(productByVariant.values())]
   for (const id of productIds) {
-    await productService.updateProducts({ id, status: "published" })
+    await productService.updateProducts({ id }, { status: "published" })
   }
   log(`[commit] prodotti pubblicati (senza canale/prezzi): ${productIds.length}`)
 

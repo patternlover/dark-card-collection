@@ -238,38 +238,50 @@ export default async ({ container }: { container: MedusaContainer }) => {
   }
 
   const pricing = container.resolve(ModuleRegistrationName.PRICING) as unknown as PricingServiceLike
-  const knex = container.resolve("__pg_connection__") as KnexLike
-  const productService = container.resolve(ModuleRegistrationName.PRODUCT) as unknown as {
-    updateProducts: (d: unknown) => Promise<unknown>
+  const knex = container.resolve("__pg_connection__") as unknown as {
+    raw: (sql: string, bindings?: unknown[]) => Promise<{ rows?: Record<string, unknown>[] }>
   }
+  const productService = container.resolve(ModuleRegistrationName.PRODUCT) as unknown as {
+    updateProducts: (selector: unknown, data: unknown) => Promise<unknown>
+  }
+
+  // Price set già collegati (idempotenza reale, oltre metadata.listino_applied).
+  const linkedRes = await knex.raw(
+    `SELECT variant_id FROM product_variant_price_set WHERE deleted_at IS NULL`,
+  )
+  const withPrice = new Set((linkedRes.rows ?? []).map((r) => String(r.variant_id)))
 
   for (const p of plan) {
     if (p.remaining === 0 || p.alreadyApplied) {
       log(`[skip] ${p.name}: ${p.remaining === 0 ? "esaurito" : "già applicato"}`)
       continue
     }
-    const existingMeta = (
-      products.find((x) => x.id === p.productId)?.metadata ?? {}
-    ) as Record<string, unknown>
-    await productService.updateProducts({
-      id: p.productId,
-      ...(p.image ? { thumbnail: p.image } : {}),
-      metadata: {
-        ...existingMeta,
-        ...(p.holdUntil ? { hold_until: p.holdUntil } : {}),
-        listino_price: p.price,
-        listino_applied: true,
+    const current = products.find((x) => x.id === p.productId)
+    const existingMeta = (current?.metadata ?? {}) as Record<string, unknown>
+    const linkedChannel = (current?.sales_channels ?? []).some((c) => c.id === website.id)
+    await productService.updateProducts(
+      { id: p.productId },
+      {
+        ...(p.image ? { thumbnail: p.image } : {}),
+        metadata: {
+          ...existingMeta,
+          ...(p.holdUntil ? { hold_until: p.holdUntil } : {}),
+          listino_price: p.price,
+          listino_applied: true,
+        },
       },
-    })
-    const [priceSet] = await pricing.createPriceSets([
-      { prices: [{ amount: Math.round(p.price * 100), currency_code: "eur" }] },
-    ])
-    // Link variante ↔ price set via SQL (link.create è ambiguo tra i moduli).
-    await knex.raw(
-      `INSERT INTO product_variant_price_set (id, variant_id, price_set_id, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW()) ON CONFLICT DO NOTHING`,
-      [newLinkId(), p.variantId, priceSet.id],
     )
-    if (p.listable) {
+    if (!withPrice.has(p.variantId)) {
+      const [priceSet] = await pricing.createPriceSets([
+        { prices: [{ amount: Math.round(p.price * 100), currency_code: "eur" }] },
+      ])
+      // Link variante ↔ price set via SQL (link.create è ambiguo tra i moduli).
+      await knex.raw(
+        `INSERT INTO product_variant_price_set (id, variant_id, price_set_id, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW()) ON CONFLICT DO NOTHING`,
+        [newLinkId(), p.variantId, priceSet.id],
+      )
+    }
+    if (p.listable && !linkedChannel) {
       await linkProductsToSalesChannelWorkflow(container).run({
         input: { id: website.id, add: [p.productId] },
       })
