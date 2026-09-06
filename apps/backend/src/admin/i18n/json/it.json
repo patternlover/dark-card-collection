@@ -46,5 +46,9 @@
     "errBadCost": "Riga {n}: costo non valido.",
     "errBadExtra": "Costi extra non validi.",
     "registered": "Lotto registrato e magazzino aggiornato."
+  },
+  "mediaNote": {
+    "title": "Immagini prodotto",
+    "body": "Le immagini vivono su Vercel Blob (products/<slug>.webp) e si caricano con lo script upload-product-images. L'upload da qui non è attivo (nessun file provider): i pulsanti di modifica sono nascosti apposta."
   }
 }
