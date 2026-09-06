@@ -5,6 +5,19 @@ Ultima sessione: **Import storico acquisti + vendite (script pronti, run su VPS)
 
 ---
 
+## Sessione 2026-09-06 — Checkout: fix lentezza init (R3)
+
+Blob offuscato segnalato = script estensione Chrome, non nostro (grep 0 risultati in `src/`).
+Collo reale: init con ~4 hop sequenziali + cart intero + rilettura cart in
+`ensurePaymentCollection` + flash "carrello vuoto". Fix: `fetchCartLean` (fields minimi
+con fallback), riuso collection senza rilettura, skeleton durante `loading`, preconnect
+`js.stripe.com`. Dettagli: `docs/project/sessions/2026-09-06-checkout-init-perf.md`.
+
+**Verifica**: tsc 0 · test 52/52 · `next build` ok (31 pagine).
+**Resta**: config Admin (sales channel → stock location) + E2E live carta `4242…` + R3b.
+
+---
+
 ## Sessione 2026-09-06 — Piano replatforming visivo (taste-skill, approvato)
 
 Valutata la skill https://github.com/Leonxlnx/taste-skill: skill scelta

@@ -58,10 +58,30 @@ interface RegionWithProviders {
 }
 
 /**
+ * Legge il carrello in forma leggera (solo i campi che servono al checkout).
+ * Il payload intero del cart (items, varianti, indirizzi) è pesante e rallenta
+ * l'init del Payment Element: se `?fields=` non è supportato, fallback al fetch
+ * completo (stesso comportamento di prima).
+ */
+async function fetchCartLean(cartId: string): Promise<CartWithCollection> {
+  try {
+    return await medusaFetch<CartWithCollection>(
+      `/carts/${cartId}?fields=id,region_id,subtotal,payment_collection.id`,
+    )
+  } catch {
+    return medusaFetch<CartWithCollection>(`/carts/${cartId}`)
+  }
+}
+
+/**
  * Riusa la payment collection già legata al carrello, se presente; altrimenti ne
  * crea una nuova. Evita pile-up di collection/intent a ogni apertura del checkout.
  */
-async function ensurePaymentCollection(cartId: string): Promise<string> {
+async function ensurePaymentCollection(
+  cartId: string,
+  knownId?: string | null,
+): Promise<string> {
+  if (knownId) return knownId
   try {
     const existing = await medusaFetch<CartWithCollection>(
       `/carts/${cartId}?fields=id,payment_collection.id`,
@@ -89,7 +109,7 @@ export async function GET(req: NextRequest) {
   }
   try {
     const [cartData, shipData] = await Promise.all([
-      medusaFetch<{ cart: { id: string; subtotal?: number } }>(`/carts/${cartId}`),
+      fetchCartLean(cartId),
       medusaFetch<ShippingMethodsResponse>(`/shipping-options?cart_id=${cartId}`),
     ])
     const subtotal = Number(cartData.cart.subtotal ?? 0)
@@ -143,10 +163,10 @@ export async function POST(req: NextRequest) {
     const payProvider = provider ?? "stripe"
 
     // Chiamate indipendenti in parallelo (il cold start del backend è lento).
+    // Il cart arriva in forma leggera e porta già l'id della payment collection,
+    // così `ensurePaymentCollection` non deve rileggerlo (un roundtrip in meno).
     const [cartData, regionsData, shipData] = await Promise.all([
-      medusaFetch<{ cart: { id: string; region_id?: string; subtotal?: number } }>(
-        `/carts/${cart_id}`,
-      ),
+      fetchCartLean(cart_id),
       medusaFetch<{ regions?: RegionWithProviders[] }>(
         `/regions?fields=id,payment_providers.id&limit=20`,
       ),
@@ -203,7 +223,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, ...shippingPayload })
     }
 
-    const paymentCollectionId = await ensurePaymentCollection(cart_id)
+    const paymentCollectionId = await ensurePaymentCollection(
+      cart_id,
+      cart.payment_collection?.id,
+    )
 
     if (payProvider === "system") {
       await medusaFetch<PaymentSessionResponse>(

@@ -11,13 +11,13 @@ Ultimo aggiornamento: 2026-09-06 (fix codice checkout R3 + bonifico; da verifica
 
 | # | Task | Stato |
 |---|------|-------|
-| R3 | **Checkout Stripe (Payment Element)**: fix codice pronto (intent stabile, riuso collection, indirizzi, `complete` con retry, shipping UI). **Bloccato su config backend**: associare sales channel → stock location in Medusa Admin (vedi sessione 2026-09-06), poi E2E carta `4242…` su live | in-progress (config backend) |
+| R3 | **Checkout Stripe (Payment Element)**: fix codice pronto (intent stabile, riuso collection, indirizzi, `complete` con retry, shipping UI) + **fix lentezza init 2026-09-06** (fetch cart leggeri, riuso collection senza rilettura, skeleton al posto del falso "carrello vuoto", preconnect Stripe). **Bloccato su config backend**: associare sales channel → stock location in Medusa Admin (vedi sessione 2026-09-06), poi E2E carta `4242…` su live | in-progress (config backend) |
 | R3b | Dopo il checkout: verificare **webhook Stripe** (`https://medusa.darkcardcollection.com/hooks/payment/stripe`, evento `payment_intent.succeeded`) + cattura ordine + email Resend end-to-end | open |
 | R3c | Registrare il **feed Google Merchant** `/api/feed/products` in Merchant Center | open |
 | R4 | **F4 — Hardening**: promotions, returns/exchanges, backup verificato, monitoring (Uptime Kuma), aggiornamenti regolari VM | open |
 | — | **Scontrini lotti** (upload su Google Drive dalla route Admin Lotti): il campo `receipt_url` esiste nel modulo procurement, l'integrazione Drive non è portata da Payload | open |
 | W6 | **Repo privata**: la repo è pubblica. Dopo `gh auth login`: `gh repo edit patternlover/dark-card-collection --visibility private` | waiting-user (auth gh) |
-| V1 | **Replatforming visivo storefront (taste-skill, preserve neobrutalist)**: skill `redesign-existing-projects` installata (`.agents/`, audit preserve fatto — report in `docs/project/sessions/2026-09-06-taste-skill-install-audit.md`). Prossimo: batch P1 (F1–F5) su `feat/visual-replatform` | in-progress (decisione: batch P1 ora o dopo E2E checkout live) |
+| V1 | **Replatforming visivo storefront (taste-skill, preserve neobrutalist)**: install `redesign-existing-projects` (+ valutare `industrial-brutalist-ui`), audit, pilota `ProductCard`+`HeroSection` su `feat/visual-replatform`, rollout vetrina→checkout/account→guide/info. Piano: `docs/project/sessions/2026-09-06-taste-skill-visual-replatform-plan.md` | blocked (R3/R3b: parte dopo checkout verificato E2E su live) |
 | W5 | **Immagini**: 2 file in `images/` senza prodotto (`bundle-ascesa-eroica.webp`, `scatola-da-collezione-mega-moonlit-tins-mega-gengar-ex.webp`) — caricare su Vercel Blob quando i prodotti esisteranno | waiting-user |
 
 ## 2. Non-goal / chiusi per scelta

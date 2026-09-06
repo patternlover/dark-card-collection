@@ -103,7 +103,7 @@ const inputClass =
   "border-2 border-zinc-700 bg-black px-3 py-2 text-white focus:border-[var(--accent)] focus:outline-none"
 
 export default function CheckoutPage() {
-  const { items, cartId, subtotal, shipping, total } = useCart()
+  const { items, cartId, subtotal, shipping, total, loading } = useCart()
   const { customer } = useAuth()
   const [method, setMethod] = useState<PayMethod>("card")
   const [state, setState] = useState<"init" | "ready" | "processing" | "error">("init")
@@ -380,6 +380,18 @@ export default function CheckoutPage() {
 
   // Totali dal server (spedizione scelta) con fallback al calcolo locale.
   const displayed = serverTotals ?? { subtotal, shipping, total }
+
+  // Il provider risolve il cart in modo asincrono: finché carica non si può
+  // sapere se è vuoto (prima mostrava "carrello vuoto" per un istante).
+  if (loading) {
+    return (
+      <div className="bg-black">
+        <div className="mx-auto flex max-w-2xl justify-center px-4 py-16 sm:px-6 lg:px-8">
+          <LoadingFallback label="Caricamento del carrello..." />
+        </div>
+      </div>
+    )
+  }
 
   if (items.length === 0) {
     return (

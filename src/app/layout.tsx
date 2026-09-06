@@ -99,6 +99,9 @@ export default function RootLayout({
           <RouteProgress />
         </Suspense>
         <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt" />
+        {/* Preconnessione a Stripe.js: il Payment Element del checkout lo carica
+            come script esterno, il preconnect risparmia handshake TLS/DNS. */}
+        <link rel="preconnect" href="https://js.stripe.com" />
         {/* hreflang renderizzato minuscolo per compatibilità crawler (React usa hrefLang di default) */}
         <link rel="alternate" {...({ hreflang: 'it-IT', href: '/' } as React.HTMLAttributes<HTMLLinkElement>)} />
         <link rel="alternate" {...({ hreflang: 'x-default', href: '/' } as React.HTMLAttributes<HTMLLinkElement>)} />
