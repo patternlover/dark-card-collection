@@ -121,7 +121,7 @@ function SuccessContent() {
   }, [loading, order, router])
 
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
         <Breadcrumb
           className="mb-6 text-left"
@@ -222,7 +222,7 @@ export default function CheckoutSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="bg-black">
+        <div className="bg-[var(--background)]">
           <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
             <Loader2 className="h-16 w-16 text-zinc-500 mx-auto mb-6 animate-spin" />
             <Reveal>

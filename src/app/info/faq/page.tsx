@@ -76,7 +76,7 @@ const jsonLd = {
 
 export default function FAQPage() {
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <JsonLd data={jsonLd} />
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
         <Breadcrumb className="mb-4" items={[{ label: 'Home', href: '/' }, { label: 'FAQ' }]} />

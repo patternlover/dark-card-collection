@@ -58,7 +58,7 @@ const itemListJsonLd = {
 
 export default function GuideHubPage() {
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <JsonLd data={[breadcrumbJsonLd, itemListJsonLd]} />
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
         <Breadcrumb className="mb-4" items={[{ label: 'Home', href: '/' }, { label: 'Guide' }]} />

@@ -108,7 +108,7 @@ export default function Home() {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <div className="relative overflow-hidden bg-black">
+      <div className="relative overflow-hidden bg-[var(--background)]">
         <HeroBackground />
         <div className="relative z-10">
           <HeroSection />

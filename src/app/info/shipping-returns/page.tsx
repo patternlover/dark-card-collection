@@ -15,7 +15,7 @@ const FREE_SHIPPING_THRESHOLD = '80,00 €'
 
 export default function ShippingReturnsPage() {
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
         <Breadcrumb className="mb-4" items={[{ label: 'Home', href: '/' }, { label: 'Spedizioni e Resi' }]} />
         <Reveal>

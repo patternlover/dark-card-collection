@@ -68,7 +68,7 @@ const breadcrumbJsonLd = {
 
 export default function GuideDoveComprarePage() {
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <JsonLd data={[jsonLd, breadcrumbJsonLd]} />
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <Breadcrumb

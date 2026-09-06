@@ -385,7 +385,7 @@ export default function CheckoutPage() {
   // sapere se è vuoto (prima mostrava "carrello vuoto" per un istante).
   if (loading) {
     return (
-      <div className="bg-black">
+      <div className="bg-[var(--background)]">
         <div className="mx-auto flex max-w-2xl justify-center px-4 py-16 sm:px-6 lg:px-8">
           <LoadingFallback label="Caricamento del carrello..." />
         </div>
@@ -395,7 +395,7 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="bg-black">
+      <div className="bg-[var(--background)]">
         <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6 lg:px-8">
           <p className="text-zinc-500">Il carrello è vuoto.</p>
           <Link
@@ -410,7 +410,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumb
           className="mb-4"

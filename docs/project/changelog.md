@@ -5,6 +5,17 @@ Ultima sessione: **Import storico acquisti + vendite (script pronti, run su VPS)
 
 ---
 
+## Sessione 2026-09-06 — V1 visual batch P1 (F1+F2) su `feat/visual-replatform`
+
+Override "dopo R3" confermato: solo modifiche class-level. F1 canvas → `#0a0a0a`
+(26 file, superfici intenzionali restano nere); F2 `:focus-visible` globale giallo.
+Dettagli: `docs/project/sessions/2026-09-06-visual-p1.md`.
+
+**Verifica**: tsc 0 · test 52/52 · `next build` ok (31 pagine). Branch, non main.
+**Aperte**: F3/F4/F5 (decisioni prodotto) + E2E R3 su live.
+
+---
+
 ## Sessione 2026-09-06 — Checkout: fix lentezza init (R3)
 
 Blob offuscato segnalato = script estensione Chrome, non nostro (grep 0 risultati in `src/`).

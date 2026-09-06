@@ -36,7 +36,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <div className="mx-auto max-w-md px-4 py-12 sm:px-6">
         <Breadcrumb
           className="mb-6"

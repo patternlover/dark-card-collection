@@ -32,7 +32,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         <Breadcrumb className="mb-4" items={[{ label: 'Home', href: '/' }, { label: 'Carrello' }]} />
         <Reveal>

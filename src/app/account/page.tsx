@@ -26,7 +26,7 @@ export default function AccountPage() {
 
   if (loading || !customer) {
     return (
-      <div className="bg-black">
+      <div className="bg-[var(--background)]">
         <div className="mx-auto flex min-h-[40vh] max-w-4xl items-center justify-center px-4">
           <LoadingFallback label="Caricamento account..." />
         </div>
@@ -35,7 +35,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="bg-black">
+    <div className="bg-[var(--background)]">
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
         <Breadcrumb
           className="mb-6"

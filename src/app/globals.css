@@ -85,6 +85,18 @@ body {
   box-shadow: 6px 6px 0px 0px #27272a;
 }
 
+/* Tastiera: indicatore focus visibile su tutti gli interattivi (a11y, F2).
+   Gli input/select hanno già il bordo accent su :focus; questa regola copre
+   bottoni, link e tab, e non appare al click del mouse (solo focus-visible). */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Hero background animations */
 @keyframes hero-glow {
   0%,
