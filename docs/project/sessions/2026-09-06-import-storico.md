@@ -78,3 +78,11 @@ branch nel workflow) — quadratura 125/125, **margini = foglio**
 
 Stato finale prod: 14 prodotti published/invisibili · 41 lotti · 38 ordini Vinted
 completed con snapshot per-lotto · 125 pezzi residui · costo €4727,39.
+
+## Epilogo shop vuoto (2026-09-06) — NESSUN BUG
+
+Segnalazione "non vedo gli item sul sito": diagnosi (feed vuoto + filtri popolati
++ nessun tocco Admin sul catalogo) + conferma utente = **demo cancellato a mano**,
+unico prodotto visibile. Verifica read-only (`verify-shop.ts`): 14/14 intatti,
+published, 0 canali, 1 variante. Shop a 0 = comportamento corretto.
+Il listino (prezzi + canale Website) li renderà visibili.
