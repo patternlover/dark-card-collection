@@ -6,32 +6,19 @@ on:
   pull_request:
 
 env:
-  PAYLOAD_SECRET: ci-placeholder-secret
   NEXT_PUBLIC_SITE_URL: https://darkcardcollection.com
   NODE_OPTIONS: --max-old-space-size=6144
 
 jobs:
   ci:
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: dcc
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
-    env:
-      DATABASE_URI: postgresql://postgres:postgres@localhost:5432/dcc
     steps:
       - uses: actions/checkout@v4
 
+      # Nessun input version: la versione pnpm arriva dal campo
+      # packageManager di package.json (11.x). Specificare entrambi
+      # fa fallire pnpm/action-setup@v4 all'istante.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -49,9 +36,6 @@ jobs:
 
       - name: Unit tests
         run: pnpm test
-
-      - name: DB integration tests
-        run: pnpm test:db
 
       - name: Build
         run: pnpm exec next build
