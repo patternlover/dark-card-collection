@@ -5,6 +5,16 @@ Ultima sessione: **Import storico acquisti + vendite (script pronti, run su VPS)
 
 ---
 
+## Sessione 2026-09-06 — Piano replatforming visivo (taste-skill, approvato)
+
+Valutata la skill https://github.com/Leonxlnx/taste-skill: skill scelta
+`redesign-existing-projects` (preserve neobrutalist), esecuzione dopo R3/R3b.
+Voce PENDING **V1** (blocked). Dettagli:
+`docs/project/sessions/2026-09-06-taste-skill-visual-replatform-plan.md`.
+Nessuna modifica al codice.
+
+---
+
 ## Sessione 2026-09-06 — Import storico acquisti + vendite
 
 Script idempotenti (`apps/backend/src/scripts/import-history/`: parser+test, report,
