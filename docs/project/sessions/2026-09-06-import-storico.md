@@ -97,6 +97,19 @@ Note: stock pooled per variante (HOLD delle listed vendibili); 2 unità fantasma
 in stock (PUR-0001-01, PUR-0027-01: foglio SOLD senza prezzo) da sistemare
 quando il foglio avrà i prezzi; Vaporeon LISTED ma esaurito (foglio stale).
 
+## Pipeline immagini Blob — APPLICATA SU PROD
+
+Convenzione `products/<slug>[-n].webp` su Vercel Blob (storefront: next/image per
+Blob, proxy per Cardmarket). Script `scripts/upload-product-images.ts`
+(dry-run/commit, mapping.json per nomi non-slug, idempotente) →
+`apps/backend/.import/manifest.json` → `attach-images.ts` (medusa exec,
+thumbnail + gallery, two-arg update).
+Applicato: 5 prodotti con Blob (Serie 2, SPC, Victini, Gengar, Crepuscolo);
+`bundle-ascesa-eroica.webp` senza prodotto (warn).
+Lezione: `productService.updateProducts` SOLO in forma (selector, data) —
+l'oggetto singolo aggiorna solo alcuni campi e tace sugli altri (persi
+thumbnail/metadata/images del primo giro, ripristinati al secondo).
+
 ## Epilogo shop vuoto (2026-09-06) — NESSUN BUG
 
 Segnalazione "non vedo gli item sul sito": diagnosi (feed vuoto + filtri popolati
