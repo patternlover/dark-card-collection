@@ -16,6 +16,13 @@ Dettagli + comandi VPS: `docs/project/sessions/2026-09-06-import-storico.md`.
 14 prodotti published/invisibili, 41 lotti, 38 ordini Vinted con snapshot
 per-lotto (margini = foglio, ricavi €1547,36), 125 residui quadrati.
 
+## Sessione 2026-09-06 — Fix CI rossa + verifica deploy
+
+CI rossa dal pin pnpm 11 (`version: 10` in conflitto con `packageManager`:
+`pnpm/action-setup` falliva all'istante; poi avrebbe fallito anche `test:db`,
+rimosso con Payload). Fix `ci.yml`: pnpm da packageManager, via postgres di
+servizio e `test:db`. **CI #120 success** · live 200 con stato atteso.
+
 ---
 
 ## Sessione 2026-09-06 — Admin italiano: Lotti usabile + dizionario IT
