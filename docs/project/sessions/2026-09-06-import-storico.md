@@ -51,7 +51,30 @@ docker compose -f docker-compose.prod.yml run --rm api \
 ### Verifica post-import (attesa)
 
 - `[verify] ... residui FIFO su DB: 125` (165 − 40) senza errori di quadratura.
-- Admin → Lotti: 41 lotti · Prodotti: 14 (+1 demo) draft · Ordini: 38 completed
+- Admin → Lotti: 41 lotti · Prodotti: 14 (+1 demo) · Ordini: 38 completed
   canale Vinted con snapshot costo · Magazzino: es. Fascio Bundle 50−13=37,
   Serie 3 43−8=35, Serie 2 31−11=20.
 - Margini: confronto spot profit foglio vs widget Admin (es. ORD-0018: 110−70=40).
+
+## Esecuzione reale 2026-09-06 (sera) — COMPLETATA SU PROD
+
+Eseguito da locale contro Neon prod via `apps/backend/.env.prod`
+(loader in `.import/load-env.ps1`, gitignored; Redis in-memory).
+
+**Run 1 (parziale):** catalogo ok (6 categorie, 12 collezioni, 14 prodotti DCC-0001→14),
+lotti bloccati — `adjustInventory` non fa upsert dei level → aggiunta creazione
+livelli a 0 nel runner. Il run aveva già creato il lotto PUR-0001 senza adjust.
+**Run 2:** 40 lotti creati + self-heal; ordini bloccati — `createOrderWorkflow`
+richiede prodotto **published** → i 14 prodotti sono published (ma SENZA sales
+channel e SENZA prezzi: invisibili sullo storefront; il listino assegnerà
+prezzi + canale Website).
+**Run 3:** 38 ordini creati, quadratura 125/125 — MA margini FIFO ≠ foglio
+(es. ORD-0004: 0,00 vs 19,43). Decisione utente: allocazione per lotto.
+**Run 4 (ROLLBACK=1):** 38 ordini rimossi (restore FIFO + magazzino + delete;
+display_id bruciati = buchi innocui), ricreazione fallita per bug early-return.
+**Run 5:** 38 ordini ricreati con `lot_id` (`consumeFromLot` nel service,
+branch nel workflow) — quadratura 125/125, **margini = foglio**
+(ORD-0004: 19,43 · ricavi €1547,36 esatti · 0 prodotti visibili).
+
+Stato finale prod: 14 prodotti published/invisibili · 41 lotti · 38 ordini Vinted
+completed con snapshot per-lotto · 125 pezzi residui · costo €4727,39.

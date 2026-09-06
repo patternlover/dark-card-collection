@@ -106,6 +106,54 @@ class ProcurementModuleService extends MedusaService({
     }
   }
 
+  /**
+   * Lot-targeted consumption: consume `quantity` units of a variant from ONE
+   * specific lot (identified by lot id). Throws on insufficient remaining.
+   * Usato quando l'origine fisica è nota (es. import storico con item→lotto);
+   * altrimenti usare consumeFifo (oldest-first).
+   */
+  async consumeFromLot(
+    variantId: string,
+    lotId: string,
+    quantity: number,
+    sharedContext?: Parameters<typeof this.listPurchaseLines>[2],
+  ): Promise<FifoAllocation[]> {
+    const lines = await this.listPurchaseLines(
+      { variant_id: variantId, lot_id: lotId },
+      { take: 100 },
+      sharedContext,
+    )
+    const available = lines
+      .filter((l) => Number(l.remaining_quantity ?? 0) > 0)
+      .sort((a, b) => (a.id < b.id ? -1 : 1))
+    const total = available.reduce((s, l) => s + Number(l.remaining_quantity ?? 0), 0)
+    if (total < quantity) {
+      throw new Error(
+        `Insufficient stock in lot ${lotId} for variant ${variantId}: need ${quantity}, have ${total}`,
+      )
+    }
+    const allocations: FifoAllocation[] = []
+    let remaining = quantity
+    for (const line of available) {
+      if (remaining <= 0) break
+      const take = Math.min(remaining, Number(line.remaining_quantity ?? 0))
+      allocations.push({
+        lineId: line.id,
+        quantity: take,
+        effective_unit_cost: Number(line.effective_unit_cost ?? 0),
+      })
+      await this.updatePurchaseLines(
+        {
+          id: line.id,
+          remaining_quantity: Number(line.remaining_quantity ?? 0) - take,
+        },
+        sharedContext,
+      )
+      remaining -= take
+    }
+    return allocations
+  }
+
   /** Weighted average effective cost of the in-stock quantities of a variant. */
   async getAverageCost(
     variantId: string,

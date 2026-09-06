@@ -12,7 +12,9 @@ runner `medusa exec` dry-run/COMMIT) + tweak `order_metadata` al workflow vendit
 Report: 14 prodotti draft, 41 lotti, 38 ordini Vinted, residui attesi 125.
 Dettagli + comandi VPS: `docs/project/sessions/2026-09-06-import-storico.md`.
 
-**Verifica**: jest nuovi 10/10 · backend tsc 0. **Run PROD da fare sul VPS**.
+**Verifica**: jest nuovi 10/10 · backend tsc 0. **ESEGUITO SU PROD 2026-09-06 sera**:
+14 prodotti published/invisibili, 41 lotti, 38 ordini Vinted con snapshot
+per-lotto (margini = foglio, ricavi €1547,36), 125 residui quadrati.
 
 ---
 

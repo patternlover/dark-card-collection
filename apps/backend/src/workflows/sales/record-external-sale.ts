@@ -31,6 +31,8 @@ export interface RecordExternalSaleWorkflowInput {
     variant_id: string
     quantity: number
     unit_price: number
+    /** Se presente, consuma da questo lotto invece che in FIFO. */
+    lot_id?: string
   }[]
 }
 
@@ -64,7 +66,7 @@ const fetchVariantDetailsStep = createStep(
 const allocateFifoSaleStep = createStep(
   "allocate-fifo-for-sale",
   async (
-    input: { items: { variant_id: string; quantity: number }[] },
+    input: { items: { variant_id: string; quantity: number; lot_id?: string }[] },
     { container },
   ) => {
     const service: ProcurementModuleService = container.resolve(PROCUREMENT_MODULE)
@@ -76,7 +78,9 @@ const allocateFifoSaleStep = createStep(
       snapshot: number
     }> = []
     for (const item of input.items) {
-      const allocations = await service.consumeFifo(item.variant_id, item.quantity)
+      const allocations = item.lot_id
+        ? await service.consumeFromLot(item.variant_id, item.lot_id, item.quantity)
+        : await service.consumeFifo(item.variant_id, item.quantity)
       perItem.push({
         variant_id: item.variant_id,
         quantity: item.quantity,
