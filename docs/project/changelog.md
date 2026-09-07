@@ -5,8 +5,17 @@ Ultima sessione: **Import storico acquisti + vendite (script pronti, run su VPS)
 
 ---
 
-## Sessione 2026-09-06 — V1 visual batch P1 (F1+F2) su `feat/visual-replatform`
+## Sessione 2026-09-07 — V1 visual F3+F4 su `feat/visual-replatform`
 
+Decisioni utente: F3 rimuovi link `/shop/preorders` morti (Hero, Footer, llms.txt/full,
+breadcrumb ClientListing — zero riferimenti rimasti); F4 rimossa sezione `CartSocialProof`
+con numeri fake (uso + file); F5 rimandata al go-live. Dettagli in sessione visual-p1.
+
+**Verifica**: tsc 0 · test 52/52 · `next build` ok (31 pagine). Branch, non main.
+
+---
+
+## Sessione 2026-09-06 — V1 visual batch P1 (F1+F2) su `feat/visual-replatform`
 Override "dopo R3" confermato: solo modifiche class-level. F1 canvas → `#0a0a0a`
 (26 file, superfici intenzionali restano nere); F2 `:focus-visible` globale giallo.
 Dettagli: `docs/project/sessions/2026-09-06-visual-p1.md`.
