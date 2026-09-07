@@ -37,12 +37,6 @@ export function HeroSection() {
                 Esplora lo Shop
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link
-                href="/shop/preorders"
-                className="inline-flex items-center gap-2 border-2 border-zinc-500 bg-zinc-900 px-7 py-3.5 text-sm font-black uppercase tracking-wide text-white shadow-[4px_4px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:shadow-[6px_6px_0px_0px_var(--accent)] active:translate-0 active:shadow-none"
-              >
-                Preordini
-              </Link>
             </div>
           </Reveal>
 

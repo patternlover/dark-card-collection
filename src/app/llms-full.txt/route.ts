@@ -10,7 +10,6 @@ const SHOP_SERVICES = `
 
 - [Shop Pokémon TCG](${SITE_URL}/shop) - Booster box, ETB, collection box e SPC sigillati delle ultime espansioni.
 - [Espansioni in vendita](${SITE_URL}/shop/espansioni) - Tutte le espansioni attualmente disponibili, con schede prodotto dettagliate.
-- [Preordini](${SITE_URL}/shop/preorders) - Prodotti in arrivo e attualmente in attesa (preorder).
 - [Novità](${SITE_URL}/shop/new-arrivals) - Ultimi prodotti aggiunti al catalogo.
 - [Bestseller](${SITE_URL}/shop/bestsellers) - I prodotti più venduti del negozio.
 `

@@ -4,7 +4,6 @@ import { HeroSection } from '@/components/sections/HeroSection'
 import { HeroBackground } from '@/components/sections/HeroBackground'
 import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
 import { EspansionsShowcase } from '@/components/sections/EspansionsShowcase'
-import { CartSocialProof } from '@/components/sections/CartSocialProof'
 import { CtaBanner } from '@/components/sections/CtaBanner'
 import { TrustBadges } from '@/components/sections/TrustBadges'
 
@@ -112,7 +111,6 @@ export default function Home() {
         <HeroBackground />
         <div className="relative z-10">
           <HeroSection />
-          <CartSocialProof />
           <FeaturedProducts />
           <EspansionsShowcase />
         </div>

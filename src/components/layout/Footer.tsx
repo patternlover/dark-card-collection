@@ -72,11 +72,6 @@ export function Footer() {
                   Novità
                 </Link>
               </li>
-              <li>
-                <Link href="/shop/preorders" className="text-sm text-zinc-500 transition-colors hover:text-[var(--accent)]">
-                  In Attesa
-                </Link>
-              </li>
             </ul>
           </div>
 

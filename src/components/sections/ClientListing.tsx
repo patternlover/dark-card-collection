@@ -184,8 +184,6 @@ export function ClientListing({
       crumbs.push({ label: 'Shop', href: '/shop' }, { label: 'Bestseller' })
     } else if (basePath === '/shop/new-arrivals') {
       crumbs.push({ label: 'Shop', href: '/shop' }, { label: 'Novità' })
-    } else if (basePath === '/shop/preorders') {
-      crumbs.push({ label: 'Shop', href: '/shop' }, { label: 'In Attesa' })
     }
     return crumbs
   }, [basePath])
