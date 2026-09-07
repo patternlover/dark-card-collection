@@ -17,7 +17,7 @@ Ultimo aggiornamento: 2026-09-06 (fix codice checkout R3 + bonifico; da verifica
 | R4 | **F4 — Hardening**: promotions, returns/exchanges, backup verificato, monitoring (Uptime Kuma), aggiornamenti regolari VM | open |
 | — | **Scontrini lotti** (upload su Google Drive dalla route Admin Lotti): il campo `receipt_url` esiste nel modulo procurement, l'integrazione Drive non è portata da Payload | open |
 | W6 | **Repo privata**: la repo è pubblica. Dopo `gh auth login`: `gh repo edit patternlover/dark-card-collection --visibility private` | waiting-user (auth gh) |
-| V1 | **Replatforming visivo storefront (taste-skill, preserve neobrutalist)**: install + audit fatti; **batch P1 (F1 canvas, F2 focus-visible) + F3 (via link `/shop/preorders` morti: Hero/Footer/llms/breadcrumb) + F4 (via `CartSocialProof` fake) su `feat/visual-replatform`**. F5 rimandata (dati aziendali reali al go-live). Resta: pilota ProductCard+HeroSection, coerenza ombre, uppercase lunghi | in-progress (branch; merge dopo E2E R3) |
+| V1 | **Replatforming visivo storefront (taste-skill, preserve neobrutalist)**: install + audit fatti; **batch P1 (F1 canvas, F2 focus-visible) + F3 (via link `/shop/preorders` morti: Hero/Footer/llms/breadcrumb) + F4 (via `CartSocialProof` fake) su `feat/visual-replatform`**. F5 rimandata (dati aziendali reali al go-live). Resta: coerenza ombre, uppercase lunghi, review visiva branch, merge dopo E2E R3 | in-progress (branch; merge dopo E2E R3) |
 | W5 | **Immagini**: 2 file in `images/` senza prodotto (`bundle-ascesa-eroica.webp`, `scatola-da-collezione-mega-moonlit-tins-mega-gengar-ex.webp`) — caricare su Vercel Blob quando i prodotti esisteranno | waiting-user |
 
 ## 2. Non-goal / chiusi per scelta
