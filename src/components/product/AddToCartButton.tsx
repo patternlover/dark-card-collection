@@ -83,14 +83,14 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
       >
         {added ? (
           <>
-            <Check className="h-4 w-4" strokeWidth={3} />
+            <Check className="h-4 w-4" />
             Aggiunto!
           </>
         ) : !isAvailable ? (
           'Non disponibile'
         ) : (
           <>
-            <ShoppingBag className="h-4 w-4" strokeWidth={2.5} />
+            <ShoppingBag className="h-4 w-4" />
             Aggiungi al carrello
           </>
         )}

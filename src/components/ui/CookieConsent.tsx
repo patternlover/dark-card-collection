@@ -23,7 +23,7 @@ export function CookieConsent() {
     <div className={`fixed inset-x-0 z-[120] p-4 sm:p-6 ${stickyBar ? 'bottom-[5.5rem]' : 'bottom-0'}`}>
       <div className="mx-auto max-w-3xl rounded-xl border border-zinc-700 bg-zinc-900 p-6 shadow-2xl">
         <div className="flex items-start gap-4">
-          <Shield className="h-6 w-6 shrink-0 text-blue-500 mt-0.5" />
+          <Shield className="h-6 w-6 shrink-0 text-[var(--accent)] mt-0.5" />
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-white mb-2">
               Rispettiamo la tua privacy
@@ -32,7 +32,7 @@ export function CookieConsent() {
               Utilizziamo cookie per garantire il funzionamento del sito e, previo tuo consenso,
               per analisi e marketing. Puoi gestire le tue preferenze in qualsiasi momento.
               Leggi la nostra{' '}
-              <a href="/info/privacy" className="text-blue-400 underline hover:text-blue-300">
+              <a href="/info/privacy" className="text-[var(--accent)] underline underline-offset-2 hover:brightness-110">
                 Privacy Policy
               </a>{' '}
               per maggiori informazioni.

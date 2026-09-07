@@ -61,7 +61,7 @@ export default function ShippingReturnsPage() {
             <h2 className="text-xl font-semibold text-white mb-3">3. Come esercitare il recesso</h2>
             <p>
               Per esercitare il diritto di recesso, comunicacelo tramite il nostro{' '}
-              <a href="/info/contact" className="text-blue-400 underline hover:text-blue-300">
+              <a href="/info/contact" className="text-[var(--accent)] underline underline-offset-2 hover:brightness-110">
                 modulo di contatto
               </a>{' '}
               oppure via email all&apos;indirizzo indicato in fondo al sito, indicando:
@@ -100,7 +100,7 @@ export default function ShippingReturnsPage() {
             <h2 className="text-xl font-semibold text-white mb-3">6. Contattaci</h2>
             <p>
               Per qualsiasi domanda su spedizioni e resi, puoi contattarci tramite il nostro{' '}
-              <a href="/info/contact" className="text-blue-400 underline hover:text-blue-300">
+              <a href="/info/contact" className="text-[var(--accent)] underline underline-offset-2 hover:brightness-110">
                 modulo di contatto
               </a>{' '}
               o all&apos;indirizzo email indicato in fondo al sito.

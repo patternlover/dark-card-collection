@@ -12,7 +12,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className={`flex min-h-screen flex-col bg-[var(--background)] ${isAdminArea ? '' : 'pt-[var(--banner-h)]'}`}
+      className={`flex min-h-dvh flex-col bg-[var(--background)] ${isAdminArea ? '' : 'pt-[var(--banner-h)]'}`}
     >
       {!isAdminArea && <FreeShippingBanner />}
       {!isAdminArea && <Header />}

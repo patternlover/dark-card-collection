@@ -143,7 +143,7 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-white mb-3">12. Contattaci</h2>
             <p>
               Per domande relative ai presenti Termini, contattaci tramite il nostro{' '}
-              <a href="/info/contact" className="text-blue-400 underline hover:text-blue-300">
+              <a href="/info/contact" className="text-[var(--accent)] underline underline-offset-2 hover:brightness-110">
                 modulo di contatto
               </a>.
             </p>

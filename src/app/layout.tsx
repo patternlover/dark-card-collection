@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist } from 'next/font/google'
 import './globals.css'
 import { CartProvider } from '@/hooks/useCart'
 import { AuthProvider } from '@/hooks/useAuth'
@@ -14,11 +14,6 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://darkcardcollectio
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
   subsets: ['latin'],
 })
 
@@ -93,7 +88,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} antialiased`}>
         <ConsentModeScript />
         <Suspense fallback={null}>
           <RouteProgress />

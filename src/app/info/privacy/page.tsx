@@ -127,7 +127,7 @@ export default function PrivacyPage() {
             <p>
               Per esercitare i tuoi diritti o per domande sulla privacy, puoi contattarci
               tramite il nostro{' '}
-              <a href="/info/contact" className="text-blue-400 underline hover:text-blue-300">
+              <a href="/info/contact" className="text-[var(--accent)] underline underline-offset-2 hover:brightness-110">
                 modulo di contatto
               </a>{' '}
               o all&apos;indirizzo email indicato sul sito.

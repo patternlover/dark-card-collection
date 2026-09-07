@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Zap, PackageCheck, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Star, Zap, PackageCheck, ShieldCheck } from 'lucide-react'
 import { Reveal } from '@/components/ui/Reveal'
 
 const stats = [
@@ -59,8 +59,9 @@ export function HeroSection() {
             </div>
 
             <div className="absolute -bottom-6 -left-6 -rotate-3 border-2 border-black bg-white px-4 py-2 shadow-[4px_4px_0px_0px_#000]">
-              <p className="text-xs font-black uppercase tracking-widest text-black">
-                ★ Collezione 2026
+              <p className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest text-black">
+                <Star className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />
+                Collezione 2026
               </p>
             </div>
           </Reveal>

@@ -315,7 +315,7 @@ export default async function ProductPage({
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center border-2 border-zinc-700 bg-zinc-800 shadow-[4px_4px_0px_0px_#27272a]">
-                <span className="text-6xl text-zinc-600">📦</span>
+                <Package className="h-16 w-16 text-zinc-600" aria-hidden="true" />
               </div>
             )}
           </div>

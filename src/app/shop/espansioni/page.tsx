@@ -1,5 +1,6 @@
 import { listCatalogCollections, toCollectionRef } from '@/lib/medusa/products'
 import Link from 'next/link'
+import { Layers } from 'lucide-react'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
@@ -90,7 +91,7 @@ export default async function EspansioniPage() {
                 >
                   <div className="p-3">
                     <div className="flex aspect-square items-center justify-center bg-zinc-800">
-                      <span className="text-3xl text-zinc-600">🃏</span>
+                      <Layers className="h-8 w-8 text-zinc-600" aria-hidden="true" />
                     </div>
                   </div>
                   <div className="px-4 pb-4">

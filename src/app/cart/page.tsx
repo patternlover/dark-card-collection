@@ -66,13 +66,13 @@ export default function CartPage() {
                     />
                   ) : (
                     <div className="flex h-24 w-24 flex-shrink-0 items-center justify-center border border-zinc-700 bg-zinc-800">
-                      <span className="text-zinc-600 text-2xl">📦</span>
+                      <ShoppingBag className="h-8 w-8 text-zinc-600" aria-hidden="true" />
                     </div>
                   )}
                   <div className="flex flex-1 flex-col">
                     <Link
                       href={`/products/${item.slug}`}
-                      className="text-sm font-medium text-white hover:text-blue-400"
+                      className="text-sm font-medium text-white hover:text-[var(--accent)]"
                     >
                       {item.title}
                     </Link>
@@ -159,7 +159,7 @@ export default function CartPage() {
         )}
 
         {confirm && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+          <div className="fixed inset-0 z-[140] flex items-end justify-center bg-black/40 p-4 sm:items-center">
             <div className="w-full max-w-sm border-2 border-zinc-700 bg-zinc-900 p-5 shadow-[4px_4px_0px_0px_#000]">
               <h2 className="text-base font-semibold text-white">
                 Rimuovere l&apos;articolo?

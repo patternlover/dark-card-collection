@@ -88,6 +88,9 @@ body {
 /* Tastiera: indicatore focus visibile su tutti gli interattivi (a11y, F2).
    Gli input/select hanno già il bordo accent su :focus; questa regola copre
    bottoni, link e tab, e non appare al click del mouse (solo focus-visible). */
+/* Scala z-index (unica fonte, dal basso verso l'alto):
+   banner 55 < menu mobile 60 < sticky ATC 100 = progress 100 < confetti 110
+   < cookie 120 < header 130 < modali 140. Non introdurre altri livelli. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -95,6 +98,16 @@ select:focus-visible,
 [role="button"]:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
+}
+
+/* Titoli senza vedove (skill: text-wrap balance). */
+h1,
+h2 {
+  text-wrap: balance;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* Hero background animations */
@@ -167,6 +180,9 @@ select:focus-visible,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
   .animate-hero-glow {
     animation: none;
   }
