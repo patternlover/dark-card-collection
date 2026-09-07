@@ -84,7 +84,7 @@ export function AddToCartButton({ product, maxQuantity = 1 }: AddToCartButtonPro
         {added ? (
           <>
             <Check className="h-4 w-4" />
-            Aggiunto!
+            Aggiunto
           </>
         ) : !isAvailable ? (
           'Non disponibile'

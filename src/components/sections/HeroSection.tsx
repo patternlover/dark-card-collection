@@ -48,11 +48,11 @@ export function HeroSection() {
               </p>
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <div className="border-2 border-black bg-black p-3 text-center">
-                  <p className="text-2xl font-black text-[var(--accent)]">100%</p>
+                  <p className="text-2xl font-black tabular-nums text-[var(--accent)]">100%</p>
                   <p className="text-[11px] font-bold uppercase text-white">Originali</p>
                 </div>
                 <div className="border-2 border-black bg-black p-3 text-center">
-                  <p className="text-2xl font-black text-[var(--accent)]">24h</p>
+                  <p className="text-2xl font-black tabular-nums text-[var(--accent)]">24h</p>
                   <p className="text-[11px] font-bold uppercase text-white">Spedizione</p>
                 </div>
               </div>

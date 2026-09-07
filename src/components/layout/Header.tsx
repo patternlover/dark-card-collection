@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Search, ShoppingBag, Menu, X, User } from 'lucide-react'
 import { MobileMenu } from './MobileMenu'
 import { useCart } from '@/hooks/useCart'
@@ -17,6 +18,7 @@ const navItems = [
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const pathname = usePathname()
   const { itemCount } = useCart()
   const { customer } = useAuth()
 
@@ -33,16 +35,20 @@ export function Header() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex md:items-center md:gap-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm font-medium text-zinc-400 transition-colors hover:text-[var(--accent)]"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="hidden md:flex md:items-center md:gap-8" aria-label="Navigazione principale">
+            {navItems.map((item) => {
+              const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={`text-sm font-medium transition-colors ${active ? 'text-[var(--accent)]' : 'text-zinc-400 hover:text-[var(--accent)]'}`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
           </nav>
 
           <div className="flex items-center gap-4">

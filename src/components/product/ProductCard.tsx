@@ -28,13 +28,13 @@ export function ProductCard({ group }: ProductCardProps) {
     <article className="group relative flex h-full flex-col border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all duration-100 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_var(--accent)]">
       <Link href={`/products/${group.slug}`} className="flex flex-1 flex-col">
         <div className="p-3">
-          <div className="relative aspect-square w-full">
+          <div className={`relative aspect-square w-full overflow-hidden${isSoldOut ? " opacity-60" : ""}`}>
             {imgSrc ? (
               <ProductImage
                 src={imgSrc}
                 alt={group.title}
                 sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw"
-                className="border border-zinc-800 object-cover"
+                className="border border-zinc-800 object-cover transition-transform duration-300 group-hover:scale-[1.04]"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center border border-zinc-800 bg-zinc-800">
@@ -61,16 +61,16 @@ export function ProductCard({ group }: ProductCardProps) {
             {isSoldOut && <Badge variant="sold-out">Esaurito</Badge>}
           </div>
 
-          <h3 className="text-sm font-semibold text-white line-clamp-2 leading-tight">
+          <h3 className="text-balance text-sm font-semibold text-white line-clamp-2 leading-tight">
             {group.title}
           </h3>
 
           <div className="mt-3 pr-14">
-            <span className="text-lg font-bold text-[var(--accent)]">
+            <span className="text-lg font-bold tabular-nums text-[var(--accent)]">
               {group.sellingPrice > 0 ? `€${group.sellingPrice.toFixed(2)}` : ''}
             </span>
             {group.totalQuantity > 0 && (
-              <p className="mt-1 text-xs font-medium text-zinc-500">
+              <p className="mt-1 text-xs font-medium tabular-nums text-zinc-500">
                 {group.totalQuantity} disponibil{group.totalQuantity === 1 ? 'e' : 'i'}
               </p>
             )}

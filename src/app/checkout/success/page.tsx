@@ -140,7 +140,7 @@ function SuccessContent() {
 
         <Reveal>
           <h1 className="mb-4 text-3xl font-black uppercase tracking-tight text-white">
-            {loading ? 'Verifica ordine...' : 'Ordine confermato!'}
+            {loading ? 'Verifica ordine...' : 'Ordine confermato'}
           </h1>
         </Reveal>
 

@@ -1,6 +1,5 @@
 import { listCatalogCollections, toCollectionRef } from '@/lib/medusa/products'
 import Link from 'next/link'
-import { Layers } from 'lucide-react'
 import { JsonLd } from '@/components/seo/JsonLd'
 import { Reveal } from '@/components/ui/Reveal'
 import { Breadcrumb } from '@/components/ui/Breadcrumb'
@@ -83,18 +82,16 @@ export default async function EspansioniPage() {
         ) : (
           <Reveal>
             <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {espansioni.map((col) => (
+              {espansioni.map((col, i) => (
                 <Link
                   key={col.id}
                   href={`/shop/espansioni/${col.slug}`}
-                  className="border-2 border-zinc-700 bg-zinc-900 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
+                  className="group flex items-start gap-5 border-2 border-zinc-700 bg-zinc-900 p-5 shadow-[3px_3px_0px_0px_#27272a] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:border-[var(--accent)] hover:shadow-[5px_5px_0px_0px_var(--accent)]"
                 >
-                  <div className="p-3">
-                    <div className="flex aspect-square items-center justify-center bg-zinc-800">
-                      <Layers className="h-8 w-8 text-zinc-600" aria-hidden="true" />
-                    </div>
-                  </div>
-                  <div className="px-4 pb-4">
+                  <span aria-hidden="true" className="text-sm font-black tabular-nums text-zinc-600 transition-colors group-hover:text-[var(--accent)]">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div className="min-w-0 flex-1">
                     <h2 className="text-lg font-semibold text-white">{col.name}</h2>
                     {col.description && (
                       <p className="mt-2 text-sm text-zinc-500 line-clamp-2">{col.description}</p>

@@ -5,6 +5,16 @@ Ultima sessione: **Import storico acquisti + vendite (script pronti, run su VPS)
 
 ---
 
+## Sessione 2026-09-07 — V1 pilota ProductCard + rifiniture (branch)
+
+ProductCard (tabular, zoom hover, esaurito attenuato, balance), hero tabular,
+espansioni in righe editoriali numerate, via `!` success/ATC, nav attiva con
+`aria-current`. Dettagli in sessione visual-p1.
+
+**Verifica**: tsc 0 · test 52/52 · `next build` 31 pagine. Branch, non main.
+
+---
+
 ## Sessione 2026-09-07 — V1 visual F3+F4 su `feat/visual-replatform`
 
 Decisioni utente: F3 rimuovi link `/shop/preorders` morti (Hero, Footer, llms.txt/full,
